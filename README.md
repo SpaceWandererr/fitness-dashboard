@@ -1,20 +1,65 @@
-# WebDev Fitness Dashboard v2 (Frontend-only)
+# 🏋️ WebDev Fitness Dashboard
 
-Upgraded React + Tailwind app with graphs, streaks, advanced planner, deadlines, Pomodoro, calories/weight tracking, gallery captions & before/after, and theme accent. No backend or AI; everything saved in localStorage.
+A personal **fitness + coding lifestyle tracker** built using **React + Vite + Tailwind CSS**.  
+It helps you track your **workouts, BMI, weight progress, calories burned, streaks**, and more — all stored locally in your browser.
 
-## Install & Run
+---
+
+## ✅ Features
+
+### 🧠 **Fitness & Progress Tracking**
+- ✅ Weekly workout plan (Monday → Saturday)
+- ✅ Mark exercises as done / Not done
+- ✅ Save calories burned + daily weight via pop-up
+- ✅ Track workout completion percentage
+- ✅ Streak counter (e.g., 7-day streak, no-skip week)
+
+### ⚖️ **BMI + Weight Management**
+- ✅ BMI calculator with category detection (Underweight / Normal / Overweight / Obese)
+- ✅ Weight & BMI auto saved with date
+- ✅ Progress bar with 🏃‍♂️ emoji running from Current Weight → Target Weight  
+- ✅ Runner animation moves **right → left** as you progress towards your goal  
+- ✅ Supports Target Weight & tracks how far you are!
+
+### 📅 **Calendar & History**
+- ✅ Mini calendar to show:
+  - ✅ Green = Workout complete
+  - ❌ Red = Missed day
+  - ⏳ Grey = Future day
+- ✅ Clicking any date shows:
+  - Calories burned that day  
+  - Weight & BMI on that day  
+  - Whether workout was done or skipped
+
+### 📊 **Charts & Visual Stats**
+- ✅ Line chart for Weight & BMI over time (Recharts)
+- ✅ Daily summary box beside the calendar
+- ✅ Goal vs Current weight progress bar
+
+### 🏆 **Achivement Badges**
+- Earn locked/unlocked badges like:
+  - ⭐ 7-Day Streak
+  - ⭐ No-Skip Week
+  - ⭐ 10/25/50 Workouts Completed  
+- Badges stay **visible & locked** or **earned**
+
+---
+
+## 🔧 **Tech Stack**
+
+| Tech        | Used For |
+|-------------|-----------|
+| React + Vite | Frontend framework & dev server |
+| Tailwind CSS | Styling & layout |
+| LocalStorage | Saving progress, weight, calories, BMI |
+| Recharts     | Weight & BMI graphs |
+| Day.js       | Date formatting & handling |
+
+---
+
+## 🚀 **Setup & Run Project**
+
+### 1️⃣ Clone or Download
 ```bash
-npm install
-npm run dev
-```
-
-## New Stuff
-- Recharts-based **Stats**: streaks, weight, calories, coding hours.
-- **Planner**: mark today done; persists streak data.
-- **Syllabus**: deadlines, % progress bars, add custom topics.
-- **Calories**: log calories, weight, and coding hours with trend charts.
-- **Focus**: Pomodoro timer with simple beep.
-- **Gallery**: captions, categories, before/after slider.
-- **Goals**: target weight, daily coding goal, and **accent color** (HSL).
-
-> Tip: If you see a plugin error, run: `npm install @vitejs/plugin-react recharts`.
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
