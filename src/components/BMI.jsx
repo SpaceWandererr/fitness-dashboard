@@ -2,7 +2,7 @@ import { useState } from "react";
 import { load, save } from "../utils/localStorage";
 
 export default function BMI() {
-  const [height, setHeight] = useState(176);
+  const [height, setHeight] = useState(176.5);
   const [weight, setWeight] = useState(85);
 
   const bmi = weight / Math.pow(height / 100, 2);
