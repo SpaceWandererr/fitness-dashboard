@@ -1,0 +1,66 @@
+{
+  "Web Dev": [
+    {
+      "title": "HTML Basics",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "CSS Fundamentals",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "JavaScript Essentials",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "React Basics",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "Node.js Basics",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "MongoDB Basics",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "DSA Arrays & Strings",
+      "done": false,
+      "deadline": ""
+    }
+  ],
+  "DSA": [
+    {
+      "title": "Recursion",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "Linked Lists",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "Stacks & Queues",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "Trees",
+      "done": false,
+      "deadline": ""
+    },
+    {
+      "title": "Graphs",
+      "done": false,
+      "deadline": ""
+    }
+  ]
+}
