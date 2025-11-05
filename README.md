@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏋️ WebDev Fitness Dashboard
 
 A personal **fitness + coding lifestyle tracker** built using **React + Vite + Tailwind CSS**.  
@@ -63,3 +64,6 @@ It helps you track your **workouts, BMI, weight progress, calories burned, strea
 ```bash
 git clone https://github.com/your-username/your-repo-name.git
 cd your-repo-name
+=======
+# fitness-dashboard
+>>>>>>> 1ae8b9afae79e49eea6ec66ce89ed9caae9dfcc5
