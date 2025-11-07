@@ -6,7 +6,7 @@ import Syllabus from "./components/Syllabus.jsx";
 import BMI from "./components/BMI.jsx";
 import Planner from "./components/Planner.jsx";
 import Gallery from "./components/Gallery.jsx";
-import Quotes from "./components/Quotes.jsx";
+// import Quotes from "./components/Quotes.jsx";
 import Quiz from "./components/Quiz.jsx";
 import Stats from "./components/Stats.jsx";
 import Focus from "./components/Focus.jsx";
