@@ -56,14 +56,3 @@ It helps you track your **workouts, BMI, weight progress, calories burned, strea
 | Recharts     | Weight & BMI graphs |
 | Day.js       | Date formatting & handling |
 
----
-
-## 🚀 **Setup & Run Project**
-
-### 1️⃣ Clone or Download
-```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-=======
-# fitness-dashboard
->>>>>>> 1ae8b9afae79e49eea6ec66ce89ed9caae9dfcc5
