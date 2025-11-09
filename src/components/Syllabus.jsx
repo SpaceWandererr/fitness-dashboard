@@ -1,10 +1,4158 @@
-// Syllabus.jsx — Mirror + Tracker + Section tick + CompletedOn + Progress bars
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-/* =========== storage helpers =========== */
+/* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
+const TREE = {
+  "Episode 1 - Code": {
+    "1. How the Internet Works:": [
+      {
+        title: "History of Web (Web 1.0 to Web 3.0).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How computer communicate with each other.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How computer send data all over the world.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is Domain Name, IP & MAC Addresses and Routing.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How ISP and DNS work together to deliver data.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Client-Server Architecture:": [
+      {
+        title: "What is Client-Server Model.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Difference between Client (browser) and Server (the computer hosting your website).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "How HTTP request and response cycle works (how browser talk to server).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What happens when you visit a website.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Difference between Front-end and Back-end (Front-end vs Back-end).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What are Static Websites and Dynamic Websites.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is web hosting and how it works.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. Internet Protocols:": [
+      {
+        title: "What is TCP protocol and why is widely used",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How Connection is established using TCP (3 Way handshake)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is UDP and why its used for fast communication",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How UPD establishes connection",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Difference between TCP and UPD",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. Understanding HTTP and HTTPS": [
+      {
+        title: "What is HTTP and its different version",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "HTTP status code for responses",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is HTTPS and why its better than HTTP",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How HTTPS provides a secure connection",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is SSL/TLS Encryption",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What are Proxy and Reverse Proxy",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How VPN works and helps accessing restricted content",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Preparing Your Machine": [
+      {
+        title: "Installing & Setting up VS Code",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Installing helpful extensions",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting up your browser for development",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What are file and folders and how to create them",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Testing our environment via serving a webpage - “ Namaste Duniya ”",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Episode 2 - Stage": {
+    "1. Starting with HTML": [
+      {
+        title: "Understanding HTML and its use Cases.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating first HTML page in VS Code",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understand HTML Structure",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Tags and building simple HTML page - doctype , html , head , title , body",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with text elements - h tags , p tag , br tag , a tag , span , code , pre",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with HTML Lists(Ordered & Unordered lists) - ol , ul , li",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Concept of nested elements in HTML",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Media Tags - img , video , audio",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "HTML attributes - href , target , alt , src , width , height ,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Navigating between pages",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. More on HTML": [
+      {
+        title:
+          "Understanding semantic tags - article , section , main , aside , form , footer , header , details , figure",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Differentiating between block and inline elements",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Text formatting tags in HTML - b , string , i , small , ins , sub , sup , del , mark",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with HTML tables - table , td , tr , th",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. HTML Forms and Inputs": [
+      {
+        title: "What is Form and why its important",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Creating a simple Form with tags - form , input , textarea , select , button , label",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Types of input fields - checkbox , text , color , file , tel , date , number , radio , submit , range",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Attributes of Form Elements - method , actions , target , novalidate , enctype , name , required, placeholder",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. Media Tags in HTML": [
+      {
+        title: "Understanding with audio and video Tags",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Attributes if media tags - src , width , height , alt , muted , loop , autoplay , controls , media",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using source element for alternative media files",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Basics of CSS": [
+      {
+        title: "Introduction to CSS and Why it is important",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Syntax, Selectors and comments in CSS",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Adding CSS to HTML Page - Inline , Internal , External",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding difference between selectors - class , id , element",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding precedence of selectors",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "How to style text using CSS - font family , font style , font weight , line-height , text-decoration , text-align , text-transform , letter-spacing , word-spacing , text-shadow",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "6. Styling With CSS": [
+      {
+        title: "Working with colors in CSS - name , rgb , etc.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with css units - % , px , rem , em , vw , vh , min , max",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with borders and border styling",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with box properties - margin , padding , box-sizing , height , width",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Background properties - background-size , background-attachment , background-image , background-repeat , background-position , linear-gradient",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Implementing shadow property.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "7. More about CSS": [
+      {
+        title:
+          "Applying display properties - inline , grid , flex , none , inline-block , etc.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Introduction to FlexBox for aligning and structure - flex-direction , order , flex-wrap , flex-grow , flex-shrink , justify-content , align-items , align-content , align-self , flex-basis , shorthand properties of flex",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Flex Grid for making grids using CSS.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with positional properties - absolute , relative , static , sticky , fixed .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Overflow - visible , hidden , scroll.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Grouping Selectors.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Why we use Nested Selectors.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "8. Interesting things about CSS ✌️": [
+      {
+        title:
+          "Applying pseudo classes and Pseudo Elements [ hover , focus , after , before , active ] .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning CSS Transitions ( properties , duration , timing functions , delays ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Creating with Transform ( translate , rotate , scale , skew , transform , rotate ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with 3D Transform ( translate3d() , translateZ() , scale3d() , scaleZ() , rotate3d() , rotateZ() .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding CSS Animation ( @keyframes ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "9. Responsive with CSS 🖥️": [
+      {
+        title:
+          "Difference Between Mobile-first and Desktop first Website(mobile-first vs desktop first).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Measurement units for Responsive Design - px(pixel) , in(inch), mm(millimetre) , % , rem",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using Viewport meta element for Responsive.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting up Images and Typography for Responsiveness.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What are Media queries [ @media , max-width , min-width ].",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using Different function of CSS [ clamp , max , min ].",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understand HTML structure for Responsive Design.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "10 Working With SASS (SASSY) my favorite 🤩": [
+      {
+        title:
+          "What is SASS? Variables , Nesting , Mixins , Functions and Operators .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting up environment for SCSS .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "SCSS or SASS? and Setting Up SCSS .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "11. Basics of Javascript with ES6+ Features 🚀": [
+      {
+        title:
+          "Introduction to JavaScript, Why it is Important! and What can it do for you?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How to link javascript files using script-tag .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Running JavaScript in the Browser Console .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Variables and Keywords in Javascript [ var , let , const ].",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Logging with javascript - [ console.log() , console.info() , console.warn() , prompt , alert ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with String in JS and there -[ splice , slice , template string , split , replace , includes ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What are Statement and Semicolons in JS",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How to add Comments in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "What are Expression in Js and difference between expression and statement",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "JavaScript Data Types - [ float , number , string , boolean , null , array , object , Symbol , Undefined ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Some Important Values - [ undefined , null , NaN , Infinity ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Relative and Primitive Data Type in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Basic Operators(Arithmetic, Assignment, Increment, Decrement, Comparison, Logical, Bitwise) - [ + , , , / , ++ , - , == , === , != , and more ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Variable hoisting in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "12 . Loops and Conditionals in Javascript": [
+      {
+        title:
+          "Understanding Condition Operator in Javascript - [ if , else , if-else , else-if , Ternary Operator , switch ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "for Loop in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "while Loop in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "do...while in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "forEach in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "for in Loop in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "for of Loop in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Recursion in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Loop control statements - [ break , continue ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "13. Functions in JavaScript": [
+      {
+        title:
+          "Understanding Function in JavaScript and why its widely used - [ parameters , arguments , rest parameters , hoisting , Variable Hoisting , Function Hoisting ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Parameters in JavaScript - [ required , destructured , rest , default ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Arguments in JavaScript - [ positional , default , spread ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Classic Function , Nested Function (function within function), Scope Chain in Javascript.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Immediately Invoked Function Expression(IIFE).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "More Functions in JavaScript - [ Arrow Function , Fat Arrow , Anonymous , Higher Order , Callback , First Class , Pure Function , Impure Function ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Scoping in JS - [ Global scope , Function scope ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Closures , Scoping Rule .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "14. Arrays and Objects in JavaScript": [
+      {
+        title: "What are Arrays in JavaScript and how to Create an Array.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understand How to Accessing Elements in Array.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Functions on Arrays - [ push , pop , shift , unshift , indexOf , array destructuring , filter , some , map , reduce , spread operator , slice , reverse , sort , join , toString ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Iterating Over Arrays using - [ For Loop , forEach ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding What are Objects in JavaScript - [ key-value pair ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Creating Objects, Accessing Properties, Deleting Property and Nested Objects.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Recognise How Objects Are Stored, Traverse Keys of an Object, Array as Object.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Timing Events - setTimeout() , setInterval() , clearTimeout() , clearInterval()",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Operation in Objects - [ freeze , seal , destructuring , object methods , this keyword ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "15. Document Object Model Manipulation": [
+      {
+        title: "Introduction to DOM in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding DOM Structure and Tree - [ nodes , elements , document ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Fetching Elements in DOM - [ document.getElementById , document.getElementsByTagName , document.getElementsByClassName, document.querySelectorAll , document.querySelector ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "DOM Tree Traversal - [ parentNode , childNodes , firstChild , nextSibling ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Manipulating DOM Element in JavaScript - [ innerHTML , textContent , setAttribute , getAttribute , style property , classList ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Create and Removing DOM Elements - [ createElement() , appendChild() , insertBefore() , removeChild() ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "16. Event Handeling in JavaScript": [
+      {
+        title:
+          "Event Handling in JavaScript - [ addEventListner() , event bubbling , event.target ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Scroll Events, Mouse Events, Key Events and Strict Mode.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with Forms and Input Elements [ Accessing Form Data , Validating Forms , preventDefault() , onsubmit , onchange ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with Classes ****Adding, Removing , Toggling (classList methods)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Browser Events - [ DOMContentLoaded , load , resize , scroll ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "17. Using Browser Functionalities in JavaScript": [
+      {
+        title:
+          "Browser Object Model - [ window , navigator , history , location , document ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Window Object - [ window.location , window.history ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with Storage - [ Local Storage , Session Storage , Cookies ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Web APIs in DOM - [ Fetch API ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "18. Object Oriented Concepts in JavaScripts": [
+      {
+        title: "Introduction to OOPS in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding classes and objects in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Constructor and Prototypes - [ this keyword , call , apply , bind ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "More Topics in OOPS - [ class expression , hoisting , inheritence , getter & setter ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "19.AsynchronousProgramming JavaScript": [
+      {
+        title: "Introduction to Asynchrony in JavaScript.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Introduction to callbacks and Problems in Callbacks",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding promises - pending , resolved , rejected",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How to prevent callback hell using async & await .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "setInterval & setTimeout in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "20. Error Handling in JavaScript": [
+      {
+        title: "Introduction to Error Handling",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Common types of errors in JavaScript - [ Syntax errors , Runtime errors , Logical errors ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding the Error object - [ message , name , stack ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Handling exceptions using try-catch , try-catch-finally",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How to Throw Errors in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "How to create custom error in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Error Handling in Asynchronous Code",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "21. Kuch Baatein Advance JavaScript Pr ⚙️": [
+      {
+        title: "Throttling and Debouncing uses in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "JSON Handeling and JavaScript - [ JSON.parse() , JSON.stringify() ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "22. Git and Github": [
+      {
+        title: "What is Git and Github?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Concepts - Git commits , Understanding branches , Making branches , merging branches , conflict in branches , understanding workflow , pushing to GitHub .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "How to use GitHub with team members, forking, PR(pull requests) open source contribution, workflow with large teams.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Episode 3 - Commit": {
+    "1. Introduction of React 🪫": [
+      {
+        title: "What is React, and Why Use It?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "What are Components and types of Components - class component , function components",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Single Page Applications (SPAs), Single Page Applications Vs Multi-Page Applications.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Difference between Real DOM and Virtual DOM",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "NPM Basics | Installing Packages .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "How does updates work in React? and More ES6+ features like Import & Exports ,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Difference Between React and Other Frameworks ( Angular , Vue ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Some Basic Terminal Commands - pwd , ls , cd , clear",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up React Environment with nodejs .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Install React-Vite Boilerplate and Installing React Developer Tools.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding JSX or JavaScript XML and Its Importance - Fragments , Components Naming .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Creating and Understanding best practices for Components in React.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Styling in React 🐼": [
+      {
+        title: "Different Styling Approaches.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Importance of component-based styling. Inline Styles , CSS Modules",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Dynamic Styling Based on Props or State.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Responsive Design in React",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Media queries with CSS and styled-components.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. Animations 🔥": [
+      {
+        title:
+          "Animation and Transitions Using libraries like framer-motion or gsap for advanced animations.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. React Basics 🔦": [
+      {
+        title: "Create Components with functions .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Importing css file/stylesheet in react and Adding a CSS Modules Stylesheet - Styled Components , Dynamic styling with styled-components .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Creating a state and Manage State using setState - What is State? , setState , useState .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating Parameterised Function Components in React.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "React Props : Passing Data to Components.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Function chaining in React and Conditional Rendering - Rendering Array Data via map , Eliminating Array Data via filter .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. More on React 📽️": [
+      {
+        title: "Higher Order Components in React.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Reusing Components, Lists and Keys in React.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Sharing Data with child components : Props Drilling .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Rendering a List, Mapping and Component Lifecycle - Mounting , Updating , Unmounting .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding React Component Lifecycle .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Different Lifecycle Methods like componentDidMount .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Useful Hooks in React 🪝": [
+      {
+        title: "Understanding React Hooks",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Rules of hooks.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Commonly Used Hooks: useState useEffect useContext useRef useCallback useMemo",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useState",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useEffect",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useContext",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useRef",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useCallback",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useMemo",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Custom Hooks : When and How to Create Them",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding and Applying Context API .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "6. Navigation in the React withReact Router 🚧": [
+      {
+        title: "Introduction to React Router.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Setting Up and Configuring React Router setup of react-router-dom .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Navigating Between Pages with .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Passing Data while Navigating",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Dynamic Routing",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "URL Parameters and Query Strings",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Nested Routes",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Programmatic Navigation Using useNavigate .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Handling 404 Pages : fallback route for unmatched paths, Customizing the “Page Not Found” experience.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "7. State Management Using Redux. 🏪": [
+      {
+        title:
+          "Introduction to Redux , What is redux?, When and Why use redux?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understand Principles of Redux and Redux Flow.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding State Management in React using Redux.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Why Use State Management Libraries?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Why Redux need reducers to be pure functions .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Redux Basics: Actions , Reducers , Store , Currying , Middleware , Async Actions: Thunk",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Connecting Redux to React Components with react-redux .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Introduction to Redux Toolkit.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Alternatives: Recoil, Zustand, or MobX.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "8. Form controls in the React : Building Dynamic Forms 📋": [
+      {
+        title: "Introduction to Forms in React.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Building Basic Forms.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating form elements like input , textarea , select , etc.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Two way binding with react [ input , textarea ].",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Handling Form Events [ onChange , onSubmit , event.preventDefault() ].",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Validation in React Forms : client-side form validation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Integrating Forms with APIs.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Sending form data to a backend using fetch or axios .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Handling loading states and success/error feedback.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "9. Performance Optimization 🏎️": [
+      {
+        title: "Code Splitting with React Lazy and Suspense",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Avoids redundant calculations by caching Using Memoization Techniques: React.memo useMemo useCallback",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "React.memo",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useMemo",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "useCallback",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Avoiding Re-Renders using useState ,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Optimizing Component Structure",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Performance Profiling Tools using Chrome DevTools , Lighthouse , Web Vitals ,Largest Contentful Paint (LCP), First Input Delay (FID)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "10. Deploying React projects 🚨": [
+      {
+        title: "Preparing a React App for Production .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Building React Applications.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Environment Variables in React.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Deployment Platforms: Netlify , Vercel , GitHub Pages ,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "11. Real-World Project with React 👷🏻‍♂️": [
+      {
+        title: "Building a Complete React Project",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Combining All Concepts ( Routing , State Management , API , etc.)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Styling and Responsiveness ,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Optimizing and Deploying the Project.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "12. Basic SEO Principles": [
+      {
+        title: "On-Page Optimization in SEO.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Guide to SEO Meta Tags.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Image SEO Best Practices.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Internal Link Building SEO.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Create An SEO Sitemap For a Website.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "13. Three.js and React Three-Fiber": [
+      {
+        title: "Understanding what is Scene .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using 3d models for animation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Controlling view with Orbit controls.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Applying Lights inside the scene.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding different types of Cameras .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Animating the mesh with GSAP or Framer motion .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Different types Geometries .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using different Materials for animation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Episode 4 - Push": {
+    "1. Starting with Node.js - The Beginning 🏁": [
+      {
+        title:
+          "Introduction to Node.js and Getting Our Tools - Node.js LTS , Postman , Editor",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting up the Tools for our Environments",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Running script with nodejs - “Namaste Duniya”",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "NPM Basics | Installing Packages .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating and Managing package.json .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Creating Server - Writing Our First Server 📱": [
+      {
+        title: "What is Server and how it works?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up Our First Node.js Server using HTTP",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Serving A Response to the Browser and Understanding Responses.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Routing in HTTP Servers.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Status Code - 1XX , 2XX , 3XX , 404 - Not Found , 200 - success , 500 - Internal Server error , 422 - Invalid Input , 403 - the client does not have access rights to the content , etc.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Installing Nodemon for Automatic Server Restarts.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. Some talk on Different Architectures 🏯": [
+      {
+        title: "Different Architectures in backend like MVC and SOA .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding MVC Architecture Model , View , Control .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "MVC in the context of REST APIs .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. Web Framework - Express.js 🚀": [
+      {
+        title: "what is Express.js and why to use it.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up Express Server .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Returning Response from the server.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using Query Parameters and URL Parameters.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "HTTP Request - Some Important part of requests , Different Types of Requests - Get , Post , PUT , Patch , Delete .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Serving Static Files with express.static() .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Template Engine - EJS 🚜": [
+      {
+        title:
+          "What is Template Engine and What is the use of Template Engine.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Template Engine Option - Handlebars , EJS , Pug , jade but We’ll use EJS .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up Template Engine - Installed EJS template engine .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Rendering Our First Page using EJS and Some important syntax - <%= %> , <% %> , <%- %> .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Loop statement, Conditional statement and Locals in views - EJS .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Accessing the Static Files Inside EJS file.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "6. Middleware in Express.js (one of my favorite) 🐵": [
+      {
+        title: "Understanding the middleware in express.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Implementing middleware with express.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Different types of middleware : builtIn middleware , third-party middleware , custom middleware .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Different level of middleware : Application-Level , Router-Level .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Handeling Errors and Security with middleware : Error-Handling , Helmet , CORS .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "7. Handling file with Express 📁": [
+      {
+        title: "Understand Multer and its usecase?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Uploading file with multer.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Memory and Disk Storage.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Accessing uploaded file req.file .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with express.static .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Using Cloudinary or Imagekit for Real-time media processing APIs and Digital Asset Management.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "8. Beginning of Database Basics ( Bohot km theory ) 🗄️": [
+      {
+        title: "Relational and non-relational Databases : mongodb & mysql .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is MongoDB ? Why Use It?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Installing Compass and Understand how to access DB using terminal.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up MongoDB Locally and in the Cloud .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Datatypes Collections and Documents .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Connecting MongoDB to Node.js with Mongoose .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Database Relations - One to One , One to Many OR Many to One , Many to Many , Polymorphic .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Handling Relationships with Mongoose ( populate ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "9. API Development(REST) ⛓": [
+      {
+        title: "What is a REST API?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Versioning in RESTful APIs - /v1/",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Using Postman for API Testing and developing - Send Requests , Save Collections , Write Tests .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding and Working With Status code , 2xx (Success) , 4xx (Client Errors) , 5xx (Server Errors) .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Validating API Inputs Using libraries like express-validator or Sanitization .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Security Handling - Rate Limiting with express-rate-limit , XSS Attack , CSRF Attack , DOS Attack .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "10. Database Optimization for Fast response 🧘🏻": [
+      {
+        title:
+          "Indexing for Performance with MongoDB :- Single-Field Indexes , Compound Indexes , Text Indexes , Wildcard Indexes .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Best practice with Indexing explain() .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning MongoDB Aggregation .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Comparison Operators - [ $eq , $ne , $lt , $gt , $lte , $gte , $in , $nin ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Logical Operators - [ $not , $and , $or and $nor ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Array[ $pop , $pull , $push and $addToSet ]",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Stages in Aggregation pipeline :- $match , $group , $project , $sort , $lookup .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating Database on Local and Atlas",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating parallel pipeline with $facet .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning MongoDB Operators .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Different types of Operators :- Comparison , Regex , Update , Aggregation .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "11. Logging Backend : Express.js": [
+      {
+        title: "Why is Logging Important?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up Logging with Libraries winstone , Pino , Morgan .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Different mode of morgan , dev , short , tiny .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Error Handling and Logging.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "12. Production Wala Project Structure and Configuration 🗼": [
+      {
+        title: "Understanding the Basic Structure of application.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning File Naming Conventions, Git Configuration,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understanding Important Folders :- src/ , config/ , routes/ , utils/ .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Role of package.json , ENV and .gitignore .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Production Environment - PM2 , Error & Response Handling Configuration , CORS Configuration , async-handler.js .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using and Configuring ESLint and Prettier for code formatting.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Testing APIs using Postman .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "13. Authentication and Authorization 🪪": [
+      {
+        title: "Difference Between Authentication & Authorization",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Working with Passwords and Authentication - Cookie Authentication , OAuth Authentication",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Session and Token Authentication.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Implementing JWT Authentication :- jsonwebtoken JWT_SECRET .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Securing user password with bcrypt hashing salt .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Role-Based Access Control ( RBAC ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Authenticating user with Express middleware .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Passport.js and its usecase?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Glancing through and Installing Passport.js",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Setting up Passport.js - passport-local , local-strategy , google-OAuth",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "express-sessions and using passport for authentication.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "14. Working Real time communication : WebSockets and socket.io 💬": [
+      {
+        title: "Understanding WebSockets protocol for realtime applications?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning handshake , Persistent connection , Bidirectional communication , HTTP polling .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding difference between WebSocket Vs Socket.io.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with socket.io for realtime applications.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding usage of Rooms in Socket.io.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Middleware in Socket.io.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "15. Working With Caching - Local and Redis 🍄": [
+      {
+        title: "What is Caching and How to cache data locally?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is Redis ?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Why Use Redis for Caching ?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Implementing Redis Caching in Node.js .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Advanced Redis Features TTL , Complex Data Structures , Pub/Sub .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "16. Error handling in express 🛑": [
+      {
+        title: "Basic Error Handling in Express next() .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Catching Specific Errors try & catch .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating Util Class for Error Handling.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "17. Testing Tools 🛠️": [
+      {
+        title: "Understanding Unit-Testing With Jest.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Cross Browser Testing and Why Is It Performed?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What Is Web Testing? and How to Test a Website.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Episode 5 - Merge": {
+    "1. Generative AI and Applications 🤖": [
+      {
+        title:
+          "Overview of Generative AI : Understanding its core concepts and potential.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Building an Authentication System with Generative AI .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Exploring Social Media Automation and Content Generation Projects.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Introduction to LangChain : Features and Practical Uses.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Developing Real-World Applications: AI-powered Resume Reviewer and Virtual Interview Assistant using tools like ChatGPT or Gemini .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Agentic-ai application",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with multi agent system",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "MCP server",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Progressive Web App (PWA) Development. 🛜": [
+      {
+        title: "Overview of Progressive Web Apps and their benefits.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Service Workers and their role in PWA.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Lifecycle of a Service Worker ( Install , Activate , Fetch ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding the Manifest File.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating a Manifest.json File.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Key Properties (name, short_name, icons, start_url, theme_color, background_color)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Browser DevTools for PWA Debugging .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Implementing Lazy Loading and Code Splitting for improved performance.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Exploring various testing techniques for PWAs.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Optimizing performance with advanced caching strategies.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. DevOps Fundamentals - Docker 🐳": [
+      {
+        title:
+          "Understanding DevOps and its importance in modern software development.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning about Continuous Integration and Continuous Deployment (CI/CD) pipelines .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Introduction to Docker and the basics of containerization .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. Building Microservices with Node.js 🏘️": [
+      {
+        title: "What are Microservices ? Why Use Them?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Monolithic vs Microservices Architecture.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Challenges of Microservices.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating a Node.js Microservice.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Designing a Microservice Architecture for a sample application.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Role of package.json in Each Microservice.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "What is Inter-Service Communication?",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Communication Patterns ( Synchronous vs Asynchronous ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Role of an API Gateway in Microservices.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting Up an API Gateway with Express.js .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Microservices and Proxying Requests .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Rate Limiting and Authentication in API Gateway.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "REST APIs for Communication",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Message Brokers (e.g., Redis Pub/Sub ).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Event-Driven Communication with Redis or RabbitMQ .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "OverView of Docker and Kubernetes .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Using Docker for microservice.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Nextjs": [
+      {
+        title: "Next.js Fundamentals",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "File-based routing",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Static assets & Image optimization",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Dynamic routes ([id].js)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Rendering & Data Fetching",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Styling in Next.js",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Deployment",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "6. Web3 Basics. ₿": [
+      {
+        title: "Understanding the concept and potential of Web3 .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Fundamentals of Blockchain technology and how it powers Web3.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Exploring Decentralized Applications ( DApps ) and their use cases.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Introduction to Smart Contracts : How they work and their applications.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Overview of Cryptocurrencies and their role in the Web3 ecosystem.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "7. Deployment ✈️": [
+      {
+        title: "We will be deploying the project on the cloud.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Easy and Smart - We’ll DigitalOcean App Platform (in-built load-balancer, scalable, containers) for Deploying our app.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Service providers give us a machine-like cloud [ AWS, GCP, Heroku, Azure ] but we’ll use AWS .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Launching Our First Machine using EC2 .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Setting up the Machine - SSH .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Pulling the code and clone the repository of the code to the main server.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Configuring the NGINX .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Masking the Domain On Our IP (We are now going to buy a new domain and Link it with cloud AWS).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "DSA with JavaScript": {
+    "1. Conditional Statements": [
+      {
+        title: "Understanding Conditional Statements",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Types of Conditional Statements if , if-else , if-else if , switch",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Making decisions in a program based on inputs or variables.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Validating user data or input forms.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating interactive menus or options in applications.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Loops, Nested Loops, Pattern Programming": [
+      {
+        title: "Undertsanding the use of Loops.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "for loop.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "while loop.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "do-while loop.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding the Use of Nested Loops.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning Pattern Programming - Pyramid patterns , right-angled triangles , and inverted triangles .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding Control Flow statement break and continue",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning how to set correct conditions to avoid getting stuck in infinite loops.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understand how to optimize nested loops for better performance and reduced time complexity.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. Array": [
+      {
+        title: "Understanding the use of Arrays.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Basic Manipulations - insertion , deletion , updation",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Accessing Elements in Arrays .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Traversing Elements in Arrays .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Array Algorithms - Two Pointer Algorithm , Rotation Algorithms , Kadane’s Algorithm , etc",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. Object-Oriented Programming (OOP) in JavaScript": [
+      {
+        title: "Understanding Object-Oriented Programming",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learn how to define a class for creating objects.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understand how to instantiate objects from a class",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learn how the constructor() function initializes an object when it’s created.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understand how this refers to the current object in the context.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Use this to access properties and methods within the same object.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Strings in JavaScript": [
+      {
+        title: "Understanding Strings in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning String Manipulation Methods - concat() , slice() , substring() , replace() , replaceAll()",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning String Search and Check Operations - indexOf() , lastIndexOf() , includes() , startsWith() , endsWith()",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learning String Transformations - toUpperCase() , toLowerCase() , trim()",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning String Splitting and Joining: - split() , join()",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Embed variables and expressions in strings using backticks ( )`",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Escape Characters - \\n , \\t , \\’",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Algorithms on Strings - Reverse a String , Check for Palindrome , Find Longest Common Prefix , Character Frequency Count , Anagram Check",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "6. Time and Space Complexity": [
+      {
+        title: "Understanding Time Complexity",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding the Big-O Notation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Constant Time – O(1)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Logarithmic Time – O(log n)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Linear Time – O(n)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Linearithmic Time – O(n log n)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Quadratic Time – O(n²)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Exponential Time – O(2ⁿ)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Factorial Time – O(n!)",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Key Factors That Affect Complexity - Algorithm Design , Data Structure Choice , Problem Constraints",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Tips to Reduce Time Complexity - Avoid Nested Loops , Efficient Data Structures , Optimize Recursion , Divide and Conquer",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Understanding what is Recursion and its use case",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "7. Math Problems and Algorithms": [
+      {
+        title: "Understanding Mathematical Operations and Their Applications",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Mathematical operations like (pow) (sqrt) and greatest common divisor (HCF) are essential in various problem-solving scenarios.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "8. Advanced Problems on Array": [
+      {
+        title: "Understanding Advanced Array Concepts",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning two-pointer approach ,",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning prefix sums",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solving complex problems efficiently.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Multi-Dimensional Arrays in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Multi-Dimensional Arrays",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Key Operations on Multi-Dimensional Arrays",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Algorithms Using Multi-Dimensional Arrays",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Multi-Dimensional Arrays in Real-World Scenarios",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "9. Sorting Algorithms ,Time complexity and their application": [
+      {
+        title: "Learning Selection Sort",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Insertion Sort",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Merge Sort",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Quick Sort",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Cyclic Sort",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "10. Binary Search and Its Algorithms": [
+      {
+        title: "Binary Search on Sorted Arrays",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Variations of Binary Search",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Binary Search on Infinite Arrays",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Binary Search in Rotated Sorted Array",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Binary Search on 2D Matrix",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Real-World Use Cases of Binary Search",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "11. Hashing (Set and Map) in JavaScript": [
+      {
+        title: "Understanding Hashing in JavaScript - s**et , map *",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Set in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Methods in Set - add(value) , delete(value) , has(value) , clear() , size",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Map in JavaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Methods in Map - set(key, value) , get(key) , delete(key) , has(key) , clear() , size",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learning Algorithms Using Set & map",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "12. Linked List in JavaScript": [
+      {
+        title: "Understanding Linked List - Data , Pointer",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Singly Linked List.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Doubly Linked List.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Circular Linked List.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Creating a Node in Linked List:",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Building a Linked List:",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Traversing a Linked List:",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Operations on Linked Lists - Insertion , Deletion , Searching",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Algorithms Using Linked Lists",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "13. Queue in JavaScript": [
+      {
+        title: "Implementation of Queue by Linked List and Array",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Queues - Basic Queue , Circular Queue",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Operations on Queues - Enqueue , Dequeue , Peek , IsEmpty , Size",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Algorithms Using Queues",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Applications of Queues",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "14. Stack in JavaScript": [
+      {
+        title: "Understanding Stacks in javaScript",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Implementation of Stack by Linked List and Array",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Working with Stacks",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Operations on Stacks - Push , Pop , Peek , IsEmpty , Size",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Algorithms Using Stacks",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Applications of Stacks",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "15. Advanced Problems on Recursion and Backtracking": [
+      {
+        title: "Understanding Advanced Recursion and Backtracking",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Key Problems and Algorithms like N-Queens Problem , Sudoku Solver , Subset Sum , Word Search",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Optimizing Recursive Solutions with Backtracking",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Challenges with Recursion and Backtracking",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Applications of Recursion and Backtracking",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "16. Tree": [
+      {
+        title: "Understanding Binary Trees",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Types of Binary Trees - Full Binary Tree , Complete Binary Tree , Perfect Binary Tree",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Key Terminology in Binary Trees - Node , Root , Leaf , Height of a Tree , Depth of a Node , Level of a Node",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Binary Tree Operations - Insertion , Deletion , Traversal , Searching",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Binary Tree Algorithms - Height , Diameter , LCA , Symmetry Check",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Applications of Binary Trees",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "17. Binary Search Tree (BST):": [
+      {
+        title: "Understanding Binary Search Tree",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Properties of Binary Search Tree",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "BST Operations -",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Binary Search Tree Algorithms",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Applications of Binary Search Tree",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Advantages of Binary Search Tree",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Aptitude and Reasoning": {
+    "Classic Chapters › 1. Percentage": [
+      {
+        title: "Learn tips and tricks for percentages.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve basic, medium, and advanced questions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to master percentages.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Classic Chapters › 2. Profit and Loss": [
+      {
+        title: "Concepts of Profit and loss",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Relationship between cost price, selling price, and mark-up price.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve practical scenarios involving discounts, successive transactions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Sharpen your skills with MCQs to prepare for competitive exams.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Classic Chapters › 3. Simple Interest": [
+      {
+        title: "Master the formula for calculating simple interest.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Differentiate between principal, interest rate, and time period.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve case-based problems related to borrowing and lending.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs for thorough preparation",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Classic Chapters › 4. Compound Interest": [
+      {
+        title: "Understand the growth of investments and savings.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Differentiate between simple interest and compound interest.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems with annual, semi-annual, and quarterly compounding.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs for preparation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Classic Chapters › 5. Ratio and Proportion": [
+      {
+        title: "Grasp the basics of ratios.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve problems on proportional relationships.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Analyze scenarios involving scaling, sharing, and dividing quantities.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs for preparation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Number Related Topics › 1. Number System": [
+      {
+        title:
+          "Understand the classification of natural numbers, whole numbers, integers, rational numbers, and irrational numbers.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Master divisibility rules, factors, multiples, and place value.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Practice MCQs to improve understanding and problem-solving speed.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Number Related Topics › 2. HCF and LCM": [
+      {
+        title: "Learn techniques to find HCF and LCM.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Understand their applications in scheduling and resource sharing.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve word problems involving time, distance, and recurring patterns.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs for competitive exam preparation.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Number Related Topics › 3. Average": [
+      {
+        title: "Understand averages and their significance.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on weighted averages, missing numbers, and group data.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Apply averages in performance analysis and time management.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to enhance speed and accuracy.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Speed Work and Time Related Topics › 1. Work and Time": [
+      {
+        title:
+          "Understand the relationship between work, time, and efficiency.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems involving individuals or groups working together.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Analyze scenarios like alternating work schedules and work completion rates.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs problems.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Speed Work and Time Related Topics › 2. Pipes and Cisterns": [
+      {
+        title: "Understand the analogy between pipes and work-time.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems with multiple pipes working together or alternately.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Address challenges like leaks or partial closure.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to improve your skills.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Speed Work and Time Related Topics › 3. Speed, Distance, and Time": [
+      {
+        title: "Master the formula: Speed = Distance / Time.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on relative speed, average speed, and varying speeds.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs questions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Speed Work and Time Related Topics › 4. Problems on Trains": [
+      {
+        title:
+          "Calculate the time for a train to cross poles, platforms, or other trains.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Apply relative speed in train-related problems.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs questions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Speed Work and Time Related Topics › 5. Boats and Streams": [
+      {
+        title:
+          "Understand the impact of stream direction (upstream, downstream) on speed.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on relative speed and effective speed in flowing water.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Analyze scenarios like rowing competitions or river crossings.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to test your understanding.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Probability and Combinations › 1. Permutations and Combinations": [
+      {
+        title:
+          "Understand the difference between permutations (arrangement) and combinations (selection).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Learn key formulas and techniques for calculating arrangements and selections.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems with factorials, repetition, and circular permutations.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to improve problem-solving skills.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Probability and Combinations › 2. Probability": [
+      {
+        title: "Understand probability as a measure of likelihood.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learn formulas for calculating probability in events.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to improve proficiency.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Progressions › 1. Arithmetic Progression (AP)": [
+      {
+        title: "Understand Arithmetic Progression with a constant difference.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Derive formulas for general term (an) and sum of n terms (Sn).",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Apply AP in real-life problem solving.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on missing terms, specific terms, and sum of series.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs and concept-based questions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Progressions › 2. Geometric Progression (GP)": [
+      {
+        title: "Understand Geometric Progression with a constant ratio.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on missing terms, specific terms, and sum of series.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Miscellaneous Topics › 1. Calendar": [
+      {
+        title: "Understand days, months, leap years, and century years.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Learn Odd Days concept and calculation for day of the week.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Use key formulas to find the day for any given date.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on repeating calendar years and calendar-based tricks.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs and scenario-based questions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "Miscellaneous Topics › 2. Clocks": [
+      {
+        title:
+          "Understand clock structure, minute hand, hour hand, and their movements.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve angle problems between clock hands.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Solve problems on overlaps, right angles, and opposite directions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice clock puzzles and time calculation problems.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs and puzzle-based questions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Logical Reasoning": {
+    "1. Direction Sense": [
+      {
+        title:
+          "Understand directions (North, South, East, West) and final direction after movements.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Track movements and turns (right/left) to find final position.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve problems with multiple directions and movement patterns.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs for speed and accuracy.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Blood Relation": [
+      {
+        title:
+          "Identify relationships like father , mother , brother , sister .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Analyze clues to trace family connections .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve problems with family trees and complex relationships.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to improve deduction skills.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. Syllogism": [
+      {
+        title: "Understand logical reasoning and conclusion deduction.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Break down premises to check conclusions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Work with All , Some , No premises.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve MCQs to identify valid/invalid conclusions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "4. Arrangements": [
+      {
+        title: "Learn to arrange people or objects based on conditions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Apply constraints like sitting together or specific positions.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve problems with multiple arrangement conditions .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to strengthen understanding.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "5. Series": [
+      {
+        title: "Understand number sequences and identify next terms.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title:
+          "Recognize patterns like arithmetic progressions , geometric progressions .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Solve problems with varying series types and difficulty.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+      {
+        title: "Practice MCQs to improve pattern recognition.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+  "Verbal Reasoning": {
+    "1. Sentence Ordering": [
+      {
+        title: "Practice MCQs to improve sentence ordering skills.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "2. Error Identification": [
+      {
+        title: "Practice MCQs to sharpen error spotting and correction.",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+    "3. Sentence Improvement": [
+      {
+        title: "Practice MCQs to improve sentence quality .",
+        done: false,
+        deadline: "",
+        completedOn: "",
+      },
+    ],
+  },
+};
+
+/* ======= utils ======= */
+const KEY = "wd_v5_"; // storage namespace
 const load = (k, f) => {
   try {
-    const x = localStorage.getItem(k);
+    const x = localStorage.getItem(KEY + k);
     return x ? JSON.parse(x) : f;
   } catch {
     return f;
@@ -12,370 +4160,195 @@ const load = (k, f) => {
 };
 const save = (k, v) => {
   try {
-    localStorage.setItem(k, JSON.stringify(v));
+    localStorage.setItem(KEY + k, JSON.stringify(v));
   } catch {}
 };
-
-/* =========== defaults (kept) + my extra section =========== */
-const defaults = {
-  "🌐 Episode 1 — Code": [
-    {
-      title: "How the Internet Works",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "DNS / IP / Client-Server",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "🎭 Episode 2 — Stage (HTML/CSS/JS Core)": [
-    {
-      title: "HTML structure + semantics",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "CSS layout: Flex + Grid",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "JS fundamentals + DOM + Fetch",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "⚛️ Episode 3 — Commit (React)": [
-    {
-      title: "Components, props, state, hooks",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "Routing + forms + data fetching",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "🧩 Episode 4 — Push (Node · Express · DB)": [
-    {
-      title: "Express routes + middleware",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "MongoDB + Mongoose basics",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "🚀 Episode 5 — Merge (GenAI · PWA · Microservices · Next.js · Deploy)": [
-    {
-      title: "PWA + Service Worker",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "Next.js routing + deploy",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "🧠 DSA with JavaScript": [
-    {
-      title: "Arrays + Strings patterns",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "Sorting + Two pointers + Hashing",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "📊 Aptitude & Reasoning (AR)": [
-    {
-      title: "Percentages, Profit & Loss",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "🧭 Logical Reasoning (LR)": [
-    {
-      title: "Direction sense + Syllogism",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "📚 Verbal Reasoning (VR)": [
-    {
-      title: "Sentence ordering + Errors",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-  "✨ Coach’s Picks — High-Impact Practice": [
-    {
-      title: "Build a Pixel-perfect Landing Page from a Dribbble shot",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "React + API mini app: Search + Pagination + Debounce",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "Auth flow (JWT) with Node/Express + Mongo: Login/Signup/Protect",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title: "PWA-ify your dashboard (offline + installable)",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-    {
-      title:
-        "Deploy full-stack demo (API + Client) and set up CI on GitHub Actions",
-      done: false,
-      deadline: "",
-      completedOn: "",
-    },
-  ],
-};
-
-/* =========== constants =========== */
-const HTML_PATH = "/syllabus.html"; // Notion export here
 const TODAY = () => new Date().toISOString().slice(0, 10);
-const VERSION = 2;
+const deepClone = (x) => JSON.parse(JSON.stringify(x));
 
-export default function Syllabus() {
-  const [mode, setMode] = useState(() => load("wd_mode", "mirror")); // mirror | tracker
-  const [query, setQuery] = useState("");
+function sectionPercent(subMap) {
+  let total = 0,
+    done = 0;
+  for (const k of Object.keys(subMap || {})) {
+    const arr = subMap[k] || [];
+    total += arr.length;
+    done += arr.filter((x) => x.done).length;
+  }
+  return total ? Math.round((100 * done) / total) : 0;
+}
 
-  /* =========== Mirror Mode state =========== */
-  const [html, setHtml] = useState("");
-  const [htmlLoaded, setHtmlLoaded] = useState(false);
-  const [mirrorProgress, setMirrorProgress] = useState({
-    done: 0,
-    total: 0,
-    percent: 0,
-  });
-
-  /* =========== Tracker Mode state =========== */
-  const [syllabus, setSyllabus] = useState(() => load("wd_syllabus", defaults));
-  const [builtFromHTML, setBuiltFromHTML] = useState(() =>
-    load("wd_tracker_built", false)
-  );
-  // default collapsed: if nothing saved, we start with ALL collapsed
-  const [collapsed, setCollapsed] = useState(() => {
-    const saved = load("wd_collapsed", null);
-    if (saved) return saved;
-    const init = {};
-    for (const k of Object.keys(syllabus)) init[k] = true;
-    return init;
-  });
-  const [editing, setEditing] = useState(null);
-
-  /* =========== persistence =========== */
-  useEffect(() => save("wd_mode", mode), [mode]);
-  useEffect(() => save("wd_syllabus", syllabus), [syllabus]);
-  useEffect(() => save("wd_collapsed", collapsed), [collapsed]);
-  useEffect(() => save("wd_tracker_built", builtFromHTML), [builtFromHTML]);
-
-  /* =========== Mirror: fetch HTML =========== */
-  useEffect(() => {
-    if (mode !== "mirror") return;
-    fetch(HTML_PATH)
-      .then((r) => (r.ok ? r.text() : Promise.reject()))
-      .then((t) => {
-        setHtml(t);
-        setHtmlLoaded(true);
-      })
-      .catch(() => {
-        setHtml(
-          `<div class="p-4 text-sm">⚠️ Put your Notion export at <code>public/syllabus.html</code>.</div>`
-        );
-        setHtmlLoaded(true);
-      });
-  }, [mode]);
-
-  /* =========== Mirror: enhance with checkboxes + dark mode styles =========== */
-  useEffect(() => {
-    if (mode !== "mirror" || !htmlLoaded) return;
-    const root = document.getElementById("mirror-root");
-    if (!root) return;
-
-    // inject dark-mode aware styles (mirror stays full width)
-    const styleId = "mirror-dark-style";
-    if (!document.getElementById(styleId)) {
-      const st = document.createElement("style");
-      st.id = styleId;
-      st.textContent = `
-        .mirror article { line-height:1.6; width:100%; padding:1rem; }
-        .dark .mirror article { color: rgba(229,231,235,0.95); }
-        .mirror article { color: rgb(55,53,47); }
-        .mirror a { text-decoration: underline; }
-        .dark .mirror a { color: #9ecbff; }
-        .mirror code { background:#f6f6f6; padding:.1rem .3rem; border-radius:4px }
-        .dark .mirror code { background:#1f2937; color:#e5e7eb }
-        .mirror ul{ padding-left:1.3rem; }
-        .mirror li{ margin: .25rem 0; }
-      `;
-      document.head.appendChild(st);
+/* ======= Grouping helper: split "Parent › Child" ======= */
+function groupByParent(subMap) {
+  const groups = {}; // parent -> { rootItems:[], children: { childName: items[] } }
+  for (const key of Object.keys(subMap)) {
+    if (key.includes(" › ")) {
+      const [parent, child] = key.split(" › ");
+      if (!groups[parent]) groups[parent] = { rootItems: [], children: {} };
+      groups[parent].children[child] = subMap[key];
+    } else {
+      if (!groups[key]) groups[key] = { rootItems: [], children: {} };
+      groups[key].rootItems = subMap[key];
     }
+  }
+  return groups;
+}
 
-    // enhance list items with checkboxes, keep progress
-    const t = setTimeout(() => {
-      const items = Array.from(root.querySelectorAll("li"));
-      items.forEach((li, idx) => {
-        if (li.dataset.enhanced) return;
-        li.dataset.enhanced = "1";
-        const key = `wd_check_${hash(li.textContent || "")}_${idx}`;
-        const chk = document.createElement("input");
-        chk.type = "checkbox";
-        chk.style.marginRight = "8px";
-        chk.checked = !!load(key, false);
-        chk.addEventListener("change", () => {
-          save(key, chk.checked);
-          compute();
-        });
-        li.prepend(chk);
-      });
-      compute();
-      function compute() {
-        const all = root.querySelectorAll('li input[type="checkbox"]');
-        const total = all.length;
-        const done = [...all].filter((x) => x.checked).length;
-        setMirrorProgress({
-          done,
-          total,
-          percent: total ? Math.round((100 * done) / total) : 0,
-        });
-      }
-    }, 10);
-    return () => clearTimeout(t);
-  }, [mode, htmlLoaded]);
+export default function App() {
+  const headerRef = useRef(null);
+  const [tree, setTree] = useState(() => load("tree", TREE));
+  const [query, setQuery] = useState("");
+  const [showTop, setShowTop] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-  /* =========== Tracker: auto-build from Notion once =========== */
+  // Collapsibles: episode / parent-sub / child-sub
+  const [epCollapsed, setEpCollapsed] = useState(() =>
+    load("ep_collapsed", {})
+  );
+  const [pCollapsed, setPCollapsed] = useState(() => load("p_collapsed", {}));
+  const [cCollapsed, setCCollapsed] = useState(() => load("c_collapsed", {}));
+
+  useEffect(() => save("tree", tree), [tree]);
+  useEffect(() => save("ep_collapsed", epCollapsed), [epCollapsed]);
+  useEffect(() => save("p_collapsed", pCollapsed), [pCollapsed]);
+  useEffect(() => save("c_collapsed", cCollapsed), [cCollapsed]);
+
+  // ensure collapse keys exist (run once)
   useEffect(() => {
-    if (mode !== "tracker" || builtFromHTML) return;
-    fetch(HTML_PATH)
-      .then((r) => (r.ok ? r.text() : Promise.reject()))
-      .then((html) => {
-        const parsed = buildFromHTML(html);
-        if (parsed && Object.keys(parsed).length) {
-          setSyllabus(mergeKeepCompleted(defaults, parsed)); // keep defaults + add parsed
-          setBuiltFromHTML(true);
+    const ep = { ...epCollapsed };
+    const p = { ...pCollapsed };
+    const c = { ...cCollapsed };
+    for (const e of Object.keys(tree)) {
+      if (!(e in ep)) ep[e] = true;
+      const groups = groupByParent(tree[e]);
+      for (const parent of Object.keys(groups)) {
+        const pKey = `${e}:::${parent}`;
+        if (!(pKey in p)) p[pKey] = true;
+        for (const child of Object.keys(groups[parent].children)) {
+          const cKey = `${e}:::${parent}:::${child}`;
+          if (!(cKey in c)) c[cKey] = true;
         }
-      })
-      .catch(() => {});
-  }, [mode, builtFromHTML]);
+      }
+    }
+    setEpCollapsed(ep);
+    setPCollapsed(p);
+    setCCollapsed(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  /* =========== tracker helpers =========== */
-  const sectionPercent = (list) =>
-    Math.round((list.filter((x) => x.done).length / (list.length || 1)) * 100);
-  const daysLeft = (ds) => {
-    if (!ds) return null;
-    const d = new Date(ds);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    return Math.ceil((d - now) / 86400000);
-  };
-  const isOverdue = (it) =>
-    it.deadline && daysLeft(it.deadline) < 0 && !it.done;
-  const deltaToDeadline = (it) => {
-    if (!it.deadline || !it.completedOn) return null;
-    const diff = Math.ceil(
-      (new Date(it.deadline) - new Date(it.completedOn)) / 86400000
-    );
-    return diff; // positive means early, negative means late
-  };
-  const highlight = (text, q) => {
-    if (!q) return text;
-    const i = text.toLowerCase().indexOf(q.toLowerCase());
-    if (i === -1) return text;
-    return (
-      <>
-        {text.slice(0, i)}
-        <mark className="bg-yellow-200 rounded px-0.5">
-          {text.slice(i, i + q.length)}
-        </mark>
-        {text.slice(i + q.length)}
-      </>
-    );
-  };
+  // Show "back to top" button on scroll
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  const toggleItem = (section, idx) => {
-    const next = structuredClone(syllabus);
-    const it = next[section][idx];
+  const filteredTree = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return tree;
+    const out = {};
+    for (const ep of Object.keys(tree)) {
+      const subMap = tree[ep];
+      const subOut = {};
+      for (const sub of Object.keys(subMap)) {
+        const items = subMap[sub].filter((it) =>
+          it.title.toLowerCase().includes(q)
+        );
+        if (items.length) subOut[sub] = items;
+      }
+      if (Object.keys(subOut).length) out[ep] = subOut;
+    }
+    return out;
+  }, [tree, query]);
+
+  const countAll = (t) => {
+    let total = 0,
+      done = 0;
+    for (const ep of Object.keys(t || {})) {
+      for (const sub of Object.keys(t[ep] || {})) {
+        const arr = t[ep][sub] || [];
+        total += arr.length;
+        done += arr.filter((x) => x.done).length;
+      }
+    }
+    const percent = total ? Math.round((100 * done) / total) : 0;
+    return { total, done, percent };
+  };
+  const big = countAll(tree);
+
+  const toggleItem = (ep, sub, idx) => {
+    const next = deepClone(tree);
+    const it = next[ep][sub][idx];
     it.done = !it.done;
     it.completedOn = it.done ? TODAY() : "";
-    setSyllabus(next);
+    setTree(next);
+  };
+  const setDeadline = (ep, sub, idx, dl) => {
+    const next = deepClone(tree);
+    next[ep][sub][idx].deadline = dl;
+    setTree(next);
+  };
+  const addItem = (ep, sub, title, dl = "") => {
+    const next = deepClone(tree);
+    if (!next[ep]) next[ep] = {};
+    if (!next[ep][sub]) next[ep][sub] = [];
+    next[ep][sub].push({ title, done: false, deadline: dl, completedOn: "" });
+    setTree(next);
   };
 
-  const clickRowToggle = (e, section, idx) => {
-    // avoid toggling when interacting with inputs/links
-    const tag = e.target.tagName.toLowerCase();
-    if (["input", "button", "a", "label", "svg", "path"].includes(tag)) return;
-    toggleItem(section, idx);
+  const collapseAll = () => {
+    const ep = {},
+      p = {},
+      c = {};
+    for (const e of Object.keys(tree)) {
+      ep[e] = true;
+      const groups = groupByParent(tree[e]);
+      for (const parent of Object.keys(groups)) {
+        p[`${e}:::${parent}`] = true;
+        for (const child of Object.keys(groups[parent].children)) {
+          c[`${e}:::${parent}:::${child}`] = true;
+        }
+      }
+    }
+    setEpCollapsed(ep);
+    setPCollapsed(p);
+    setCCollapsed(c);
+  };
+  const expandAll = () => {
+    const ep = {},
+      p = {},
+      c = {};
+    for (const e of Object.keys(tree)) {
+      ep[e] = false;
+      const groups = groupByParent(tree[e]);
+      for (const parent of Object.keys(groups)) {
+        p[`${e}:::${parent}`] = false;
+        for (const child of Object.keys(groups[parent].children)) {
+          c[`${e}:::${parent}:::${child}`] = false;
+        }
+      }
+    }
+    setEpCollapsed(ep);
+    setPCollapsed(p);
+    setCCollapsed(c);
   };
 
-  const toggleSection = (section) => {
-    const next = structuredClone(syllabus);
-    const allDone = next[section].every((i) => i.done);
-    next[section] = next[section].map((i) => ({
-      ...i,
-      done: !allDone,
-      completedOn: !allDone ? TODAY() : "",
-    }));
-    setSyllabus(next);
-  };
-
-  const addItem = (section, title, dl = "") => {
-    const next = structuredClone(syllabus);
-    if (!next[section]) next[section] = [];
-    next[section].push({ title, done: false, deadline: dl, completedOn: "" });
-    setSyllabus(next);
-  };
-
-  const setDeadline = (section, idx, dl) => {
-    const next = structuredClone(syllabus);
-    next[section][idx].deadline = dl;
-    setSyllabus(next);
-  };
-
-  const removeItem = (section, idx) => {
-    const next = structuredClone(syllabus);
-    next[section].splice(idx, 1);
-    setSyllabus(next);
+  const clearProgress = () => {
+    const next = deepClone(tree);
+    for (const e of Object.keys(next)) {
+      for (const s of Object.keys(next[e])) {
+        next[e][s] = next[e][s].map((it) => ({
+          ...it,
+          done: false,
+          deadline: "",
+          completedOn: "",
+        }));
+      }
+    }
+    setTree(next);
   };
 
   const exportJSON = () => {
-    const blob = new Blob([JSON.stringify(syllabus, null, 2)], {
+    const blob = new Blob([JSON.stringify(tree, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -385,135 +4358,128 @@ export default function Syllabus() {
     a.click();
     URL.revokeObjectURL(url);
   };
-
   const importJSON = (file) => {
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const data = JSON.parse(reader.result);
-        if (data && typeof data === "object") setSyllabus(data);
+        if (data && typeof data === "object") setTree(data);
       } catch {}
     };
     reader.readAsText(file);
   };
 
-  const collapseAll = () => {
-    const next = {};
-    for (const k of Object.keys(syllabus)) next[k] = true;
-    setCollapsed(next);
-  };
-  const expandAll = () => {
-    const next = {};
-    for (const k of Object.keys(syllabus)) next[k] = false;
-    setCollapsed(next);
+  const scrollIntoViewSmooth = (el) => {
+    if (!el) return;
+    const topOffset = (headerRef.current?.offsetHeight || 0) + 8;
+    const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
+    window.scrollTo({ top: y, behavior: "smooth" });
   };
 
-  /* =========== derived for tracker =========== */
-  const filtered = useMemo(() => {
-    if (!query.trim()) return syllabus;
-    const q = query.toLowerCase();
-    const out = {};
-    for (const sec of Object.keys(syllabus)) {
-      out[sec] = syllabus[sec].filter((it) =>
-        it.title.toLowerCase().includes(q)
-      );
-    }
-    return out;
-  }, [syllabus, query]);
-
-  /* =========== small utils =========== */
-  function hash(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = (h << 5) - h + str.charCodeAt(i);
-      h |= 0;
-    }
-    return Math.abs(h);
-  }
-  function mergeKeepCompleted(base, extra) {
-    // merge sections; keep completed info if titles match
-    const out = structuredClone(base);
-    for (const sec of Object.keys(extra)) {
-      if (!out[sec]) out[sec] = [];
-      const map = new Map(out[sec].map((i) => [i.title, i]));
-      for (const e of extra[sec]) {
-        if (map.has(e.title)) continue;
-        out[sec].push({ ...e, completedOn: e.completedOn || "" });
-      }
-    }
-    return out;
-  }
-
-  /* =========== render =========== */
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl border bg-white dark:bg-gray-900">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl md:text-2xl font-bold">Syllabus</h1>
-          {mode === "mirror" ? (
-            <span className="text-sm opacity-80">
-              Mirror · {mirrorProgress.done}/{mirrorProgress.total} ·{" "}
-              {mirrorProgress.percent}%
+    <div className="p-3 md:p-4 max-w-5xl mx-auto space-y-3 md:space-y-4">
+      {/* Sticky header */}
+      <div ref={headerRef} className="sticky top-0 z-50">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 p-3 rounded-xl border bg-white/80 dark:bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg md:text-2xl font-bold">Syllabus</h1>
+            <span className="text-xs md:text-sm opacity-80">
+              {big.done}/{big.total}
             </span>
-          ) : (
-            <span className="text-sm opacity-80">
-              Tracker ·{" "}
-              {
-                Object.values(syllabus)
-                  .flat()
-                  .filter((x) => x.done).length
-              }
-              /{Object.values(syllabus).flat().length}
-            </span>
-          )}
-        </div>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() =>
-              setMode((m) => (m === "mirror" ? "tracker" : "mirror"))
-            }
-            className="px-3 py-2 rounded border"
-          >
-            {mode === "mirror" ? "Switch to Tracker" : "Switch to Mirror"}
-          </button>
+          {/* Desktop actions */}
+          <div className="hidden md:flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={collapseAll}
+              className="px-3 py-2 rounded border active:scale-[.98]"
+            >
+              Collapse All
+            </button>
+            <button
+              type="button"
+              onClick={expandAll}
+              className="px-3 py-2 rounded border active:scale-[.98]"
+            >
+              Expand All
+            </button>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              className="border rounded px-3 py-2 w-60"
+            />
+            <button
+              type="button"
+              onClick={exportJSON}
+              className="px-3 py-2 rounded border active:scale-[.98]"
+            >
+              Export
+            </button>
+            <label className="px-3 py-2 rounded border cursor-pointer active:scale-[.98]">
+              Import
+              <input
+                type="file"
+                accept="application/json"
+                className="hidden"
+                onChange={(e) =>
+                  e.target.files && importJSON(e.target.files[0])
+                }
+              />
+            </label>
+            <button
+              type="button"
+              onClick={clearProgress}
+              className="px-3 py-2 rounded border active:scale-[.98]"
+            >
+              Clear Progress
+            </button>
+          </div>
 
-          {mode === "tracker" && (
-            <>
+          {/* Mobile: single menu button */}
+          <div className="flex md:hidden items-center justify-end">
+            <button
+              type="button"
+              onClick={() => setMobileMenu((v) => !v)}
+              className="px-3 py-2 rounded border active:scale-[.98]"
+              aria-expanded={mobileMenu}
+            >
+              ☰ Menu
+            </button>
+          </div>
+
+          {/* Mobile actions panel */}
+          {mobileMenu && (
+            <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search…"
+                className="border rounded px-3 py-2 col-span-2"
+              />
               <button
+                type="button"
                 onClick={collapseAll}
                 className="px-3 py-2 rounded border"
               >
                 Collapse All
               </button>
-              <button onClick={expandAll} className="px-3 py-2 rounded border">
+              <button
+                type="button"
+                onClick={expandAll}
+                className="px-3 py-2 rounded border"
+              >
                 Expand All
               </button>
               <button
-                onClick={() => {
-                  fetch(HTML_PATH)
-                    .then((r) => r.text())
-                    .then((txt) => {
-                      const parsed = buildFromHTML(txt);
-                      if (parsed)
-                        setSyllabus(mergeKeepCompleted(defaults, parsed));
-                    });
-                }}
+                type="button"
+                onClick={exportJSON}
                 className="px-3 py-2 rounded border"
               >
-                Rebuild from Notion
-              </button>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search…"
-                className="border rounded px-3 py-2 w-60"
-              />
-              <button onClick={exportJSON} className="px-3 py-2 rounded border">
                 Export
               </button>
-              <label className="px-3 py-2 rounded border cursor-pointer">
+              <label className="px-3 py-2 rounded border text-center cursor-pointer">
                 Import
                 <input
                   type="file"
@@ -524,203 +4490,384 @@ export default function Syllabus() {
                   }
                 />
               </label>
-            </>
+              <button
+                type="button"
+                onClick={clearProgress}
+                className="px-3 py-2 rounded border col-span-2"
+              >
+                Clear Progress
+              </button>
+            </div>
           )}
+
+          <div className="w-full">
+            <div className="mt-2 md:mt-0 w-full h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden relative">
+              <div
+                className="h-3 bg-[hsl(210,100%,50%)]"
+                style={{ width: big.percent + "%" }}
+              />
+              <span className="absolute inset-0 text-[10px] md:text-xs flex items-center justify-center font-medium">
+                {big.percent}%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Mirror Mode */}
-      {mode === "mirror" && (
-        <div className="rounded-xl border overflow-hidden">
-          <div className="mirror">
-            <article
-              id="mirror-root"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Tracker Mode */}
-      {mode === "tracker" && (
-        <div className="space-y-4">
-          {Object.keys(filtered).map((section) => {
-            const list = filtered[section] || [];
-            if (!list.length) return null;
-            const pct = sectionPercent(syllabus[section] || []);
-            return (
-              <details
-                key={section}
-                open={!collapsed[section]}
-                className="group border rounded-xl bg-white dark:bg-gray-900"
-              >
-                <summary
-                  className="cursor-pointer list-none px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+      {/* Body */}
+      <div className="space-y-3">
+        {Object.keys(filteredTree).map((ep) => {
+          const epPct = sectionPercent(filteredTree[ep]);
+          const epOpen = !epCollapsed[ep];
+          const groups = groupByParent(filteredTree[ep]);
+          return (
+            <div
+              key={ep}
+              className="group border rounded-xl bg-white dark:bg-gray-900 dark:border-gray-800"
+            >
+              {/* Episode header */}
+              <div className="px-3 md:px-4 py-3 flex items-center justify-between">
+                <button
+                  type="button"
+                  className="flex items-center gap-3 cursor-pointer"
                   onClick={(e) => {
-                    // when clicking the right-side controls we don't toggle
-                    if (e.target.closest(".sec-actions")) return;
+                    setEpCollapsed((s) => ({ ...s, [ep]: epOpen }));
+                    if (epOpen) return;
+                    const card = e.currentTarget.closest(".group");
+                    setTimeout(() => scrollIntoViewSmooth(card), 30);
                   }}
+                  title={epOpen ? "Collapse" : "Expand"}
                 >
-                  <div
-                    className="flex items-center gap-3"
-                    onDoubleClick={() => toggleSection(section)}
-                    title="Double-click to toggle entire section"
+                  <span className="select-none text-lg">
+                    {epOpen ? "▾" : "▸"}
+                  </span>
+                  <h2 className="font-semibold">{ep}</h2>
+                </button>
+                <div className="sec-actions flex items-center gap-3">
+                  <span className="text-sm opacity-70">{epPct}%</span>
+                  <div className="w-24 md:w-28 h-2 bg-gray-200 dark:bg-gray-800 rounded">
+                    <div
+                      className="h-2 bg-[hsl(210,100%,50%)]"
+                      style={{ width: epPct + "%" }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="px-2 py-1 text-xs rounded border active:scale-[.98]"
+                    onClick={(e) => {
+                      setEpCollapsed((s) => ({ ...s, [ep]: epOpen }));
+                      if (epOpen) return;
+                      const card = e.currentTarget.closest(".group");
+                      setTimeout(() => scrollIntoViewSmooth(card), 30);
+                    }}
                   >
-                    <span className="select-none text-lg">
-                      {section.slice(0, 2)}
-                    </span>
-                    <h2 className="font-semibold">{section}</h2>
-                  </div>
-                  <div className="sec-actions flex items-center gap-3">
-                    <span className="text-sm opacity-70">{pct}%</span>
-                    <MiniBar value={pct} />
-                    <button
-                      className="px-2 py-1 text-xs rounded border"
-                      onClick={() => toggleSection(section)}
-                    >
-                      {pct === 100 ? "Uncheck All" : "Check All"}
-                    </button>
-                    <button
-                      className="px-2 py-1 text-xs rounded border"
-                      onClick={() =>
-                        setCollapsed((s) => ({ ...s, [section]: !s[section] }))
-                      }
-                    >
-                      {collapsed[section] ? "Expand" : "Collapse"}
-                    </button>
-                  </div>
-                </summary>
+                    {epOpen ? "Collapse" : "Expand"}
+                  </button>
+                </div>
+              </div>
 
-                <div className="px-4 pb-4 pt-2">
-                  <ul className="mt-2 space-y-1">
-                    {list.map((it, idx) => (
-                      <li
-                        key={idx}
-                        className={`rounded-lg px-2 py-2 border hover:bg-gray-50 dark:hover:bg-gray-800 transition ${
-                          isOverdue(it)
-                            ? "border-red-400"
-                            : "border-gray-200 dark:border-gray-800"
-                        } ${it.done ? "opacity-70" : ""}`}
-                        onClick={(e) => clickRowToggle(e, section, idx)}
+              {/* Episode content */}
+              {epOpen && (
+                <div className="px-3 md:px-4 pb-4 pt-1 space-y-2">
+                  {Object.keys(groups).map((parent) => {
+                    const pKey = `${ep}:::${parent}`;
+                    const pOpen = !pCollapsed[pKey];
+                    const rootList = groups[parent].rootItems || [];
+                    return (
+                      <div
+                        key={pKey}
+                        className="border rounded-lg dark:border-gray-800"
                       >
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            className="mt-1 scale-110"
-                            checked={!!it.done}
-                            onChange={() => toggleItem(section, idx)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className={`leading-snug ${
-                                it.done ? "line-through" : ""
-                              }`}
-                            >
-                              {highlight(it.title, query)}
-                            </p>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-90">
-                              <span className="px-2 py-0.5 rounded-full border">
-                                Deadline
-                              </span>
-                              <input
-                                type="date"
-                                value={it.deadline || ""}
-                                onChange={(e) =>
-                                  setDeadline(section, idx, e.target.value)
-                                }
-                                className="border rounded px-2 py-1"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              {it.deadline && (
-                                <span
-                                  className={`px-2 py-0.5 rounded-full ${
-                                    daysLeft(it.deadline) < 0
-                                      ? "bg-red-100 text-red-700 border border-red-200"
-                                      : "bg-gray-100 text-gray-700 border border-gray-200"
-                                  }`}
-                                >
-                                  {daysLeft(it.deadline) < 0
-                                    ? `${Math.abs(
-                                        daysLeft(it.deadline)
-                                      )} days overdue`
-                                    : `${daysLeft(it.deadline)} days left`}
-                                </span>
-                              )}
-                              {it.completedOn && (
-                                <span className="px-2 py-0.5 rounded-full border bg-green-50 dark:bg-green-900/20">
-                                  Completed on {it.completedOn}
-                                </span>
-                              )}
-                              {it.completedOn &&
-                                it.deadline != null &&
-                                it.deadline !== "" && (
-                                  <DeadlineDeltaPill
-                                    diff={deltaToDeadline(it)}
-                                  />
-                                )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
+                        {/* Parent subsection header */}
+                        <div className="px-3 py-2 flex items-center justify-between">
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              setPCollapsed((s) => ({ ...s, [pKey]: pOpen }));
+                              if (pOpen) return;
+                              const card = e.currentTarget.closest(".border");
+                              setTimeout(() => scrollIntoViewSmooth(card), 30);
+                            }}
+                            title={pOpen ? "Collapse" : "Expand"}
+                          >
+                            <span className="select-none">
+                              {pOpen ? "▾" : "▸"}
+                            </span>
+                            <h3 className="font-medium">{parent}</h3>
+                          </button>
+                          <div className="sub-actions flex items-center gap-2">
                             <button
-                              className="text-xs px-2 py-1 rounded border"
+                              type="button"
+                              className="px-2 py-1 text-xs rounded border active:scale-[.98]"
                               onClick={(e) => {
-                                e.stopPropagation();
-                                removeItem(section, idx);
+                                setPCollapsed((s) => ({ ...s, [pKey]: pOpen }));
+                                if (pOpen) return;
+                                const card = e.currentTarget.closest(".border");
+                                setTimeout(
+                                  () => scrollIntoViewSmooth(card),
+                                  30
+                                );
                               }}
                             >
-                              Delete
+                              {pOpen ? "Collapse" : "Expand"}
                             </button>
                           </div>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
 
-                  <NewItem onAdd={(t, dl) => addItem(section, t, dl)} />
+                        {/* Parent content */}
+                        {pOpen && (
+                          <div className="px-3 pb-3 pt-1 space-y-2">
+                            {/* root items under parent (if any) */}
+                            {rootList.length > 0 && (
+                              <ul className="space-y-1">
+                                {rootList.map((it, idx) => (
+                                  <li
+                                    key={idx}
+                                    className={`rounded-lg px-2 py-2 border hover:bg-gray-50 dark:hover:bg-gray-800 transition ${
+                                      it.done ? "opacity-70" : ""
+                                    }`}
+                                    onClick={(e) => {
+                                      const tag =
+                                        e.target.tagName.toLowerCase();
+                                      if (
+                                        [
+                                          "input",
+                                          "button",
+                                          "a",
+                                          "label",
+                                          "svg",
+                                          "path",
+                                        ].includes(tag)
+                                      )
+                                        return;
+                                      const subKey = parent;
+                                      toggleItem(ep, subKey, idx);
+                                    }}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <button
+                                        type="button"
+                                        className={`min-w-6 h-6 rounded-md border px-2 text-xs ${
+                                          it.done ? "text-white" : ""
+                                        }`}
+                                        style={{
+                                          background: it.done
+                                            ? "hsl(210,100%,50%)"
+                                            : "",
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const subKey = parent;
+                                          toggleItem(ep, subKey, idx);
+                                        }}
+                                        title="Mark done/undone"
+                                      >
+                                        {it.done ? "✓" : ""}
+                                      </button>
+                                      <div className="flex-1 min-w-0">
+                                        <p
+                                          className={`leading-snug ${
+                                            it.done ? "line-through" : ""
+                                          }`}
+                                        >
+                                          {it.title}
+                                        </p>
+                                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-90">
+                                          {it.completedOn && (
+                                            <span className="px-2 py-0.5 rounded-full border bg-green-50 dark:bg-green-900/20">
+                                              Completed on {it.completedOn}
+                                            </span>
+                                          )}
+                                          <span className="hidden">
+                                            {" "}
+                                            {/* mode is tracker-only */}{" "}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+
+                            {/* child subsections */}
+                            {Object.keys(groups[parent].children).map(
+                              (child) => {
+                                const cKey = `${ep}:::${parent}:::${child}`;
+                                const cOpen = !cCollapsed[cKey];
+                                const list =
+                                  groups[parent].children[child] || [];
+                                const pct = Math.round(
+                                  (list.filter((x) => x.done).length /
+                                    (list.length || 1)) *
+                                    100
+                                );
+                                return (
+                                  <div key={cKey} className="border rounded-md">
+                                    <div className="px-3 py-2 flex items-center justify-between">
+                                      <button
+                                        type="button"
+                                        className="flex items-center gap-2 cursor-pointer"
+                                        onClick={(e) => {
+                                          setCCollapsed((s) => ({
+                                            ...s,
+                                            [cKey]: cOpen,
+                                          }));
+                                          if (cOpen) return;
+                                          const card =
+                                            e.currentTarget.closest(".border");
+                                          setTimeout(
+                                            () => scrollIntoViewSmooth(card),
+                                            30
+                                          );
+                                        }}
+                                        title={cOpen ? "Collapse" : "Expand"}
+                                      >
+                                        <span className="select-none">
+                                          {cOpen ? "▾" : "▸"}
+                                        </span>
+                                        <span className="font-medium">
+                                          {child}
+                                        </span>
+                                      </button>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs opacity-70">
+                                          {pct}%
+                                        </span>
+                                        <div className="w-24 h-2 bg-gray-200 dark:bg-gray-800 rounded">
+                                          <div
+                                            className="h-2 bg-[hsl(210,100%,50%)]"
+                                            style={{ width: pct + "%" }}
+                                          />
+                                        </div>
+                                        <button
+                                          type="button"
+                                          className="px-2 py-1 text-xs rounded border active:scale-[.98]"
+                                          onClick={(e) => {
+                                            setCCollapsed((s) => ({
+                                              ...s,
+                                              [cKey]: cOpen,
+                                            }));
+                                            if (cOpen) return;
+                                            const card =
+                                              e.currentTarget.closest(
+                                                ".border"
+                                              );
+                                            setTimeout(
+                                              () => scrollIntoViewSmooth(card),
+                                              30
+                                            );
+                                          }}
+                                        >
+                                          {cOpen ? "Collapse" : "Expand"}
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {cOpen && (
+                                      <div className="px-3 pb-3 pt-1">
+                                        <ul className="space-y-1">
+                                          {list.map((it, idx) => (
+                                            <li
+                                              key={idx}
+                                              className={`rounded-lg px-2 py-2 border hover:bg-gray-50 dark:hover:bg-gray-800 transition ${
+                                                it.done ? "opacity-70" : ""
+                                              }`}
+                                              onClick={(e) => {
+                                                const tag =
+                                                  e.target.tagName.toLowerCase();
+                                                if (
+                                                  [
+                                                    "input",
+                                                    "button",
+                                                    "a",
+                                                    "label",
+                                                    "svg",
+                                                    "path",
+                                                  ].includes(tag)
+                                                )
+                                                  return;
+                                                const subKey = `${parent} › ${child}`;
+                                                toggleItem(ep, subKey, idx);
+                                              }}
+                                            >
+                                              <div className="flex items-start gap-3">
+                                                <button
+                                                  type="button"
+                                                  className={`min-w-6 h-6 rounded-md border px-2 text-xs ${
+                                                    it.done ? "text-white" : ""
+                                                  }`}
+                                                  style={{
+                                                    background: it.done
+                                                      ? "hsl(210,100%,50%)"
+                                                      : "",
+                                                  }}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const subKey = `${parent} › ${child}`;
+                                                    toggleItem(ep, subKey, idx);
+                                                  }}
+                                                  title="Mark done/undone"
+                                                >
+                                                  {it.done ? "✓" : ""}
+                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                  <p
+                                                    className={`leading-snug ${
+                                                      it.done
+                                                        ? "line-through"
+                                                        : ""
+                                                    }`}
+                                                  >
+                                                    {it.title}
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            </li>
+                                          ))}
+                                        </ul>
+
+                                        <NewItem
+                                          onAdd={(t, dl) =>
+                                            addItem(
+                                              ep,
+                                              `${parent} › ${child}`,
+                                              t,
+                                              dl
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </details>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Back to top button */}
+      {showTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-4 right-4 md:bottom-6 md:right-6 border rounded-full px-3 py-2 bg-white/90 dark:bg-gray-900/80 shadow"
+          title="Back to top"
+        >
+          ↑ Top
+        </button>
       )}
     </div>
-  );
-}
-
-/* =========== tiny components =========== */
-function MiniBar({ value = 0 }) {
-  return (
-    <div className="w-28 h-2 bg-gray-200 dark:bg-gray-800 rounded">
-      <div
-        className="h-2 rounded bg-[hsl(var(--accent))]"
-        style={{ width: value + "%" }}
-      />
-    </div>
-  );
-}
-
-function DeadlineDeltaPill({ diff }) {
-  if (diff == null) return null;
-  if (diff > 0) {
-    return (
-      <span className="px-2 py-0.5 rounded-full border bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300">
-        {diff} days early
-      </span>
-    );
-  }
-  if (diff < 0) {
-    return (
-      <span className="px-2 py-0.5 rounded-full border bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300">
-        {Math.abs(diff)} days late
-      </span>
-    );
-  }
-  return (
-    <span className="px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
-      On time
-    </span>
   );
 }
 
@@ -751,57 +4898,9 @@ function NewItem({ onAdd }) {
         value={dl}
         onChange={(e) => setDl(e.target.value)}
       />
-      <button className="px-3 rounded bg-[hsl(var(--accent))] text-white">
+      <button type="submit" className="px-3 rounded border active:scale-[.98]">
         Add
       </button>
     </form>
   );
-}
-
-/* =========== parser: Notion HTML -> sections/items =========== */
-function buildFromHTML(html) {
-  try {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const out = {};
-    let current = "General";
-
-    const nodes = Array.from(doc.body.querySelectorAll("h1, h2, h3, ul"));
-    for (const n of nodes) {
-      if (n.tagName === "H1" || n.tagName === "H2") {
-        const t = (n.textContent || "").trim();
-        if (t) {
-          current = t;
-          if (!out[current]) out[current] = [];
-        }
-      } else if (n.tagName === "H3") {
-        const sub = (n.textContent || "").trim();
-        if (sub) {
-          if (!out[current]) out[current] = [];
-          out[current].push({
-            title: `— ${sub}`,
-            done: false,
-            deadline: "",
-            completedOn: "",
-          });
-        }
-      } else if (n.tagName === "UL") {
-        const lis = Array.from(n.querySelectorAll(":scope > li"));
-        for (const li of lis) {
-          const text = (li.textContent || "").replace(/\s+/g, " ").trim();
-          if (text) {
-            if (!out[current]) out[current] = [];
-            out[current].push({
-              title: text,
-              done: false,
-              deadline: "",
-              completedOn: "",
-            });
-          }
-        }
-      }
-    }
-    return out;
-  } catch {
-    return null;
-  }
 }
