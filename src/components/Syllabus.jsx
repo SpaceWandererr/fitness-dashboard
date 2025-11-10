@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+// import { useMemo, useRef } from "react";
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4270,10 +4271,17 @@ export default function Syllabus() {
     } catch {}
     return new Set();
   });
+
+  const [lastSaved, setLastSaved] = useState(() => {
+    const saved = localStorage.getItem("syllabus_last_saved_v2");
+    return saved ? new Date(saved) : null;
+  });
+
   const [query, setQuery] = useState("");
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [milestone, setMilestone] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [saving, setSaving] = useState(false); 
 
   const streak = useMemo(() => {
     const has = (iso) => daySet.has(iso);
@@ -4292,26 +4300,36 @@ export default function Syllabus() {
   useEffect(() => {
     try {
       localStorage.setItem(K_TREE, JSON.stringify(tree));
+      const now = new Date();
+      localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
+      setLastSaved(now);
     } catch {}
   }, [tree]);
+
   useEffect(() => {
     try {
       localStorage.setItem(K_META, JSON.stringify(meta));
+      updateLastSaved(); // ✅ record save time
     } catch {}
   }, [meta]);
+
   const nrSaveRef = useRef(null);
+
   useEffect(() => {
     clearTimeout(nrSaveRef.current);
     nrSaveRef.current = setTimeout(() => {
       try {
         localStorage.setItem(K_NOTES, JSON.stringify(nr));
+        updateLastSaved(); // ✅ record save time
       } catch {}
     }, 200);
     return () => clearTimeout(nrSaveRef.current);
   }, [nr]);
+
   useEffect(() => {
     try {
       localStorage.setItem(K_STREAK, JSON.stringify(Array.from(daySet)));
+      updateLastSaved(); // ✅ record save time
     } catch {}
   }, [daySet]);
 
@@ -4334,6 +4352,14 @@ export default function Syllabus() {
       if (!m[k]) m[k] = { open: false, targetDate: "" };
       seedChildMeta(m, [...path, name], child);
     }
+  }
+
+  function updateLastSaved() {
+    setSaving(true);
+    const now = new Date();
+    localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
+    setLastSaved(now);
+    setTimeout(() => setSaving(false), 1000); // "Saving..." animation for 1 sec
   }
 
   /* actions */
@@ -4477,21 +4503,84 @@ export default function Syllabus() {
     return { plan, remaining };
   };
 
+  // ✅ Export all syllabus data
+  function exportProgress() {
+    const data = {
+      tree,
+      meta,
+      nr,
+      daySet: Array.from(daySet),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "syllabus_backup.json";
+    a.click();
+  }
+
+  // ✅ Import syllabus data
+  function importProgress(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (!data.tree || !data.meta) {
+          alert("Invalid file — missing keys.");
+          return;
+        }
+        setTree(data.tree);
+        setMeta(data.meta);
+        setNR(data.nr || {});
+        setDaySet(new Set(data.daySet || []));
+        localStorage.setItem(K_TREE, JSON.stringify(data.tree));
+        localStorage.setItem(K_META, JSON.stringify(data.meta));
+        localStorage.setItem(K_NOTES, JSON.stringify(data.nr || {}));
+        localStorage.setItem(K_STREAK, JSON.stringify(data.daySet || []));
+        alert("✅ Import successful! Refreshing...");
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Failed to import. Make sure it's a valid backup file.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
   /* ======================= RENDER ======================= */
   return (
     <div className="min-h-screen bg-[#FF8F8F]/10 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <header className="sticky top-0 z-40 backdrop-blur bg-[#FF8F8F]/40 dark:bg-gray-900/70 border-b border-[#FF8F8F]/40 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-3 py-3 md:py-4">
-          <div className="flex items-center justify-between gap-2 mb-3 w-full">
-            {/* ✅ Title */}
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Syllabus
-            </h1>
-            {/* ✅ Desktop Actions */}
-            <div className="hidden md:flex items-center gap-2">
-              <span className="px-2 py-1.5 rounded-lg bg-white/70 dark:bg-gray-800 text-xs border border-[#FF8F8F]/40">
+      <header className="rounded-xl sticky top-0 z-40 backdrop-blur bg-[#FF8F8F]/30 dark:bg-gray-900/70 border-b border-[#FF8F8F]/40 dark:border-gray-800 shadow-md">
+        <div className="max-w-6xl mx-auto px-3 py-3 md:py-4 space-y-3">
+          {/* 🔹 Top Bar with Title + Buttons */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Left: Title */}
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                Syllabus Jay's Web Dev-2026
+              </h1>
+              {saving ? (
+                <div className="text-xs text-gray-500 animate-pulse mt-1">
+                  💾 Saving...
+                </div>
+              ) : (
+                lastSaved && (
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    💾 Saved at {lastSaved.toLocaleTimeString()}
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Right: Controls */}
+            <div className="flex flex-wrap items-center gap-2 justify-end">
+              <span className="px-3 py-1.5 rounded-xl bg-white/70 dark:bg-gray-800 text-xs border border-[#FF8F8F]/40 font-medium whitespace-nowrap">
                 🔥 Streak: <b>{Array.from(daySet).length}</b> days
               </span>
+
               <button
                 onClick={() =>
                   setMeta((m) => {
@@ -4500,10 +4589,11 @@ export default function Syllabus() {
                     return c;
                   })
                 }
-                className="px-3 py-1.5 rounded-xl bg-[#FF8F8F] text-white text-sm"
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF8F8F] to-[#ff6b6b] text-white text-sm shadow hover:scale-[1.05] transition-transform"
               >
                 Expand
               </button>
+
               <button
                 onClick={() =>
                   setMeta((m) => {
@@ -4512,10 +4602,11 @@ export default function Syllabus() {
                     return c;
                   })
                 }
-                className="px-3 py-1.5 rounded-xl bg-[#FF8F8F]/20 text-gray-900 text-sm dark:bg-gray-800 dark:text-gray-100"
+                className="px-3 py-1.5 rounded-xl bg-gray-200/60 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm hover:bg-gray-300/70 transition"
               >
                 Collapse
               </button>
+
               <button
                 onClick={() => {
                   if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
@@ -4544,106 +4635,31 @@ export default function Syllabus() {
                   localStorage.removeItem("K_STREAK");
                   window.location.reload();
                 }}
-                className="px-3 py-1.5 rounded-xl bg-red-500 text-white text-sm"
+                className="px-3 py-1.5 rounded-xl bg-red-500 text-white text-sm shadow hover:bg-red-600 transition"
               >
                 Reset
               </button>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search topics..."
-                className="px-3 py-1.5 rounded-xl border border-[#FF8F8F]/40 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
-              />
-            </div>
-            {
-              /* ✅ Mobile Hamburger Menu */
-            }
-            <div className="md:hidden relative">
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="px-3 py-2 rounded-lg bg-[#FF8F8F] text-white"
-              >
-                ☰
-              </button>
 
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 flex flex-col gap-2 shadow-lg z-50">
-                  <span className="px-2 py-1.5 rounded-md bg-gray-200 dark:bg-gray-700 text-xs">
-                    🔥 Streak: {Array.from(daySet).length} days
-                  </span>
-                  <button
-                    onClick={() => {
-                      setMeta((m) => {
-                        const c = { ...m };
-                        Object.keys(c).forEach((k) => (c[k].open = true));
-                        return c;
-                      });
-                      setMenuOpen(false);
-                    }}
-                    className="px-3 py-1.5 rounded-md bg-[#FF8F8F] text-white text-sm"
-                  >
-                    Expand
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMeta((m) => {
-                        const c = { ...m };
-                        Object.keys(c).forEach((k) => (c[k].open = false));
-                        return c;
-                      });
-                      setMenuOpen(false);
-                    }}
-                    className="px-3 py-1.5 rounded-md bg-gray-300 dark:bg-gray-700 text-sm"
-                  >
-                    Collapse
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (
-                        !confirm(
-                          "Reset syllabus only? Gym data will not be removed."
-                        )
-                      )
-                        return;
-                      setTree((old) => {
-                        const t = deepClone(old);
-                        (function reset(n) {
-                          if (Array.isArray(n)) {
-                            n.forEach((it) => {
-                              it.done = false;
-                              it.completedOn = "";
-                              it.deadline = "";
-                            });
-                            return;
-                          }
-                          for (const v of Object.values(n || {})) reset(v);
-                        })(t);
-                        return t;
-                      });
-                      setMeta({});
-                      setNR({});
-                      setDaySet(new Set());
-                      localStorage.removeItem("K_TREE");
-                      localStorage.removeItem("K_META");
-                      localStorage.removeItem("K_NOTES");
-                      localStorage.removeItem("K_STREAK");
-                      window.location.reload();
-                    }}
-                    className="px-3 py-1.5 rounded-md bg-red-500 text-white text-sm"
-                  >
-                    Reset
-                  </button>
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search..."
-                    className="px-2 py-1.5 rounded-md border border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-                  />
-                </div>
-              )}
+              {/* 📤 Export / 📥 Import */}
+              <button
+                onClick={exportProgress}
+                className="px-3 py-1.5 rounded-xl bg-[#00d1b2]/20 hover:bg-[#00d1b2]/40 text-sm transition"
+              >
+                📤 Export
+              </button>
+              <label className="px-3 py-1.5 rounded-xl bg-[#FF8F8F]/20 hover:bg-[#FF8F8F]/40 text-sm cursor-pointer transition">
+                📥 Import
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importProgress}
+                  className="hidden"
+                />
+              </label>
             </div>
           </div>
 
+          {/* 🔹 Progress Bar */}
           <div className="w-full">
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="font-medium">
@@ -4651,51 +4667,64 @@ export default function Syllabus() {
               </span>
               <span className="font-semibold">{grand.pct}%</span>
             </div>
-            <div className="h-4 bg-[#FF8F8F]/25 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-3 rounded-full bg-gray-200/60 dark:bg-gray-800 overflow-hidden relative">
               <div
-                className="h-full bg-[#FF8F8F]"
+                className="h-full bg-gradient-to-r from-[#FF8F8F] via-[#ff5f6d] to-[#ffc371] transition-all duration-700 ease-out"
                 style={{ width: `${grand.pct}%` }}
               />
             </div>
           </div>
         </div>
       </header>
-      {/* Smart Planner + Smart Suggest */}
-      <div className="w-full px-3 mt-6 pb-6 grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-3">
-          <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
-          <p className="text-sm opacity-80 mb-3">
-            Closest-deadline topics not yet done.
-          </p>
-          <DailyPlanner tree={tree} />
-        </div>
-        <SmartSuggest generateSmartPlan={generateSmartPlan} />
-      </div>
 
-      <main className="w-full px-3 md:px-4 space-y-4 ">
-        {Object.keys(filtered).length === 0 && (
-          <div className="text-sm text-gray-700 dark:text-gray-300">
-            No matches for “{query}”.
+      {/* Smart Planner + Smart Suggest */}
+      {/* === Combined Layout (Planner + Topics) === */}
+      <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* RIGHT SIDE (above on mobile) */}
+        <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
+          {/* 🗓️ Daily Planner */}
+          <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-sm">
+            <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
+            <p className="text-sm opacity-80 mb-3">
+              Closest-deadline topics not yet done.
+            </p>
+            <DailyPlanner tree={tree} />
           </div>
-        )}
-        {Object.entries(filtered).map(([secKey, secVal]) => (
-          <SectionCard
-            key={secKey}
-            secKey={secKey}
-            node={secVal}
-            meta={meta}
-            nr={nr}
-            setNR={setNR}
-            onSectionHeaderClick={onSectionHeaderClick}
-            setSectionTargetPct={setSectionTargetPct}
-            setTargetDate={setTargetDate}
-            toggleOpen={toggleOpen}
-            setAllAtPath={setAllAtPath}
-            markTask={markTask}
-            setTaskDeadline={setTaskDeadline}
-          />
-        ))}
-      </main>
+
+          {/* 🤖 Smart Suggest */}
+          <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-sm">
+            <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
+          </div>
+        </div>
+
+        {/* LEFT SIDE — All Topics */}
+        <div className="order-2 lg:order-1 lg:col-span-3 space-y-4">
+          <main className="w-full px-0 md:px-1 space-y-4">
+            {Object.keys(filtered).length === 0 && (
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                No matches for “{query}”.
+              </div>
+            )}
+            {Object.entries(filtered).map(([secKey, secVal]) => (
+              <SectionCard
+                key={secKey}
+                secKey={secKey}
+                node={secVal}
+                meta={meta}
+                nr={nr}
+                setNR={setNR}
+                onSectionHeaderClick={onSectionHeaderClick}
+                setSectionTargetPct={setSectionTargetPct}
+                setTargetDate={setTargetDate}
+                toggleOpen={toggleOpen}
+                setAllAtPath={setAllAtPath}
+                markTask={markTask}
+                setTaskDeadline={setTaskDeadline}
+              />
+            ))}
+          </main>
+        </div>
+      </div>
 
       {showTopBtn && (
         <button
@@ -4714,7 +4743,7 @@ export default function Syllabus() {
   );
 }
 
-/* ======================= PARTS ======================= */
+/* ======================= Main Section ======================= */
 function SectionCard({
   secKey,
   node,
@@ -4733,131 +4762,87 @@ function SectionCard({
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
 
-  // ✅ Get latest completed date from this section
-  function getSectionCompletionDate(n) {
-    let latest = null;
-    if (Array.isArray(n)) {
-      n.forEach((task) => {
-        if (task?.done && task?.completedOn) {
-          const d = new Date(task.completedOn);
-          if (!latest || d > latest) latest = d;
-        }
-      });
-    } else {
-      for (const [k, v] of Object.entries(n || {})) {
-        const d = getSectionCompletionDate(v);
-        if (d && (!latest || d > latest)) latest = d;
-      }
-    }
-    return latest;
-  }
-  const latestDone = getSectionCompletionDate(node);
+  const wrapRef = useRef(null);
+  const [maxH, setMaxH] = useState(0);
 
-  // ✅ Rollup total estimated hours for this section
-  const hoursRollup = useMemo(() => {
-    let est = 0;
-    (function walk(n, p) {
-      if (Array.isArray(n)) {
-        n.forEach((_, idx) => {
-          const e = Number(nr[itemKey(p, idx)]?.estimate || 0.5);
-          est += isFinite(e) ? e : 0.5;
-        });
-      } else {
-        for (const [k, v] of Object.entries(n || {})) walk(v, [...p, k]);
-      }
-    })(node, sectionPath);
-    return est;
-  }, [node, nr]);
+  // measure content on open + whenever content changes
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    const measure = () => setMaxH(m.open ? el.scrollHeight : 0);
+    measure();
+
+    // keep height accurate while content changes
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [m.open, node, meta, nr]);
 
   return (
-    <section className="rounded-2xl border border-[#FF8F8F]/40 dark:border-gray-800 bg-[#FF8F8F]/15 dark:bg-gray-900/60 shadow-sm">
-      {/* ✅ Progress bar on top */}
-      <div className="w-full p-3">
-        <div className="h-2 bg-[#FF8F8F]/25 dark:bg-gray-800 rounded-full overflow-hidden">
+    <section className="rounded-xl border border-[#00d1b2]/30 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50 shadow-sm overflow-hidden">
+      {/* Header */}
+
+      {/* Header */}
+      <div
+        onClick={() => onSectionHeaderClick(sectionPath)}
+        className="relative rounded-xl p-3 cursor-pointer hover:bg-green-50 dark:hover:bg-white/5 transition-colors overflow-hidden"
+      >
+        {/* ✅ Progress bar (kept, thin + aligned) */}
+        <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-800">
           <div
-            className="h-full bg-[#FF8F8F] transition-all"
+            className="h-full rounded-full bg-[#248d14] transition-all duration-300"
             style={{ width: `${totals.pct}%` }}
           />
         </div>
-      </div>
 
-      {/* ✅ Header Row (Title + Completion message + Actions + Stats) */}
-      <div
-        onClick={() => onSectionHeaderClick(sectionPath)}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-3 pb-3 select-none"
-      >
-        {/* LEFT — Title + Completed message */}
-        <div className="flex items-center gap-2 flex-1">
-          <span
-            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
-              m.open
-                ? "bg-[#FF8F8F] text-white border-[#FF8F8F]"
-                : "bg-[#FF8F8F]/30 text-gray-900 border-[#FF8F8F]/50"
-            }`}
-          >
-            {m.open ? "−" : "+"}
-          </span>
-          <h2 className="text-base md:text-lg font-semibold">{secKey}</h2>
-
-          {/* ✅ Show completed before/after/target only if whole section done */}
-          {allDone && latestDone && (
-            <span className="text-xs text-green-600 ml-2 whitespace-nowrap">
-              {(() => {
-                if (m.targetDate) {
-                  const done = new Date(latestDone);
-                  const target = new Date(m.targetDate);
-                  done.setHours(0, 0, 0, 0);
-                  target.setHours(0, 0, 0, 0);
-                  const diff = Math.round((done - target) / 86400000);
-                  if (diff < 0)
-                    return `✅ Completed ${Math.abs(
-                      diff
-                    )} day(s) before target`;
-                  if (diff > 0)
-                    return `✅ Completed ${diff} day(s) after target`;
-                  return `✅ Completed on target date`;
-                }
-                return `✅ Completed on ${formatDateDDMMYYYY(latestDone)}`;
-              })()}
+        {/* ✅ Responsive layout container */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
+          {/* LEFT — arrow + title */}
+          <div className="flex items-start gap-2 min-w-0">
+            <span className="text-lg select-none shrink-0">
+              {m.open ? "🔽" : "▶️"}
             </span>
-          )}
-        </div>
+            <span className="font-semibold text-base sm:text-lg leading-snug break-words">
+              {secKey}
+            </span>
+          </div>
 
-        {/* RIGHT — Stats + Complete All + Target Date */}
-        <div
-          className="flex items-center gap-3 text-xs"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* ✅ Moved stats from under progress bar to here (compact) */}
-          <span className="opacity-75 whitespace-nowrap">
-            {totals.done}/{totals.total} • {totals.pct}% • ~
-            {hoursRollup.toFixed(1)}h
-          </span>
-
-          {/* Complete All / Undo All */}
-          <button
-            onClick={() => setAllAtPath(sectionPath, !allDone)}
-            className="px-2.5 py-1 rounded-lg bg-[#FF8F8F]/20 text-gray-900 text-xs dark:bg-gray-800 dark:text-gray-100"
+          {/* RIGHT — stats + actions */}
+          <div
+            className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs"
+            onClick={(e) => e.stopPropagation()}
           >
-            {allDone ? "Undo all" : "Mark all"}
-          </button>
+            <span className="leading-tight shrink-0">
+              {totals.done}/{totals.total} • {totals.pct}% • ~
+              {totals.estimate || 0}h
+            </span>
 
-          {/* 🎯 Target Date */}
-          <label className="flex items-center gap-1.5 text-sm">
-            <span className="opacity-80">🎯</span>
+            <button
+              onClick={() => setAllAtPath(sectionPath, !allDone)}
+              className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
+            >
+              {allDone ? "Undo all" : "Mark all"}
+            </button>
+
             <input
               type="date"
               value={m.targetDate}
               onChange={(e) => setTargetDate(sectionPath, e.target.value)}
-              className="px-2 py-1 rounded-lg border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+              className="px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-md bg-white/70 dark:bg-gray-800 text-xs shrink-0"
             />
-          </label>
+          </div>
         </div>
       </div>
 
-      {/* ✅ Collapsible Subtopics */}
-      {m.open && (
-        <div className="px-3 pb-3 space-y-3">
+      {/* Progress bar (kept) */}
+
+      {/* Smooth expandable content */}
+      <div
+        style={{ maxHeight: `${maxH}px`, transition: "max-height 420ms ease" }}
+        className="overflow-hidden"
+      >
+        <div ref={wrapRef} className="px-4 pb-4 pt-2 space-y-2">
           {Object.entries(node || {}).map(([name, child]) => (
             <SubNode
               key={name}
@@ -4875,10 +4860,12 @@ function SectionCard({
             />
           ))}
         </div>
-      )}
+      </div>
     </section>
   );
 }
+
+/* ======================= Sub Section ======================= */
 
 function SubNode({
   name,
@@ -4898,28 +4885,42 @@ function SubNode({
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
 
-  // rollup hours for subnode
+  // ✅ Smooth expand animation
+  const contentRef = useRef(null);
+  const [height, setHeight] = useState("0px");
+
+  useEffect(() => {
+    if (m.open && contentRef.current) {
+      setHeight(contentRef.current.scrollHeight + "px");
+    } else {
+      setHeight("0px");
+    }
+  }, [m.open, node]);
+
+  // ✅ Rollup hours
   const hoursRollup = useMemo(() => {
     if (!isArray(node)) {
       let est = 0;
       for (const [childKey, childVal] of Object.entries(node || {})) {
-        if (isArray(childVal))
+        if (isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
               nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
-        else
+        } else {
           Object.entries(childVal || {}).forEach(([gk, gv]) => {
-            if (isArray(gv))
+            if (isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
                   nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
+            }
           });
+        }
       }
       return est;
     }
@@ -4931,96 +4932,145 @@ function SubNode({
 
   return (
     <div className="rounded-xl border border-[#FF8F8F]/35 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50">
-      {/* header row */}
+      {/* Header */}
       <div
         onClick={() => toggleOpen(path)}
-        className="flex items-center justify-between gap-2 p-2 cursor-pointer"
+        className="rounded-xl p-2 cursor-pointer bg-[#007bff]/10 hover:bg-[#00d1b2]/10 transition-all"
       >
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border ${
-              m.open
-                ? "bg-[#FF8F8F] text-white border-[#FF8F8F]"
-                : "bg-[#FF8F8F]/20 border-[#FF8F8F]/50"
-            }`}
-          >
-            {m.open ? "−" : "+"}
-          </span>
-          <div className="font-medium">{name}</div>
-        </div>
-        <div
-          className="flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="text-[11px] opacity-75 text-right">
-            {totals.done}/{totals.total} • {totals.pct}% • ~
-            {hoursRollup.toFixed(1)}h
+        {/* Wrap header content */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          {/* LEFT: arrow + title */}
+          <div className="flex items-start gap-2 min-w-0">
+            <span className="text-lg shrink-0">{m.open ? "🔽" : "▶️"}</span>
+            <span className="font-medium text-base leading-snug break-words">
+              {name}
+            </span>
           </div>
-          <button
-            onClick={() => setAllAtPath(path, !allDone)}
-            className="px-2 py-0.5 rounded-md bg-[#FF8F8F]/20 text-xs"
+
+          {/* RIGHT: stats + mark all + date (will drop below on mobile) */}
+          <div
+            className="flex flex-wrap items-start gap-2 text-[11px] sm:text-xs"
+            onClick={(e) => e.stopPropagation()}
           >
-            {allDone ? "Undo all" : "Complete all"}
-          </button>
-          <input
-            type="date"
-            value={m.targetDate}
-            onChange={(e) => setTargetDate(path, e.target.value)}
-            className="px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none text-xs"
-          />
+            <span className="leading-tight shrink-0">
+              {totals.done}/{totals.total} • {totals.pct}% • ~
+              {hoursRollup.toFixed(1)}h
+            </span>
+
+            <button
+              onClick={() => setAllAtPath(path, !allDone)}
+              className="px-2 py-1 bg-[#FF8F8F]/20 rounded shrink-0"
+            >
+              {allDone ? "Undo all" : "Complete all"}
+            </button>
+
+            <input
+              type="date"
+              value={m.targetDate}
+              onChange={(e) => setTargetDate(path, e.target.value)}
+              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-gray-800 text-xs shrink-0"
+            />
+          </div>
         </div>
       </div>
 
-      {/* content */}
+      {/* ✅ Smooth expanding content */}
       <div
-        className={`grid transition-all duration-500 ease-out ${
-          m.open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        } overflow-hidden`}
+        ref={contentRef}
+        style={{ maxHeight: height }}
+        className="transition-all duration-500 ease-in-out overflow-hidden"
       >
-        <div className="overflow-hidden">
+        <div className="px-3 pb-3 mt-2">
           {isArray(node) ? (
-            <ul className="space-y-2 px-2 pb-2">
+            <ul className="space-y-2">
               {node.map((it, idx) => {
-                const diff =
-                  m.targetDate && it.completedOn
-                    ? daysDiff(it.completedOn, m.targetDate)
-                    : null;
-                let statusLine = "";
+                // ✅ Save completion date if marked done
+                if (it.done && !nr[itemKey(path, idx)]?.completedDate) {
+                  setNR((old) => ({
+                    ...old,
+                    [itemKey(path, idx)]: {
+                      ...(old[itemKey(path, idx)] || {}),
+                      completedDate: new Date().toISOString(),
+                    },
+                  }));
+                }
+
+                const completedDate = nr[itemKey(path, idx)]?.completedDate;
+                const diff = daysDiff(completedDate, it.deadline);
+
+                // ✅ Completion message & colors
+                let completionMsg = "";
+                let completionColor = "";
+
                 if (it.done) {
-                  if (diff === null)
-                    statusLine = `✅ Completed on ${formatDateDDMMYYYY(
-                      it.completedOn
-                    )}`;
-                  else if (diff > 0)
-                    statusLine = `✅ Completed ${diff} day${
-                      diff === 1 ? "" : "s"
-                    } after target`;
-                  else if (diff < 0) {
-                    const before = Math.abs(diff);
-                    statusLine = `✅ Completed ${before} day${
-                      before === 1 ? "" : "s"
-                    } before target`;
-                  } else statusLine = "✅ Completed on target date";
+                  const completedStr = completedDate
+                    ? new Date(completedDate).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "";
+
+                  if (!it.deadline) {
+                    completionMsg = `Completed on ${completedStr}`;
+                    completionColor =
+                      "bg-gray-100 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300";
+                  } else if (completedDate && diff !== null) {
+                    const targetStr = new Date(it.deadline).toLocaleDateString(
+                      "en-IN",
+                      {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    );
+                    if (diff > 0) {
+                      completionMsg = `Completed ${diff} day${
+                        diff > 1 ? "s" : ""
+                      } after target (${targetStr})`;
+                      completionColor =
+                        "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+                    } else if (diff < 0) {
+                      completionMsg = `Completed ${Math.abs(diff)} day${
+                        Math.abs(diff) > 1 ? "s" : ""
+                      } before target (${targetStr})`;
+                      completionColor =
+                        "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+                    } else {
+                      completionMsg = `Completed on target (${targetStr})`;
+                      completionColor =
+                        "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+                    }
+                  }
                 }
 
                 return (
                   <li
                     key={idx}
                     onClick={(e) => {
-                      // Prevent marking task as complete when clicking on input fields
                       if (
                         e.target.type !== "date" &&
                         e.target.type !== "number"
                       ) {
                         markTask(path, idx, !it.done);
+                        if (!it.done) {
+                          setNR((old) => ({
+                            ...old,
+                            [itemKey(path, idx)]: {
+                              ...(old[itemKey(path, idx)] || {}),
+                              completedDate: new Date().toISOString(),
+                            },
+                          }));
+                        }
                       }
                     }}
-                    className={`rounded-lg border border-[#FF8F8F]/25 dark:border-gray-800 p-2 bg-white/70 dark:bg-gray-900/40 cursor-pointer select-none ${
+                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-gray-800 p-2 bg-white/70 dark:bg-gray-900/40 cursor-pointer select-none ${
                       it.done ? "opacity-90" : ""
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      {/* ✅ LEFT — Checkbox + Title */}
+                    {/* ✅ Task Row Layout */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      {/* LEFT — Checkbox + Title */}
                       <div className="flex items-start gap-2 min-w-0">
                         <input
                           type="checkbox"
@@ -5028,62 +5078,44 @@ function SubNode({
                           onChange={(e) => {
                             e.stopPropagation();
                             markTask(path, idx, e.target.checked);
+                            if (e.target.checked) {
+                              setNR((old) => ({
+                                ...old,
+                                [itemKey(path, idx)]: {
+                                  ...(old[itemKey(path, idx)] || {}),
+                                  completedDate: new Date().toISOString(),
+                                },
+                              }));
+                            }
                           }}
-                          className="mt-0.5 shrink-0"
+                          className="mt-1 shrink-0 w-4 h-4 accent-[#FF8F8F]"
                         />
+
                         <div className="min-w-0">
                           <div
-                            className={`truncate ${
-                              it.done ? "line-through" : ""
+                            className={`font-medium text-sm sm:text-[15px] leading-snug break-words ${
+                              it.done ? "line-through opacity-75" : ""
                             }`}
                           >
                             {it.title}
                           </div>
 
-                          {/* ✅ STATUS — BELOW TITLE (fixed space for no layout shift) */}
-                          <div className="text-xs text-gray-500 min-h-[1.25rem] leading-4">
-                            {it.done && it.completedOn
-                              ? (() => {
-                                  if (it.deadline) {
-                                    const doneDate = new Date(it.completedOn);
-                                    const targetDate = new Date(it.deadline);
-
-                                    doneDate.setHours(0, 0, 0, 0);
-                                    targetDate.setHours(0, 0, 0, 0);
-
-                                    const diff = Math.round(
-                                      (doneDate - targetDate) / 86400000
-                                    );
-
-                                    if (diff < 0) {
-                                      return `✅ Completed ${Math.abs(
-                                        diff
-                                      )} day${
-                                        Math.abs(diff) === 1 ? "" : "s"
-                                      } before target`;
-                                    }
-                                    if (diff > 0) {
-                                      return `✅ Completed ${diff} day${
-                                        diff === 1 ? "" : "s"
-                                      } after target`;
-                                    }
-                                    return "✅ Completed on target date";
-                                  }
-                                  return `✅ Completed on ${formatDateDDMMYYYY(
-                                    it.completedOn
-                                  )}`;
-                                })()
-                              : ""}
-                          </div>
+                          {/* ✅ Completion Message */}
+                          {completionMsg && (
+                            <div
+                              className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium transition-opacity duration-300 ${completionColor}`}
+                            >
+                              {completionMsg}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* ✅ RIGHT — Deadline + Hours */}
+                      {/* RIGHT — Inputs */}
                       <div
-                        className="flex items-center gap-3 shrink-0"
-                        onClick={(e) => e.stopPropagation()} // prevent click bubbling
+                        className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {/* Deadline */}
                         <label className="text-xs flex items-center gap-1">
                           ⏰
                           <input
@@ -5092,11 +5124,10 @@ function SubNode({
                             onChange={(e) =>
                               setTaskDeadline(path, idx, e.target.value)
                             }
-                            className="px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+                            className="px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none w-[110px] text-xs"
                           />
                         </label>
 
-                        {/* Estimated Hours */}
                         <label className="text-xs flex items-center gap-1">
                           ⏱
                           <input
@@ -5116,14 +5147,14 @@ function SubNode({
                                 },
                               }))
                             }
-                            className="w-16 px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+                            className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none text-xs"
                           />
                           <span>h</span>
                         </label>
                       </div>
                     </div>
 
-                    {/* ✅ Notes & Resources Section (Unchanged) */}
+                    {/* 🗒️ Notes & Resources */}
                     <details className="mt-2">
                       <summary className="cursor-pointer text-xs opacity-80">
                         🗒️ Notes & 📚 Resources
@@ -5170,7 +5201,7 @@ function SubNode({
               })}
             </ul>
           ) : (
-            <div className="grid grid-cols-1 gap-2 px-2 pb-2">
+            <div className="space-y-2">
               {Object.entries(node || {}).map(([childKey, childVal]) => (
                 <SubNode
                   key={childKey}
@@ -5232,57 +5263,173 @@ function DailyPlanner({ tree }) {
 }
 
 /* Smart Suggest — hides completion info */
-function SmartSuggest({ generateSmartPlan }) {
-  const [mins, setMins] = useState(120);
-  const [plan, setPlan] = useState(null);
+
+function SmartSuggest({ generateSmartPlan, tree }) {
+  const [minutes, setMinutes] = useState(120);
+  const [plan, setPlan] = useState([]);
+  const [remaining, setRemaining] = useState(0);
+  const [summary, setSummary] = useState("");
+
+  useEffect(() => {
+    // whenever syllabus updates, refresh visual state
+    setPlan((prev) =>
+      prev.map((p) => {
+        // try to find same topic in live tree
+        const match = findInTree(tree, p.title);
+        return match ? { ...p, done: !!match.done } : p;
+      })
+    );
+  }, [tree]);
+
+  const handleSuggest = () => {
+    const { plan, remaining } = generateSmartPlan(minutes);
+    const sorted = [...plan].sort((a, b) => {
+      const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      return da - db;
+    });
+
+    let sum = "";
+    if (sorted.length === 0) sum = "No urgent topics found for now! 🎉";
+    else if (sorted.length <= 2)
+      sum = "🧠 Focus on these key tasks today — high impact and short!";
+    else if (sorted.length <= 4)
+      sum = "⚡ Balanced day ahead! Let’s tackle core and conceptual topics.";
+    else sum = "🚀 Power day! Deep-dive into multiple modules today.";
+
+    setPlan(sorted);
+    setRemaining(remaining);
+    setSummary(sum);
+  };
+
+  function daysLeft(deadline) {
+    if (!deadline) return "";
+    const d = new Date(deadline);
+    const today = new Date();
+    const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+    if (diff > 0) return `Due in ${diff} day${diff > 1 ? "s" : ""}`;
+    if (diff === 0) return "Due today!";
+    return `Overdue by ${Math.abs(diff)} day${Math.abs(diff) > 1 ? "s" : ""}`;
+  }
+
+  function findInTree(node, title) {
+    if (Array.isArray(node)) {
+      for (const it of node) {
+        if (it.title === title) return it;
+      }
+    } else {
+      for (const [k, v] of Object.entries(node || {})) {
+        const found = findInTree(v, title);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
   return (
-    <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-3">
-      <h2 className="font-semibold mb-2">🤖 Smart Suggest</h2>
-      <div className="flex items-center gap-2 mb-2">
-        <label className="text-sm flex items-center gap-2">
+    <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-md hover:shadow-lg transition-all duration-300">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h3 className="font-semibold flex items-center gap-2 text-base">
+          🤖 Smart Suggest
+        </h3>
+        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#FF8F8F]/20 dark:bg-gray-800 whitespace-nowrap">
+          AI Study Planner
+        </span>
+      </div>
+
+      {/* Input */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <label className="text-xs font-medium whitespace-nowrap">
           Minutes:
-          <input
-            type="number"
-            value={mins}
-            onChange={(e) => setMins(Number(e.target.value || 0))}
-            className="w-24 px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
-          />
         </label>
+        <input
+          type="number"
+          value={minutes}
+          onChange={(e) => setMinutes(Number(e.target.value))}
+          className="flex-1 px-2 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800 min-w-[70px]"
+        />
         <button
-          onClick={() => setPlan(generateSmartPlan(mins))}
-          className="px-3 py-1.5 rounded-lg bg-[#FF8F8F] text-white text-sm"
+          onClick={handleSuggest}
+          className="px-3 py-1 rounded-md bg-[#FF8F8F] text-white text-xs hover:bg-[#ff6b6b] transition w-full sm:w-auto"
         >
           Suggest
         </button>
       </div>
-      {plan && (
-        <div className="text-sm">
-          {plan.plan.length ? (
-            <>
-              <ul className="list-disc pl-5 space-y-1">
-                {plan.plan.map((t, i) => (
-                  <li key={i}>
-                    {t.title} — ~{Math.round(t.estimate * 60)} mins{" "}
-                    {t.deadline && (
-                      <em className="opacity-70">
-                        {" "}
-                        (⏰ {formatDateDDMMYYYY(t.deadline)})
-                      </em>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-2 opacity-75">
-                Remaining buffer: {plan.remaining} mins
-              </div>
-            </>
-          ) : (
-            <div className="opacity-75">
-              Not enough time to suggest a set. Try increasing minutes.
-            </div>
-          )}
-        </div>
+
+      {/* Summary */}
+      {summary && (
+        <p className="text-xs italic mb-3 text-gray-700 dark:text-gray-300">
+          {summary}
+        </p>
       )}
+
+      {/* Suggestions */}
+      <div className="space-y-2">
+        {plan.length === 0 ? (
+          <p className="text-xs opacity-70 italic">No topics suggested yet.</p>
+        ) : (
+          plan.map((item, i) => {
+            const urgency =
+              item.deadline && new Date(item.deadline) < new Date()
+                ? "bg-red-500/15 text-red-600 dark:text-red-400"
+                : item.deadline &&
+                  new Date(item.deadline) - new Date() < 86400000 * 2
+                ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
+                : "bg-green-500/10 text-green-700 dark:text-green-400";
+
+            const countdown = daysLeft(item.deadline);
+
+            return (
+              <div
+                key={i}
+                className={`rounded-lg border border-gray-200 dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${
+                  item.done ? "opacity-60 line-through" : ""
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                  <span
+                    className={`font-medium text-gray-900 dark:text-gray-100 ${
+                      item.done ? "line-through" : ""
+                    }`}
+                  >
+                    • {item.title}
+                  </span>
+                  {countdown && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${urgency} text-center`}
+                    >
+                      {countdown}
+                    </span>
+                  )}
+                </div>
+                <div
+                  className={`text-xs mt-1 ${
+                    item.done ? "opacity-50" : "opacity-80"
+                  } transition-opacity`}
+                >
+                  ⏱ ~{Math.round(item.estimate * 60)} mins
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <span>
+          {plan.length > 0
+            ? `Remaining buffer: ${remaining} mins`
+            : "Enter available time to get a plan!"}
+        </span>
+        {plan.length > 0 && (
+          <button className="text-[#FF8F8F] font-medium hover:underline text-xs whitespace-nowrap self-end sm:self-auto">
+            Start Focus Mode 🚀
+          </button>
+        )}
+      </div>
     </div>
   );
 }
+

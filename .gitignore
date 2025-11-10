@@ -1,0 +1,33 @@
+# Node + dependencies
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.production
+.env.development
+
+# Editor folders
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Windows junk
+Thumbs.db
+AppData/
+desktop.ini
+
+# Local storage or backups
+*.zip
+*.bak
+*.tmp
+
+# React/Vite cache
+.cache/
+vite.config.ts.timestamp*
