@@ -4148,759 +4148,1141 @@ const TREE = {
   },
 };
 
-/* ======= utils ======= */
-const KEY = "wd_v5_"; // storage namespace
-const load = (k, f) => {
-  try {
-    const x = localStorage.getItem(KEY + k);
-    return x ? JSON.parse(x) : f;
-  } catch {
-    return f;
-  }
-};
-const save = (k, v) => {
-  try {
-    localStorage.setItem(KEY + k, JSON.stringify(v));
-  } catch {}
-};
-const TODAY = () => new Date().toISOString().slice(0, 10);
-const deepClone = (x) => JSON.parse(JSON.stringify(x));
 
-function sectionPercent(subMap) {
+/* ======================= KEYS ======================= */
+const K_TREE = "syllabus_tree_v2";
+const K_META = "syllabus_meta_v2";
+const K_NOTES = "syllabus_notes_v2";
+const K_STREAK = "syllabus_streak_v2";
+
+
+
+/* ======================= UTIL ======================= */
+const isArray = Array.isArray;
+const isObject = (o) => !!o && typeof o === "object" && !Array.isArray(o);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const deepClone = (o) => JSON.parse(JSON.stringify(o || {}));
+const pathKey = (path) => (path || []).join(" > ");
+const itemKey = (path, idx) => `${pathKey(path)} ## ${idx}`;
+
+function formatDateDDMMYYYY(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(d.getFullYear());
+  return `${dd}-${mm}-${yyyy}`;
+}
+function daysDiff(aISO, bISO) {
+  if (!aISO || !bISO) return null;
+  const a = new Date(aISO);
+  const b = new Date(bISO);
+  if (isNaN(a) || isNaN(b)) return null;
+  const ms = a.setHours(0, 0, 0, 0) - b.setHours(0, 0, 0, 0);
+  return Math.round(ms / 86400000);
+}
+function getRefAtPath(obj, path) {
+  let ref = obj;
+  for (const part of path) {
+    if (!ref || typeof ref !== "object") return undefined;
+    ref = ref[part];
+  }
+  return ref;
+}
+function totalsOf(node) {
+  if (isArray(node)) {
+    const total = node.length;
+    const done = node.filter((i) => i.done).length;
+    return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+  }
   let total = 0,
     done = 0;
-  for (const k of Object.keys(subMap || {})) {
-    const arr = subMap[k] || [];
-    total += arr.length;
-    done += arr.filter((x) => x.done).length;
+  for (const v of Object.values(node || {})) {
+    const t = totalsOf(v);
+    total += t.total;
+    done += t.done;
   }
-  return total ? Math.round((100 * done) / total) : 0;
+  return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
 }
-
-/* ======= Grouping helper: split "Parent › Child" ======= */
-function groupByParent(subMap) {
-  const groups = {}; // parent -> { rootItems:[], children: { childName: items[] } }
-  for (const key of Object.keys(subMap)) {
-    if (key.includes(" › ")) {
-      const [parent, child] = key.split(" › ");
-      if (!groups[parent]) groups[parent] = { rootItems: [], children: {} };
-      groups[parent].children[child] = subMap[key];
-    } else {
-      if (!groups[key]) groups[key] = { rootItems: [], children: {} };
-      groups[key].rootItems = subMap[key];
+function normalizeSection(sectionObj) {
+  const out = {};
+  for (const [rawKey, value] of Object.entries(sectionObj || {})) {
+    if (!rawKey.includes("›")) {
+      out[rawKey] = isArray(value) ? deepClone(value) : normalizeSection(value);
+      continue;
     }
-  }
-  return groups;
-}
-
-export default function App() {
-  const headerRef = useRef(null);
-  const [tree, setTree] = useState(() => load("tree", TREE));
-  const [query, setQuery] = useState("");
-  const [showTop, setShowTop] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
-
-  // Collapsibles: episode / parent-sub / child-sub
-  const [epCollapsed, setEpCollapsed] = useState(() =>
-    load("ep_collapsed", {})
-  );
-  const [pCollapsed, setPCollapsed] = useState(() => load("p_collapsed", {}));
-  const [cCollapsed, setCCollapsed] = useState(() => load("c_collapsed", {}));
-
-  useEffect(() => save("tree", tree), [tree]);
-  useEffect(() => save("ep_collapsed", epCollapsed), [epCollapsed]);
-  useEffect(() => save("p_collapsed", pCollapsed), [pCollapsed]);
-  useEffect(() => save("c_collapsed", cCollapsed), [cCollapsed]);
-
-  // ensure collapse keys exist (run once)
-  useEffect(() => {
-    const ep = { ...epCollapsed };
-    const p = { ...pCollapsed };
-    const c = { ...cCollapsed };
-    for (const e of Object.keys(tree)) {
-      if (!(e in ep)) ep[e] = true;
-      const groups = groupByParent(tree[e]);
-      for (const parent of Object.keys(groups)) {
-        const pKey = `${e}:::${parent}`;
-        if (!(pKey in p)) p[pKey] = true;
-        for (const child of Object.keys(groups[parent].children)) {
-          const cKey = `${e}:::${parent}:::${child}`;
-          if (!(cKey in c)) c[cKey] = true;
-        }
+    const parts = rawKey
+      .split("›")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let ref = out;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (i === parts.length - 1)
+        ref[p] = isArray(value) ? deepClone(value) : normalizeSection(value);
+      else {
+        if (!isObject(ref[p])) ref[p] = {};
+        ref = ref[p];
       }
     }
-    setEpCollapsed(ep);
-    setPCollapsed(p);
-    setCCollapsed(c);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
+  return out;
+}
+function normalizeWholeTree(src) {
+  const out = {};
+  for (const [k, v] of Object.entries(src || {})) out[k] = normalizeSection(v);
+  return out;
+}
 
-  // Show "back to top" button on scroll
+/* ======================= MAIN ======================= */
+export default function Syllabus() {
+  const [tree, setTree] = useState(() => {
+    try {
+      const s = localStorage.getItem(K_TREE);
+      if (s) return JSON.parse(s);
+    } catch {}
+    return normalizeWholeTree(TREE);
+  });
+  const [meta, setMeta] = useState(() => {
+    try {
+      const s = localStorage.getItem(K_META);
+      if (s) return JSON.parse(s);
+    } catch {}
+    const m = {};
+    for (const [secKey, secVal] of Object.entries(tree)) {
+      m[pathKey([secKey])] = { open: false, targetDate: "", targetPct: 100 };
+      seedChildMeta(m, [secKey], secVal);
+    }
+    return m;
+  });
+  const [nr, setNR] = useState(() => {
+    try {
+      const s = localStorage.getItem(K_NOTES);
+      if (s) return JSON.parse(s);
+    } catch {}
+    return {};
+  });
+  const [daySet, setDaySet] = useState(() => {
+    try {
+      const s = localStorage.getItem(K_STREAK);
+      if (s) return new Set(JSON.parse(s));
+    } catch {}
+    return new Set();
+  });
+  const [query, setQuery] = useState("");
+  const [showTopBtn, setShowTopBtn] = useState(false);
+  const [milestone, setMilestone] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const streak = useMemo(() => {
+    const has = (iso) => daySet.has(iso);
+    let st = 0;
+    const d = new Date();
+    for (;;) {
+      const iso = d.toISOString().slice(0, 10);
+      if (has(iso)) st++;
+      else break;
+      d.setDate(d.getDate() - 1);
+    }
+    return st;
+  }, [daySet]);
+
+  /* persist */
   useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 400);
+    try {
+      localStorage.setItem(K_TREE, JSON.stringify(tree));
+    } catch {}
+  }, [tree]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(K_META, JSON.stringify(meta));
+    } catch {}
+  }, [meta]);
+  const nrSaveRef = useRef(null);
+  useEffect(() => {
+    clearTimeout(nrSaveRef.current);
+    nrSaveRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(K_NOTES, JSON.stringify(nr));
+      } catch {}
+    }, 200);
+    return () => clearTimeout(nrSaveRef.current);
+  }, [nr]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(K_STREAK, JSON.stringify(Array.from(daySet)));
+    } catch {}
+  }, [daySet]);
+
+  /* ui misc */
+  useEffect(() => {
+    const onScroll = () => setShowTopBtn(window.scrollY > 400);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  const grand = useMemo(() => totalsOf(tree), [tree]);
 
-  const filteredTree = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return tree;
-    const out = {};
-    for (const ep of Object.keys(tree)) {
-      const subMap = tree[ep];
-      const subOut = {};
-      for (const sub of Object.keys(subMap)) {
-        const items = subMap[sub].filter((it) =>
-          it.title.toLowerCase().includes(q)
-        );
-        if (items.length) subOut[sub] = items;
-      }
-      if (Object.keys(subOut).length) out[ep] = subOut;
+  function seedChildMeta(m, path, node) {
+    if (isArray(node)) {
+      const k = pathKey(path);
+      if (!m[k]) m[k] = { open: false, targetDate: "" };
+      return;
     }
-    return out;
+    for (const [name, child] of Object.entries(node || {})) {
+      const k = pathKey([...path, name]);
+      if (!m[k]) m[k] = { open: false, targetDate: "" };
+      seedChildMeta(m, [...path, name], child);
+    }
+  }
+
+  /* actions */
+  const toggleOpen = (path) =>
+    setMeta((m) => {
+      const k = pathKey(path);
+      const nowOpen = !m[k]?.open;
+      const next = { ...m, [k]: { ...(m[k] || {}), open: nowOpen } };
+      if (!nowOpen) {
+        const node = getRefAtPath(tree, path);
+        (function closeAll(n, p) {
+          if (isArray(n)) return;
+          for (const [name, child] of Object.entries(n || {})) {
+            const ck = pathKey([...p, name]);
+            next[ck] = { ...(next[ck] || {}), open: false };
+            closeAll(child, [...p, name]);
+          }
+        })(node, path);
+      }
+      return next;
+    });
+  const onSectionHeaderClick = (path) => toggleOpen(path);
+  const setTargetDate = (path, date) =>
+    setMeta((m) => ({
+      ...m,
+      [pathKey(path)]: { ...(m[pathKey(path)] || {}), targetDate: date },
+    }));
+  const setSectionTargetPct = (secKey, pct) =>
+    setMeta((m) => ({
+      ...m,
+      [pathKey([secKey])]: {
+        ...(m[pathKey([secKey])] || {}),
+        targetPct: Number(pct || 0),
+      },
+    }));
+
+  const setAllAtPath = (path, val) => {
+    setTree((old) => {
+      const t = deepClone(old);
+      const node = getRefAtPath(t, path);
+      (function mark(n) {
+        if (isArray(n)) {
+          n.forEach((it) => {
+            it.done = val;
+            it.completedOn = val ? todayISO() : "";
+          });
+          return;
+        }
+        for (const v of Object.values(n || {})) mark(v);
+      })(node);
+      return t;
+    });
+    if (val) setDaySet((s) => new Set(s).add(todayISO()));
+  };
+
+  const setTaskDeadline = (path, idx, date) => {
+    setTree((old) => {
+      const t = deepClone(old);
+      const parent = getRefAtPath(t, path.slice(0, -1));
+      const leafKey = path[path.length - 1];
+      parent[leafKey][idx].deadline = date;
+      return t;
+    });
+  };
+
+  const markTask = (path, idx, val) => {
+    setTree((old) => {
+      const t = deepClone(old);
+      const parent = getRefAtPath(t, path.slice(0, -1));
+      const leafKey = path[path.length - 1];
+      const item = parent[leafKey][idx];
+      item.done = val;
+      item.completedOn = val ? todayISO() : "";
+      return t;
+    });
+    if (val) setDaySet((prev) => new Set(prev).add(todayISO()));
+  };
+
+  /* search filter (structure-preserving) */
+  const filtered = useMemo(() => {
+    if (!query.trim()) return tree;
+    const q = query.toLowerCase();
+    function filterNode(node) {
+      if (isArray(node)) {
+        const items = node.filter((it) =>
+          (it.title || "").toLowerCase().includes(q)
+        );
+        return items.length ? items : null;
+      }
+      const out = {};
+      for (const [k, v] of Object.entries(node || {})) {
+        const matchKey = (k || "").toLowerCase().includes(q);
+        const fn = filterNode(v);
+        if (matchKey && !fn) out[k] = v;
+        else if (fn && (isArray(fn) ? fn.length : Object.keys(fn).length))
+          out[k] = fn;
+      }
+      return Object.keys(out).length ? out : null;
+    }
+    return filterNode(tree) || {};
   }, [tree, query]);
 
-  const countAll = (t) => {
-    let total = 0,
-      done = 0;
-    for (const ep of Object.keys(t || {})) {
-      for (const sub of Object.keys(t[ep] || {})) {
-        const arr = t[ep][sub] || [];
-        total += arr.length;
-        done += arr.filter((x) => x.done).length;
+  const generateSmartPlan = (availableMins) => {
+    const leaves = [];
+    function walk(node, path) {
+      if (isArray(node)) {
+        node.forEach((it, idx) => {
+          if (!it.done)
+            leaves.push({
+              title: it.title,
+              deadline: it.deadline || "",
+              estimate: Math.max(
+                0.25,
+                Number(nr[itemKey(path, idx)]?.estimate || 0.5)
+              ),
+            });
+        });
+        return;
       }
+      for (const [k, v] of Object.entries(node || {})) walk(v, [...path, k]);
     }
-    const percent = total ? Math.round((100 * done) / total) : 0;
-    return { total, done, percent };
-  };
-  const big = countAll(tree);
-
-  const toggleItem = (ep, sub, idx) => {
-    const next = deepClone(tree);
-    const it = next[ep][sub][idx];
-    it.done = !it.done;
-    it.completedOn = it.done ? TODAY() : "";
-    setTree(next);
-  };
-  const setDeadline = (ep, sub, idx, dl) => {
-    const next = deepClone(tree);
-    next[ep][sub][idx].deadline = dl;
-    setTree(next);
-  };
-  const addItem = (ep, sub, title, dl = "") => {
-    const next = deepClone(tree);
-    if (!next[ep]) next[ep] = {};
-    if (!next[ep][sub]) next[ep][sub] = [];
-    next[ep][sub].push({ title, done: false, deadline: dl, completedOn: "" });
-    setTree(next);
-  };
-
-  const collapseAll = () => {
-    const ep = {},
-      p = {},
-      c = {};
-    for (const e of Object.keys(tree)) {
-      ep[e] = true;
-      const groups = groupByParent(tree[e]);
-      for (const parent of Object.keys(groups)) {
-        p[`${e}:::${parent}`] = true;
-        for (const child of Object.keys(groups[parent].children)) {
-          c[`${e}:::${parent}:::${child}`] = true;
-        }
+    walk(tree, []);
+    const scored = leaves
+      .map((l) => ({
+        ...l,
+        score:
+          (l.deadline ? Date.parse(l.deadline) : Number.POSITIVE_INFINITY) +
+          l.estimate * 1000,
+      }))
+      .sort((a, b) => a.score - b.score);
+    const plan = [];
+    let remaining = availableMins;
+    for (const t of scored) {
+      const mins = Math.round(t.estimate * 60);
+      if (mins <= remaining) {
+        plan.push(t);
+        remaining -= mins;
       }
+      if (remaining < 15) break;
     }
-    setEpCollapsed(ep);
-    setPCollapsed(p);
-    setCCollapsed(c);
-  };
-  const expandAll = () => {
-    const ep = {},
-      p = {},
-      c = {};
-    for (const e of Object.keys(tree)) {
-      ep[e] = false;
-      const groups = groupByParent(tree[e]);
-      for (const parent of Object.keys(groups)) {
-        p[`${e}:::${parent}`] = false;
-        for (const child of Object.keys(groups[parent].children)) {
-          c[`${e}:::${parent}:::${child}`] = false;
-        }
-      }
-    }
-    setEpCollapsed(ep);
-    setPCollapsed(p);
-    setCCollapsed(c);
+    return { plan, remaining };
   };
 
-  const clearProgress = () => {
-    const next = deepClone(tree);
-    for (const e of Object.keys(next)) {
-      for (const s of Object.keys(next[e])) {
-        next[e][s] = next[e][s].map((it) => ({
-          ...it,
-          done: false,
-          deadline: "",
-          completedOn: "",
-        }));
-      }
-    }
-    setTree(next);
-  };
-
-  const exportJSON = () => {
-    const blob = new Blob([JSON.stringify(tree, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "syllabus-progress.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  const importJSON = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result);
-        if (data && typeof data === "object") setTree(data);
-      } catch {}
-    };
-    reader.readAsText(file);
-  };
-
-  const scrollIntoViewSmooth = (el) => {
-    if (!el) return;
-    const topOffset = (headerRef.current?.offsetHeight || 0) + 8;
-    const y = el.getBoundingClientRect().top + window.scrollY - topOffset;
-    window.scrollTo({ top: y, behavior: "smooth" });
-  };
-
+  /* ======================= RENDER ======================= */
   return (
-    <div className="p-3 md:p-4 max-w-5xl mx-auto space-y-3 md:space-y-4">
-      {/* Sticky header */}
-      <div ref={headerRef} className="sticky top-0 z-50">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 p-3 rounded-xl border bg-white/80 dark:bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg md:text-2xl font-bold">Syllabus</h1>
-            <span className="text-xs md:text-sm opacity-80">
-              {big.done}/{big.total}
-            </span>
-          </div>
-
-          {/* Desktop actions */}
-          <div className="hidden md:flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={collapseAll}
-              className="px-3 py-2 rounded border active:scale-[.98]"
-            >
-              Collapse All
-            </button>
-            <button
-              type="button"
-              onClick={expandAll}
-              className="px-3 py-2 rounded border active:scale-[.98]"
-            >
-              Expand All
-            </button>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search…"
-              className="border rounded px-3 py-2 w-60"
-            />
-            <button
-              type="button"
-              onClick={exportJSON}
-              className="px-3 py-2 rounded border active:scale-[.98]"
-            >
-              Export
-            </button>
-            <label className="px-3 py-2 rounded border cursor-pointer active:scale-[.98]">
-              Import
-              <input
-                type="file"
-                accept="application/json"
-                className="hidden"
-                onChange={(e) =>
-                  e.target.files && importJSON(e.target.files[0])
+    <div className="min-h-screen bg-[#FF8F8F]/10 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+      <header className="sticky top-0 z-40 backdrop-blur bg-[#FF8F8F]/40 dark:bg-gray-900/70 border-b border-[#FF8F8F]/40 dark:border-gray-800">
+        <div className="max-w-6xl mx-auto px-3 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-2 mb-3 w-full">
+            {/* ✅ Title */}
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+              Syllabus
+            </h1>
+            {/* ✅ Desktop Actions */}
+            <div className="hidden md:flex items-center gap-2">
+              <span className="px-2 py-1.5 rounded-lg bg-white/70 dark:bg-gray-800 text-xs border border-[#FF8F8F]/40">
+                🔥 Streak: <b>{Array.from(daySet).length}</b> days
+              </span>
+              <button
+                onClick={() =>
+                  setMeta((m) => {
+                    const c = { ...m };
+                    Object.keys(c).forEach((k) => (c[k].open = true));
+                    return c;
+                  })
                 }
-              />
-            </label>
-            <button
-              type="button"
-              onClick={clearProgress}
-              className="px-3 py-2 rounded border active:scale-[.98]"
-            >
-              Clear Progress
-            </button>
-          </div>
-
-          {/* Mobile: single menu button */}
-          <div className="flex md:hidden items-center justify-end">
-            <button
-              type="button"
-              onClick={() => setMobileMenu((v) => !v)}
-              className="px-3 py-2 rounded border active:scale-[.98]"
-              aria-expanded={mobileMenu}
-            >
-              ☰ Menu
-            </button>
-          </div>
-
-          {/* Mobile actions panel */}
-          {mobileMenu && (
-            <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
+                className="px-3 py-1.5 rounded-xl bg-[#FF8F8F] text-white text-sm"
+              >
+                Expand
+              </button>
+              <button
+                onClick={() =>
+                  setMeta((m) => {
+                    const c = { ...m };
+                    Object.keys(c).forEach((k) => (c[k].open = false));
+                    return c;
+                  })
+                }
+                className="px-3 py-1.5 rounded-xl bg-[#FF8F8F]/20 text-gray-900 text-sm dark:bg-gray-800 dark:text-gray-100"
+              >
+                Collapse
+              </button>
+              <button
+                onClick={() => {
+                  if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
+                    return;
+                  setTree((old) => {
+                    const t = deepClone(old);
+                    (function reset(n) {
+                      if (Array.isArray(n)) {
+                        n.forEach((it) => {
+                          it.done = false;
+                          it.completedOn = "";
+                          it.deadline = "";
+                        });
+                        return;
+                      }
+                      for (const v of Object.values(n || {})) reset(v);
+                    })(t);
+                    return t;
+                  });
+                  setMeta({});
+                  setNR({});
+                  setDaySet(new Set());
+                  localStorage.removeItem("K_TREE");
+                  localStorage.removeItem("K_META");
+                  localStorage.removeItem("K_NOTES");
+                  localStorage.removeItem("K_STREAK");
+                  window.location.reload();
+                }}
+                className="px-3 py-1.5 rounded-xl bg-red-500 text-white text-sm"
+              >
+                Reset
+              </button>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search…"
-                className="border rounded px-3 py-2 col-span-2"
+                placeholder="Search topics..."
+                className="px-3 py-1.5 rounded-xl border border-[#FF8F8F]/40 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
               />
-              <button
-                type="button"
-                onClick={collapseAll}
-                className="px-3 py-2 rounded border"
-              >
-                Collapse All
-              </button>
-              <button
-                type="button"
-                onClick={expandAll}
-                className="px-3 py-2 rounded border"
-              >
-                Expand All
-              </button>
-              <button
-                type="button"
-                onClick={exportJSON}
-                className="px-3 py-2 rounded border"
-              >
-                Export
-              </button>
-              <label className="px-3 py-2 rounded border text-center cursor-pointer">
-                Import
-                <input
-                  type="file"
-                  accept="application/json"
-                  className="hidden"
-                  onChange={(e) =>
-                    e.target.files && importJSON(e.target.files[0])
-                  }
-                />
-              </label>
-              <button
-                type="button"
-                onClick={clearProgress}
-                className="px-3 py-2 rounded border col-span-2"
-              >
-                Clear Progress
-              </button>
             </div>
-          )}
+            {
+              /* ✅ Mobile Hamburger Menu */
+            }
+            <div className="md:hidden relative">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="px-3 py-2 rounded-lg bg-[#FF8F8F] text-white"
+              >
+                ☰
+              </button>
 
-          <div className="w-full">
-            <div className="mt-2 md:mt-0 w-full h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden relative">
-              <div
-                className="h-3 bg-[hsl(210,100%,50%)]"
-                style={{ width: big.percent + "%" }}
-              />
-              <span className="absolute inset-0 text-[10px] md:text-xs flex items-center justify-center font-medium">
-                {big.percent}%
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="space-y-3">
-        {Object.keys(filteredTree).map((ep) => {
-          const epPct = sectionPercent(filteredTree[ep]);
-          const epOpen = !epCollapsed[ep];
-          const groups = groupByParent(filteredTree[ep]);
-          return (
-            <div
-              key={ep}
-              className="group border rounded-xl bg-white dark:bg-gray-900 dark:border-gray-800"
-            >
-              {/* Episode header */}
-              <div className="px-3 md:px-4 py-3 flex items-center justify-between">
-                <button
-                  type="button"
-                  className="flex items-center gap-3 cursor-pointer"
-                  onClick={(e) => {
-                    setEpCollapsed((s) => ({ ...s, [ep]: epOpen }));
-                    if (epOpen) return;
-                    const card = e.currentTarget.closest(".group");
-                    setTimeout(() => scrollIntoViewSmooth(card), 30);
-                  }}
-                  title={epOpen ? "Collapse" : "Expand"}
-                >
-                  <span className="select-none text-lg">
-                    {epOpen ? "▾" : "▸"}
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 flex flex-col gap-2 shadow-lg z-50">
+                  <span className="px-2 py-1.5 rounded-md bg-gray-200 dark:bg-gray-700 text-xs">
+                    🔥 Streak: {Array.from(daySet).length} days
                   </span>
-                  <h2 className="font-semibold">{ep}</h2>
-                </button>
-                <div className="sec-actions flex items-center gap-3">
-                  <span className="text-sm opacity-70">{epPct}%</span>
-                  <div className="w-24 md:w-28 h-2 bg-gray-200 dark:bg-gray-800 rounded">
-                    <div
-                      className="h-2 bg-[hsl(210,100%,50%)]"
-                      style={{ width: epPct + "%" }}
-                    />
-                  </div>
                   <button
-                    type="button"
-                    className="px-2 py-1 text-xs rounded border active:scale-[.98]"
-                    onClick={(e) => {
-                      setEpCollapsed((s) => ({ ...s, [ep]: epOpen }));
-                      if (epOpen) return;
-                      const card = e.currentTarget.closest(".group");
-                      setTimeout(() => scrollIntoViewSmooth(card), 30);
+                    onClick={() => {
+                      setMeta((m) => {
+                        const c = { ...m };
+                        Object.keys(c).forEach((k) => (c[k].open = true));
+                        return c;
+                      });
+                      setMenuOpen(false);
                     }}
+                    className="px-3 py-1.5 rounded-md bg-[#FF8F8F] text-white text-sm"
                   >
-                    {epOpen ? "Collapse" : "Expand"}
+                    Expand
                   </button>
-                </div>
-              </div>
-
-              {/* Episode content */}
-              {epOpen && (
-                <div className="px-3 md:px-4 pb-4 pt-1 space-y-2">
-                  {Object.keys(groups).map((parent) => {
-                    const pKey = `${ep}:::${parent}`;
-                    const pOpen = !pCollapsed[pKey];
-                    const rootList = groups[parent].rootItems || [];
-                    return (
-                      <div
-                        key={pKey}
-                        className="border rounded-lg dark:border-gray-800"
-                      >
-                        {/* Parent subsection header */}
-                        <div className="px-3 py-2 flex items-center justify-between">
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={(e) => {
-                              setPCollapsed((s) => ({ ...s, [pKey]: pOpen }));
-                              if (pOpen) return;
-                              const card = e.currentTarget.closest(".border");
-                              setTimeout(() => scrollIntoViewSmooth(card), 30);
-                            }}
-                            title={pOpen ? "Collapse" : "Expand"}
-                          >
-                            <span className="select-none">
-                              {pOpen ? "▾" : "▸"}
-                            </span>
-                            <h3 className="font-medium">{parent}</h3>
-                          </button>
-                          <div className="sub-actions flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="px-2 py-1 text-xs rounded border active:scale-[.98]"
-                              onClick={(e) => {
-                                setPCollapsed((s) => ({ ...s, [pKey]: pOpen }));
-                                if (pOpen) return;
-                                const card = e.currentTarget.closest(".border");
-                                setTimeout(
-                                  () => scrollIntoViewSmooth(card),
-                                  30
-                                );
-                              }}
-                            >
-                              {pOpen ? "Collapse" : "Expand"}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Parent content */}
-                        {pOpen && (
-                          <div className="px-3 pb-3 pt-1 space-y-2">
-                            {/* root items under parent (if any) */}
-                            {rootList.length > 0 && (
-                              <ul className="space-y-1">
-                                {rootList.map((it, idx) => (
-                                  <li
-                                    key={idx}
-                                    className={`rounded-lg px-2 py-2 border hover:bg-gray-50 dark:hover:bg-gray-800 transition ${
-                                      it.done ? "opacity-70" : ""
-                                    }`}
-                                    onClick={(e) => {
-                                      const tag =
-                                        e.target.tagName.toLowerCase();
-                                      if (
-                                        [
-                                          "input",
-                                          "button",
-                                          "a",
-                                          "label",
-                                          "svg",
-                                          "path",
-                                        ].includes(tag)
-                                      )
-                                        return;
-                                      const subKey = parent;
-                                      toggleItem(ep, subKey, idx);
-                                    }}
-                                  >
-                                    <div className="flex items-start gap-3">
-                                      <button
-                                        type="button"
-                                        className={`min-w-6 h-6 rounded-md border px-2 text-xs ${
-                                          it.done ? "text-white" : ""
-                                        }`}
-                                        style={{
-                                          background: it.done
-                                            ? "hsl(210,100%,50%)"
-                                            : "",
-                                        }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const subKey = parent;
-                                          toggleItem(ep, subKey, idx);
-                                        }}
-                                        title="Mark done/undone"
-                                      >
-                                        {it.done ? "✓" : ""}
-                                      </button>
-                                      <div className="flex-1 min-w-0">
-                                        <p
-                                          className={`leading-snug ${
-                                            it.done ? "line-through" : ""
-                                          }`}
-                                        >
-                                          {it.title}
-                                        </p>
-                                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-90">
-                                          {it.completedOn && (
-                                            <span className="px-2 py-0.5 rounded-full border bg-green-50 dark:bg-green-900/20">
-                                              Completed on {it.completedOn}
-                                            </span>
-                                          )}
-                                          <span className="hidden">
-                                            {" "}
-                                            {/* mode is tracker-only */}{" "}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-
-                            {/* child subsections */}
-                            {Object.keys(groups[parent].children).map(
-                              (child) => {
-                                const cKey = `${ep}:::${parent}:::${child}`;
-                                const cOpen = !cCollapsed[cKey];
-                                const list =
-                                  groups[parent].children[child] || [];
-                                const pct = Math.round(
-                                  (list.filter((x) => x.done).length /
-                                    (list.length || 1)) *
-                                    100
-                                );
-                                return (
-                                  <div key={cKey} className="border rounded-md">
-                                    <div className="px-3 py-2 flex items-center justify-between">
-                                      <button
-                                        type="button"
-                                        className="flex items-center gap-2 cursor-pointer"
-                                        onClick={(e) => {
-                                          setCCollapsed((s) => ({
-                                            ...s,
-                                            [cKey]: cOpen,
-                                          }));
-                                          if (cOpen) return;
-                                          const card =
-                                            e.currentTarget.closest(".border");
-                                          setTimeout(
-                                            () => scrollIntoViewSmooth(card),
-                                            30
-                                          );
-                                        }}
-                                        title={cOpen ? "Collapse" : "Expand"}
-                                      >
-                                        <span className="select-none">
-                                          {cOpen ? "▾" : "▸"}
-                                        </span>
-                                        <span className="font-medium">
-                                          {child}
-                                        </span>
-                                      </button>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs opacity-70">
-                                          {pct}%
-                                        </span>
-                                        <div className="w-24 h-2 bg-gray-200 dark:bg-gray-800 rounded">
-                                          <div
-                                            className="h-2 bg-[hsl(210,100%,50%)]"
-                                            style={{ width: pct + "%" }}
-                                          />
-                                        </div>
-                                        <button
-                                          type="button"
-                                          className="px-2 py-1 text-xs rounded border active:scale-[.98]"
-                                          onClick={(e) => {
-                                            setCCollapsed((s) => ({
-                                              ...s,
-                                              [cKey]: cOpen,
-                                            }));
-                                            if (cOpen) return;
-                                            const card =
-                                              e.currentTarget.closest(
-                                                ".border"
-                                              );
-                                            setTimeout(
-                                              () => scrollIntoViewSmooth(card),
-                                              30
-                                            );
-                                          }}
-                                        >
-                                          {cOpen ? "Collapse" : "Expand"}
-                                        </button>
-                                      </div>
-                                    </div>
-
-                                    {cOpen && (
-                                      <div className="px-3 pb-3 pt-1">
-                                        <ul className="space-y-1">
-                                          {list.map((it, idx) => (
-                                            <li
-                                              key={idx}
-                                              className={`rounded-lg px-2 py-2 border hover:bg-gray-50 dark:hover:bg-gray-800 transition ${
-                                                it.done ? "opacity-70" : ""
-                                              }`}
-                                              onClick={(e) => {
-                                                const tag =
-                                                  e.target.tagName.toLowerCase();
-                                                if (
-                                                  [
-                                                    "input",
-                                                    "button",
-                                                    "a",
-                                                    "label",
-                                                    "svg",
-                                                    "path",
-                                                  ].includes(tag)
-                                                )
-                                                  return;
-                                                const subKey = `${parent} › ${child}`;
-                                                toggleItem(ep, subKey, idx);
-                                              }}
-                                            >
-                                              <div className="flex items-start gap-3">
-                                                <button
-                                                  type="button"
-                                                  className={`min-w-6 h-6 rounded-md border px-2 text-xs ${
-                                                    it.done ? "text-white" : ""
-                                                  }`}
-                                                  style={{
-                                                    background: it.done
-                                                      ? "hsl(210,100%,50%)"
-                                                      : "",
-                                                  }}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const subKey = `${parent} › ${child}`;
-                                                    toggleItem(ep, subKey, idx);
-                                                  }}
-                                                  title="Mark done/undone"
-                                                >
-                                                  {it.done ? "✓" : ""}
-                                                </button>
-                                                <div className="flex-1 min-w-0">
-                                                  <p
-                                                    className={`leading-snug ${
-                                                      it.done
-                                                        ? "line-through"
-                                                        : ""
-                                                    }`}
-                                                  >
-                                                    {it.title}
-                                                  </p>
-                                                </div>
-                                              </div>
-                                            </li>
-                                          ))}
-                                        </ul>
-
-                                        <NewItem
-                                          onAdd={(t, dl) =>
-                                            addItem(
-                                              ep,
-                                              `${parent} › ${child}`,
-                                              t,
-                                              dl
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              }
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <button
+                    onClick={() => {
+                      setMeta((m) => {
+                        const c = { ...m };
+                        Object.keys(c).forEach((k) => (c[k].open = false));
+                        return c;
+                      });
+                      setMenuOpen(false);
+                    }}
+                    className="px-3 py-1.5 rounded-md bg-gray-300 dark:bg-gray-700 text-sm"
+                  >
+                    Collapse
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (
+                        !confirm(
+                          "Reset syllabus only? Gym data will not be removed."
+                        )
+                      )
+                        return;
+                      setTree((old) => {
+                        const t = deepClone(old);
+                        (function reset(n) {
+                          if (Array.isArray(n)) {
+                            n.forEach((it) => {
+                              it.done = false;
+                              it.completedOn = "";
+                              it.deadline = "";
+                            });
+                            return;
+                          }
+                          for (const v of Object.values(n || {})) reset(v);
+                        })(t);
+                        return t;
+                      });
+                      setMeta({});
+                      setNR({});
+                      setDaySet(new Set());
+                      localStorage.removeItem("K_TREE");
+                      localStorage.removeItem("K_META");
+                      localStorage.removeItem("K_NOTES");
+                      localStorage.removeItem("K_STREAK");
+                      window.location.reload();
+                    }}
+                    className="px-3 py-1.5 rounded-md bg-red-500 text-white text-sm"
+                  >
+                    Reset
+                  </button>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="px-2 py-1.5 rounded-md border border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
+                  />
                 </div>
               )}
             </div>
-          );
-        })}
+          </div>
+
+          <div className="w-full">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="font-medium">
+                Progress: {grand.done}/{grand.total}
+              </span>
+              <span className="font-semibold">{grand.pct}%</span>
+            </div>
+            <div className="h-4 bg-[#FF8F8F]/25 dark:bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#FF8F8F]"
+                style={{ width: `${grand.pct}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+      {/* Smart Planner + Smart Suggest */}
+      <div className="w-full px-3 mt-6 pb-6 grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-3">
+          <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
+          <p className="text-sm opacity-80 mb-3">
+            Closest-deadline topics not yet done.
+          </p>
+          <DailyPlanner tree={tree} />
+        </div>
+        <SmartSuggest generateSmartPlan={generateSmartPlan} />
       </div>
 
-      {/* Back to top button */}
-      {showTop && (
+      <main className="w-full px-3 md:px-4 space-y-4 ">
+        {Object.keys(filtered).length === 0 && (
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            No matches for “{query}”.
+          </div>
+        )}
+        {Object.entries(filtered).map(([secKey, secVal]) => (
+          <SectionCard
+            key={secKey}
+            secKey={secKey}
+            node={secVal}
+            meta={meta}
+            nr={nr}
+            setNR={setNR}
+            onSectionHeaderClick={onSectionHeaderClick}
+            setSectionTargetPct={setSectionTargetPct}
+            setTargetDate={setTargetDate}
+            toggleOpen={toggleOpen}
+            setAllAtPath={setAllAtPath}
+            markTask={markTask}
+            setTaskDeadline={setTaskDeadline}
+          />
+        ))}
+      </main>
+
+      {showTopBtn && (
         <button
-          type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-4 right-4 md:bottom-6 md:right-6 border rounded-full px-3 py-2 bg-white/90 dark:bg-gray-900/80 shadow"
-          title="Back to top"
+          className="fixed bottom-4 right-4 z-40 h-11 w-11 rounded-full shadow-lg bg-[#FF8F8F] text-white flex items-center justify-center text-xl"
         >
-          ↑ Top
+          ↑
         </button>
+      )}
+      {milestone && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-500 text-white shadow">
+          {milestone}
+        </div>
       )}
     </div>
   );
 }
 
-function NewItem({ onAdd }) {
-  const [t, setT] = useState("");
-  const [dl, setDl] = useState("");
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (t.trim()) {
-          onAdd(t.trim(), dl);
-          setT("");
-          setDl("");
+/* ======================= PARTS ======================= */
+function SectionCard({
+  secKey,
+  node,
+  meta,
+  nr,
+  setNR,
+  onSectionHeaderClick,
+  setTargetDate,
+  toggleOpen,
+  setAllAtPath,
+  markTask,
+  setTaskDeadline,
+}) {
+  const sectionPath = [secKey];
+  const m = meta[pathKey(sectionPath)] || { open: false, targetDate: "" };
+  const totals = totalsOf(node);
+  const allDone = totals.total > 0 && totals.done === totals.total;
+
+  // ✅ Get latest completed date from this section
+  function getSectionCompletionDate(n) {
+    let latest = null;
+    if (Array.isArray(n)) {
+      n.forEach((task) => {
+        if (task?.done && task?.completedOn) {
+          const d = new Date(task.completedOn);
+          if (!latest || d > latest) latest = d;
         }
-      }}
-      className="flex gap-2 mt-3"
-    >
-      <input
-        className="flex-1 border rounded p-2"
-        value={t}
-        onChange={(e) => setT(e.target.value)}
-        placeholder="Add topic…"
-      />
-      <input
-        type="date"
-        className="border rounded px-2"
-        value={dl}
-        onChange={(e) => setDl(e.target.value)}
-      />
-      <button type="submit" className="px-3 rounded border active:scale-[.98]">
-        Add
-      </button>
-    </form>
+      });
+    } else {
+      for (const [k, v] of Object.entries(n || {})) {
+        const d = getSectionCompletionDate(v);
+        if (d && (!latest || d > latest)) latest = d;
+      }
+    }
+    return latest;
+  }
+  const latestDone = getSectionCompletionDate(node);
+
+  // ✅ Rollup total estimated hours for this section
+  const hoursRollup = useMemo(() => {
+    let est = 0;
+    (function walk(n, p) {
+      if (Array.isArray(n)) {
+        n.forEach((_, idx) => {
+          const e = Number(nr[itemKey(p, idx)]?.estimate || 0.5);
+          est += isFinite(e) ? e : 0.5;
+        });
+      } else {
+        for (const [k, v] of Object.entries(n || {})) walk(v, [...p, k]);
+      }
+    })(node, sectionPath);
+    return est;
+  }, [node, nr]);
+
+  return (
+    <section className="rounded-2xl border border-[#FF8F8F]/40 dark:border-gray-800 bg-[#FF8F8F]/15 dark:bg-gray-900/60 shadow-sm">
+      {/* ✅ Progress bar on top */}
+      <div className="w-full p-3">
+        <div className="h-2 bg-[#FF8F8F]/25 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#FF8F8F] transition-all"
+            style={{ width: `${totals.pct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* ✅ Header Row (Title + Completion message + Actions + Stats) */}
+      <div
+        onClick={() => onSectionHeaderClick(sectionPath)}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-3 pb-3 select-none"
+      >
+        {/* LEFT — Title + Completed message */}
+        <div className="flex items-center gap-2 flex-1">
+          <span
+            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
+              m.open
+                ? "bg-[#FF8F8F] text-white border-[#FF8F8F]"
+                : "bg-[#FF8F8F]/30 text-gray-900 border-[#FF8F8F]/50"
+            }`}
+          >
+            {m.open ? "−" : "+"}
+          </span>
+          <h2 className="text-base md:text-lg font-semibold">{secKey}</h2>
+
+          {/* ✅ Show completed before/after/target only if whole section done */}
+          {allDone && latestDone && (
+            <span className="text-xs text-green-600 ml-2 whitespace-nowrap">
+              {(() => {
+                if (m.targetDate) {
+                  const done = new Date(latestDone);
+                  const target = new Date(m.targetDate);
+                  done.setHours(0, 0, 0, 0);
+                  target.setHours(0, 0, 0, 0);
+                  const diff = Math.round((done - target) / 86400000);
+                  if (diff < 0)
+                    return `✅ Completed ${Math.abs(
+                      diff
+                    )} day(s) before target`;
+                  if (diff > 0)
+                    return `✅ Completed ${diff} day(s) after target`;
+                  return `✅ Completed on target date`;
+                }
+                return `✅ Completed on ${formatDateDDMMYYYY(latestDone)}`;
+              })()}
+            </span>
+          )}
+        </div>
+
+        {/* RIGHT — Stats + Complete All + Target Date */}
+        <div
+          className="flex items-center gap-3 text-xs"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ✅ Moved stats from under progress bar to here (compact) */}
+          <span className="opacity-75 whitespace-nowrap">
+            {totals.done}/{totals.total} • {totals.pct}% • ~
+            {hoursRollup.toFixed(1)}h
+          </span>
+
+          {/* Complete All / Undo All */}
+          <button
+            onClick={() => setAllAtPath(sectionPath, !allDone)}
+            className="px-2.5 py-1 rounded-lg bg-[#FF8F8F]/20 text-gray-900 text-xs dark:bg-gray-800 dark:text-gray-100"
+          >
+            {allDone ? "Undo all" : "Mark all"}
+          </button>
+
+          {/* 🎯 Target Date */}
+          <label className="flex items-center gap-1.5 text-sm">
+            <span className="opacity-80">🎯</span>
+            <input
+              type="date"
+              value={m.targetDate}
+              onChange={(e) => setTargetDate(sectionPath, e.target.value)}
+              className="px-2 py-1 rounded-lg border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* ✅ Collapsible Subtopics */}
+      {m.open && (
+        <div className="px-3 pb-3 space-y-3">
+          {Object.entries(node || {}).map(([name, child]) => (
+            <SubNode
+              key={name}
+              name={name}
+              node={child}
+              path={[secKey, name]}
+              meta={meta}
+              nr={nr}
+              setNR={setNR}
+              toggleOpen={toggleOpen}
+              setTargetDate={setTargetDate}
+              setAllAtPath={setAllAtPath}
+              markTask={markTask}
+              setTaskDeadline={setTaskDeadline}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SubNode({
+  name,
+  node,
+  path,
+  meta,
+  nr,
+  setNR,
+  toggleOpen,
+  setTargetDate,
+  setAllAtPath,
+  markTask,
+  setTaskDeadline,
+}) {
+  const k = pathKey(path);
+  const m = meta[k] || { open: false, targetDate: "" };
+  const totals = totalsOf(node);
+  const allDone = totals.total > 0 && totals.done === totals.total;
+
+  // rollup hours for subnode
+  const hoursRollup = useMemo(() => {
+    if (!isArray(node)) {
+      let est = 0;
+      for (const [childKey, childVal] of Object.entries(node || {})) {
+        if (isArray(childVal))
+          childVal.forEach((_, idx) => {
+            const e = Number(
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+            );
+            est += isFinite(e) ? e : 0.5;
+          });
+        else
+          Object.entries(childVal || {}).forEach(([gk, gv]) => {
+            if (isArray(gv))
+              gv.forEach((_, idx) => {
+                const e = Number(
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                );
+                est += isFinite(e) ? e : 0.5;
+              });
+          });
+      }
+      return est;
+    }
+    return node.reduce((s, _, idx) => {
+      const e = Number(nr[itemKey(path, idx)]?.estimate || 0.5);
+      return s + (isFinite(e) ? e : 0.5);
+    }, 0);
+  }, [node, nr, path]);
+
+  return (
+    <div className="rounded-xl border border-[#FF8F8F]/35 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50">
+      {/* header row */}
+      <div
+        onClick={() => toggleOpen(path)}
+        className="flex items-center justify-between gap-2 p-2 cursor-pointer"
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border ${
+              m.open
+                ? "bg-[#FF8F8F] text-white border-[#FF8F8F]"
+                : "bg-[#FF8F8F]/20 border-[#FF8F8F]/50"
+            }`}
+          >
+            {m.open ? "−" : "+"}
+          </span>
+          <div className="font-medium">{name}</div>
+        </div>
+        <div
+          className="flex items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-[11px] opacity-75 text-right">
+            {totals.done}/{totals.total} • {totals.pct}% • ~
+            {hoursRollup.toFixed(1)}h
+          </div>
+          <button
+            onClick={() => setAllAtPath(path, !allDone)}
+            className="px-2 py-0.5 rounded-md bg-[#FF8F8F]/20 text-xs"
+          >
+            {allDone ? "Undo all" : "Complete all"}
+          </button>
+          <input
+            type="date"
+            value={m.targetDate}
+            onChange={(e) => setTargetDate(path, e.target.value)}
+            className="px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none text-xs"
+          />
+        </div>
+      </div>
+
+      {/* content */}
+      <div
+        className={`grid transition-all duration-500 ease-out ${
+          m.open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        } overflow-hidden`}
+      >
+        <div className="overflow-hidden">
+          {isArray(node) ? (
+            <ul className="space-y-2 px-2 pb-2">
+              {node.map((it, idx) => {
+                const diff =
+                  m.targetDate && it.completedOn
+                    ? daysDiff(it.completedOn, m.targetDate)
+                    : null;
+                let statusLine = "";
+                if (it.done) {
+                  if (diff === null)
+                    statusLine = `✅ Completed on ${formatDateDDMMYYYY(
+                      it.completedOn
+                    )}`;
+                  else if (diff > 0)
+                    statusLine = `✅ Completed ${diff} day${
+                      diff === 1 ? "" : "s"
+                    } after target`;
+                  else if (diff < 0) {
+                    const before = Math.abs(diff);
+                    statusLine = `✅ Completed ${before} day${
+                      before === 1 ? "" : "s"
+                    } before target`;
+                  } else statusLine = "✅ Completed on target date";
+                }
+
+                return (
+                  <li
+                    key={idx}
+                    onClick={(e) => {
+                      // Prevent marking task as complete when clicking on input fields
+                      if (
+                        e.target.type !== "date" &&
+                        e.target.type !== "number"
+                      ) {
+                        markTask(path, idx, !it.done);
+                      }
+                    }}
+                    className={`rounded-lg border border-[#FF8F8F]/25 dark:border-gray-800 p-2 bg-white/70 dark:bg-gray-900/40 cursor-pointer select-none ${
+                      it.done ? "opacity-90" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      {/* ✅ LEFT — Checkbox + Title */}
+                      <div className="flex items-start gap-2 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={!!it.done}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            markTask(path, idx, e.target.checked);
+                          }}
+                          className="mt-0.5 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <div
+                            className={`truncate ${
+                              it.done ? "line-through" : ""
+                            }`}
+                          >
+                            {it.title}
+                          </div>
+
+                          {/* ✅ STATUS — BELOW TITLE (fixed space for no layout shift) */}
+                          <div className="text-xs text-gray-500 min-h-[1.25rem] leading-4">
+                            {it.done && it.completedOn
+                              ? (() => {
+                                  if (it.deadline) {
+                                    const doneDate = new Date(it.completedOn);
+                                    const targetDate = new Date(it.deadline);
+
+                                    doneDate.setHours(0, 0, 0, 0);
+                                    targetDate.setHours(0, 0, 0, 0);
+
+                                    const diff = Math.round(
+                                      (doneDate - targetDate) / 86400000
+                                    );
+
+                                    if (diff < 0) {
+                                      return `✅ Completed ${Math.abs(
+                                        diff
+                                      )} day${
+                                        Math.abs(diff) === 1 ? "" : "s"
+                                      } before target`;
+                                    }
+                                    if (diff > 0) {
+                                      return `✅ Completed ${diff} day${
+                                        diff === 1 ? "" : "s"
+                                      } after target`;
+                                    }
+                                    return "✅ Completed on target date";
+                                  }
+                                  return `✅ Completed on ${formatDateDDMMYYYY(
+                                    it.completedOn
+                                  )}`;
+                                })()
+                              : ""}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ✅ RIGHT — Deadline + Hours */}
+                      <div
+                        className="flex items-center gap-3 shrink-0"
+                        onClick={(e) => e.stopPropagation()} // prevent click bubbling
+                      >
+                        {/* Deadline */}
+                        <label className="text-xs flex items-center gap-1">
+                          ⏰
+                          <input
+                            type="date"
+                            value={it.deadline || ""}
+                            onChange={(e) =>
+                              setTaskDeadline(path, idx, e.target.value)
+                            }
+                            className="px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+                          />
+                        </label>
+
+                        {/* Estimated Hours */}
+                        <label className="text-xs flex items-center gap-1">
+                          ⏱
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.25"
+                            value={nr[itemKey(path, idx)]?.estimate ?? 0.5}
+                            onChange={(e) =>
+                              setNR((old) => ({
+                                ...old,
+                                [itemKey(path, idx)]: {
+                                  ...(old[itemKey(path, idx)] || {
+                                    notes: "",
+                                    resources: "",
+                                  }),
+                                  estimate: Number(e.target.value || 0),
+                                },
+                              }))
+                            }
+                            className="w-16 px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+                          />
+                          <span>h</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* ✅ Notes & Resources Section (Unchanged) */}
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs opacity-80">
+                        🗒️ Notes & 📚 Resources
+                      </summary>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <textarea
+                          placeholder="Notes…"
+                          value={nr[itemKey(path, idx)]?.notes ?? ""}
+                          onChange={(e) =>
+                            setNR((old) => ({
+                              ...old,
+                              [itemKey(path, idx)]: {
+                                ...(old[itemKey(path, idx)] || {
+                                  estimate: 0.5,
+                                  resources: "",
+                                }),
+                                notes: e.target.value,
+                              },
+                            }))
+                          }
+                          className="min-h-[80px] rounded-md border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
+                        />
+                        <textarea
+                          placeholder="Links (comma/newline)…"
+                          value={nr[itemKey(path, idx)]?.resources ?? ""}
+                          onChange={(e) =>
+                            setNR((old) => ({
+                              ...old,
+                              [itemKey(path, idx)]: {
+                                ...(old[itemKey(path, idx)] || {
+                                  estimate: 0.5,
+                                  notes: "",
+                                }),
+                                resources: e.target.value,
+                              },
+                            }))
+                          }
+                          className="min-h-[80px] rounded-md border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
+                        />
+                      </div>
+                    </details>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 px-2 pb-2">
+              {Object.entries(node || {}).map(([childKey, childVal]) => (
+                <SubNode
+                  key={childKey}
+                  name={childKey}
+                  node={childVal}
+                  path={[...path, childKey]}
+                  meta={meta}
+                  nr={nr}
+                  setNR={setNR}
+                  toggleOpen={toggleOpen}
+                  setTargetDate={setTargetDate}
+                  setAllAtPath={setAllAtPath}
+                  markTask={markTask}
+                  setTaskDeadline={setTaskDeadline}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Daily Planner — excludes completed, shows only titles + deadlines */
+function DailyPlanner({ tree }) {
+  const items = [];
+  (function walk(node, path) {
+    if (Array.isArray(node)) {
+      node.forEach((it) => {
+        if (!it.done)
+          items.push({ title: it.title, deadline: it.deadline || "" });
+      });
+      return;
+    }
+    for (const [k, v] of Object.entries(node || {})) walk(v, [...path, k]);
+  })(tree, []);
+  const withDeadlines = items
+    .map((i) => ({
+      ...i,
+      d: i.deadline ? Date.parse(i.deadline) : Number.POSITIVE_INFINITY,
+    }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 6);
+  return (
+    <ul className="text-sm list-disc pl-5 space-y-1">
+      {withDeadlines.map((i, idx) => (
+        <li key={idx} className="flex items-center justify-between gap-2">
+          <span>{i.title}</span>
+          {i.deadline ? (
+            <span className="text-xs opacity-70">
+              ⏰ {formatDateDDMMYYYY(i.deadline)}
+            </span>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* Smart Suggest — hides completion info */
+function SmartSuggest({ generateSmartPlan }) {
+  const [mins, setMins] = useState(120);
+  const [plan, setPlan] = useState(null);
+  return (
+    <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-3">
+      <h2 className="font-semibold mb-2">🤖 Smart Suggest</h2>
+      <div className="flex items-center gap-2 mb-2">
+        <label className="text-sm flex items-center gap-2">
+          Minutes:
+          <input
+            type="number"
+            value={mins}
+            onChange={(e) => setMins(Number(e.target.value || 0))}
+            className="w-24 px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none"
+          />
+        </label>
+        <button
+          onClick={() => setPlan(generateSmartPlan(mins))}
+          className="px-3 py-1.5 rounded-lg bg-[#FF8F8F] text-white text-sm"
+        >
+          Suggest
+        </button>
+      </div>
+      {plan && (
+        <div className="text-sm">
+          {plan.plan.length ? (
+            <>
+              <ul className="list-disc pl-5 space-y-1">
+                {plan.plan.map((t, i) => (
+                  <li key={i}>
+                    {t.title} — ~{Math.round(t.estimate * 60)} mins{" "}
+                    {t.deadline && (
+                      <em className="opacity-70">
+                        {" "}
+                        (⏰ {formatDateDDMMYYYY(t.deadline)})
+                      </em>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 opacity-75">
+                Remaining buffer: {plan.remaining} mins
+              </div>
+            </>
+          ) : (
+            <div className="opacity-75">
+              Not enough time to suggest a set. Try increasing minutes.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
