@@ -442,7 +442,7 @@ export default function CalendarFullDark() {
   // small UI pieces (StreakBar, TodayHighlights, WeeklySummary, ComparePanel)
   function StreakBar() {
     return (
-      <div className="rounded-xl p-3 bg-gradient-to-r from-green-800/10 via-blue-800/6 to-red-800/8 border border-gray-700">
+      <div className="bg-[#1c1c1e]/80 backdrop-blur-md border border-gray-800 rounded-xl p-6 shadow-md text-gray-300">
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-medium">🔥 Streak</div>
           <div className="text-xs opacity-70">{streakInfo.current} days</div>
@@ -462,16 +462,16 @@ export default function CalendarFullDark() {
   }
 
   function TodayHighlights({ iso, streakInfo }) {
-    const gym = load("wd_gym_logs", {})[iso] || {};
-    const syllabus = load("syllabus_tree_v2", {});
+    const gym = load("wd_gym_logs") || {};
+    const syllabus = load("syllabus_tree_v2") || {};
 
-    // recursively count all completed topics for this date
+    // --- Count study topics for this date ---
     function countTopics(node) {
       if (!node) return 0;
       let count = 0;
       if (Array.isArray(node)) {
         node.forEach((it) => {
-          if (it?.done && it?.completedOn === iso) count++;
+          if (it.completedOn === iso) count++;
         });
       } else if (typeof node === "object") {
         for (const v of Object.values(node)) count += countTopics(v);
@@ -481,37 +481,42 @@ export default function CalendarFullDark() {
 
     const topicCount = countTopics(syllabus);
 
-    const exercises = (gym.cleanedExercises || []).length;
-    const calories = gym.calories || "—";
-    const weight = gym.weight || "—";
+    // --- Extract gym info for this date ---
+    const gymData = gym[iso] || {};
+    const exerciseCount = (gymData.cleanedExercises || []).length || 0;
+    const caloriesCount = gymData.calories || "—";
+    const weightValue = gymData.weight || "—";
 
+    // --- UI ---
     return (
-      <div className="rounded-2xl p-4 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-gray-700 shadow-lg">
+      <div className="rounded-2xl p-4 bg-gradient-to-br from-[#182c48] via-[#1f2d4a] to-[#0e1c33] border border-[#3b82f6]/40 shadow-md text-white dark:bg-[#0f172a] dark:border-gray-700 dark:text-gray-200 transition-all duration-300">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-semibold text-[#93c5fd]">
+          <h3 className="text-base font-semibold text-white dark:text-[#93c5fd]">
             {dayjs(iso).format("dddd, DD MMM")}
           </h3>
-          <div className="text-xs text-gray-400">
-            🔥 Streak: {streakInfo.current}d
+          <div className="text-xs text-white/90 dark:text-gray-400">
+            🔥 Streak: {streakInfo?.current || 0}d
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 text-sm gap-2">
-          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
-            <div className="text-[#38bdf8] font-medium">{topicCount}</div>
-            <div className="opacity-70 text-xs">Topics</div>
+        <div className="grid grid-cols-4 text-center mt-2">
+          <div>
+            <p className="text-[#38bdf8] font-semibold">{topicCount}</p>
+            <p className="text-xs text-white/80 dark:text-gray-400">Topics</p>
           </div>
-          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
-            <div className="text-[#34d399] font-medium">{exercises}</div>
-            <div className="opacity-70 text-xs">Exercises</div>
+          <div>
+            <p className="text-[#22c55e] font-semibold">{exerciseCount}</p>
+            <p className="text-xs text-white/80 dark:text-gray-400">
+              Exercises
+            </p>
           </div>
-          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
-            <div className="text-[#fbbf24] font-medium">{calories}</div>
-            <div className="opacity-70 text-xs">Calories</div>
+          <div>
+            <p className="text-[#facc15] font-semibold">{caloriesCount}</p>
+            <p className="text-xs text-white/80 dark:text-gray-400">Calories</p>
           </div>
-          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
-            <div className="text-[#f472b6] font-medium">{weight}</div>
-            <div className="opacity-70 text-xs">Weight</div>
+          <div>
+            <p className="text-[#f472b6] font-semibold">{weightValue}</p>
+            <p className="text-xs text-white/80 dark:text-gray-400">Weight</p>
           </div>
         </div>
       </div>
@@ -602,145 +607,132 @@ export default function CalendarFullDark() {
 
   // ----------------- UI -----------------
   return (
-    <div className="w-full max-w-6xl mx-auto p-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {/* Top controls */}
-      <div className="lg:col-span-3 flex flex-col gap-3">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-3">
+    <div className="w-full max-w-6xl mx-auto p-3 grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-4 items-start transition-colors duration-500 bg-[#0b1220] dark:bg-transparent">
+      {/* Top Controls */}
+      <div className="lg:col-span-3 flex flex-col gap-4">
+        {/* Row 1: Streak + Quote */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Streak Card */}
+          {/* Streak Card */}
+          <div className="rounded-xl p-4 border border-[#3b82f6]/40 bg-gradient-to-b from-[#182c48] to-[#0e1c33] shadow-md dark:bg-gray-900 dark:border-gray-700 transition-all duration-300 text-white dark:text-gray-200">
             <StreakBar />
-            <div className="rounded-xl p-3 border bg-gray-900 shadow-sm">
-              <div className="text-sm font-medium">Quote</div>
-              <div className="text-xs opacity-70 mt-1">{quote}</div>
-            </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
-            <button
-              onClick={() => setView("calendar")}
-              className={`px-3 py-2 rounded ${
-                view === "calendar"
-                  ? "bg-[#FF8F8F] text-white"
-                  : "bg-gray-800 text-white"
-              }`}
-            >
-              Calendar
-            </button>
-            <button
-              onClick={() => setView("weekly")}
-              className={`px-3 py-2 rounded ${
-                view === "weekly"
-                  ? "bg-[#FF8F8F] text-white"
-                  : "bg-gray-800 text-white"
-              }`}
-            >
-              Weekly
-            </button>
-            <button
-              onClick={() => setView("compare")}
-              className={`px-3 py-2 rounded ${
-                view === "compare"
-                  ? "bg-[#FF8F8F] text-white"
-                  : "bg-gray-800 text-white"
-              }`}
-            >
-              Compare
-            </button>
-            <button
-              onClick={exportAll}
-              className="px-3 py-2 rounded bg-[#10B981]/20"
-            >
-              Export
-            </button>
-            <label className="px-3 py-2 rounded bg-[#FF8F8F]/20 cursor-pointer">
-              Import
-              <input
-                type="file"
-                accept=".json"
-                onChange={(e) => importAll(e.target.files?.[0])}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={resetGymProgress}
-              className="px-3 py-2 rounded bg-red-600 text-white"
-            >
-              Reset Gym
-            </button>
+          {/* Quote Card */}
+          <div className="rounded-xl p-4 border border-[#3b82f6]/40 bg-gradient-to-b from-[#182c48] to-[#0e1c33] shadow-md dark:bg-gray-900 dark:border-gray-700 transition-all duration-300 flex flex-col justify-center">
+            <div className="text-sm font-semibold text-[#38bdf8] dark:text-teal-300 mb-1">
+              💬 Quote
+            </div>
+            <div className="text-sm text-[#e2e8f0] dark:text-gray-300 leading-snug">
+              {quote}
+            </div>
           </div>
+        </div>
+
+        {/* Row 2: Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
+          {[
+            { label: "Calendar", val: "calendar" },
+            { label: "Weekly", val: "weekly" },
+            { label: "Compare", val: "compare" },
+          ].map((btn) => (
+            <button
+              key={btn.val}
+              onClick={() => setView(btn.val)}
+              className={`w-full py-2 rounded-lg text-sm font-medium transition-colors duration-300 ${
+                view === btn.val
+                  ? "bg-[#2563eb] text-white dark:bg-[#1f2937] dark:hover:bg-gray-700"
+                  : "bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white"
+              }`}
+            >
+              {btn.label}
+            </button>
+          ))}
+
+          <button
+            onClick={exportAll}
+            className="w-full py-2 rounded-lg text-sm bg-[#15803d] hover:bg-[#166534] text-white dark:bg-emerald-700/40 dark:hover:bg-emerald-600/50"
+          >
+            Export
+          </button>
+
+          <label className="w-full py-2 rounded-lg text-sm bg-[#0369a1] hover:bg-[#075985] text-white cursor-pointer dark:bg-sky-700/40 dark:hover:bg-sky-600/50">
+            Import
+            <input
+              type="file"
+              accept=".json"
+              onChange={(e) => importAll(e.target.files?.[0])}
+              className="hidden"
+            />
+          </label>
+
+          <button
+            onClick={resetGymProgress}
+            className="w-full py-2 rounded-lg text-sm bg-[#b91c1c] hover:bg-[#991b1b] text-white dark:bg-red-600 dark:hover:bg-red-500"
+          >
+            Reset Gym
+          </button>
         </div>
       </div>
 
-      {/* Calendar grid (left) */}
-      <div className="lg:col-span-2 rounded-2xl border border-gray-700 p-3 bg-[#071022]">
-        <div className="flex items-center justify-between mb-3">
+      {/* Calendar Section */}
+      <div className="lg:col-span-2 rounded-2xl border border-[#274472] dark:border-gray-700 p-3 bg-[#13223a] dark:bg-[#071022] space-y-6">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMonth((m) => m.subtract(1, "month"))}
-              className="px-2 py-1 rounded bg-gray-800 text-white"
+              className="px-2 py-1 rounded bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:text-white"
             >
               ◀
             </button>
-            <h2 className="text-lg font-semibold text-gray-100">
+            <h2 className="text-lg font-semibold text-[#60a5fa] dark:text-gray-100">
               {month.format("MMMM YYYY")}
             </h2>
             <button
               onClick={() => setMonth((m) => m.add(1, "month"))}
-              className="px-2 py-1 rounded bg-gray-800 text-white"
+              className="px-2 py-1 rounded bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:text-white"
             >
               ▶
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMonth(dayjs())}
-              className="px-3 py-1 rounded bg-gray-800 text-white"
-            >
-              Today
-            </button>
-            <div className="text-sm opacity-70 text-gray-300">
-              Showing: {month.format("MMMM YYYY")}
-            </div>
-          </div>
+          <button
+            onClick={() => setMonth(dayjs())}
+            className="px-3 py-1 rounded bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:text-white"
+          >
+            Today
+          </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium opacity-70 mb-2 text-gray-300">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
-
-        {/* Date grid: dark-friendly tile colors */}
+        {/* Calendar Days */}
         <div className="grid grid-cols-7 gap-2">
           {days.map((d) => {
             const iso = d.format("YYYY-MM-DD");
             const status = getDayStatusStr(iso);
             const isCurMonth = d.month() === month.month();
 
-            // dark-mode-friendly classes (no white tiles)
-            const colorCls =
-              status === "both"
-                ? "bg-gradient-to-br from-green-700/40 to-blue-700/30 text-white"
-                : status === "study"
-                ? "bg-green-900/60 text-green-200"
-                : status === "gym"
-                ? "bg-blue-900/50 text-blue-200"
-                : "bg-gray-800/50 text-gray-200";
-
             return (
               <button
                 key={iso}
                 onClick={() => openDay(d)}
-                title={d.format("DD MMM YYYY")}
-                className={`aspect-square sm:aspect-[1/1] w-8 sm:w-10 rounded-xl flex items-center justify-center text-[13px] font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                className={`aspect-square w-10 rounded-xl flex items-center justify-center font-medium transition-all duration-300 hover:scale-105 ${
                   !isCurMonth ? "opacity-30" : ""
                 } ${
+                  status === "both"
+                    ? "bg-gradient-to-br from-[#2563eb] to-[#e11d48] text-white"
+                    : status === "study"
+                    ? "bg-[#22c55e]/70 text-white"
+                    : status === "gym"
+                    ? "bg-[#38bdf8]/80 text-[#0f172a]"
+                    : "bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0]"
+                } dark:${
                   status === "both"
                     ? "bg-gradient-to-br from-[#38bdf8]/60 to-[#34d399]/60 text-white"
                     : status === "study"
                     ? "bg-[#22c55e]/30 text-green-200"
                     : status === "gym"
                     ? "bg-[#0ea5e9]/30 text-blue-200"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/70"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
               >
                 {d.date()}
@@ -748,36 +740,66 @@ export default function CalendarFullDark() {
             );
           })}
         </div>
+
+        {/* Notes Section */}
+        <div className="rounded-xl p-3 border bg-[#1c2b45] border-[#3b82f6]/40 dark:bg-gray-900 dark:border-gray-700">
+          <h4 className="font-semibold text-[#60a5fa] dark:text-gray-100 mb-2">
+            📝 Notes
+          </h4>
+          <textarea
+            value={selectedNote}
+            onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
+            placeholder="Write a short note about today..."
+            className="w-full min-h-[70px] p-2 border rounded bg-[#0f1b33] text-[#e2e8f0] border-[#475569] dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+          />
+        </div>
+
+        {/* Compare / Weekly Containers Below Notes */}
+        <div className="transition-all duration-500 ease-in-out space-y-4">
+          {view === "weekly" && (
+            <div className="rounded-xl p-4 border bg-[#182844] border-[#3b82f6]/50 dark:bg-[#0b2440] dark:border-gray-700 transition-colors text-[#dbeafe] dark:text-gray-100">
+              <WeeklySummary />
+            </div>
+          )}
+
+          {view === "compare" && (
+            <div className="rounded-xl p-4 border bg-[#182844] border-[#3b82f6]/50 dark:bg-[#0b2440] dark:border-gray-700 transition-colors text-[#dbeafe] dark:text-gray-100">
+              <ComparePanel />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Right panel */}
-      <div className="rounded-2xl border border-gray-700 p-3 bg-[#071022] space-y-3">
-        <div className="text-sm opacity-70 text-gray-300">
+      {/* Right Panel */}
+      <div className="rounded-2xl border border-[#274472] dark:border-gray-700 p-3 bg-[#13223a] dark:bg-[#071022] space-y-3">
+        <div className="text-sm text-[#93c5fd] dark:text-gray-300 mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
         </div>
 
         <TodayHighlights iso={selectedDate} streakInfo={streakInfo} />
 
-        <div className="rounded-xl p-3 border bg-[#0c2f28] border-gray-700">
+        {/* Topics */}
+        <div className="rounded-xl p-3 border bg-[#132f27] border-green-600/40 dark:bg-[#0c2f28] dark:border-gray-700 transition-colors">
           <h4 className="font-semibold text-green-400 mb-2">
             📚 Topics Studied
           </h4>
           {selectedStudy.length ? (
-            <ul className="list-disc list-inside text-sm space-y-1">
+            <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] dark:text-gray-100">
               {selectedStudy.map((t, i) => (
                 <li key={i}>{t}</li>
               ))}
             </ul>
           ) : (
-            <div className="text-sm opacity-70">
+            <div className="text-sm opacity-70 text-green-100 dark:text-gray-300">
               No study recorded this day.
             </div>
           )}
         </div>
 
-        <div className="rounded-xl p-3 border bg-[#0b2440] border-gray-700">
-          <h4 className="font-semibold text-blue-400 mb-2">🏋️ Gym Summary</h4>
-          <div className="text-sm space-y-1 text-gray-100">
+        {/* Gym Summary */}
+        <div className="rounded-xl p-3 border bg-[#182844] border-[#3b82f6]/40 dark:bg-[#0b2440] dark:border-gray-700 transition-colors">
+          <h4 className="font-semibold text-[#60a5fa] mb-2">🏋️ Gym Summary</h4>
+          <div className="text-sm space-y-1 text-[#e2e8f0] dark:text-gray-100">
             <div>
               <b>Weight:</b> {selectedGym.weight ?? "-"} kg
             </div>
@@ -793,19 +815,6 @@ export default function CalendarFullDark() {
             </div>
           </div>
         </div>
-
-        <div className="rounded-xl p-3 border bg-gray-900 border-gray-700">
-          <h4 className="font-semibold mb-2">📝 Notes</h4>
-          <textarea
-            value={selectedNote}
-            onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
-            placeholder="Write a short note about today..."
-            className="w-full min-h-[70px] p-2 border rounded bg-gray-800 text-gray-100"
-          />
-        </div>
-
-        {view === "weekly" && <WeeklySummary />}
-        {view === "compare" && <ComparePanel />}
       </div>
     </div>
   );

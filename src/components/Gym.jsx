@@ -490,98 +490,162 @@ export default function Gym() {
   };
 
   return (
-    <div className="space-y-6">
+    <div
+      className="rounded-xl p-6 backdrop-blur-md border shadow-md text-gray-300 transition-all duration-500 
+    bg-gradient-to-br from-[#01497c]/50 via-[#1F2A2A]/85 to-[#0A8754]/50 border-gray-800 text-blue-500 font-medium"
+    >
       {/* Header */}
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Gym</h1>
-          <p className="text-sm opacity-70">
-            Log workouts, calories, weight, and sync with the calendar.
-          </p>
-        </div>
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+  {/* Left Section: Title & Subtitle */}
+  <div>
+    <h1 className="text-2xl font-extrabold tracking-wide 
+                   text-[#E9F8F8] dark:text-[#E9F8F8] drop-shadow-[0_0_8px_rgba(24,61,61,0.4)]">
+      Gym
+    </h1>
+    <p className="text-sm text-[#C4D9D9] dark:text-[#A8BFBF]">
+      Log workouts, calories, weight, and sync with the calendar.
+    </p>
+  </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <select
-            value={weekday}
-            onChange={(e) => setWeekday(e.target.value)}
-            className="px-3 py-2 rounded-md bg-white dark:bg-gray-800 border"
-          >
-            {WEEK.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
+  {/* Right Section: Controls */}
+  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+    {/* Weekday Dropdown */}
+    <select
+      value={weekday}
+      onChange={(e) => setWeekday(e.target.value)}
+      className="px-3 py-2 rounded-md border border-[#406B6B]/60 
+                 bg-[#102626]/80 text-[#E9F8F8] text-sm 
+                 focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
+    >
+      {WEEK.map((d) => (
+        <option key={d} value={d} className="bg-[#102626] text-[#E9F8F8]">
+          {d}
+        </option>
+      ))}
+    </select>
 
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-md bg-white dark:bg-gray-800 border"
-          />
+    {/* Date Picker */}
+    <input
+      type="date"
+      value={date}
+      onChange={(e) => setDate(e.target.value)}
+      className="px-3 py-2 rounded-md border border-[#406B6B]/60 
+                 bg-[#102626]/80 text-[#E9F8F8] text-sm 
+                 focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
+    />
 
-          <button
-            onClick={resetProgress}
-            className="ml-auto bg-red-600 text-white px-4 py-2 rounded-md"
-          >
-            Reset Progress
-          </button>
-        </div>
-      </header>
+    {/* Reset Button */}
+    <button
+      onClick={resetProgress}
+      className="ml-auto bg-gradient-to-r from-[#D64545] via-[#B82132] to-[#8C1E28]
+                 hover:from-[#E14D4D] hover:to-[#B82132] text-[#FAFAFA] 
+                 px-4 py-2 rounded-md text-sm font-semibold 
+                 shadow-md transition-all duration-200"
+    >
+      Reset Progress
+    </button>
+  </div>
+</header>
 
-      {/* Target & progress bar */}
-      <section className="border rounded-2xl p-4 space-y-3">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🎯 Target Weight</span>
-            <input
-              type="number"
-              step="0.1"
-              className="w-28 px-2 py-1 rounded-md bg-white dark:bg-gray-800 border"
-              value={targetWeight}
-              onChange={(e) => setTargetWeight(Number(e.target.value || 0))}
-            />
-            <div className="text-sm opacity-70">
-              Current: {curWeight != null ? `${curWeight} kg` : "—"}
-            </div>
-          </div>
 
-          <div className="ml-auto text-sm">
-            {saving ? (
-              <span className="text-xs opacity-70">Saving…</span>
-            ) : (
-              <span className="text-xs opacity-70">
-                Streak: {streak} days • Workouts: {totalWorkouts}
-              </span>
-            )}
-          </div>
-        </div>
+    {/* 🎯 Target & Progress Bar */}
+      {/* 🎯 Target vs Starting Weight */}
+<section className="mb-2 border border-[#2A4B4B]/70 rounded-2xl p-4 space-y-3 
+                    bg-[#102626]/60 backdrop-blur-md shadow-[0_0_12px_rgba(24,61,61,0.2)] 
+                    transition-all duration-300">
 
-        {/* Bar container (relative) */}
-        <div className="relative">
-          {/* Main grey bar */}
-          <div className="h-3 rounded-full bg-gray-300 dark:bg-gray-800 overflow-hidden" />
-          {/* Green fill: from right → left, width runnerPct% */}
+  {/* Inputs Row */}
+  <div className="flex items-center justify-between flex-wrap gap-4">
+    {/* Target Weight */}
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium text-[#E9F8F8]">🎯 Target Weight</span>
+      <input
+        type="number"
+        step="0.1"
+        className="w-24 px-2 py-1 rounded-md border border-[#406B6B]/60 
+                   bg-[#183D3D]/80 text-[#F1FCFC] text-sm 
+                   focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
+        value={targetWeight}
+        onChange={(e) => setTargetWeight(Number(e.target.value || 0))}
+      />
+      <span className="text-sm text-[#C4D9D9]">kg</span>
+    </div>
+
+    {/* Starting Weight */}
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium text-[#E9F8F8]">⚖️ Starting Weight</span>
+      <input
+        type="number"
+        step="0.1"
+        className="w-24 px-2 py-1 rounded-md border border-[#406B6B]/60 
+                   bg-[#183D3D]/80 text-[#F1FCFC] text-sm 
+                   focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
+        value={startWeight}
+        onChange={(e) => setStartWeight(Number(e.target.value || 0))}
+      />
+      <span className="text-sm text-[#C4D9D9]">kg</span>
+    </div>
+
+    {/* Auto Current Weight Display */}
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium text-[#E9F8F8]">Current Weight:</span>
+      <span className="text-[#A8F8E0] font-semibold">
+        {curWeight ? `${curWeight} kg` : "—"}
+      </span>
+    </div>
+  </div>
+
+  {/* 🏃 Progress Bar — right → left */}
+  <div className="relative mt-3">
+    <div className="h-3 rounded-full bg-[#264545]/60 overflow-hidden shadow-inner" />
+
+    {(() => {
+      const start = startWeight || 85;
+      const target = targetWeight || 75;
+      const current = curWeight || start;
+
+      const totalLoss = start - target;
+      const currentLoss = start - current;
+
+      // Progress = how much lost out of total goal
+      const pct = totalLoss > 0 ? (currentLoss / totalLoss) * 100 : 0;
+      const clamped = Math.min(100, Math.max(0, pct));
+
+      return (
+        <>
+          {/* Fill (right → left) */}
           <div
-            className="absolute top-0 right-0 h-3 rounded-l-full"
+            className="absolute top-0 right-0 h-3 rounded-l-full transition-all duration-700"
             style={{
-              width: `${runnerPct}%`,
-              background: "linear-gradient(90deg, #4ade80, #22c55e)",
+              width: `${100 - clamped}%`,
+              background:
+                "linear-gradient(270deg, rgba(79,209,197,1) 0%, rgba(34,197,94,1) 100%)",
             }}
-            title="Progress toward target"
           />
-          {/* Runner emoji BELOW the bar, moves RIGHT → LEFT (your exact code kept) */}
+
+          {/* Runner */}
           <div
             className="absolute -top-5 mt-1 transition-all duration-500 z-20"
-            style={{ left: `calc(${100 - runnerPct}% - 15px)` }}
+            style={{
+              right: `calc(${100 - clamped}% - 15px)`,
+            }}
           >
-            <span className="text-2xl drop-shadow-md">🏃‍♂️</span>
+            <span className="text-2xl drop-shadow-[0_0_6px_rgba(79,209,197,0.6)]">
+              🏃
+            </span>
           </div>
-        </div>
-      </section>
+        </>
+      );
+    })()}
+  </div>
+</section>
+
+
+
+
 
       {/* Workout card */}
-      <section className="border rounded-2xl p-4">
+      <section className="mb-2 border rounded-2xl p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">
@@ -707,7 +771,7 @@ export default function Gym() {
       </section>
 
       {/* Calendar + Daily Summary side-by-side on desktop */}
-      <section className="grid md:grid-cols-2 gap-4">
+      <section className="grid md:grid-cols-2 gap-4 mb-2">
         <MiniCalendar
           date={date}
           setDate={(d) => {
@@ -718,7 +782,7 @@ export default function Gym() {
       </section>
 
       {/* Progress Chart */}
-      <section className="border rounded-2xl p-4">
+      <section className="border rounded-2xl mb-2 p-4">
         <h3 className="font-semibold mb-3">Progress (Weight & BMI)</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
