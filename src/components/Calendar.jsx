@@ -65,6 +65,10 @@ function combinedExercisesForDate(iso) {
   // load raw gym logs (helps if other modules update storage)
   const gymLogs = load("wd_gym_logs", {}) || {};
   const g = gymLogs[iso] || {};
+  if (g.cleanedExercises && Array.isArray(g.cleanedExercises)) {
+    return g.cleanedExercises;
+  }
+
   const parts = [];
 
   const pushIf = (v) => {
@@ -161,6 +165,30 @@ function combinedExercisesForDate(iso) {
         if (v === true) parts.push(k);
       });
     }
+  }
+
+  // NEW FIX — handle boolean arrays + reference plan
+  if (
+    Array.isArray(g.left) ||
+    Array.isArray(g.right) ||
+    Array.isArray(g.finisher)
+  ) {
+    const plan = JSON.parse(localStorage.getItem("wd_gym_plan") || "{}");
+    const weekday = g.weekday || dayjs(iso).format("dddd");
+    const todayPlan = plan[weekday] || {};
+    const allExercises = [
+      ...(todayPlan.left || []),
+      ...(todayPlan.right || []),
+      ...(todayPlan.finisher || []),
+    ];
+    const bools = [
+      ...(g.left || []),
+      ...(g.right || []),
+      ...(g.finisher || []),
+    ];
+    bools.forEach((b, i) => {
+      if (b && allExercises[i]) parts.push(allExercises[i]);
+    });
   }
 
   // unique and cleaned
@@ -433,40 +461,58 @@ export default function CalendarFullDark() {
     );
   }
 
-  function TodayHighlights({ iso }) {
-    const study = studyMap[iso] || [];
-    const gym = gymLogs[iso] || {};
-    const exercises = combinedExercisesForDateWrapper(iso);
+  function TodayHighlights({ iso, streakInfo }) {
+    const gym = load("wd_gym_logs", {})[iso] || {};
+    const syllabus = load("syllabus_tree_v2", {});
+
+    // recursively count all completed topics for this date
+    function countTopics(node) {
+      if (!node) return 0;
+      let count = 0;
+      if (Array.isArray(node)) {
+        node.forEach((it) => {
+          if (it?.done && it?.completedOn === iso) count++;
+        });
+      } else if (typeof node === "object") {
+        for (const v of Object.values(node)) count += countTopics(v);
+      }
+      return count;
+    }
+
+    const topicCount = countTopics(syllabus);
+
+    const exercises = (gym.cleanedExercises || []).length;
+    const calories = gym.calories || "—";
+    const weight = gym.weight || "—";
+
     return (
-      <div className="rounded-xl p-3 border border-gray-700 bg-gray-900 shadow-sm">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <div className="text-xs opacity-70">Today</div>
-            <div className="font-semibold">
-              {dayjs(iso).format("dddd, DD MMM")}
-            </div>
-          </div>
-          <div className="text-xs opacity-70 text-right">
-            <div>Topics: {study.length}</div>
-            <div>Exercises: {exercises.length}</div>
-            <div>Calories: {gym.calories ?? "—"}</div>
+      <div className="rounded-2xl p-4 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] border border-gray-700 shadow-lg">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-base font-semibold text-[#93c5fd]">
+            {dayjs(iso).format("dddd, DD MMM")}
+          </h3>
+          <div className="text-xs text-gray-400">
+            🔥 Streak: {streakInfo.current}d
           </div>
         </div>
-        <div className="mt-3 text-sm">
-          {study.length ? (
-            <div className="mb-2">
-              <b>Study:</b> {study.join(", ")}
-            </div>
-          ) : (
-            <div className="opacity-70">No study</div>
-          )}
-          {exercises.length ? (
-            <div>
-              <b>Gym:</b> {exercises.join(", ")}
-            </div>
-          ) : (
-            <div className="opacity-70">No gym</div>
-          )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 text-sm gap-2">
+          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
+            <div className="text-[#38bdf8] font-medium">{topicCount}</div>
+            <div className="opacity-70 text-xs">Topics</div>
+          </div>
+          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
+            <div className="text-[#34d399] font-medium">{exercises}</div>
+            <div className="opacity-70 text-xs">Exercises</div>
+          </div>
+          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
+            <div className="text-[#fbbf24] font-medium">{calories}</div>
+            <div className="opacity-70 text-xs">Calories</div>
+          </div>
+          <div className="p-2 rounded-lg bg-gray-800/40 text-center">
+            <div className="text-[#f472b6] font-medium">{weight}</div>
+            <div className="opacity-70 text-xs">Weight</div>
+          </div>
         </div>
       </div>
     );
@@ -685,9 +731,17 @@ export default function CalendarFullDark() {
                 key={iso}
                 onClick={() => openDay(d)}
                 title={d.format("DD MMM YYYY")}
-                className={`aspect-square rounded-lg text-sm flex items-center justify-center ${
-                  !isCurMonth ? "opacity-40" : ""
-                } ${colorCls}`}
+                className={`aspect-square sm:aspect-[1/1] w-8 sm:w-10 rounded-xl flex items-center justify-center text-[13px] font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                  !isCurMonth ? "opacity-30" : ""
+                } ${
+                  status === "both"
+                    ? "bg-gradient-to-br from-[#38bdf8]/60 to-[#34d399]/60 text-white"
+                    : status === "study"
+                    ? "bg-[#22c55e]/30 text-green-200"
+                    : status === "gym"
+                    ? "bg-[#0ea5e9]/30 text-blue-200"
+                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/70"
+                }`}
               >
                 {d.date()}
               </button>
@@ -702,7 +756,7 @@ export default function CalendarFullDark() {
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
         </div>
 
-        <TodayHighlights iso={selectedDate} />
+        <TodayHighlights iso={selectedDate} streakInfo={streakInfo} />
 
         <div className="rounded-xl p-3 border bg-[#0c2f28] border-gray-700">
           <h4 className="font-semibold text-green-400 mb-2">

@@ -11,6 +11,46 @@ import {
   Legend,
 } from "recharts";
 
+// 🔧 Auto-clean old boolean logs → replaces "true" & "done" with actual exercise names from plan
+(function cleanGymLogs() {
+  try {
+    const raw = localStorage.getItem("wd_gym_logs");
+    if (!raw) return;
+    const logs = JSON.parse(raw);
+    const plan = JSON.parse(localStorage.getItem("wd_gym_plan") || "{}");
+
+    Object.entries(logs).forEach(([date, entry]) => {
+      if (!entry || typeof entry !== "object") return;
+      const weekday = entry.weekday || dayjs(date).format("dddd");
+      const todayPlan = plan[weekday] || {};
+      const allExercises = [
+        ...(todayPlan.left || []),
+        ...(todayPlan.right || []),
+        ...(todayPlan.finisher || []),
+      ];
+      const bools = [
+        ...(entry.left || []),
+        ...(entry.right || []),
+        ...(entry.finisher || []),
+      ];
+      const cleaned = [];
+      bools.forEach((b, i) => {
+        if (b === true && allExercises[i]) cleaned.push(allExercises[i]);
+      });
+      // merge existing string names too
+      Object.values(entry).forEach((v) => {
+        if (typeof v === "string" && v.trim() && !cleaned.includes(v))
+          cleaned.push(v.trim());
+      });
+      logs[date].cleanedExercises = cleaned;
+    });
+
+    localStorage.setItem("wd_gym_logs", JSON.stringify(logs));
+  } catch (err) {
+    console.warn("cleanup skipped:", err);
+  }
+})();
+
 /**
  * Utilities (localStorage helpers)
  */
@@ -858,18 +898,26 @@ function DailySummary({ date, logs, dateKey }) {
           <h4 className="font-medium mb-1">Exercises</h4>
           {entry ? (
             <ul className="list-disc list-inside text-sm">
-              {(entry.left || [])
-                .concat(entry.right || [])
-                .concat(entry.finisher || [])
-                .map((ex, i) => (
+              {(() => {
+                const plan = load("wd_gym_plan", {});
+                const weekday = entry?.weekday || dayjs(date).format("dddd");
+                const todayPlan = plan[weekday] || {};
+                const allExercises = [
+                  ...(todayPlan.left || []),
+                  ...(todayPlan.right || []),
+                  ...(todayPlan.finisher || []),
+                ];
+                const bools = [
+                  ...(entry.left || []),
+                  ...(entry.right || []),
+                  ...(entry.finisher || []),
+                ];
+                return allExercises.map((ex, i) => (
                   <li key={i}>
-                    {typeof ex === "boolean"
-                      ? ex
-                        ? "Completed"
-                        : "Not completed"
-                      : ex}
+                    {bools[i] ? ex : <span className="opacity-60">{ex}</span>}
                   </li>
-                ))}
+                ));
+              })()}
             </ul>
           ) : (
             <div className="opacity-70">No exercises logged for this day.</div>
