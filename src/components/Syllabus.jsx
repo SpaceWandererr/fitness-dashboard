@@ -4550,6 +4550,29 @@ export default function Syllabus() {
     reader.readAsText(file);
   }
 
+  function getStudyHistory(tree) {
+    const history = {}; // { "2025-11-10": ["Topic 1", "Topic 2"], ... }
+
+    function walk(node, path) {
+      if (Array.isArray(node)) {
+        node.forEach((item) => {
+          if (item.done && item.completedOn) {
+            const date = item.completedOn;
+            const title = item.title || path.join(" > ");
+            if (!history[date]) history[date] = [];
+            history[date].push(title);
+          }
+        });
+        return;
+      }
+      for (const [k, v] of Object.entries(node || {})) walk(v, [...path, k]);
+    }
+
+    walk(tree, []);
+    return history;
+  }
+
+
   /* ======================= RENDER ======================= */
   return (
     <div className="min-h-screen bg-[#FF8F8F]/10 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
