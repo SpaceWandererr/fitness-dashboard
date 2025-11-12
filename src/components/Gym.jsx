@@ -11,7 +11,9 @@ import {
   Legend,
 } from "recharts";
 
-// 🔧 Auto-clean old boolean logs → replaces "true" & "done" with actual exercise names from plan
+/* ---------------------------------------------------------
+   🔧 One-time cleanup for old logs that had "true"/"done"
+---------------------------------------------------------- */
 (function cleanGymLogs() {
   try {
     const raw = localStorage.getItem("wd_gym_logs");
@@ -37,7 +39,6 @@ import {
       bools.forEach((b, i) => {
         if (b === true && allExercises[i]) cleaned.push(allExercises[i]);
       });
-      // merge existing string names too
       Object.values(entry).forEach((v) => {
         if (typeof v === "string" && v.trim() && !cleaned.includes(v))
           cleaned.push(v.trim());
@@ -51,9 +52,7 @@ import {
   }
 })();
 
-/**
- * Utilities (localStorage helpers)
- */
+/* ---------------------- Utilities ---------------------- */
 function load(key, fallback = null) {
   try {
     const s = localStorage.getItem(key);
@@ -69,7 +68,6 @@ function save(key, val) {
   } catch (e) {}
 }
 
-/* ---------- Constants & defaults ---------- */
 const DEFAULT_PLAN = {
   Monday: {
     title: "Chest + Core",
@@ -162,17 +160,22 @@ const WEEK = [
   "Friday",
   "Saturday",
 ];
-
 const fmtISO = (d) => dayjs(d).format("YYYY-MM-DD");
 const fmtDisp = (d) => dayjs(d).format("DD-MM-YYYY");
 
-/* ---------- Main component ---------- */
 export default function Gym() {
-  // plan persisted (editable)
+  /* ------------ Persisted plan ------------ */
   const [plan, setPlan] = useState(() => load("wd_gym_plan", DEFAULT_PLAN));
   useEffect(() => save("wd_gym_plan", plan), [plan]);
 
-  // calendar selection & weekday
+  // 🧩 Auto-fill missing weekdays if old plan was incomplete
+  useEffect(() => {
+    const updated = { ...DEFAULT_PLAN, ...plan };
+    setPlan(updated);
+    save("wd_gym_plan", updated);
+  }, []); // run once on load
+
+  /* ------------ Calendar & weekday ------------ */
   const todayIso = dayjs().format("YYYY-MM-DD");
   const todayName = dayjs().format("dddd");
   const defaultDay = WEEK.includes(todayName) ? todayName : "Monday";
@@ -181,20 +184,28 @@ export default function Gym() {
   const [date, setDate] = useState(todayIso);
   const dateKey = fmtISO(date);
 
-  // logs persisted: { "YYYY-MM-DD": { weekday, left:[], right:[], finisher:[], done, calories, weight, bmi } }
+  /* ------------ Logs & goals ------------ */
   const [logs, setLogs] = useState(() => load("wd_gym_logs", {}));
   useEffect(() => save("wd_gym_logs", logs), [logs]);
 
-  // goals, overrides, bmi logs
   const [targetWeight, setTargetWeight] = useState(() => {
     const goals = load("wd_goals", { targetWeight: 70 });
-    return goals.targetWeight || 70;
+    return goals?.targetWeight ?? 70;
   });
-
   useEffect(() => {
     const goals = load("wd_goals", {});
     save("wd_goals", { ...goals, targetWeight });
   }, [targetWeight]);
+
+  // NEW: editable, persistent startWeight
+  const [startWeight, setStartWeight] = useState(() =>
+    load("wd_start_weight", null)
+  );
+  useEffect(() => {
+    if (startWeight !== null && startWeight !== undefined) {
+      save("wd_start_weight", startWeight);
+    }
+  }, [startWeight]);
 
   const [weightOverrides, setWeightOverrides] = useState(() =>
     load("wd_weight_overrides", {})
@@ -204,60 +215,81 @@ export default function Gym() {
     [weightOverrides]
   );
 
-  // bmi logs array [{date: 'DD-MM-YYYY', weight, bmi}]
   const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
   useEffect(() => save("bmi_logs", bmiLogs), [bmiLogs]);
 
-  // modal inputs & state
+  /* ------------ Modal state ------------ */
   const [showModal, setShowModal] = useState(false);
   const [caloriesInput, setCaloriesInput] = useState("");
   const [currentWeightInput, setCurrentWeightInput] = useState("");
+  const weightInputRef = useRef(null);
 
-  // UI helpers
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  // autofocus when modal opens
+  useEffect(() => {
+    if (showModal && weightInputRef.current) {
+      // slight delay to ensure mount
+      setTimeout(() => {
+        weightInputRef.current?.focus();
+        weightInputRef.current?.select();
+      }, 10);
+    }
+  }, [showModal]);
+
+  /* ------------ Misc UI ------------ */
   const [saving, setSaving] = useState(false);
+  const [showChart, setShowChart] = useState(false);
 
-  // When 'date' changes from anywhere (calendar or date input), we should ensure weekday sync
+  // Sync weekday when date changes
+  // ✅ Always set weekday, even for Sunday/future days
   useEffect(() => {
     const name = dayjs(date).format("dddd");
-    if (WEEK.includes(name)) setWeekday(name);
-    // ensure checks persist: if logs has an entry for date, keep it; else create default placeholder
-    // (we won't auto-write logs here)
+    setWeekday(name);
   }, [date]);
 
-  // Persist helper
   function persistLogFor(dateIso, obj) {
     const next = { ...logs, [dateIso]: obj };
     setLogs(next);
     save("wd_gym_logs", next);
   }
 
-  // Build checks view for current selected date (shows default plan structure but uses saved values when available)
+  /* ------------ Checks for selected day ------------ */
+  // ✅ bulletproof checks initializer
   const checks = useMemo(() => {
-    const def = plan[weekday] || { left: [], right: [], finisher: [] };
-    const prev = logs[dateKey];
-    const fit = (arr = [], len = 0) => {
-      const a = (arr || []).slice(0, len);
-      while (a.length < len) a.push(false);
-      return a;
-    };
-    if (!prev) {
+    const def = plan?.[weekday] ?? { left: [], right: [], finisher: [] };
+    const prev = logs?.[dateKey];
+
+    if (!prev || typeof prev !== "object") {
       return {
-        weekday,
-        left: fit([], def.left?.length || 0),
-        right: fit([], def.right?.length || 0),
-        finisher: fit([], def.finisher?.length || 0),
+        weekday: weekday || "",
+        left: Array.isArray(def.left) ? def.left.map(() => false) : [],
+        right: Array.isArray(def.right) ? def.right.map(() => false) : [],
+        finisher: Array.isArray(def.finisher)
+          ? def.finisher.map(() => false)
+          : [],
         done: false,
         calories: undefined,
         bmi: undefined,
         weight: undefined,
       };
     }
+
     return {
-      weekday,
-      left: fit(prev.left, def.left?.length || 0),
-      right: fit(prev.right, def.right?.length || 0),
-      finisher: fit(prev.finisher, def.finisher?.length || 0),
+      weekday: weekday || "",
+      left: Array.isArray(prev.left)
+        ? prev.left
+        : Array.isArray(def.left)
+        ? def.left.map(() => false)
+        : [],
+      right: Array.isArray(prev.right)
+        ? prev.right
+        : Array.isArray(def.right)
+        ? def.right.map(() => false)
+        : [],
+      finisher: Array.isArray(prev.finisher)
+        ? prev.finisher
+        : Array.isArray(def.finisher)
+        ? def.finisher.map(() => false)
+        : [],
       done: !!prev.done,
       calories: prev.calories,
       bmi: prev.bmi,
@@ -279,7 +311,7 @@ export default function Gym() {
     ? Math.round((completedExercises / totalExercises) * 100)
     : 0;
 
-  // mark toggle for an exercise
+  /* ------------ Exercise toggles ------------ */
   const toggle = (section, idx) => {
     const prev = logs[dateKey] || { ...checks, weekday };
     const next = {
@@ -299,7 +331,6 @@ export default function Gym() {
     persistLogFor(dateKey, next);
   };
 
-  // Mark workout done (open modal to save calories + weight)
   const canComplete =
     checks.left.some(Boolean) ||
     checks.right.some(Boolean) ||
@@ -320,7 +351,6 @@ export default function Gym() {
     const calories = Number(caloriesInput) || 0;
     const weight = Number(currentWeightInput) || checks.weight || null;
 
-    // compute BMI using saved height (fallback 176 cm)
     const savedHeight = Number(load("bmi_height", 176));
     const newBmi =
       weight && savedHeight
@@ -340,17 +370,14 @@ export default function Gym() {
     };
     persistLogFor(dateKey, next);
 
-    // mark calendar done map
     const doneMap = load("wd_done", {});
     doneMap[dateKey] = true;
     save("wd_done", doneMap);
 
-    // save weight override to keep data even if bmi logs removed
     const overrides = { ...weightOverrides, [dateKey]: weight };
     setWeightOverrides(overrides);
     save("wd_weight_overrides", overrides);
 
-    // push/update bmi_logs (DD-MM-YYYY)
     const disp = fmtDisp(date);
     const arr = load("bmi_logs", []);
     const idx = arr.findIndex((e) => e?.date === disp);
@@ -361,6 +388,17 @@ export default function Gym() {
     }
     setBmiLogs(arr);
     save("bmi_logs", arr);
+
+    // if startWeight is not set yet, initialize it with the first saved weight
+    // 🧠 Smart baseline update
+    if (weight) {
+      const savedStart = load("wd_start_weight", null);
+      // If no start or gained weight beyond previous start → update
+      if (!savedStart || weight > savedStart) {
+        setStartWeight(weight);
+        save("wd_start_weight", weight);
+      }
+    }
 
     setShowModal(false);
   };
@@ -383,7 +421,6 @@ export default function Gym() {
     save("wd_done", doneMap);
   };
 
-  // Mark/unmark all exercises
   const toggleMarkAll = () => {
     const prev = logs[dateKey] || { ...checks, weekday };
     const def = plan[weekday] || { left: [], right: [], finisher: [] };
@@ -401,7 +438,7 @@ export default function Gym() {
     persistLogFor(dateKey, next);
   };
 
-  // streak and totals derived from wd_done map
+  /* ------------ Streak & totals ------------ */
   const streak = useMemo(() => {
     const doneMap = load("wd_done", {});
     let s = 0;
@@ -418,38 +455,50 @@ export default function Gym() {
     return Object.values(doneMap).filter(Boolean).length;
   }, [logs]);
 
-  // Weight progress helpers
+  /* ------------ Weight progress helpers ------------ */
   const recentWeights = (load("bmi_logs", []) || [])
     .map((b) => b?.weight)
     .filter((w) => typeof w === "number");
-  const startWeight = recentWeights.length
+
+  // If user hasn't set startWeight yet, infer a reasonable default
+  const inferredStart = recentWeights.length
     ? Math.max(...recentWeights.slice(-30))
     : checks.weight ?? targetWeight;
+
+  const effectiveStart = startWeight ?? inferredStart;
   const overrideWeight = weightOverrides[dateKey];
   let curWeight =
     overrideWeight ??
     checks.weight ??
     recentWeights.slice().reverse()[0] ??
-    startWeight;
-  const tw = Number(targetWeight);
-  const pct = (from, to, cur) => {
-    const span = Math.abs(from - to);
-    if (!isFinite(span) || span === 0) return 0;
-    const p = ((from - cur) / (from - to)) * 100;
-    return Math.max(0, Math.min(100, p));
-  };
-  const runnerPct = pct(startWeight, tw, curWeight);
-  const diffToGoal =
-    isFinite(curWeight) && isFinite(tw) ? curWeight - tw : null;
+    effectiveStart;
 
-  // Chart data
+  const tw = Number(targetWeight);
+
+  // ✅ Progress = how far NOW is from START toward TARGET (works for loss or gain)
+  // 🧮 Realistic progress (supports regression + dynamic baseline)
+  const pctToGoal = (() => {
+    const from = Number(effectiveStart);
+    const to = Number(tw);
+    const cur = Number(curWeight);
+    const span = from - to;
+    if (!isFinite(span) || span === 0) return 0;
+
+    const p = ((from - cur) / span) * 100;
+    return p; // can go negative if weight increases
+  })();
+
+  const diffToGoal =
+    isFinite(curWeight) && isFinite(tw) ? (curWeight - tw).toFixed(1) : null;
+
+  /* ------------ Chart data ------------ */
   const chartData = (bmiLogs || []).map((e) => ({
     date: e.date,
     weight: e.weight,
     bmi: e.bmi,
   }));
 
-  // Next day plan description
+  /* ------------ Next Day Plan ------------ */
   const nextDayName = (() => {
     const d = dayjs(date).add(1, "day").format("dddd");
     if (d === "Sunday") return "Rest Day (Sunday)";
@@ -459,7 +508,7 @@ export default function Gym() {
   const nextPlan =
     nextDayName === "Rest Day (Sunday)" ? null : plan[nextDayName] || null;
 
-  // Reset progress (clear logs, wd_done, overrides, but keep plan & goals)
+  /* ------------ Reset ------------ */
   const resetProgress = () => {
     if (
       !confirm(
@@ -478,148 +527,174 @@ export default function Gym() {
     setTimeout(() => setSaving(false), 900);
   };
 
-  // When calendar changes date externally, consumer will call setDate (we rely on prop setDate in MiniCalendar)
-  // We already have setDate local.
+  /* ------------ Render ------------ */
+  // ✅ Always safe fallback, even if weekday invalid or not in plan
+  // ✅ Always fix case + fill missing days dynamically
+  const normalizedWeekday = WEEK.find(
+    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
+  );
 
-  /* ---------- Render ---------- */
-  const dayPlan = plan[weekday] || {
-    title: "",
-    left: [],
-    right: [],
-    finisher: [],
-  };
+  const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
+    DEFAULT_PLAN[normalizedWeekday] || {
+      title: `${weekday || "Unknown"} — No Plan Found`,
+      left: [],
+      right: [],
+      finisher: [],
+    };
+
+  // 🛡️ Emergency guard: prevent rendering if critical data missing
+  if (!plan || typeof plan !== "object") {
+    return (
+      <div className="p-4 text-red-400">
+        ⚠ Error: Workout plan data is missing or corrupted.
+      </div>
+    );
+  }
+  console.log("DEBUG weekday:", weekday);
+  console.log("PLAN KEYS:", Object.keys(plan || {}));
 
   return (
     <div
-      className="rounded-xl p-6 backdrop-blur-md border shadow-md text-gray-300 transition-all duration-500 
-    bg-gradient-to-br from-[#01497c]/50 via-[#1F2A2A]/85 to-[#0A8754]/50 border-gray-800 text-blue-500 font-medium"
+      className="rounded-xl p-6 backdrop-blur-md border shadow-md transition-all duration-500 
+      bg-gradient-to-br from-[#01497c]/50 via-[#1F2A2A]/85 to-[#0A8754]/50 border-gray-800 text-blue-500 font-medium"
     >
       {/* Header */}
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-  {/* Left Section: Title & Subtitle */}
-  <div>
-    <h1 className="text-2xl font-extrabold tracking-wide 
-                   text-[#E9F8F8] dark:text-[#E9F8F8] drop-shadow-[0_0_8px_rgba(24,61,61,0.4)]">
-      Gym
-    </h1>
-    <p className="text-sm text-[#C4D9D9] dark:text-[#A8BFBF]">
-      Log workouts, calories, weight, and sync with the calendar.
-    </p>
-  </div>
+        <div>
+          <h1
+            className="text-2xl font-extrabold tracking-wide 
+                         text-[#E9F8F8] drop-shadow-[0_0_8px_rgba(24,61,61,0.4)]"
+          >
+            Gym
+          </h1>
+          <p className="text-sm text-[#C4D9D9]">
+            Log workouts, calories, weight. Everything syncs with the calendar.
+          </p>
+        </div>
 
-  {/* Right Section: Controls */}
-  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-    {/* Weekday Dropdown */}
-    <select
-      value={weekday}
-      onChange={(e) => setWeekday(e.target.value)}
-      className="px-3 py-2 rounded-md border border-[#406B6B]/60 
-                 bg-[#102626]/80 text-[#E9F8F8] text-sm 
-                 focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
-    >
-      {WEEK.map((d) => (
-        <option key={d} value={d} className="bg-[#102626] text-[#E9F8F8]">
-          {d}
-        </option>
-      ))}
-    </select>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <select
+            value={weekday}
+            onChange={(e) => setWeekday(e.target.value)}
+            className="px-3 py-2 rounded-md border border-[#406B6B]/60 
+                       bg-[#102626]/80 text-[#E9F8F8] text-sm 
+                       focus:outline-none focus:ring-1 focus:ring-cyan-300 transition"
+          >
+            {WEEK.map((d) => (
+              <option key={d} value={d} className="bg-[#102626] text-[#E9F8F8]">
+                {d}
+              </option>
+            ))}
+          </select>
 
-    {/* Date Picker */}
-    <input
-      type="date"
-      value={date}
-      onChange={(e) => setDate(e.target.value)}
-      className="px-3 py-2 rounded-md border border-[#406B6B]/60 
-                 bg-[#102626]/80 text-[#E9F8F8] text-sm 
-                 focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
-    />
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="px-3 py-2 rounded-md border border-[#406B6B]/60 
+                       bg-[#102626]/80 text-[#E9F8F8] text-sm 
+                       focus:outline-none focus:ring-1 focus:ring-cyan-300 transition"
+          />
 
-    {/* Reset Button */}
-    <button
-      onClick={resetProgress}
-      className="ml-auto bg-gradient-to-r from-[#D64545] via-[#B82132] to-[#8C1E28]
-                 hover:from-[#E14D4D] hover:to-[#B82132] text-[#FAFAFA] 
-                 px-4 py-2 rounded-md text-sm font-semibold 
-                 shadow-md transition-all duration-200"
-    >
-      Reset Progress
-    </button>
-  </div>
-</header>
+          <button
+            onClick={resetProgress}
+            className="ml-auto bg-gradient-to-r from-[#D64545] via-[#B82132] to-[#8C1E28]
+                       hover:from-[#E14D4D] hover:to-[#B82132] text-[#FAFAFA] 
+                       px-4 py-2 rounded-md text-sm font-semibold 
+                       shadow-md transition-all duration-200"
+          >
+            Reset Progress
+          </button>
+        </div>
+      </header>
 
+      {/* 🎯 Progress Section */}
+      <section
+        className="mb-3 border border-[#2A4B4B]/70 rounded-2xl p-4 space-y-3 
+                          bg-[#102626]/60 backdrop-blur-md shadow-[0_0_12px_rgba(24,61,61,0.2)]"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* Target Weight */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#E9F8F8]">
+              🎯 Target
+            </span>
+            <input
+              type="number"
+              step="0.1"
+              className="w-24 px-2 py-1 rounded-md border border-[#406B6B]/60 
+                         bg-[#183D3D]/80 text-[#F1FCFC] text-sm 
+                         focus:outline-none focus:ring-1 focus:ring-cyan-300 transition"
+              value={targetWeight}
+              onChange={(e) => setTargetWeight(Number(e.target.value || 0))}
+            />
+            <span className="text-sm text-[#C4D9D9]">kg</span>
+          </div>
 
-    {/* 🎯 Target & Progress Bar */}
-      {/* 🎯 Target vs Starting Weight */}
-<section className="mb-2 border border-[#2A4B4B]/70 rounded-2xl p-4 space-y-3 
-                    bg-[#102626]/60 backdrop-blur-md shadow-[0_0_12px_rgba(24,61,61,0.2)] 
-                    transition-all duration-300">
+          {/* Start Weight */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#E9F8F8]">⚖️ Start</span>
+            <input
+              type="number"
+              step="0.1"
+              className="w-24 px-2 py-1 rounded-md border border-[#406B6B]/60 
+                         bg-[#183D3D]/80 text-[#F1FCFC] text-sm 
+                         focus:outline-none focus:ring-1 focus:ring-cyan-300 transition"
+              value={effectiveStart ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") setStartWeight(null);
+                else setStartWeight(Number(v));
+              }}
+            />
+            <span className="text-sm text-[#C4D9D9]">kg</span>
+          </div>
 
-  {/* Inputs Row */}
-  <div className="flex items-center justify-between flex-wrap gap-4">
-    {/* Target Weight */}
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-[#E9F8F8]">🎯 Target Weight</span>
-      <input
-        type="number"
-        step="0.1"
-        className="w-24 px-2 py-1 rounded-md border border-[#406B6B]/60 
-                   bg-[#183D3D]/80 text-[#F1FCFC] text-sm 
-                   focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
-        value={targetWeight}
-        onChange={(e) => setTargetWeight(Number(e.target.value || 0))}
-      />
-      <span className="text-sm text-[#C4D9D9]">kg</span>
-    </div>
+          {/* Current Weight (auto) */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#E9F8F8]">Now:</span>
+            <span className="text-emerald-300 font-semibold">
+              {curWeight ? `${curWeight} kg` : "—"}
+            </span>
+          </div>
 
-    {/* Starting Weight */}
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-[#E9F8F8]">⚖️ Starting Weight</span>
-      <input
-        type="number"
-        step="0.1"
-        className="w-24 px-2 py-1 rounded-md border border-[#406B6B]/60 
-                   bg-[#183D3D]/80 text-[#F1FCFC] text-sm 
-                   focus:outline-none focus:ring-1 focus:ring-[#4FD1C5] transition"
-        value={startWeight}
-        onChange={(e) => setStartWeight(Number(e.target.value || 0))}
-      />
-      <span className="text-sm text-[#C4D9D9]">kg</span>
-    </div>
+          {/* Percent to goal (handles regression + dynamic Δ) */}
+          <div className="text-sm text-[#C4D9D9]">
+            {pctToGoal < 0 ? (
+              <>
+                ⚠️ Regression{" "}
+                <span className="text-red-400 font-semibold">
+                  {Math.abs(pctToGoal).toFixed(0)}%
+                </span>{" "}
+                <span className="text-xs opacity-80">
+                  (Δ +{Math.abs(diffToGoal)} kg)
+                </span>
+              </>
+            ) : (
+              <>
+                {Math.min(100, pctToGoal).toFixed(0)}% to goal{" "}
+                <span className="text-xs opacity-80">(Δ {diffToGoal} kg)</span>
+              </>
+            )}
+          </div>
+        </div>
 
-    {/* Auto Current Weight Display */}
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-[#E9F8F8]">Current Weight:</span>
-      <span className="text-[#A8F8E0] font-semibold">
-        {curWeight ? `${curWeight} kg` : "—"}
-      </span>
-    </div>
-  </div>
+        {/* Progress Bar */}
+        {/* 🏃 Right-to-Left Progress Bar with Regression */}
+        <div className="relative mt-1">
+          {/* Base Bar */}
+          <div className="h-3 rounded-full bg-[#264545]/60 overflow-hidden shadow-inner" />
 
-  {/* 🏃 Progress Bar — right → left */}
-  <div className="relative mt-3">
-    <div className="h-3 rounded-full bg-[#264545]/60 overflow-hidden shadow-inner" />
-
-    {(() => {
-      const start = startWeight || 85;
-      const target = targetWeight || 75;
-      const current = curWeight || start;
-
-      const totalLoss = start - target;
-      const currentLoss = start - current;
-
-      // Progress = how much lost out of total goal
-      const pct = totalLoss > 0 ? (currentLoss / totalLoss) * 100 : 0;
-      const clamped = Math.min(100, Math.max(0, pct));
-
-      return (
-        <>
-          {/* Fill (right → left) */}
+          {/* Fill: Green for progress, Red for regression */}
           <div
             className="absolute top-0 right-0 h-3 rounded-l-full transition-all duration-700"
             style={{
-              width: `${100 - clamped}%`,
+              width: `${Math.min(100, Math.max(0, Math.abs(pctToGoal)))}%`,
               background:
-                "linear-gradient(270deg, rgba(79,209,197,1) 0%, rgba(34,197,94,1) 100%)",
+                pctToGoal < 0
+                  ? "linear-gradient(270deg, rgba(255,85,85,1) 0%, rgba(255,150,150,1) 100%)" // 🔴 regression
+                  : "linear-gradient(270deg, rgba(79,209,197,1) 0%, rgba(34,197,94,1) 100%)", // 🟢 progress
+              transformOrigin: "right",
             }}
           />
 
@@ -627,113 +702,130 @@ export default function Gym() {
           <div
             className="absolute -top-5 mt-1 transition-all duration-500 z-20"
             style={{
-              right: `calc(${100 - clamped}% - 15px)`,
+              right: `calc(${Math.min(
+                100,
+                Math.max(0, Math.abs(pctToGoal))
+              )}% - 15px)`,
             }}
           >
-            <span className="text-2xl drop-shadow-[0_0_6px_rgba(79,209,197,0.6)]">
+            <span
+              className={`text-2xl drop-shadow-[0_0_6px_rgba(79,209,197,0.6)] ${
+                pctToGoal < 0 ? "rotate-180" : ""
+              }`}
+            >
               🏃
             </span>
           </div>
-        </>
-      );
-    })()}
-  </div>
-</section>
+        </div>
+      </section>
 
-
-
-
-
-      {/* Workout card */}
-      <section className="mb-2 border rounded-2xl p-4">
+      {/* 💪 Workout Section */}
+      <section className="mb-3 border rounded-2xl p-4 bg-[#0E2121]/60 backdrop-blur">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold">
-              {weekday} • {dayPlan.title || "Untitled"}
+            <h2 className="text-lg font-semibold text-[#E9F8F8]">
+              {weekday} • {dayPlan.title || "No Plan Found"}
             </h2>
-            <div className="text-sm opacity-70 mt-1">Date: {fmtDisp(date)}</div>
-            <div className="mt-2 text-sm opacity-80">
-              Completion: {completedExercises}/{totalExercises} ({completionPct}
-              %)
+            <div className="text-sm text-[#B6D0D0] mt-1">
+              Date: {fmtDisp(date)}
+            </div>
+            <div className="mt-2 text-sm text-[#CDE7E7]">
+              Completion:{" "}
+              {typeof completedExercises !== "undefined"
+                ? `${completedExercises}/${totalExercises} (${
+                    completionPct || 0
+                  }%)`
+                : "—"}
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-2">
             <div
-              className={`text-sm px-3 py-1 rounded ${
-                checks.done
+              className={`text-sm px-3 py-1 rounded transition ${
+                checks?.done
                   ? "bg-green-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700"
+                  : "bg-gray-200/20 text-[#E9F8F8]"
               }`}
             >
-              {checks.done ? "Completed" : "Not completed"}
+              {checks?.done ? "Completed" : "Not completed"}
             </div>
-            <div className="text-sm px-3 py-1 rounded bg-green-600 text-white">
-              🔥 Streak: {streak} days
+            <div className="text-sm px-3 py-1 rounded bg-green-600/90 text-white shadow">
+              🔥 Streak: {streak || 0} days
             </div>
           </div>
         </div>
 
-        {!["Sunday"].includes(dayjs(date).format("dddd")) ? (
+        {/* 🧩 Unified render logic */}
+        {weekday === "Sunday" ? (
+          <div className="p-3 rounded bg-blue-50/10 text-blue-200 mt-4">
+            Rest Day — stretch, hydrate, recover.
+          </div>
+        ) : dayPlan?.left?.length +
+            dayPlan?.right?.length +
+            dayPlan?.finisher?.length ===
+          0 ? (
+          <div className="p-3 rounded bg-yellow-50/10 text-yellow-200 mt-4">
+            ⚠ No exercises defined for {weekday}.
+          </div>
+        ) : (
           <>
-            <div className="grid md:grid-cols-2 gap-6 mt-4">
+            {/* ✅ Workout Lists */}
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
               <ExerciseList
                 label="Left"
                 list={dayPlan.left || []}
-                state={checks.left}
+                state={checks?.left || []}
                 onToggle={(i) => toggle("left", i)}
               />
               <ExerciseList
                 label="Right"
                 list={dayPlan.right || []}
-                state={checks.right}
+                state={checks?.right || []}
                 onToggle={(i) => toggle("right", i)}
               />
             </div>
 
             {!!dayPlan.finisher?.length && (
-              <div className="mt-6">
-                <h3 className="font-semibold mb-2">
+              <div className="mt-5">
+                <h3 className="font-semibold mb-2 text-[#E9F8F8]">
                   {dayPlan.finisherLabel || "Finisher"}
                 </h3>
                 <ul className="space-y-2">
                   {dayPlan.finisher.map((t, i) => (
                     <li
                       key={i}
-                      className="flex items-center gap-3 p-2 border rounded-xl"
+                      onClick={() => toggle("finisher", i)}
+                      className="flex items-center gap-3 p-2 border rounded-xl bg-[#0C1C1C]/60 hover:shadow-md hover:shadow-emerald-500/10 transition cursor-pointer select-none"
                     >
-                      <input
-                        type="checkbox"
-                        checked={checks.finisher[i] || false}
-                        onChange={() => toggle("finisher", i)}
-                      />
-                      <span>{t}</span>
+                      <AnimatedCheckbox checked={!!checks?.finisher?.[i]} />
+                      <span className="text-[#E9F8F8]">{t}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
 
-            <div className="flex gap-3 mt-6 items-center">
+            {/* Buttons Section */}
+            <div className="flex gap-3 mt-6 items-center flex-wrap">
               <button
                 onClick={toggleMarkAll}
-                className="px-4 py-2 rounded border"
+                className="px-4 py-2 rounded border border-emerald-600/60 text-[#E9F8F8] hover:bg-emerald-600/10 transition"
               >
-                {checks.left.every(Boolean) &&
-                checks.right.every(Boolean) &&
-                (checks.finisher?.every?.(Boolean) ?? true)
+                {checks?.left?.every(Boolean) &&
+                checks?.right?.every(Boolean) &&
+                (checks?.finisher?.every?.(Boolean) ?? true)
                   ? "❌ Unmark All"
                   : "✔ Mark All"}
               </button>
 
-              {!checks.done ? (
+              {!checks?.done ? (
                 <button
                   onClick={openCaloriesModal}
                   disabled={!canComplete}
                   className={`px-4 py-2 rounded ${
                     canComplete
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-400 text-gray-700 cursor-not-allowed"
+                      ? "bg-emerald-600 text-white shadow hover:bg-emerald-500"
+                      : "bg-gray-400/30 text-gray-400 cursor-not-allowed"
                   }`}
                 >
                   ✅ Mark Workout Done ({fmtDisp(date)})
@@ -741,37 +833,34 @@ export default function Gym() {
               ) : (
                 <button
                   onClick={deleteCaloriesAndUnmark}
-                  className="bg-red-600 text-white px-4 py-2 rounded"
+                  className="bg-red-600/90 hover:bg-red-600 text-white px-4 py-2 rounded"
                 >
                   ❌ Unmark & Clear
                 </button>
               )}
 
-              {checks.done && (
+              {checks?.done && (
                 <button
                   onClick={editCalories}
-                  className="px-3 py-2 border rounded"
+                  className="px-3 py-2 border rounded hover:bg-white/5"
                 >
                   ✏ Edit
                 </button>
               )}
-              <div className="ml-auto text-sm opacity-80">
-                Status: {checks.done ? "Done" : "Not done"} • 🔥 Calories:{" "}
-                {checks.calories != null ? `${checks.calories} kcal` : "—"} • 📊
-                BMI: {checks.bmi != null ? checks.bmi : "—"} • ⚖️ Weight:{" "}
-                {checks.weight != null ? `${checks.weight} kg` : "—"}
+
+              <div className="ml-auto text-sm text-[#C4D9D9]">
+                Status: {checks?.done ? "Done" : "Not done"} • 🔥 Calories:{" "}
+                {checks?.calories != null ? `${checks.calories} kcal` : "—"} •
+                📊 BMI: {checks?.bmi != null ? checks.bmi : "—"} • ⚖️ Weight:{" "}
+                {checks?.weight != null ? `${checks.weight} kg` : "—"}
               </div>
             </div>
           </>
-        ) : (
-          <div className="p-3 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 mt-4">
-            Rest Day — stretch, hydrate, recover.
-          </div>
         )}
       </section>
 
-      {/* Calendar + Daily Summary side-by-side on desktop */}
-      <section className="grid md:grid-cols-2 gap-4 mb-2">
+      {/* 📆 Calendar + Summary */}
+      <section className="grid md:grid-cols-2 gap-4 mb-3">
         <MiniCalendar
           date={date}
           setDate={(d) => {
@@ -781,46 +870,55 @@ export default function Gym() {
         <DailySummary date={date} logs={logs} dateKey={dateKey} />
       </section>
 
-      {/* Progress Chart */}
-      <section className="border rounded-2xl mb-2 p-4">
-        <h3 className="font-semibold mb-3">Progress (Weight & BMI)</h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="weight"
-                stroke="#8884d8"
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="bmi"
-                stroke="#82ca9d"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {/* 📊 Progress Chart (Collapsible) */}
+      <section className="border rounded-2xl mb-3 p-4 bg-[#0E2121]/50">
+        <button
+          onClick={() => setShowChart((s) => !s)}
+          className="text-sm px-3 py-2 rounded border border-[#2A4B4B]/70 hover:bg-white/5"
+        >
+          {showChart ? "🙈 Hide Progress Graph" : "📈 Show Progress Graph"}
+        </button>
+        {showChart && (
+          <div className="h-64 mt-3">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="weight"
+                  stroke="#8884d8"
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="bmi"
+                  stroke="#82ca9d"
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </section>
 
-      {/* Next day & Badges */}
+      {/* 🔜 Next workout & 🏅 Badges */}
       <section className="grid md:grid-cols-2 gap-4">
-        <div className="border rounded-2xl p-4">
-          <h3 className="font-semibold mb-2">Next Workout</h3>
+        <div className="border rounded-2xl p-4 bg-[#0E2121]/50">
+          <h3 className="font-semibold mb-2 text-[#E9F8F8]">Next Workout</h3>
           {nextDayName === "Rest Day (Sunday)" ? (
-            <div className="opacity-80">Tomorrow is Rest Day (Sunday)</div>
+            <div className="opacity-80 text-[#CDE7E7]">
+              Tomorrow is Rest Day (Sunday)
+            </div>
           ) : nextPlan ? (
-            <div className="text-sm">
-              <div className="font-medium mb-1">
+            <div className="text-sm text-[#CDE7E7]">
+              <div className="font-medium mb-1 text-[#E9F8F8]">
                 {nextDayName} • {nextPlan.title}
               </div>
-              <div className="opacity-80">
+              <div className="opacity-90">
                 Total exercises:{" "}
                 {(nextPlan.left?.length || 0) +
                   (nextPlan.right?.length || 0) +
@@ -828,12 +926,12 @@ export default function Gym() {
               </div>
             </div>
           ) : (
-            <div className="opacity-80">Plan not found</div>
+            <div className="opacity-80 text-[#CDE7E7]">Plan not found</div>
           )}
         </div>
 
-        <div className="border rounded-2xl p-4">
-          <h3 className="font-semibold mb-3">Badges</h3>
+        <div className="border rounded-2xl p-4 bg-[#0E2121]/50">
+          <h3 className="font-semibold mb-3 text-[#E9F8F8]">Badges</h3>
           <div className="flex flex-wrap gap-3">
             <Badge label="7-Day Streak" earned={streak >= 7} />
             <Badge label="14-Day Streak" earned={streak >= 14} />
@@ -848,42 +946,53 @@ export default function Gym() {
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-[#E9F8F8]">
               Save Workout • {fmtDisp(date)}
             </h3>
 
             <div>
-              <label className="text-sm block">🔥 Calories Burned</label>
+              <label className="text-sm block text-[#CDE7E7]">
+                🔥 Calories Burned
+              </label>
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-800"
+                className="w-full border rounded px-3 py-2 bg-white/90 dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-emerald-400"
                 value={caloriesInput}
                 onChange={(e) => setCaloriesInput(e.target.value)}
                 placeholder="e.g. 350"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveCaloriesAndComplete();
+                }}
               />
             </div>
 
             <div>
-              <label className="text-sm block">⚖ Current Weight (kg)</label>
+              <label className="text-sm block text-[#CDE7E7]">
+                ⚖ Current Weight (kg)
+              </label>
               <input
+                ref={weightInputRef}
                 type="number"
-                className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-800"
+                className="w-full border rounded px-3 py-2 bg-white/90 dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-emerald-400"
                 value={currentWeightInput}
                 onChange={(e) => setCurrentWeightInput(e.target.value)}
                 placeholder="e.g. 75"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveCaloriesAndComplete();
+                }}
               />
             </div>
 
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-3 py-2 border rounded"
+                className="px-3 py-2 border rounded hover:bg-white/5 text-[#E9F8F8]"
               >
                 Cancel
               </button>
               <button
                 onClick={saveCaloriesAndComplete}
-                className="px-3 py-2 bg-green-600 text-white rounded"
+                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded"
               >
                 Save
               </button>
@@ -895,21 +1004,45 @@ export default function Gym() {
   );
 }
 
-/* ---------- Subcomponents ---------- */
+/* ---------------------- Subcomponents ---------------------- */
+
+function AnimatedCheckbox({ checked, onChange }) {
+  return (
+    <button
+      onClick={onChange}
+      className={`w-5 h-5 rounded-md border flex items-center justify-center transition
+                 ${
+                   checked
+                     ? "bg-emerald-500 border-emerald-400 scale-105 shadow shadow-emerald-500/30"
+                     : "bg-transparent border-gray-400/60 hover:border-emerald-400/70"
+                 }`}
+      aria-pressed={checked}
+    >
+      <span
+        className={`text-white text-xs transition-transform ${
+          checked ? "scale-100" : "scale-0"
+        }`}
+      >
+        ✓
+      </span>
+    </button>
+  );
+}
 
 function ExerciseList({ label, list = [], state = [], onToggle }) {
   return (
     <div>
-      <h3 className="font-semibold mb-2">{label}</h3>
+      <h3 className="font-semibold mb-2 text-[#E9F8F8]">{label}</h3>
       <ul className="space-y-2">
         {list.map((t, i) => (
-          <li key={i} className="flex items-center gap-3 p-2 border rounded-xl">
-            <input
-              type="checkbox"
-              checked={!!state[i]}
-              onChange={() => onToggle(i)}
-            />
-            <span>{t}</span>
+          <li
+            key={i}
+            onClick={() => onToggle(i)}
+            className="flex items-center gap-3 p-2 border rounded-xl bg-[#0C1C1C]/60 hover:shadow-md hover:shadow-emerald-500/10 transition cursor-pointer select-none"
+          >
+            {/* make the checkbox non-interactive; the row handles clicks */}
+            <AnimatedCheckbox checked={!!state[i]} inert />
+            <span className="text-[#E9F8F8]">{t}</span>
           </li>
         ))}
       </ul>
@@ -922,23 +1055,23 @@ function DailySummary({ date, logs, dateKey }) {
   const bmiLogs = load("bmi_logs", []);
   const latestBmi = bmiLogs.slice().reverse()[0] || null;
   return (
-    <div className="border rounded-2xl p-4 h-full">
+    <div className="border rounded-2xl p-4 h-full bg-[#0E2121]/60 backdrop-blur">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Daily Summary</h3>
+        <h3 className="font-semibold text-[#E9F8F8]">Daily Summary</h3>
         <span
           className={`text-xs px-2 py-1 rounded ${
             entry?.done
-              ? "bg-green-600 text-white"
-              : "bg-gray-300 dark:bg-gray-700"
+              ? "bg-emerald-600 text-white"
+              : "bg-gray-300/20 text-[#E9F8F8]"
           }`}
         >
           {entry?.done ? "✅ Done" : "❌ Not Done"}
         </span>
       </div>
 
-      <div className="text-sm opacity-70 mt-1">📅 {fmtDisp(date)}</div>
+      <div className="text-sm text-[#B6D0D0] mt-1">📅 {fmtDisp(date)}</div>
 
-      <div className="mt-3 space-y-2 text-sm">
+      <div className="mt-3 space-y-2 text-sm text-[#CDE7E7]">
         <div>
           🔥 Calories:{" "}
           {entry?.calories != null ? `${entry.calories} kcal` : "—"}
@@ -959,7 +1092,7 @@ function DailySummary({ date, logs, dateKey }) {
         </div>
 
         <div className="mt-2">
-          <h4 className="font-medium mb-1">Exercises</h4>
+          <h4 className="font-medium mb-1 text-[#E9F8F8]">Exercises</h4>
           {entry ? (
             <ul className="list-disc list-inside text-sm">
               {(() => {
@@ -977,8 +1110,11 @@ function DailySummary({ date, logs, dateKey }) {
                   ...(entry.finisher || []),
                 ];
                 return allExercises.map((ex, i) => (
-                  <li key={i}>
-                    {bools[i] ? ex : <span className="opacity-60">{ex}</span>}
+                  <li
+                    key={i}
+                    className={bools[i] ? "text-[#CDE7E7]" : "opacity-60"}
+                  >
+                    {ex}
                   </li>
                 ));
               })()}
@@ -995,8 +1131,10 @@ function DailySummary({ date, logs, dateKey }) {
 function Badge({ label, earned }) {
   return (
     <div
-      className={`px-3 py-2 rounded-xl border text-sm ${
-        earned ? "" : "opacity-40 grayscale"
+      className={`px-3 py-2 rounded-xl border text-sm transition ${
+        earned
+          ? "text-emerald-200 border-emerald-500/50 shadow shadow-emerald-500/10"
+          : "opacity-60 text-gray-300 border-gray-500/30"
       }`}
     >
       {earned ? "🏆" : "🔒"} {label}
@@ -1004,7 +1142,6 @@ function Badge({ label, earned }) {
   );
 }
 
-/* Mini calendar with month navigation - compact and responsive */
 function MiniCalendar({ date, setDate }) {
   const [viewMonth, setViewMonth] = useState(dayjs(date));
   useEffect(() => setViewMonth(dayjs(date)), [date]);
@@ -1016,34 +1153,34 @@ function MiniCalendar({ date, setDate }) {
 
   const colorOf = (d) => {
     const key = d.format("YYYY-MM-DD");
-    if (doneMap[key]) return "bg-green-500 text-white";
-    if (d.isAfter(today, "day")) return "bg-gray-600 text-white opacity-60";
-    return "bg-gray-700 text-white";
+    if (doneMap[key]) return "bg-emerald-600 text-white";
+    if (d.isAfter(today, "day")) return "bg-gray-600 text-white/80 opacity-60";
+    return "bg-gray-700 text-white/90";
   };
 
   return (
-    <section className="border rounded-2xl p-4">
+    <section className="border rounded-2xl p-4 bg-[#0E2121]/60 backdrop-blur">
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
-          className="px-2"
+          className="px-2 py-1 rounded hover:bg-white/5"
         >
           〈
         </button>
-        <div className="font-semibold text-sm">
+        <div className="font-semibold text-sm text-[#E9F8F8]">
           {viewMonth.format("MMMM YYYY")}
         </div>
         <button
           onClick={() => setViewMonth(viewMonth.add(1, "month"))}
-          className="px-2"
+          className="px-2 py-1 rounded hover:bg-white/5"
         >
           〉
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-[10px] sm:text-xs text-center mb-1">
+      <div className="grid grid-cols-7 gap-1 text-[10px] sm:text-xs text-center mb-1 text-[#B6D0D0]">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} className="opacity-60">
+          <div key={d} className="opacity-80">
             {d}
           </div>
         ))}
@@ -1054,14 +1191,19 @@ function MiniCalendar({ date, setDate }) {
           const key = d.format("YYYY-MM-DD");
           const isCurMonth = d.month() === viewMonth.month();
           const isSelected = key === date;
+          const isToday = d.isSame(today, "day");
           return (
             <button
               key={key}
               onClick={() => setDate(key)}
               title={d.format("DD-MM-YYYY")}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-md text-[11px] flex items-center justify-center border ${
-                !isCurMonth ? "opacity-30" : ""
-              } ${colorOf(d)} ${isSelected ? "ring-2 ring-blue-400" : ""}`}
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-md text-[11px] flex items-center justify-center border transition
+                ${!isCurMonth ? "opacity-30" : ""}
+                ${colorOf(d)} 
+                ${isSelected ? "ring-2 ring-cyan-300" : ""}
+                ${isToday ? "border-cyan-400" : "border-white/10"}
+                hover:scale-[1.03] hover:shadow hover:shadow-emerald-500/10
+              `}
             >
               {d.date()}
             </button>
@@ -1072,16 +1214,15 @@ function MiniCalendar({ date, setDate }) {
   );
 }
 
-/* Modal */
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg rounded-2xl border bg-white dark:bg-gray-900 p-4">
+      <div className="absolute inset-0 flex items-start justify-center pt-[10vh] p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0F1E1E] text-[#E9F8F8] p-4 shadow-2xl shadow-black/40">
           {children}
         </div>
       </div>
