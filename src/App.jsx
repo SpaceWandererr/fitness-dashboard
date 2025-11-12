@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen text-gray-200 transition-colors duration-300 ${
+      className={`flex flex-col min-h-[100dvh] overflow-x-hidden text-gray-200 transition-colors duration-300 ${
         dark
           ? "bg-gradient-to-br from-[#0d0d0f] via-[#121212] to-[#1a1a1a]"
           : "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]"
@@ -39,38 +39,50 @@ export default function App() {
     >
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-gray-800 bg-[#121212]/70 backdrop-blur-lg">
-        <div className="mx-auto max-w-7xl flex items-center justify-between p-3">
+        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between p-3 gap-2">
           {/* Name / Logo */}
           <Link
             to="/"
             onClick={() => setMenuOpen(false)}
-            className="text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 to-sky-300 bg-clip-text text-transparent select-none"
+            className="select-none"
           >
-            JAY&nbsp;SINH&nbsp;THAKUR
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-emerald-400 tracking-tight whitespace-nowrap hover:tracking-wider transition-all duration-300">
+              JAY&nbsp;SINH&nbsp;THAKUR
+            </h1>
           </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-3">
-            {links.map((link) => (
-              <NavLink key={link.to} to={link.to} current={location.pathname}>
-                {link.label}
-              </NavLink>
-            ))}
+          {/* Right-side controls */}
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center gap-3">
+              {links.map((link) => (
+                <NavLink key={link.to} to={link.to} current={location.pathname}>
+                  {link.label}
+                </NavLink>
+              ))}
+            </div>
+
+            {/* Dark Mode Switcher */}
             <button
-              onClick={() => setDark((v) => !v)}
-              className="px-3 py-1 rounded border border-gray-700 text-sm hover:bg-gray-800/60 transition-colors"
+              onClick={() => setDark(!dark)}
+              className={`p-2 rounded-full transition-all duration-200 ${
+                dark
+                  ? "text-emerald-400 hover:text-emerald-300 bg-emerald-900/40"
+                  : "text-yellow-400 hover:text-yellow-300 bg-white/10"
+              } shadow-md hover:scale-105`}
+              title="Toggle Dark Mode"
             >
-              {dark ? "☀️ Light" : "🌙 Dark"}
+              {dark ? "🌙" : "☀️"}
+            </button>
+
+            {/* Mobile Toggle */}
+            <button
+              className="md:hidden p-2 rounded hover:bg-gray-800/50"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
-
-          {/* Mobile Toggle */}
-          <button
-            className="md:hidden p-2 rounded hover:bg-gray-800/50"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
 
         {/* Mobile Menu */}
@@ -109,7 +121,10 @@ export default function App() {
       </nav>
 
       {/* Routes */}
-      <main className="mx-auto max-w-7xl p-6">
+      <main
+        key={location.pathname}
+        className="flex-1 w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 mt-2 transition-all duration-300 ease-in-out"
+      >
         <Routes>
           <Route path="/" element={<ModernDashboard accent={accent} />} />
           <Route path="/home" element={<Navigate to="/" />} />
