@@ -412,7 +412,7 @@ const TREE = {
         completedOn: "",
       },
       {
-        title: "Implementing shadow property.",
+        title: "Implementing shadow-[0_0_20px_rgba(0,0,0,0.2)] property.",
         done: false,
         deadline: "",
         completedOn: "",
@@ -4149,14 +4149,11 @@ const TREE = {
   },
 };
 
-
 /* ======================= KEYS ======================= */
 const K_TREE = "syllabus_tree_v2";
 const K_META = "syllabus_meta_v2";
 const K_NOTES = "syllabus_notes_v2";
 const K_STREAK = "syllabus_streak_v2";
-
-
 
 /* ======================= UTIL ======================= */
 const isArray = Array.isArray;
@@ -4281,7 +4278,7 @@ export default function Syllabus() {
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [milestone, setMilestone] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [saving, setSaving] = useState(false); 
+  const [saving, setSaving] = useState(false);
 
   const streak = useMemo(() => {
     const has = (iso) => daySet.has(iso);
@@ -4572,11 +4569,13 @@ export default function Syllabus() {
     return history;
   }
 
-
   /* ======================= RENDER ======================= */
   return (
-    <div className="min-h-screen bg-[#FF8F8F]/10 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <header className="rounded-xl sticky top-0 z-40 backdrop-blur bg-[#FF8F8F]/30 dark:bg-gray-900/70 border-b border-[#FF8F8F]/40 dark:border-gray-800 shadow-md">
+    <div className="min-h-screen bg-[#071014] text-[#E2E8F0] dark:bg-[#050F0A] dark:text-[#D1FAE5 p-2 rounded-xl">
+
+     <header className="rounded-xl sticky top-0 z-40 backdrop-blur bg-[#051C14]/90 dark:bg- 
+        [#030a07] border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)]">
+
         <div className="max-w-6xl mx-auto px-3 py-3 md:py-4 space-y-3">
           {/* 🔹 Top Bar with Title + Buttons */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -4600,10 +4599,10 @@ export default function Syllabus() {
 
             {/* Right: Controls */}
             <div className="flex flex-wrap items-center gap-2 justify-end">
-              <span className="px-3 py-1.5 rounded-xl bg-white/70 dark:bg-gray-800 text-xs border border-[#FF8F8F]/40 font-medium whitespace-nowrap">
+              <span className="px-3 py-1.5 rounded-xl bg-[#051C14]
+        dark:bg-gray-800 text-xs border border-[#0B5134]/40 font-medium whitespace-nowrap">
                 🔥 Streak: <b>{Array.from(daySet).length}</b> days
               </span>
-
               <button
                 onClick={() =>
                   setMeta((m) => {
@@ -4612,7 +4611,7 @@ export default function Syllabus() {
                     return c;
                   })
                 }
-                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF8F8F] to-[#ff6b6b] text-white text-sm shadow hover:scale-[1.05] transition-transform"
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF8F8F] to-[#ff6b6b] text-white text-sm shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:scale-[1.05] transition-transform"
               >
                 Expand
               </button>
@@ -4625,7 +4624,7 @@ export default function Syllabus() {
                     return c;
                   })
                 }
-                className="px-3 py-1.5 rounded-xl bg-gray-200/60 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm hover:bg-gray-300/70 transition"
+                className="px-3 py-1.5 rounded-xl bg-[#051C14] dark:bg-gray-800 text-[#E2E8F0] dark:text-gray-100 text-sm hover:bg-[#051C14] transition"
               >
                 Collapse
               </button>
@@ -4658,7 +4657,7 @@ export default function Syllabus() {
                   localStorage.removeItem("K_STREAK");
                   window.location.reload();
                 }}
-                className="px-3 py-1.5 rounded-xl bg-red-500 text-white text-sm shadow hover:bg-red-600 transition"
+                className="px-3 py-1.5 rounded-xl bg-red-500 text-white text-sm shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:bg-red-600 transition"
               >
                 Reset
               </button>
@@ -4684,29 +4683,37 @@ export default function Syllabus() {
 
           {/* 🔹 Progress Bar */}
           <div className="w-full">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="font-medium">
-                Progress: {grand.done}/{grand.total}
-              </span>
-              <span className="font-semibold">{grand.pct}%</span>
-            </div>
-            <div className="h-3 rounded-full bg-gray-200/60 dark:bg-gray-800 overflow-hidden relative">
-              <div
-                className="h-full bg-gradient-to-r from-[#FF8F8F] via-[#ff5f6d] to-[#ffc371] transition-all duration-700 ease-out"
-                style={{ width: `${grand.pct}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+       <div className="flex items-center justify-between text-xs mb-1">
+          <span className="font-medium">
+             Progress: {grand.done}/{grand.total}
+            </span>
+          <span className="font-semibold">{grand.pct}%</span>
+         </div>
 
-      {/* Smart Planner + Smart Suggest */}
+        {/* BASE LINE ALWAYS VISIBLE */}
+      <div className="h-3 rounded-full bg-[#1B5F46] overflow-hidden relative">
+    
+       {/* GREEN BAR */}
+      <div
+      className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] shadow-[0_0_8px_#22C55E] transition-all duration-700 ease-out"
+      style={{
+        width: `${grand.pct}%`,
+        minWidth: grand.pct > 0 ? 0 : "6px",
+      }}
+       />
+        </div>
+       </div>
+      </div>
+     </header>
+
+     
       {/* === Combined Layout (Planner + Topics) === */}
       <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
           {/* 🗓️ Daily Planner */}
-          <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-sm">
+          <div className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
+           dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm">
             <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
             <p className="text-sm opacity-80 mb-3">
               Closest-deadline topics not yet done.
@@ -4715,16 +4722,17 @@ export default function Syllabus() {
           </div>
 
           {/* 🤖 Smart Suggest */}
-          <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-sm">
+          <div className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
+              dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm">
             <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
           </div>
         </div>
 
         {/* LEFT SIDE — All Topics */}
-        <div className="order-2 lg:order-1 lg:col-span-3 space-y-4">
+        <div className="order-2 lg:order-1 lg:col-span-3 space-y-4 ">
           <main className="w-full px-0 md:px-1 space-y-4">
             {Object.keys(filtered).length === 0 && (
-              <div className="text-sm text-gray-700 dark:text-gray-300">
+              <div className="text-sm text-[#E2E8F0] dark:text-gray-300">
                 No matches for “{query}”.
               </div>
             )}
@@ -4758,12 +4766,12 @@ export default function Syllabus() {
         </button>
       )}
       {milestone && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-500 text-white shadow">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-500 text-white shadow-[0_0_20px_rgba(0,0,0,0.2)]">
           {milestone}
         </div>
       )}
-    </div>
-  );
+  </div>
+       );
 }
 
 /* ======================= Main Section ======================= */
@@ -4803,21 +4811,26 @@ function SectionCard({
   }, [m.open, node, meta, nr]);
 
   return (
-    <section className="rounded-xl border border-[#00d1b2]/30 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50 shadow-sm overflow-hidden">
-      {/* Header */}
-
+    <section className="rounded-xl border border-[#00d1b2]/30 dark:border-gray-800 bg-[#051C14]
+    dark:bg-gray-900/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm overflow-hidden">
       {/* Header */}
       <div
-        onClick={() => onSectionHeaderClick(sectionPath)}
-        className="relative rounded-xl p-3 cursor-pointer hover:bg-green-50 dark:hover:bg-white/5 transition-colors overflow-hidden"
-      >
-        {/* ✅ Progress bar (kept, thin + aligned) */}
-        <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-800">
-          <div
-            className="h-full rounded-full bg-[#248d14] transition-all duration-300"
-            style={{ width: `${totals.pct}%` }}
-          />
-        </div>
+  onClick={() => onSectionHeaderClick(sectionPath)}
+  className="relative rounded-xl p-3 cursor-pointer 
+  bg-[#051C14] border border-[#0B5134]
+  hover:bg-[#0A2F22] 
+  transition-all duration-200 overflow-hidden text-[#E2E8F0]"
+>
+        {/* ✅ Progress bar (thin + matches main green style) */}
+       <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#1B5F46] overflow-hidden">
+            <div
+               className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
+               shadow-[0_0_6px_#22C55E] transition-all duration-700 ease-out rounded-full"
+            style={{width: `${totals.pct}%`, minWidth: totals.pct > 0 ? 0 : "6px", // 👈 always visible dot at 0%
+                }}
+                 />
+          </div>
+
 
         {/* ✅ Responsive layout container */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
@@ -4843,7 +4856,10 @@ function SectionCard({
 
             <button
               onClick={() => setAllAtPath(sectionPath, !allDone)}
-              className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
+              className="px-2 py-1 rounded-md border bg-[#051C14]
+              dark:border-gray-700 bg-[#051C14]
+              dark:bg-gray-800 hover:bg-[#051C14]
+              dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
             >
               {allDone ? "Undo all" : "Mark all"}
             </button>
@@ -4852,7 +4868,8 @@ function SectionCard({
               type="date"
               value={m.targetDate}
               onChange={(e) => setTargetDate(sectionPath, e.target.value)}
-              className="px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-md bg-white/70 dark:bg-gray-800 text-xs shrink-0"
+              className="px-2 py-1 border border-[#0B5134] dark:border-gray-700 rounded-md bg-[#051C14]
+              dark:bg-gray-800 text-xs shrink-0"
             />
           </div>
         </div>
@@ -4954,7 +4971,8 @@ function SubNode({
   }, [node, nr, path]);
 
   return (
-    <div className="rounded-xl border border-[#FF8F8F]/35 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50">
+    <div className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-[#051C14]
+    dark:bg-gray-900/50">
       {/* Header */}
       <div
         onClick={() => toggleOpen(path)}
@@ -5037,7 +5055,7 @@ function SubNode({
                   if (!it.deadline) {
                     completionMsg = `Completed on ${completedStr}`;
                     completionColor =
-                      "bg-gray-100 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300";
+                      "bg-[#051C14] text-[#E2E8F0] dark:bg-gray-800/60 dark:text-gray-300";
                   } else if (completedDate && diff !== null) {
                     const targetStr = new Date(it.deadline).toLocaleDateString(
                       "en-IN",
@@ -5087,7 +5105,8 @@ function SubNode({
                         }
                       }
                     }}
-                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-gray-800 p-2 bg-white/70 dark:bg-gray-900/40 cursor-pointer select-none ${
+                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-gray-800 p-2 bg-[#051C14]
+                    dark:bg-gray-900/40 cursor-pointer select-none ${
                       it.done ? "opacity-90" : ""
                     }`}
                   >
@@ -5147,7 +5166,8 @@ function SubNode({
                             onChange={(e) =>
                               setTaskDeadline(path, idx, e.target.value)
                             }
-                            className="px-2 py-1 rounded-md border border-[#FF8F8F]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none w-[110px] text-xs"
+                            className="px-2 py-1 rounded-md border border-[#0B5134]/50 bg-[#051C14]
+                            dark:bg-gray-800 dark:border-gray-700 outline-none w-[110px] text-xs"
                           />
                         </label>
 
@@ -5170,7 +5190,8 @@ function SubNode({
                                 },
                               }))
                             }
-                            className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-white/80 dark:bg-gray-800 dark:border-gray-700 outline-none text-xs"
+                            className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-[#051C14]
+                            dark:bg-gray-800 dark:border-gray-700 outline-none text-xs"
                           />
                           <span>h</span>
                         </label>
@@ -5198,7 +5219,8 @@ function SubNode({
                               },
                             }))
                           }
-                          className="min-h-[80px] rounded-md border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
+                          className="min-h-[80px] rounded-md border border-[#0B5134]/40 bg-[#051C14]
+                          dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
                         />
                         <textarea
                           placeholder="Links (comma/newline)…"
@@ -5215,7 +5237,8 @@ function SubNode({
                               },
                             }))
                           }
-                          className="min-h-[80px] rounded-md border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
+                          className="min-h-[80px] rounded-md border border-[#0B5134]/40 bg-[#051C14]
+                          dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
                         />
                       </div>
                     </details>
@@ -5350,7 +5373,8 @@ function SmartSuggest({ generateSmartPlan, tree }) {
   }
 
   return (
-    <div className="rounded-2xl border border-[#FF8F8F]/40 bg-white/90 dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-md hover:shadow-lg transition-all duration-300">
+    <div className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
+    dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="font-semibold flex items-center gap-2 text-base">
@@ -5370,7 +5394,8 @@ function SmartSuggest({ generateSmartPlan, tree }) {
           type="number"
           value={minutes}
           onChange={(e) => setMinutes(Number(e.target.value))}
-          className="flex-1 px-2 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800 min-w-[70px]"
+          className="flex-1 px-2 py-1 text-sm rounded-md border border-[#0B5134] dark:border-gray-700 bg-[#051C14]
+          dark:bg-gray-800 min-w-[70px]"
         />
         <button
           onClick={handleSuggest}
@@ -5406,13 +5431,13 @@ function SmartSuggest({ generateSmartPlan, tree }) {
             return (
               <div
                 key={i}
-                className={`rounded-lg border border-gray-200 dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${
+                className={`rounded-lg border border-[#0B5134]                dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${
                   item.done ? "opacity-60 line-through" : ""
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                   <span
-                    className={`font-medium text-gray-900 dark:text-gray-100 ${
+                    className={`font-medium text-[#E2E8F0] dark:text-gray-100 ${
                       item.done ? "line-through" : ""
                     }`}
                   >
@@ -5440,7 +5465,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       </div>
 
       {/* Footer */}
-      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 border-t border-[#0B5134] dark:border-gray-800 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <span>
           {plan.length > 0
             ? `Remaining buffer: ${remaining} mins`
@@ -5455,4 +5480,3 @@ function SmartSuggest({ generateSmartPlan, tree }) {
     </div>
   );
 }
-
