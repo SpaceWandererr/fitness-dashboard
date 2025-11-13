@@ -4235,6 +4235,26 @@ function normalizeWholeTree(src) {
 
 /* ======================= MAIN ======================= */
 export default function Syllabus() {
+  const [lastStudied, setLastStudied] = useState(
+    localStorage.getItem("K_LAST_STUDIED") || ""
+  );
+
+  const [showLastStudied, setShowLastStudied] = useState(true);
+
+  const LAST_STUDIED_HIDE_MINUTES = 10; // you can change this
+
+  useEffect(() => {
+    if (!lastStudied) return;
+
+    setShowLastStudied(true);
+
+    const timer = setTimeout(() => {
+      setShowLastStudied(false);
+    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
+
+    return () => clearTimeout(timer);
+  }, [lastStudied]);
+
   const [tree, setTree] = useState(() => {
     try {
       const s = localStorage.getItem(K_TREE);
@@ -4397,18 +4417,40 @@ export default function Syllabus() {
     setTree((old) => {
       const t = deepClone(old);
       const node = getRefAtPath(t, path);
+
+      let lastItem = null; // 🔥 keep track of the last completed topic
+
       (function mark(n) {
         if (isArray(n)) {
           n.forEach((it) => {
             it.done = val;
             it.completedOn = val ? todayISO() : "";
+            if (val) lastItem = it; // 🔥 store the last item in this array
           });
           return;
         }
         for (const v of Object.values(n || {})) mark(v);
       })(node);
+
+      // 🔥 Update LAST STUDIED only when marking ALL as done
+      if (val && lastItem) {
+        const timestamp = new Date().toLocaleString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+
+        const stamp = `${lastItem.title} — ${timestamp}`;
+        setLastStudied(stamp);
+        localStorage.setItem("K_LAST_STUDIED", stamp);
+        setShowLastStudied(true);
+      }
+
       return t;
     });
+
     if (val) setDaySet((s) => new Set(s).add(todayISO()));
   };
 
@@ -4428,10 +4470,29 @@ export default function Syllabus() {
       const parent = getRefAtPath(t, path.slice(0, -1));
       const leafKey = path[path.length - 1];
       const item = parent[leafKey][idx];
+
       item.done = val;
       item.completedOn = val ? todayISO() : "";
+
+      if (val) {
+        const timestamp = new Date().toLocaleString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+
+        const stamp = `${item.title} — ${timestamp}`;
+
+        setLastStudied(stamp);
+        localStorage.setItem("K_LAST_STUDIED", stamp);
+        setShowLastStudied(true);
+      }
+
       return t;
     });
+
     if (val) setDaySet((prev) => new Set(prev).add(todayISO()));
   };
 
@@ -4571,147 +4632,160 @@ export default function Syllabus() {
 
   /* ======================= RENDER ======================= */
   return (
-    <div className="min-h-screen bg-[#071014] text-[#E2E8F0] dark:bg-[#050F0A] dark:text-[#D1FAE5 p-2 rounded-xl">
+    <div className="min-h-[80vh] rounded-xl bg-[#0c1f18]/90 text-[#dceee8] dark:bg-[#050f0a] dark:text-[#d1fae5] p-2">
       <header
-        className="rounded-xl sticky top-0 z-40 backdrop-blur 
-  bg-[#051C14]/90 border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)]"
+        className="rounded-xl sticky top-0 z-40
+  bg-[#0c1f18]/80 backdrop-blur-xl
+ border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)]"
       >
-        <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
-          {/* 🔹 Top Section: Title + Saved Status */}
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#E2E8F0]">
-              Syllabus Jay's Web Dev-2026
-            </h1>
+        {/* === INNER WRAPPER (handles spacing) === */}
+        <div className="max-w-6xl mx-auto px-3 py-4 space-y-3 md:space-y-4">
+          {/* 🔹 Top Row: Title + Buttons in one line */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
+            {/* LEFT — Title + Saved */}
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
+                Syllabus Jay's Web Dev-2026
+              </h1>
+            </div>
+            {/* RIGHT — Buttons */}
+            <div className="flex flex-wrap justify-end gap-2">
+              {/* Streak */}
+              <span
+                className="px-3 py-1.5 rounded-xl  border-[#1f6a50]/40 bg-gradient-to-r from-[#0ca56d] to-[#18c481]
+                text-[15px] border border-[#0B5134] font-medium text-[#020504]"
+              >
+                🔥 Streak: <b>{Array.from(daySet).length}</b> days
+              </span>
+              {/* Expand */}
+              <button
+                onClick={() => {
+                  setMeta((m) => {
+                    const c = { ...m };
+                    Object.keys(c).forEach((k) => (c[k].open = true));
+                    return c;
+                  });
+                }}
+                className="px-3 py-1.5 rounded-xl text-sm 
+          bg-[#113f30]/80 border-[#1f6a50]/40
+          text-[#d9ebe5] hover:bg-[#0F3A2B] transition"
+              >
+                Expand
+              </button>
+              {/* Collapse */}
+              <button
+                onClick={() => {
+                  setMeta((m) => {
+                    const c = { ...m };
+                    Object.keys(c).forEach((k) => (c[k].open = false));
+                    return c;
+                  });
+                }}
+                className="px-3 py-1.5 rounded-xl text-sm 
+          bg-[#113f30]/80 border-[#1f6a50]/40
+          text-[#d9ebe5] hover:bg-[#0F3A2B] transition"
+              >
+                Collapse
+              </button>
+              {/* Reset */}
+              <button
+                onClick={() => {
+                  if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
+                    return;
 
-            {saving ? (
-              <div className="text-xs text-gray-400 animate-pulse mt-1">
-                💾 Saving...
-              </div>
-            ) : lastSaved ? (
-              <div className="text-xs text-gray-400 mt-1">
-                💾 Saved at {lastSaved.toLocaleTimeString()}
-              </div>
-            ) : null}
-          </div>
+                  setTree((old) => {
+                    const t = deepClone(old);
+                    (function reset(n) {
+                      if (Array.isArray(n)) {
+                        n.forEach((it) => {
+                          it.done = false;
+                          it.completedOn = "";
+                          it.deadline = "";
+                        });
+                        return;
+                      }
+                      for (const v of Object.values(n || {})) reset(v);
+                    })(t);
+                    return t;
+                  });
 
-          {/* 🔹 Buttons Section — Now fully responsive */}
-          <div className="flex flex-wrap gap-2">
-            {/* Streak */}
-            <span
-              className="px-3 py-1.5 rounded-xl bg-[#0A2F22] text-xs 
-        border border-[#0B5134] font-medium text-[#E2E8F0]"
-            >
-              🔥 Streak: <b>{Array.from(daySet).length}</b> days
-            </span>
+                  setMeta({});
+                  setNR({});
+                  setDaySet(new Set());
 
-            {/* Expand */}
-            <button
-              onClick={() => {
-                setMeta((m) => {
-                  const c = { ...m };
-                  Object.keys(c).forEach((k) => (c[k].open = true));
-                  return c;
-                });
-              }}
-              className="px-3 py-1.5 rounded-xl text-sm
-        bg-gradient-to-r from-[#0BA36B] to-[#16C47F]
-        text-white font-semibold shadow-md
-        hover:scale-[1.05] transition"
-            >
-              Expand
-            </button>
+                  // 🔥 CLEAR LAST STUDIED
+                  localStorage.removeItem("K_LAST_STUDIED");
+                  setLastStudied("");
+                  setShowLastStudied(false);
 
-            {/* Collapse */}
-            <button
-              onClick={() => {
-                setMeta((m) => {
-                  const c = { ...m };
-                  Object.keys(c).forEach((k) => (c[k].open = false));
-                  return c;
-                });
-              }}
-              className="px-3 py-1.5 rounded-xl text-sm 
-        bg-[#0A2F22] border border-[#0B5134] 
-        text-[#E2E8F0] hover:bg-[#0F3A2B] transition"
-            >
-              Collapse
-            </button>
+                  localStorage.removeItem("K_TREE");
+                  localStorage.removeItem("K_META");
+                  localStorage.removeItem("K_NOTES");
+                  localStorage.removeItem("K_STREAK");
 
-            {/* Reset */}
-            <button
-              onClick={() => {
-                if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
-                  return;
-                setTree((old) => {
-                  const t = deepClone(old);
-                  (function reset(n) {
-                    if (Array.isArray(n)) {
-                      n.forEach((it) => {
-                        it.done = false;
-                        it.completedOn = "";
-                        it.deadline = "";
-                      });
-                      return;
-                    }
-                    for (const v of Object.values(n || {})) reset(v);
-                  })(t);
-                  return t;
-                });
-                setMeta({});
-                setNR({});
-                setDaySet(new Set());
-                localStorage.removeItem("K_TREE");
-                localStorage.removeItem("K_META");
-                localStorage.removeItem("K_NOTES");
-                localStorage.removeItem("K_STREAK");
-                window.location.reload();
-              }}
-              className="px-3 py-1.5 rounded-xl text-sm bg-red-600 text-white shadow-md hover:bg-red-700 transition"
-            >
-              Reset
-            </button>
-
-            {/* Export */}
-            <button
-              onClick={exportProgress}
-              className="px-3 py-1.5 rounded-xl text-sm text-[#E2E8F0]
-        bg-[#0A2F22] border border-[#0B5134]
-        hover:bg-[#0F3A2B] transition"
-            >
-              📤 Export
-            </button>
-
-            {/* Import */}
-            <label
-              className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
-        bg-[#0A2F22] border border-[#0B5134] text-[#E2E8F0]
-        hover:bg-[#0F3A2B] transition"
-            >
-              📥 Import
-              <input
-                type="file"
-                accept=".json"
-                onChange={importProgress}
-                className="hidden"
-              />
-            </label>
-          </div>
-
+                  window.location.reload();
+                }}
+                className="px-3 py-1.5 rounded-xl text-sm bg-red-600 text-white shadow-md hover:bg-red-700 transition"
+              >
+                Reset
+              </button>
+              {/* Export */}
+              <button
+                onClick={exportProgress}
+                className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
+          bg-[#113f30]/80 border-[#1f6a50]/40
+          hover:bg-[#0F3A2B] transition"
+              >
+                📤 Export
+              </button>
+              {/* Import */}
+              <label
+                className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
+          bg-[#113f30]/80 border-[#1f6a50]/40 text-[#d9ebe5]
+          hover:bg-[#0F3A2B] transition"
+              >
+                📥 Import
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importProgress}
+                  className="hidden"
+                />
+              </label>
+            </div>{" "}
+            {/* END Button Row */}
+          </div>{" "}
+          {/* END Title + Button Row */}
           {/* 🔹 Progress Bar */}
-          <div className="w-full">
-            <div className="flex items-center justify-between text-xs mb-1 text-[#E2E8F0]">
+          <div className="w-full pt-1 md:pt-3">
+            <div className="flex items-center justify-between text-xs mb-1 text-[#d9ebe5]">
               <span className="font-medium">
                 Progress: {grand.done}/{grand.total}
               </span>
+              {showLastStudied ? (
+                lastStudied ? (
+                  <div className="text-xs text-green-300/90 mt-1 flex items-center gap-1">
+                    📘 <span>Last studied:</span>
+                    <span className="font-medium text-green-200">
+                      {lastStudied}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-400 mt-1">
+                    📭 No topics completed yet.
+                  </div>
+                )
+              ) : null}
+
               <span className="font-semibold">{grand.pct}%</span>
             </div>
 
-            <div className="h-3 rounded-full bg-[#1B5F46] overflow-hidden relative">
+            <div className="h-3 mt-2 rounded-full bg-[#184d3a] overflow-hidden relative">
               <div
                 className="h-full bg-gradient-to-r 
-            from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
-            shadow-[0_0_8px_#22C55E]
-            transition-all duration-700 ease-out rounded-full"
+          from-[#18c47b] via-[#2de89b] to-[#4cf5b9]
+          shadow-[0_0_8px_#22C55E]
+          transition-all duration-700 ease-out rounded-full"
                 style={{
                   width: `${grand.pct}%`,
                   minWidth: grand.pct > 0 ? 0 : "6px",
@@ -4719,18 +4793,16 @@ export default function Syllabus() {
               />
             </div>
           </div>
-        </div>
+        </div>{" "}
+        {/* END inner wrapper */}
       </header>
 
       {/* === Combined Layout (Planner + Topics) === */}
-      <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
         {/* RIGHT SIDE (above on mobile) */}
-        <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
+        <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
           {/* 🗓️ Daily Planner */}
-          <div
-            className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
-           dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm"
-          >
+          <div className="rounded-2xl bg-[#11342b]/70 border border-[#1a4a39]/40 backdrop-blur-md dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm">
             <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
             <p className="text-sm opacity-80 mb-3">
               Closest-deadline topics not yet done.
@@ -4740,18 +4812,18 @@ export default function Syllabus() {
 
           {/* 🤖 Smart Suggest */}
           <div
-            className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
-              dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm"
+            className="rounded-2xl bg-[#11342b]/70 border border-[#1a4a39]/40
+             backdrop-blur-md dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm"
           >
             <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
           </div>
         </div>
 
         {/* LEFT SIDE — All Topics */}
-        <div className="order-2 lg:order-1 lg:col-span-3 space-y-4 ">
+        <div className="order-2 lg:order-1 lg:col-span-6 space-y-4 ">
           <main className="w-full px-0 md:px-1 space-y-4">
             {Object.keys(filtered).length === 0 && (
-              <div className="text-sm text-[#E2E8F0] dark:text-gray-300">
+              <div className="text-sm text-[#d9ebe5] dark:text-gray-300">
                 No matches for “{query}”.
               </div>
             )}
@@ -4830,20 +4902,17 @@ function SectionCard({
   }, [m.open, node, meta, nr]);
 
   return (
-    <section
-      className="rounded-xl border border-[#00d1b2]/30 dark:border-gray-800 bg-[#051C14]
-    dark:bg-gray-900/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm overflow-hidden"
-    >
+    <section className="rounded  dark:border-gray-800 bg-[#0f2f25]/70 border border-[#1c5b44]/30 backdrop-blur-md dark:bg-gray-900/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm overflow-hidden">
       {/* Header */}
       <div
         onClick={() => onSectionHeaderClick(sectionPath)}
-        className="relative rounded-xl p-3 cursor-pointer 
+        className="relative  p-3 cursor-pointer 
   bg-[#051C14] border border-[#0B5134]
   hover:bg-[#0A2F22] 
-  transition-all duration-200 overflow-hidden text-[#E2E8F0]"
+  transition-all duration-200 overflow-hidden text-[#d9ebe5]"
       >
         {/* ✅ Progress bar (thin + matches main green style) */}
-        <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#1B5F46] overflow-hidden">
+        <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#184d3a] overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
                shadow-[0_0_6px_#22C55E] transition-all duration-700 ease-out rounded-full"
@@ -4878,7 +4947,7 @@ function SectionCard({
 
             <button
               onClick={() => setAllAtPath(sectionPath, !allDone)}
-              className="px-2 py-1 rounded-md border bg-[#051C14]
+              className="px-2 py-1 rounded-md border
               dark:border-gray-700 bg-[#051C14]
               dark:bg-gray-800 hover:bg-[#051C14]
               dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
@@ -5079,7 +5148,7 @@ function SubNode({
                   if (!it.deadline) {
                     completionMsg = `Completed on ${completedStr}`;
                     completionColor =
-                      "bg-[#051C14] text-[#E2E8F0] dark:bg-gray-800/60 dark:text-gray-300";
+                      "bg-[#051C14] text-[#d9ebe5] dark:bg-gray-800/60 dark:text-gray-300";
                   } else if (completedDate && diff !== null) {
                     const targetStr = new Date(it.deadline).toLocaleDateString(
                       "en-IN",
@@ -5402,11 +5471,12 @@ function SmartSuggest({ generateSmartPlan, tree }) {
     dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300"
     >
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
         <h3 className="font-semibold flex items-center gap-2 text-base">
           🤖 Smart Suggest
         </h3>
-        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#FF8F8F]/20 dark:bg-gray-800 whitespace-nowrap">
+
+        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#FF8F8F]/20 dark:bg-gray-800 whitespace-nowrap sm:ml-auto">
           AI Study Planner
         </span>
       </div>
@@ -5463,7 +5533,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                   <span
-                    className={`font-medium text-[#E2E8F0] dark:text-gray-100 ${
+                    className={`font-medium text-[#d9ebe5] dark:text-gray-100 ${
                       item.done ? "line-through" : ""
                     }`}
                   >
