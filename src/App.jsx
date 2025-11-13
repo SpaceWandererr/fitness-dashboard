@@ -30,15 +30,15 @@ export default function App() {
 
   return (
     <div
-      className={`flex flex-col min-h-[100dvh] overflow-x-hidden text-gray-200 transition-colors duration-300 ${
+      className={`min-h-[100dvh] overflow-x-hidden text-gray-200 transition-colors duration-300 ${
         dark
           ? "bg-gradient-to-br from-[#0d0d0f] via-[#121212] to-[#1a1a1a]"
           : "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]"
       }`}
       style={{ "--accent": accent }}
     >
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-gray-800 bg-[#121212]/70 backdrop-blur-lg">
+      {/* Navbar MUST be outside the flex parent */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 bg-[#121212]/70 backdrop-blur-lg">
         <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between p-3 gap-2">
           {/* Name / Logo */}
           <Link
@@ -120,17 +120,17 @@ export default function App() {
         )}
       </nav>
 
-      {/* Routes */}
+      {/* Main Content */}
       <main
         key={location.pathname}
-        className="flex-1 w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 mt-2 transition-all duration-300 ease-in-out"
+        className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 pt-24 transition-all duration-300 ease-in-out"
       >
         <Routes>
           <Route path="/" element={<ModernDashboard accent={accent} />} />
           <Route path="/home" element={<Navigate to="/" />} />
+          <Route path="/syllabus" element={<Syllabus />} />
           <Route path="/gym" element={<Gym />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/syllabus" element={<Syllabus />} />
           <Route path="/bmi" element={<BMI />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/gallery" element={<Gallery />} />
@@ -153,11 +153,11 @@ export default function App() {
 /* ---------- helpers ---------- */
 
 const links = [
-  { to: "/home", label: "Home" },
+  { to: "/home", label: "HOME" },
+  { to: "/syllabus", label: "STUDY" },
+  { to: "/gym", label: "GYM" },
+  { to: "/calendar", label: "CALENDAR" },
   { to: "/planner", label: "Planner" },
-  { to: "/gym", label: "Gym" },
-  { to: "/calendar", label: "Calendar" },
-  { to: "/syllabus", label: "Syllabus" },
   { to: "/bmi", label: "BMI" },
   { to: "/calories", label: "Calories" },
   { to: "/stats", label: "Stats" },
