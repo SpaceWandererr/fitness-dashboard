@@ -1222,8 +1222,16 @@ function Modal({ children, onClose }) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="absolute inset-0 flex items-start justify-center pt-[10vh] p-4">
-        <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0F1E1E] text-emerald-100 p-4 shadow-2xl">
+      <div className="absolute inset-0 flex items-start justify-center pt-[15vh] p-4">
+        <div
+          className="
+  w-full max-w-lg rounded-2xl border border-white/10 bg-[#0F1E1E] text-emerald-100 p-4 shadow-2xl
+  [&_input]:bg-[#0F1E1E] [&_textarea]:bg-[#0F1E1E] [&_select]:bg-[#0F1E1E]
+  [&_input]:text-emerald-100 [&_textarea]:text-emerald-100 [&_select]:text-emerald-100
+  [&_input]:border-white/10 [&_textarea]:border-white/10 [&_select]:border-white/10
+  [&_input]:border [&_textarea]:border [&_select]:border
+"
+        >
           {children}
         </div>
       </div>

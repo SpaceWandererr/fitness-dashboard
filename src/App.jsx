@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
-import Dashboard from "./components/Dashboard.jsx";
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
 import BMI from "./components/BMI.jsx";
@@ -20,8 +19,21 @@ export default function App() {
   const [dark, setDark] = useState(() => load("wd_dark", true));
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navRef = useRef(null);
 
   const accent = "190 80% 55%"; // cyan-aqua tone
+
+  useEffect(() => {
+    function adjustPadding() {
+      if (navRef.current) {
+        const h = navRef.current.getBoundingClientRect().height;
+        document.documentElement.style.setProperty("--nav-height", `${h}px`);
+      }
+    }
+    adjustPadding();
+    window.addEventListener("resize", adjustPadding);
+    return () => window.removeEventListener("resize", adjustPadding);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -38,7 +50,10 @@ export default function App() {
       style={{ "--accent": accent }}
     >
       {/* Navbar MUST be outside the flex parent */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 bg-[#121212]/70 backdrop-blur-lg">
+      <nav
+        ref={navRef}
+        className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 bg-[#121212]/70 backdrop-blur-lg"
+      >
         <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between p-3 gap-2">
           {/* Name / Logo */}
           <Link
@@ -123,7 +138,8 @@ export default function App() {
       {/* Main Content */}
       <main
         key={location.pathname}
-        className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 pt-24 transition-all duration-300 ease-in-out"
+        className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 transition-all duration-300 ease-in-out"
+        style={{ paddingTop: "calc(var(--nav-height) + 16px)" }}
       >
         <Routes>
           <Route path="/" element={<ModernDashboard accent={accent} />} />

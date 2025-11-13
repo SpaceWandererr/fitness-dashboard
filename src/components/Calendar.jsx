@@ -1,5 +1,4 @@
-// Calendar_Full_Dark.jsx
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import {
   ResponsiveContainer,
@@ -12,23 +11,11 @@ import {
   Legend,
 } from "recharts";
 
-/**
- * Calendar — Full Dark (final)
- *
- * LocalStorage keys used (keeps compatibility with your app):
- *  - syllabus_tree_v2
- *  - wd_gym_logs
- *  - wd_done
- *  - bmi_logs
- *  - wd_notes_v1
- *
- * Install:
- *  npm i dayjs recharts
- *
- * Drop into your components folder and import where needed.
- */
+// Updated Calendar — with: selected glow (neon blue), today highlight,
+// compact "no exercises" handling, light-theme color fixes, monthly stats,
+// hover popup, smooth animations, and Quote replaced with Today's Stats.
 
-// ----------------- small local helpers -----------------
+// LocalStorage helpers
 function load(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -47,30 +34,17 @@ function save(key, value) {
   }
 }
 
-// quotes
-const QUOTES = [
-  "Small progress is still progress — show up today.",
-  "Focus on consistency, not perfection.",
-  "Lift heavy. Ship often. Repeat.",
-  "Short, focused sessions beat long, distracted ones.",
-  "Progress compounds — keep stacking days.",
-];
-
 function todayISO() {
   return dayjs().format("YYYY-MM-DD");
 }
 
-// ----------------- robust exercise extractor -----------------
+// Combined extractor (same robust version as before)
 function combinedExercisesForDate(iso) {
-  // load raw gym logs (helps if other modules update storage)
   const gymLogs = load("wd_gym_logs", {}) || {};
   const g = gymLogs[iso] || {};
-  if (g.cleanedExercises && Array.isArray(g.cleanedExercises)) {
+  if (g.cleanedExercises && Array.isArray(g.cleanedExercises))
     return g.cleanedExercises;
-  }
-
   const parts = [];
-
   const pushIf = (v) => {
     if (!v && v !== 0) return;
     if (Array.isArray(v)) {
@@ -86,13 +60,10 @@ function combinedExercisesForDate(iso) {
       return;
     }
     if (typeof v === "object" && v !== null) {
-      // common keys
       if (v.name && typeof v.name === "string") return pushIf(v.name);
       if (v.title && typeof v.title === "string") return pushIf(v.title);
       if (v.exercise && typeof v.exercise === "string")
         return pushIf(v.exercise);
-      // sometimes you have {name:..., reps:...} or nested objects
-      // check if object is a map of name->true
       const keys = Object.keys(v);
       const isMapOfTrues =
         keys.length &&
@@ -104,16 +75,31 @@ function combinedExercisesForDate(iso) {
             typeof v[k] === "number"
         );
       if (isMapOfTrues) {
+        const ignoreKeys = [
+          "done",
+          "weight",
+          "calories",
+          "bmi",
+          "notes",
+          "date",
+          "weekday",
+          "cleanedExercises",
+          "workout",
+        ];
         keys.forEach((k) => {
           const val = v[k];
-          if (val === true || val === 1) parts.push(k);
-          else if (typeof val === "string" && val.trim())
+          if (ignoreKeys.includes(k)) return;
+          if (val === true) {
+            const pretty = k
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+            parts.push(pretty);
+          } else if (typeof val === "string" && val.trim()) {
             parts.push(val.trim());
-          else if (typeof val === "number") parts.push(String(val));
+          }
         });
         return;
       }
-      // otherwise try to find nested name/title
       for (const k of keys) {
         const val = v[k];
         if (
@@ -135,39 +121,30 @@ function combinedExercisesForDate(iso) {
           parts.push(String(val));
         }
       }
-      // fallback: stringify keys where value is truthy
       keys.forEach((k) => {
         if (v[k] === true) parts.push(k);
       });
       return;
     }
-    // fallback primitives
     parts.push(String(v));
   };
 
-  // common blocks used in your gym logs: left, right, finisher, exercises, sets
   ["left", "right", "finisher", "exercises", "sets"].forEach((blk) => {
     if (g[blk]) pushIf(g[blk]);
   });
 
-  // if g itself is an array or object with top-level names
   if (Array.isArray(g)) pushIf(g);
   else if (typeof g === "object" && g !== null) {
-    // sometimes you store array under g.exercises or g.workout
     if (g.exercises) pushIf(g.exercises);
     else if (g.workout) pushIf(g.workout);
     else {
-      // fallback: inspect keys
-      const keys = Object.keys(g || {});
-      // if keys are strings mapped to true, collect them
-      keys.forEach((k) => {
+      Object.keys(g || {}).forEach((k) => {
         const v = g[k];
         if (v === true) parts.push(k);
       });
     }
   }
 
-  // NEW FIX — handle boolean arrays + reference plan
   if (
     Array.isArray(g.left) ||
     Array.isArray(g.right) ||
@@ -191,11 +168,9 @@ function combinedExercisesForDate(iso) {
     });
   }
 
-  // unique and cleaned
   const cleaned = parts
     .map((s) => (typeof s === "string" ? s.trim() : String(s)))
     .filter(Boolean);
-  // dedupe keeping order
   const seen = new Set();
   const out = [];
   cleaned.forEach((x) => {
@@ -207,23 +182,35 @@ function combinedExercisesForDate(iso) {
   return out;
 }
 
-// render helper
 function renderExercises(iso) {
-  const arr = combinedExercisesForDate(iso);
-  if (!arr.length)
-    return <p className="text-sm opacity-70">No exercises logged.</p>;
+  const logs = load("wd_gym_logs", {}) || {};
+  const entry = logs[iso];
+  if (!entry) return null; // compact: show nothing if no gym entry
+  const planStore = load("wd_gym_plan", {}) || {};
+  const weekday = entry.weekday || dayjs(iso).format("dddd");
+  const todayPlan = planStore[weekday] || {};
+  const allExercises = [
+    ...(todayPlan.left || []),
+    ...(todayPlan.right || []),
+    ...(todayPlan.finisher || []),
+  ];
+  const bools = [
+    ...(entry.left || []),
+    ...(entry.right || []),
+    ...(entry.finisher || []),
+  ];
+  const doneExercises = allExercises.filter((ex, i) => bools[i]);
+  if (!doneExercises.length) return null; // compact
   return (
     <ul className="list-disc list-inside text-sm space-y-1">
-      {arr.map((e, i) => (
+      {doneExercises.map((e, i) => (
         <li key={i}>{e}</li>
       ))}
     </ul>
   );
 }
 
-// ----------------- main component -----------------
-export default function CalendarFullDark() {
-  // state variables (same keys as your app)
+export default function CalendarFullDarkUpdated() {
   const [month, setMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [syllabus, setSyllabus] = useState(() => load("syllabus_tree_v2", {}));
@@ -231,14 +218,12 @@ export default function CalendarFullDark() {
   const [doneMap, setDoneMap] = useState(() => load("wd_done", {}));
   const [notesMap, setNotesMap] = useState(() => load("wd_notes_v1", {}));
   const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
-  const [quote, setQuote] = useState(
-    () => QUOTES[Math.floor(Math.random() * QUOTES.length)]
-  );
-  const [view, setView] = useState("calendar"); // calendar | weekly | compare
+  const [view, setView] = useState("calendar");
   const [compareDates, setCompareDates] = useState([null, null]);
-  const [importing, setImporting] = useState(false);
+  const [hoveredDate, setHoveredDate] = useState(null);
+  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+  const hoverRef = useRef(null);
 
-  // keep synched on mount
   useEffect(() => {
     setSyllabus(load("syllabus_tree_v2", {}));
     setGymLogs(load("wd_gym_logs", {}));
@@ -248,7 +233,6 @@ export default function CalendarFullDark() {
     setSelectedDate(todayISO());
   }, []);
 
-  // rebuild study map (date -> [titles]) from syllabus tree
   const studyMap = useMemo(() => {
     const out = {};
     function walk(node) {
@@ -268,7 +252,6 @@ export default function CalendarFullDark() {
     return out;
   }, [syllabus]);
 
-  // days to display (6 weeks)
   const days = useMemo(() => {
     const start = month.startOf("month").startOf("week");
     return Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
@@ -287,7 +270,6 @@ export default function CalendarFullDark() {
     setSelectedDate(d.format("YYYY-MM-DD"));
   }
 
-  // Streaks (current and longest)
   const streakInfo = useMemo(() => {
     const done = load("wd_done", {});
     const today = dayjs();
@@ -297,7 +279,6 @@ export default function CalendarFullDark() {
       if (done[k]) cur++;
       else break;
     }
-    // longest streak
     let longest = 0;
     let running = 0;
     const keys = Object.keys(done).sort();
@@ -310,7 +291,6 @@ export default function CalendarFullDark() {
     return { current: cur, longest, percent };
   }, [doneMap]);
 
-  // weekly summary for chart (last 7)
   const weeklyData = useMemo(() => {
     const arr = [];
     for (let i = 6; i >= 0; i--) {
@@ -326,12 +306,10 @@ export default function CalendarFullDark() {
     return arr;
   }, [studyMap, gymLogs]);
 
-  // combined exercises helper uses robust extractor above
   function combinedExercisesForDateWrapper(iso) {
     return combinedExercisesForDate(iso);
   }
 
-  // weekly / compare helpers
   function setCompareSlot(idx, date) {
     setCompareDates((prev) => {
       const next = [...prev];
@@ -340,14 +318,12 @@ export default function CalendarFullDark() {
     });
   }
 
-  // notes save
   function saveNoteForDate(date, text) {
     const next = { ...notesMap, [date]: text };
     setNotesMap(next);
     save("wd_notes_v1", next);
   }
 
-  // export/import all
   function exportAll() {
     const payload = {
       syllabus: load("syllabus_tree_v2", {}),
@@ -367,7 +343,6 @@ export default function CalendarFullDark() {
 
   function importAll(file) {
     if (!file) return;
-    setImporting(true);
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -396,14 +371,11 @@ export default function CalendarFullDark() {
       } catch (err) {
         console.error(err);
         alert("Import failed.");
-      } finally {
-        setImporting(false);
       }
     };
     reader.readAsText(file);
   }
 
-  // reset gym
   function resetGymProgress() {
     if (
       !confirm(
@@ -419,7 +391,6 @@ export default function CalendarFullDark() {
     alert("Gym progress reset.");
   }
 
-  // ensure selectedDate / re-sync when storage changes externally
   useEffect(() => {
     const onStorage = (e) => {
       if (!e.key) return;
@@ -434,202 +405,121 @@ export default function CalendarFullDark() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // auto-save doneMap/gym/notes when changed in-app
   useEffect(() => save("wd_done", doneMap), [doneMap]);
   useEffect(() => save("wd_gym_logs", gymLogs), [gymLogs]);
   useEffect(() => save("wd_notes_v1", notesMap), [notesMap]);
 
-  // small UI pieces (StreakBar, TodayHighlights, WeeklySummary, ComparePanel)
-  function StreakBar() {
-    return (
-      <div className="bg-[#1c1c1e]/80 backdrop-blur-md border border-gray-800 rounded-xl p-6 shadow-md text-gray-300">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium">🔥 Streak</div>
-          <div className="text-xs opacity-70">{streakInfo.current} days</div>
-        </div>
-        <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all"
-            style={{ width: `${streakInfo.percent}%` }}
-          />
-        </div>
-        <div className="mt-2 text-xs opacity-70 flex justify-between">
-          <span>Longest: {streakInfo.longest}d</span>
-          <span>{streakInfo.percent}% of longest</span>
-        </div>
-      </div>
-    );
-  }
-
-  function TodayHighlights({ iso, streakInfo }) {
-    const gym = load("wd_gym_logs") || {};
-    const syllabus = load("syllabus_tree_v2") || {};
-
-    // --- Count study topics for this date ---
-    function countTopics(node) {
-      if (!node) return 0;
-      let count = 0;
-      if (Array.isArray(node)) {
-        node.forEach((it) => {
-          if (it.completedOn === iso) count++;
-        });
-      } else if (typeof node === "object") {
-        for (const v of Object.values(node)) count += countTopics(v);
-      }
-      return count;
+  // Monthly stats
+  const monthlyStats = useMemo(() => {
+    const start = month.startOf("month");
+    const end = month.endOf("month");
+    let topics = 0;
+    let exercises = 0;
+    for (
+      let d = start;
+      d.isBefore(end) || d.isSame(end, "day");
+      d = d.add(1, "day")
+    ) {
+      const iso = d.format("YYYY-MM-DD");
+      topics += (studyMap[iso] || []).length;
+      exercises += combinedExercisesForDateWrapper(iso).length;
     }
+    return { topics, exercises };
+  }, [month, studyMap, gymLogs]);
 
-    const topicCount = countTopics(syllabus);
+  // Today's stats card (replaces quote)
+  const todayStats = useMemo(() => {
+    const iso = todayISO();
+    const topics = (studyMap[iso] || []).length;
+    const exercises = combinedExercisesForDateWrapper(iso).length;
+    const g = gymLogs[iso] || {};
+    return {
+      topics,
+      exercises,
+      calories: g.calories || "—",
+      weight: g.weight || "—",
+      bmi: g.bmi || "—",
+    };
+  }, [studyMap, gymLogs]);
 
-    // --- Extract gym info for this date ---
-    const gymData = gym[iso] || {};
-    const exerciseCount = (gymData.cleanedExercises || []).length || 0;
-    const caloriesCount = gymData.calories || "—";
-    const weightValue = gymData.weight || "—";
-
-    // --- UI ---
-    return (
-      <div className="rounded-2xl p-4 bg-gradient-to-br from-[#182c48] via-[#1f2d4a] to-[#0e1c33] border border-[#3b82f6]/40 shadow-md text-white dark:bg-[#0f172a] dark:border-gray-700 dark:text-gray-200 transition-all duration-300">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-semibold text-white dark:text-[#93c5fd]">
-            {dayjs(iso).format("dddd, DD MMM")}
-          </h3>
-          <div className="text-xs text-white/90 dark:text-gray-400">
-            🔥 Streak: {streakInfo?.current || 0}d
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 text-center mt-2">
-          <div>
-            <p className="text-[#38bdf8] font-semibold">{topicCount}</p>
-            <p className="text-xs text-white/80 dark:text-gray-400">Topics</p>
-          </div>
-          <div>
-            <p className="text-[#22c55e] font-semibold">{exerciseCount}</p>
-            <p className="text-xs text-white/80 dark:text-gray-400">
-              Exercises
-            </p>
-          </div>
-          <div>
-            <p className="text-[#facc15] font-semibold">{caloriesCount}</p>
-            <p className="text-xs text-white/80 dark:text-gray-400">Calories</p>
-          </div>
-          <div>
-            <p className="text-[#f472b6] font-semibold">{weightValue}</p>
-            <p className="text-xs text-white/80 dark:text-gray-400">Weight</p>
-          </div>
-        </div>
-      </div>
-    );
+  // Hover popup content
+  function handleMouseEnterDate(e, iso) {
+    setHoveredDate(iso);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHoverPos({ x: rect.right + 8, y: rect.top });
+  }
+  function handleMouseLeaveDate() {
+    setHoveredDate(null);
   }
 
-  function WeeklySummary() {
-    return (
-      <div className="rounded-xl p-3 border border-gray-700 bg-gray-900 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h4 className="font-semibold">Weekly Summary</h4>
-          <div className="text-xs opacity-70">Last 7 days</div>
-        </div>
-        <div className="h-48 mt-3">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#233046" />
-              <XAxis dataKey="date" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
-              <Tooltip
-                wrapperStyle={{
-                  backgroundColor: "#0b1220",
-                  border: "1px solid #263249",
-                }}
-              />
-              <Legend />
-              <Bar dataKey="study" stackId="a" fill="#16a34a" />
-              <Bar dataKey="gym" stackId="a" fill="#0284c7" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    );
-  }
-
-  function ComparePanel() {
-    const [a, b] = compareDates;
-    const info = (iso) => ({
-      studyCount: (studyMap[iso] || []).length,
-      gymDone: !!gymLogs[iso],
-      exercises: combinedExercisesForDateWrapper(iso),
-      notes: notesMap[iso] || "",
-    });
-    const ia = a ? info(a) : null;
-    const ib = b ? info(b) : null;
-    return (
-      <div className="rounded-xl p-3 border border-gray-700 bg-gray-900 shadow-sm">
-        <h4 className="font-semibold mb-2">Compare Dates</h4>
-        <div className="flex gap-2 mb-2">
-          <input
-            type="date"
-            value={a || ""}
-            onChange={(e) => setCompareSlot(0, e.target.value)}
-            className="border rounded px-2 py-1 bg-gray-800"
-          />
-          <input
-            type="date"
-            value={b || ""}
-            onChange={(e) => setCompareSlot(1, e.target.value)}
-            className="border rounded px-2 py-1 bg-gray-800"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-2 border rounded bg-gray-900">
-            <div className="text-xs opacity-70">{a || "—"}</div>
-            <div>Study: {ia ? ia.studyCount : "—"}</div>
-            <div>Gym: {ia ? (ia.gymDone ? "Yes" : "No") : "—"}</div>
-            <div>Exercises: {ia ? ia.exercises.length : "—"}</div>
-            <div className="text-sm opacity-70 mt-1">{ia?.notes}</div>
-          </div>
-          <div className="p-2 border rounded bg-gray-900">
-            <div className="text-xs opacity-70">{b || "—"}</div>
-            <div>Study: {ib ? ib.studyCount : "—"}</div>
-            <div>Gym: {ib ? (ib.gymDone ? "Yes" : "No") : "—"}</div>
-            <div>Exercises: {ib ? ib.exercises.length : "—"}</div>
-            <div className="text-sm opacity-70 mt-1">{ib?.notes}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // right panel main contents
   const selectedStudy = studyMap[selectedDate] || [];
   const selectedGym = gymLogs[selectedDate] || {};
   const selectedExercises = combinedExercisesForDateWrapper(selectedDate);
   const selectedNote = notesMap[selectedDate] || "";
 
-  // ----------------- UI -----------------
   return (
-    <div className="w-full max-w-6xl mx-auto p-3 grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-4 items-start transition-colors duration-500 bg-[#0b1220] dark:bg-transparent">
+    <div className="w-full max-w-6xl mx-auto p-3 grid grid-cols-1 lg:grid-cols-[1.7fr,1fr] gap-4 items-start transition-colors duration-500 bg-[#0b1220] rounded-xl">
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
-        {/* Row 1: Streak + Quote */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Streak Card */}
-          {/* Streak Card */}
-          <div className="rounded-xl p-4 border border-[#3b82f6]/40 bg-gradient-to-b from-[#182c48] to-[#0e1c33] shadow-md dark:bg-gray-900 dark:border-gray-700 transition-all duration-300 text-white dark:text-gray-200">
-            <StreakBar />
+          <div className="rounded-xl p-4 border bg-gradient-to-b from-[#0b0b0b] to-[#071016] shadow-md transition-all duration-300 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium">🔥 Streak</div>
+              <div className="text-xs opacity-70">
+                {streakInfo.current} days
+              </div>
+            </div>
+            <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all"
+                style={{ width: `${streakInfo.percent}%` }}
+              />
+            </div>
+            <div className="mt-2 text-xs opacity-70 flex justify-between">
+              <span>Longest: {streakInfo.longest}d</span>
+              <span>{streakInfo.percent}% of longest</span>
+            </div>
           </div>
 
-          {/* Quote Card */}
-          <div className="rounded-xl p-4 border border-[#3b82f6]/40 bg-gradient-to-b from-[#182c48] to-[#0e1c33] shadow-md dark:bg-gray-900 dark:border-gray-700 transition-all duration-300 flex flex-col justify-center">
-            <div className="text-sm font-semibold text-[#38bdf8] dark:text-teal-300 mb-1">
-              💬 Quote
+          {/* Today's Stats (replaces quote) */}
+          <div className="rounded-xl p-4 border bg-gradient-to-br from-[#071022] to-[#081427] shadow-md transition-all duration-300 text-white">
+            <div className="text-sm font-semibold text-[#60a5fa] mb-1">
+              📊 Today's Stats
             </div>
-            <div className="text-sm text-[#e2e8f0] dark:text-gray-300 leading-snug">
-              {quote}
+            <div className="grid grid-cols-5 text-center mt-2">
+              <div>
+                <p className="text-[#38bdf8] font-semibold">
+                  {todayStats.topics}
+                </p>
+                <p className="text-xs opacity-70">Topics</p>
+              </div>
+              <div>
+                <p className="text-[#22c55e] font-semibold">
+                  {todayStats.exercises}
+                </p>
+                <p className="text-xs opacity-70">Exercises</p>
+              </div>
+              <div>
+                <p className="text-[#facc15] font-semibold">
+                  {todayStats.calories}
+                </p>
+                <p className="text-xs opacity-70">Calories</p>
+              </div>
+              <div>
+                <p className="text-[#f472b6] font-semibold">
+                  {todayStats.weight}
+                </p>
+                <p className="text-xs opacity-70">Weight</p>
+              </div>
+              <div>
+                <p className="text-[#34d399] font-semibold">{todayStats.bmi}</p>
+                <p className="text-xs opacity-70">BMI</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Row 2: Buttons */}
+        {/* Buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
           {[
             { label: "Calendar", val: "calendar" },
@@ -639,10 +529,10 @@ export default function CalendarFullDark() {
             <button
               key={btn.val}
               onClick={() => setView(btn.val)}
-              className={`w-full py-2 rounded-lg text-sm font-medium transition-colors duration-300 ${
+              className={`w-full py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                 view === btn.val
-                  ? "bg-[#2563eb] text-white dark:bg-[#1f2937] dark:hover:bg-gray-700"
-                  : "bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white"
+                  ? "bg-[#000000] text-[#00e5ff] shadow-[0_4px_20px_rgba(0,149,255,0.18)]"
+                  : "bg-[#071227] hover:bg-[#0b2a44] text-[#dbeafe]"
               }`}
             >
               {btn.label}
@@ -651,12 +541,12 @@ export default function CalendarFullDark() {
 
           <button
             onClick={exportAll}
-            className="w-full py-2 rounded-lg text-sm bg-[#15803d] hover:bg-[#166534] text-white dark:bg-emerald-700/40 dark:hover:bg-emerald-600/50"
+            className="w-full py-2 rounded-lg text-sm bg-[#15803d] hover:bg-[#166534] text-white"
           >
             Export
           </button>
 
-          <label className="w-full py-2 rounded-lg text-sm bg-[#0369a1] hover:bg-[#075985] text-white cursor-pointer dark:bg-sky-700/40 dark:hover:bg-sky-600/50">
+          <label className="w-full py-2 rounded-lg text-sm bg-[#0369a1] hover:bg-[#075985] text-white cursor-pointer">
             Import
             <input
               type="file"
@@ -668,7 +558,7 @@ export default function CalendarFullDark() {
 
           <button
             onClick={resetGymProgress}
-            className="w-full py-2 rounded-lg text-sm bg-[#b91c1c] hover:bg-[#991b1b] text-white dark:bg-red-600 dark:hover:bg-red-500"
+            className="w-full py-2 rounded-lg text-sm bg-[#b91c1c] hover:bg-[#991b1b] text-white"
           >
             Reset Gym
           </button>
@@ -676,142 +566,257 @@ export default function CalendarFullDark() {
       </div>
 
       {/* Calendar Section */}
-      <div className="lg:col-span-2 rounded-2xl border border-[#274472] dark:border-gray-700 p-3 bg-[#13223a] dark:bg-[#071022] space-y-6">
-        {/* Calendar Header */}
+      <div className="lg:col-span-2 rounded-2xl border p-3 bg-[#071022] space-y-6 min-w-[650px] min-h-[600px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMonth((m) => m.subtract(1, "month"))}
-              className="px-2 py-1 rounded bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:text-white"
+              className="px-2 py-1 rounded bg-black text-[#00e5ff] hover:scale-105 transition-transform"
             >
               ◀
             </button>
-            <h2 className="text-lg font-semibold text-[#60a5fa] dark:text-gray-100">
+            <h2 className="text-lg font-semibold text-[#00e5ff]">
               {month.format("MMMM YYYY")}
             </h2>
             <button
               onClick={() => setMonth((m) => m.add(1, "month"))}
-              className="px-2 py-1 rounded bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:text-white"
+              className="px-2 py-1 rounded bg-black text-[#00e5ff] hover:scale-105 transition-transform"
             >
               ▶
             </button>
           </div>
-          <button
-            onClick={() => setMonth(dayjs())}
-            className="px-3 py-1 rounded bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0] dark:bg-gray-800 dark:text-white"
-          >
-            Today
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMonth(dayjs())}
+              className="px-3 py-1 rounded bg-black text-[#00e5ff]"
+            >
+              Today
+            </button>
+            <div className="px-3 py-1 rounded bg-[#0b0b0b] text-sm text-[#e6ffea]">
+              Monthly:{" "}
+              <span className="font-semibold">{monthlyStats.topics} T</span> /{" "}
+              <span className="font-semibold text-red-400">
+                {monthlyStats.exercises} E
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Calendar Days */}
         <div className="grid grid-cols-7 gap-2">
           {days.map((d) => {
             const iso = d.format("YYYY-MM-DD");
             const status = getDayStatusStr(iso);
             const isCurMonth = d.month() === month.month();
+            const isToday = iso === todayISO();
+            const isSelected = iso === selectedDate;
+
+            const base = `aspect-square w-12 h-12 rounded-xl flex items-center justify-center font-medium transition-all duration-300 transform`;
+            const notCur = !isCurMonth ? "opacity-40" : "";
+
+            const bgClass =
+              status === "both"
+                ? "bg-gradient-to-br from-[#2563eb] to-[#e11d48] text-white"
+                : status === "study"
+                ? "bg-[#07391f] text-green-200"
+                : status === "gym"
+                ? "bg-[#071633] text-blue-200"
+                : "bg-[#0b1220] text-[#bfe9ff]";
 
             return (
               <button
                 key={iso}
                 onClick={() => openDay(d)}
-                className={`aspect-square w-10 rounded-xl flex items-center justify-center font-medium transition-all duration-300 hover:scale-105 ${
-                  !isCurMonth ? "opacity-30" : ""
-                } ${
+                onMouseEnter={(e) => handleMouseEnterDate(e, iso)}
+                onMouseLeave={handleMouseLeaveDate}
+                className={`${base} ${notCur} ${bgClass} ${
+                  isSelected
+                    ? "ring-2 ring-offset-2 ring-[#0ea5ff] shadow-[0_8px_30px_rgba(14,165,255,0.12)] scale-105"
+                    : "hover:scale-105"
+                }`}
+                title={`${d.format("ddd, DD MMM YYYY")} — ${
                   status === "both"
-                    ? "bg-gradient-to-br from-[#2563eb] to-[#e11d48] text-white"
+                    ? "Study + Gym"
                     : status === "study"
-                    ? "bg-[#22c55e]/70 text-white"
+                    ? "Study"
                     : status === "gym"
-                    ? "bg-[#38bdf8]/80 text-[#0f172a]"
-                    : "bg-[#1c2b45] hover:bg-[#263656] text-[#e2e8f0]"
-                } dark:${
-                  status === "both"
-                    ? "bg-gradient-to-br from-[#38bdf8]/60 to-[#34d399]/60 text-white"
-                    : status === "study"
-                    ? "bg-[#22c55e]/30 text-green-200"
-                    : status === "gym"
-                    ? "bg-[#0ea5e9]/30 text-blue-200"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    ? "Gym"
+                    : ""
                 }`}
               >
-                {d.date()}
+                <div
+                  className={`relative flex items-center justify-center w-full h-full ${
+                    isToday
+                      ? "before:absolute before:inset-0 before:rounded-xl before:ring-2 before:ring-green-500/40 before:animate-pulse"
+                      : ""
+                  }`}
+                >
+                  <span>{d.date()}</span>
+                  {/* small dot indicators */}
+                  <div className="absolute bottom-2 flex gap-1">
+                    {status === "study" || status === "both" ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    ) : null}
+                    {status === "gym" || status === "both" ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                    ) : null}
+                  </div>
+                </div>
               </button>
             );
           })}
         </div>
 
-        {/* Notes Section */}
-        <div className="rounded-xl p-3 border bg-[#1c2b45] border-[#3b82f6]/40 dark:bg-gray-900 dark:border-gray-700">
-          <h4 className="font-semibold text-[#60a5fa] dark:text-gray-100 mb-2">
-            📝 Notes
-          </h4>
+        {/* Notes */}
+        <div className="rounded-xl p-3 border bg-[#071227] transition-all">
+          <h4 className="font-semibold text-[#00e5ff] mb-2">📝 Notes</h4>
           <textarea
             value={selectedNote}
             onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
             placeholder="Write a short note about today..."
-            className="w-full min-h-[70px] p-2 border rounded bg-[#0f1b33] text-[#e2e8f0] border-[#475569] dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+            className="w-full min-h-[70px] p-2 border rounded bg-[#02060a] text-[#cfefff] border-[#233446]"
           />
         </div>
 
-        {/* Compare / Weekly Containers Below Notes */}
-        <div className="transition-all duration-500 ease-in-out space-y-4">
+        <div className="space-y-4">
           {view === "weekly" && (
-            <div className="rounded-xl p-4 border bg-[#182844] border-[#3b82f6]/50 dark:bg-[#0b2440] dark:border-gray-700 transition-colors text-[#dbeafe] dark:text-gray-100">
-              <WeeklySummary />
+            <div className="rounded-xl p-4 border bg-[#071827] transition-colors text-[#dbeafe]">
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#122236" />
+                    <XAxis dataKey="date" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip
+                      wrapperStyle={{
+                        backgroundColor: "#071425",
+                        border: "1px solid #263249",
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="study" stackId="a" />
+                    <Bar dataKey="gym" stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
 
           {view === "compare" && (
-            <div className="rounded-xl p-4 border bg-[#182844] border-[#3b82f6]/50 dark:bg-[#0b2440] dark:border-gray-700 transition-colors text-[#dbeafe] dark:text-gray-100">
-              <ComparePanel />
+            <div className="rounded-xl p-4 border bg-[#071827] transition-colors text-[#dbeafe]">
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="date"
+                    value={compareDates[0] || ""}
+                    onChange={(e) => setCompareSlot(0, e.target.value)}
+                    className="border rounded px-2 py-1 bg-[#02061a] text-white"
+                  />
+                  <input
+                    type="date"
+                    value={compareDates[1] || ""}
+                    onChange={(e) => setCompareSlot(1, e.target.value)}
+                    className="border rounded px-2 py-1 bg-[#02061a] text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[0, 1].map((i) => {
+                    const iso = compareDates[i];
+                    const info = iso
+                      ? {
+                          studyCount: (studyMap[iso] || []).length,
+                          gymDone: !!gymLogs[iso],
+                          exercises: combinedExercisesForDateWrapper(iso),
+                          notes: notesMap[iso] || "",
+                        }
+                      : null;
+                    return (
+                      <div className="p-2 border rounded bg-[#071323]">
+                        <div className="text-xs opacity-70">{iso || "—"}</div>
+                        <div>Study: {info ? info.studyCount : "—"}</div>
+                        <div>
+                          Gym: {info ? (info.gymDone ? "Yes" : "No") : "—"}
+                        </div>
+                        <div>
+                          Exercises: {info ? info.exercises.length : "—"}
+                        </div>
+                        <div className="text-sm opacity-70 mt-1">
+                          {info?.notes}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
 
       {/* Right Panel */}
-      <div className="rounded-2xl border border-[#274472] dark:border-gray-700 p-3 bg-[#13223a] dark:bg-[#071022] space-y-3">
-        <div className="text-sm text-[#93c5fd] dark:text-gray-300 mb-2">
+      <div className="rounded-2xl border p-3 bg-[#071022] space-y-3 min-h-[600px] min-w-[450px]">
+        <div className="text-sm text-[#60a5fa] mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
         </div>
 
-        <TodayHighlights iso={selectedDate} streakInfo={streakInfo} />
+        <div className="rounded-2xl p-3 border bg-[#071827]">
+          <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
+          <div className="grid grid-cols-5 text-center mt-2">
+            <div>
+              <p className="text-[#38bdf8] font-semibold">
+                {(studyMap[selectedDate] || []).length}
+              </p>
+              <p className="text-xs opacity-70">Topics</p>
+            </div>
+            <div>
+              <p className="text-[#22c55e] font-semibold">
+                {combinedExercisesForDateWrapper(selectedDate).length}
+              </p>
+              <p className="text-xs opacity-70">Exercises</p>
+            </div>
+            <div>
+              <p className="text-[#facc15] font-semibold">
+                {selectedGym.calories || "—"}
+              </p>
+              <p className="text-xs opacity-70">Calories</p>
+            </div>
+            <div>
+              <p className="text-[#f472b6] font-semibold">
+                {selectedGym.weight || "—"}
+              </p>
+              <p className="text-xs opacity-70">Weight</p>
+            </div>
+            <div>
+              <p className="text-[#34d399] font-semibold">
+                {selectedGym.bmi || "—"}
+              </p>
+              <p className="text-xs opacity-70">BMI</p>
+            </div>
+          </div>
+        </div>
 
-        {/* Topics */}
         <div className="rounded-xl p-3 border bg-[#132f27] border-green-600/40 dark:bg-[#0c2f28] dark:border-gray-700 transition-colors">
           <h4 className="font-semibold text-green-400 mb-2">
             📚 Topics Studied
           </h4>
-          {selectedStudy.length ? (
-            <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] dark:text-gray-100">
+          {(selectedStudy.length && (
+            <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0]">
               {selectedStudy.map((t, i) => (
                 <li key={i}>{t}</li>
               ))}
             </ul>
-          ) : (
-            <div className="text-sm opacity-70 text-green-100 dark:text-gray-300">
-              No study recorded this day.
-            </div>
-          )}
+          )) || <div className="text-sm opacity-60">—</div>}
         </div>
 
-        {/* Gym Summary */}
-        <div className="rounded-xl p-3 border bg-[#182844] border-[#3b82f6]/40 dark:bg-[#0b2440] dark:border-gray-700 transition-colors">
+        <div className="rounded-xl p-3 border bg-[#071427] min-h-[160px]">
           <h4 className="font-semibold text-[#60a5fa] mb-2">🏋️ Gym Summary</h4>
-          <div className="text-sm space-y-1 text-[#e2e8f0] dark:text-gray-100">
-            <div>
-              <b>Weight:</b> {selectedGym.weight ?? "-"} kg
-            </div>
-            <div>
-              <b>Calories:</b> {selectedGym.calories ?? "-"} kcal
-            </div>
-            <div>
-              <b>BMI:</b> {selectedGym.bmi ?? "-"}
-            </div>
+          <div className="text-sm space-y-1 text-[#e2e8f0]">
             <div className="mt-2">
               <b>Exercises:</b>
-              <div className="mt-1">{renderExercises(selectedDate)}</div>
+              <div className="mt-1">
+                {renderExercises(selectedDate) || (
+                  <div className="text-sm opacity-60">—</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
