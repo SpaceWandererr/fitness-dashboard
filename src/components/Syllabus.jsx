@@ -4572,148 +4572,165 @@ export default function Syllabus() {
   /* ======================= RENDER ======================= */
   return (
     <div className="min-h-screen bg-[#071014] text-[#E2E8F0] dark:bg-[#050F0A] dark:text-[#D1FAE5 p-2 rounded-xl">
+      <header
+        className="rounded-xl sticky top-0 z-40 backdrop-blur 
+  bg-[#051C14]/90 border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)]"
+      >
+        <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
+          {/* 🔹 Top Section: Title + Saved Status */}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#E2E8F0]">
+              Syllabus Jay's Web Dev-2026
+            </h1>
 
-     <header className="rounded-xl sticky top-0 z-40 backdrop-blur bg-[#051C14]/90 dark:bg- 
-        [#030a07] border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)]">
+            {saving ? (
+              <div className="text-xs text-gray-400 animate-pulse mt-1">
+                💾 Saving...
+              </div>
+            ) : lastSaved ? (
+              <div className="text-xs text-gray-400 mt-1">
+                💾 Saved at {lastSaved.toLocaleTimeString()}
+              </div>
+            ) : null}
+          </div>
 
-        <div className="max-w-6xl mx-auto px-3 py-3 md:py-4 space-y-3">
-          {/* 🔹 Top Bar with Title + Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Left: Title */}
-            <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                Syllabus Jay's Web Dev-2026
-              </h1>
-              {saving ? (
-                <div className="text-xs text-gray-500 animate-pulse mt-1">
-                  💾 Saving...
-                </div>
-              ) : (
-                lastSaved && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    💾 Saved at {lastSaved.toLocaleTimeString()}
-                  </div>
-                )
-              )}
-            </div>
+          {/* 🔹 Buttons Section — Now fully responsive */}
+          <div className="flex flex-wrap gap-2">
+            {/* Streak */}
+            <span
+              className="px-3 py-1.5 rounded-xl bg-[#0A2F22] text-xs 
+        border border-[#0B5134] font-medium text-[#E2E8F0]"
+            >
+              🔥 Streak: <b>{Array.from(daySet).length}</b> days
+            </span>
 
-            {/* Right: Controls */}
-            <div className="flex flex-wrap items-center gap-2 justify-end">
-              <span className="px-3 py-1.5 rounded-xl bg-[#051C14]
-        dark:bg-gray-800 text-xs border border-[#0B5134]/40 font-medium whitespace-nowrap">
-                🔥 Streak: <b>{Array.from(daySet).length}</b> days
-              </span>
-              <button
-                onClick={() =>
-                  setMeta((m) => {
-                    const c = { ...m };
-                    Object.keys(c).forEach((k) => (c[k].open = true));
-                    return c;
-                  })
-                }
-                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF8F8F] to-[#ff6b6b] text-white text-sm shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:scale-[1.05] transition-transform"
-              >
-                Expand
-              </button>
+            {/* Expand */}
+            <button
+              onClick={() => {
+                setMeta((m) => {
+                  const c = { ...m };
+                  Object.keys(c).forEach((k) => (c[k].open = true));
+                  return c;
+                });
+              }}
+              className="px-3 py-1.5 rounded-xl text-sm
+        bg-gradient-to-r from-[#0BA36B] to-[#16C47F]
+        text-white font-semibold shadow-md
+        hover:scale-[1.05] transition"
+            >
+              Expand
+            </button>
 
-              <button
-                onClick={() =>
-                  setMeta((m) => {
-                    const c = { ...m };
-                    Object.keys(c).forEach((k) => (c[k].open = false));
-                    return c;
-                  })
-                }
-                className="px-3 py-1.5 rounded-xl bg-[#051C14] dark:bg-gray-800 text-[#E2E8F0] dark:text-gray-100 text-sm hover:bg-[#051C14] transition"
-              >
-                Collapse
-              </button>
+            {/* Collapse */}
+            <button
+              onClick={() => {
+                setMeta((m) => {
+                  const c = { ...m };
+                  Object.keys(c).forEach((k) => (c[k].open = false));
+                  return c;
+                });
+              }}
+              className="px-3 py-1.5 rounded-xl text-sm 
+        bg-[#0A2F22] border border-[#0B5134] 
+        text-[#E2E8F0] hover:bg-[#0F3A2B] transition"
+            >
+              Collapse
+            </button>
 
-              <button
-                onClick={() => {
-                  if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
-                    return;
-                  setTree((old) => {
-                    const t = deepClone(old);
-                    (function reset(n) {
-                      if (Array.isArray(n)) {
-                        n.forEach((it) => {
-                          it.done = false;
-                          it.completedOn = "";
-                          it.deadline = "";
-                        });
-                        return;
-                      }
-                      for (const v of Object.values(n || {})) reset(v);
-                    })(t);
-                    return t;
-                  });
-                  setMeta({});
-                  setNR({});
-                  setDaySet(new Set());
-                  localStorage.removeItem("K_TREE");
-                  localStorage.removeItem("K_META");
-                  localStorage.removeItem("K_NOTES");
-                  localStorage.removeItem("K_STREAK");
-                  window.location.reload();
-                }}
-                className="px-3 py-1.5 rounded-xl bg-red-500 text-white text-sm shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:bg-red-600 transition"
-              >
-                Reset
-              </button>
+            {/* Reset */}
+            <button
+              onClick={() => {
+                if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
+                  return;
+                setTree((old) => {
+                  const t = deepClone(old);
+                  (function reset(n) {
+                    if (Array.isArray(n)) {
+                      n.forEach((it) => {
+                        it.done = false;
+                        it.completedOn = "";
+                        it.deadline = "";
+                      });
+                      return;
+                    }
+                    for (const v of Object.values(n || {})) reset(v);
+                  })(t);
+                  return t;
+                });
+                setMeta({});
+                setNR({});
+                setDaySet(new Set());
+                localStorage.removeItem("K_TREE");
+                localStorage.removeItem("K_META");
+                localStorage.removeItem("K_NOTES");
+                localStorage.removeItem("K_STREAK");
+                window.location.reload();
+              }}
+              className="px-3 py-1.5 rounded-xl text-sm bg-red-600 text-white shadow-md hover:bg-red-700 transition"
+            >
+              Reset
+            </button>
 
-              {/* 📤 Export / 📥 Import */}
-              <button
-                onClick={exportProgress}
-                className="px-3 py-1.5 rounded-xl bg-[#00d1b2]/20 hover:bg-[#00d1b2]/40 text-sm transition"
-              >
-                📤 Export
-              </button>
-              <label className="px-3 py-1.5 rounded-xl bg-[#FF8F8F]/20 hover:bg-[#FF8F8F]/40 text-sm cursor-pointer transition">
-                📥 Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importProgress}
-                  className="hidden"
-                />
-              </label>
-            </div>
+            {/* Export */}
+            <button
+              onClick={exportProgress}
+              className="px-3 py-1.5 rounded-xl text-sm text-[#E2E8F0]
+        bg-[#0A2F22] border border-[#0B5134]
+        hover:bg-[#0F3A2B] transition"
+            >
+              📤 Export
+            </button>
+
+            {/* Import */}
+            <label
+              className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
+        bg-[#0A2F22] border border-[#0B5134] text-[#E2E8F0]
+        hover:bg-[#0F3A2B] transition"
+            >
+              📥 Import
+              <input
+                type="file"
+                accept=".json"
+                onChange={importProgress}
+                className="hidden"
+              />
+            </label>
           </div>
 
           {/* 🔹 Progress Bar */}
           <div className="w-full">
-       <div className="flex items-center justify-between text-xs mb-1">
-          <span className="font-medium">
-             Progress: {grand.done}/{grand.total}
-            </span>
-          <span className="font-semibold">{grand.pct}%</span>
-         </div>
+            <div className="flex items-center justify-between text-xs mb-1 text-[#E2E8F0]">
+              <span className="font-medium">
+                Progress: {grand.done}/{grand.total}
+              </span>
+              <span className="font-semibold">{grand.pct}%</span>
+            </div>
 
-        {/* BASE LINE ALWAYS VISIBLE */}
-      <div className="h-3 rounded-full bg-[#1B5F46] overflow-hidden relative">
-    
-       {/* GREEN BAR */}
-      <div
-      className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] shadow-[0_0_8px_#22C55E] transition-all duration-700 ease-out"
-      style={{
-        width: `${grand.pct}%`,
-        minWidth: grand.pct > 0 ? 0 : "6px",
-      }}
-       />
+            <div className="h-3 rounded-full bg-[#1B5F46] overflow-hidden relative">
+              <div
+                className="h-full bg-gradient-to-r 
+            from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
+            shadow-[0_0_8px_#22C55E]
+            transition-all duration-700 ease-out rounded-full"
+                style={{
+                  width: `${grand.pct}%`,
+                  minWidth: grand.pct > 0 ? 0 : "6px",
+                }}
+              />
+            </div>
+          </div>
         </div>
-       </div>
-      </div>
-     </header>
+      </header>
 
-     
       {/* === Combined Layout (Planner + Topics) === */}
       <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
           {/* 🗓️ Daily Planner */}
-          <div className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
-           dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm">
+          <div
+            className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
+           dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm"
+          >
             <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
             <p className="text-sm opacity-80 mb-3">
               Closest-deadline topics not yet done.
@@ -4722,8 +4739,10 @@ export default function Syllabus() {
           </div>
 
           {/* 🤖 Smart Suggest */}
-          <div className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
-              dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm">
+          <div
+            className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
+              dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm"
+          >
             <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
           </div>
         </div>
@@ -4770,8 +4789,8 @@ export default function Syllabus() {
           {milestone}
         </div>
       )}
-  </div>
-       );
+    </div>
+  );
 }
 
 /* ======================= Main Section ======================= */
@@ -4811,26 +4830,29 @@ function SectionCard({
   }, [m.open, node, meta, nr]);
 
   return (
-    <section className="rounded-xl border border-[#00d1b2]/30 dark:border-gray-800 bg-[#051C14]
-    dark:bg-gray-900/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm overflow-hidden">
+    <section
+      className="rounded-xl border border-[#00d1b2]/30 dark:border-gray-800 bg-[#051C14]
+    dark:bg-gray-900/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm overflow-hidden"
+    >
       {/* Header */}
       <div
-  onClick={() => onSectionHeaderClick(sectionPath)}
-  className="relative rounded-xl p-3 cursor-pointer 
+        onClick={() => onSectionHeaderClick(sectionPath)}
+        className="relative rounded-xl p-3 cursor-pointer 
   bg-[#051C14] border border-[#0B5134]
   hover:bg-[#0A2F22] 
   transition-all duration-200 overflow-hidden text-[#E2E8F0]"
->
+      >
         {/* ✅ Progress bar (thin + matches main green style) */}
-       <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#1B5F46] overflow-hidden">
-            <div
-               className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
+        <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#1B5F46] overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
                shadow-[0_0_6px_#22C55E] transition-all duration-700 ease-out rounded-full"
-            style={{width: `${totals.pct}%`, minWidth: totals.pct > 0 ? 0 : "6px", // 👈 always visible dot at 0%
-                }}
-                 />
-          </div>
-
+            style={{
+              width: `${totals.pct}%`,
+              minWidth: totals.pct > 0 ? 0 : "6px", // 👈 always visible dot at 0%
+            }}
+          />
+        </div>
 
         {/* ✅ Responsive layout container */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
@@ -4971,8 +4993,10 @@ function SubNode({
   }, [node, nr, path]);
 
   return (
-    <div className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-[#051C14]
-    dark:bg-gray-900/50">
+    <div
+      className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-[#051C14]
+    dark:bg-gray-900/50"
+    >
       {/* Header */}
       <div
         onClick={() => toggleOpen(path)}
@@ -5373,8 +5397,10 @@ function SmartSuggest({ generateSmartPlan, tree }) {
   }
 
   return (
-    <div className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
-    dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300">
+    <div
+      className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
+    dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300"
+    >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="font-semibold flex items-center gap-2 text-base">
