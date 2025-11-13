@@ -159,7 +159,7 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="text-center p-6 opacity-80 text-xs text-gray-500">
+      <footer className="text-center p-1 opacity-80 text-xs text-gray-500">
         <p>⚡ Built by Jay Sinh Thakur — Focus. Code. Grow.</p>
       </footer>
     </div>
