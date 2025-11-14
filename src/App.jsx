@@ -4,13 +4,9 @@ import { Menu, X } from "lucide-react";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
-import BMI from "./components/BMI.jsx";
 import Planner from "./components/Planner.jsx";
 import Gallery from "./components/Gallery.jsx";
-import Quiz from "./components/Quiz.jsx";
-import Stats from "./components/Stats.jsx";
-import Focus from "./components/Focus.jsx";
-import Calories from "./components/Calories.jsx";
+import Test from "./components/Test.jsx";
 import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
 import { load, save } from "./utils/localStorage.js";
@@ -69,7 +65,7 @@ export default function App() {
           {/* Right-side controls */}
           <div className="flex items-center gap-3 ml-auto">
             {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-3">
               {links.map((link) => (
                 <NavLink key={link.to} to={link.to} current={location.pathname}>
                   {link.label}
@@ -92,7 +88,7 @@ export default function App() {
 
             {/* Mobile Toggle */}
             <button
-              className="md:hidden p-2 rounded hover:bg-gray-800/50"
+              className="sm:hidden p-2 rounded hover:bg-gray-800/50"
               onClick={() => setMenuOpen((v) => !v)}
             >
               {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -147,13 +143,9 @@ export default function App() {
           <Route path="/syllabus" element={<Syllabus />} />
           <Route path="/gym" element={<Gym />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/bmi" element={<BMI />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/quiz" element={<Quiz />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/focus" element={<Focus />} />
-          <Route path="/calories" element={<Calories />} />
+          <Route path="/test" element={<Test />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
@@ -174,13 +166,9 @@ const links = [
   { to: "/gym", label: "GYM" },
   { to: "/calendar", label: "CALENDAR" },
   { to: "/planner", label: "Planner" },
-  { to: "/bmi", label: "BMI" },
-  { to: "/calories", label: "Calories" },
-  { to: "/stats", label: "Stats" },
-  { to: "/focus", label: "Focus" },
-  { to: "/gallery", label: "Photos" },
-  { to: "/quiz", label: "Quiz" },
   { to: "/goals", label: "Goals" },
+  { to: "/gallery", label: "Photos" },
+  { to: "/test", label: "Test" },
 ];
 
 function NavLink({ to, children, current }) {
@@ -205,9 +193,8 @@ function ModernDashboard({ accent }) {
     { title: "Planner", desc: "Organize your daily tasks efficiently." },
     { title: "Gym", desc: "Track workouts and progress." },
     { title: "Syllabus", desc: "Learn MERN + DSA with milestones." },
-    { title: "Calories", desc: "Log macros & daily nutrition." },
-    { title: "Focus", desc: "Pomodoro timer for deep work." },
-    { title: "Quiz", desc: "Sharpen your JS + DSA skills." },
+    { title: "Goals", desc: "Pomodoro timer for deep work." },
+    { title: "Test", desc: "Sharpen your JS + DSA skills." },
   ];
 
   return (
@@ -215,7 +202,9 @@ function ModernDashboard({ accent }) {
       {cards.map((card) => (
         <div
           key={card.title}
-          className="rounded-xl bg-[#00224D]/80 backdrop-blur-md p-6 border border-gray-800 shadow-md hover:shadow-[0_0_20px_hsl(var(--accent)/0.25)] hover:-translate-y-[2px] transition-all duration-300"
+          className="rounded-xl bg-[#00224D]/80 backdrop-blur-md p-6 border border-gray-800 shadow-md hover:shadow-[0_0_20px_hsl(var(--
+
+accent)/0.25)] hover:-translate-y-[2px] transition-all duration-300"
         >
           <h3
             className="font-semibold text-lg mb-2"
