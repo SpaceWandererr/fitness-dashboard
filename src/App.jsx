@@ -175,9 +175,9 @@ const links = [
   { to: "/syllabus", label: "STUDY" },
   { to: "/gym", label: "GYM" },
   { to: "/calendar", label: "CALENDAR" },
-  { to: "/planner", label: "Planner" },
-  { to: "/goals", label: "Goals" },
-  { to: "/gallery", label: "Photos" },
+  { to: "/planner", label: "PLANNER" },
+  { to: "/goals", label: "GOALS" },
+  { to: "/gallery", label: "PHOTOS" },
 ];
 
 function NavLink({ to, children, current }) {
@@ -211,9 +211,7 @@ function ModernDashboard({ accent }) {
       {cards.map((card) => (
         <div
           key={card.title}
-          className="rounded-xl bg-[#00224D]/80 backdrop-blur-md p-6 border border-gray-800 shadow-md hover:shadow-[0_0_20px_hsl(var(--
-
-accent)/0.25)] hover:-translate-y-[2px] transition-all duration-300"
+          className="rounded-xl bg-[#00224D]/80 backdrop-blur-md p-6 border border-gray-800 shadow-md hover:shadow-[0_0_20px_hsl(var(--accent)/0.25)] hover:-translate-y-[2px] transition-all duration-300"
         >
           <h3
             className="font-semibold text-lg mb-2"
