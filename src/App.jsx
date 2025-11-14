@@ -6,9 +6,10 @@ import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
 import Planner from "./components/Planner.jsx";
 import Gallery from "./components/Gallery.jsx";
-import Test from "./components/Test.jsx";
 import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
+import HomeFuturisticDashboard from "./components/HomeFuturisticDashboard.jsx";
+
 import { load, save } from "./utils/localStorage.js";
 
 export default function App() {
@@ -138,15 +139,24 @@ export default function App() {
         style={{ paddingTop: "calc(var(--nav-height) + 16px)" }}
       >
         <Routes>
-          <Route path="/" element={<ModernDashboard accent={accent} />} />
+          {/* ✅ Your new homepage */}
+          <Route
+            path="/"
+            element={<HomeFuturisticDashboard accent={accent} />}
+          />
+
+          {/* redirect old /home to / */}
           <Route path="/home" element={<Navigate to="/" />} />
+
+          {/* other pages */}
           <Route path="/syllabus" element={<Syllabus />} />
           <Route path="/gym" element={<Gym />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/test" element={<Test />} />
           <Route path="/goals" element={<Goals />} />
+
+          {/* fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
@@ -161,14 +171,13 @@ export default function App() {
 /* ---------- helpers ---------- */
 
 const links = [
-  { to: "/home", label: "HOME" },
+  { to: "/", label: "HOME" }, // fixed
   { to: "/syllabus", label: "STUDY" },
   { to: "/gym", label: "GYM" },
   { to: "/calendar", label: "CALENDAR" },
   { to: "/planner", label: "Planner" },
   { to: "/goals", label: "Goals" },
   { to: "/gallery", label: "Photos" },
-  { to: "/test", label: "Test" },
 ];
 
 function NavLink({ to, children, current }) {
