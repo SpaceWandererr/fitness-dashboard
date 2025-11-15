@@ -1,0 +1,41 @@
+/* animations.css — required for planner */
+
+@keyframes move-slow {
+    from { transform: translateX(0); }
+    to { transform: translateX(-20px); }
+  }
+  
+  @keyframes move-medium {
+    from { transform: translateX(0); }
+    to { transform: translateX(-40px); }
+  }
+  
+  @keyframes move-fast {
+    from { transform: translateX(0); }
+    to { transform: translateX(-60px); }
+  }
+  
+  .animate-move-slow {
+    animation: move-slow 40s linear infinite;
+  }
+  
+  .animate-move-medium {
+    animation: move-medium 25s linear infinite;
+  }
+  
+  .animate-move-fast {
+    animation: move-fast 15s linear infinite;
+  }
+  
+  .animate-cloud-1 {
+    animation: move-slow 60s linear infinite;
+  }
+  
+  .animate-cloud-2 {
+    animation: move-medium 45s linear infinite;
+  }
+  
+  .animate-cloud-3 {
+    animation: move-fast 30s linear infinite;
+  }
+  
