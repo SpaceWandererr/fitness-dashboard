@@ -1,22 +1,18 @@
-// src/components/Planner.jsx
-// Full cleaned & rebuilt Planner component (Option A)
+// Planner.jsx — Full slim+features version with H1 hamburger (⋮) menu
+// Paste into src/components/Planner.jsx (replace existing).
+// Requires: react, framer-motion, lottie-react, dayjs, tailwindcss
+// Adjust Lottie import paths if your assets live elsewhere.
 
-// ----- imports -----
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Lottie from "lottie-react";
 import dayjs from "dayjs";
-import { load, save } from "../utils/localStorage.js";
-import "../styles/animations.css"; // optional; keep if exists
 
-// ----- Direct Lottie JSON imports (adjust paths if necessary) -----
-// Anime
+/* Lottie imports - update paths if necessary */
 import animeSun from "../assets/weather-lottie/anime/sun.json";
 import animeCloudy from "../assets/weather-lottie/anime/cloudy.json";
 import animeRain from "../assets/weather-lottie/anime/rain.json";
-import animeWinter from "../assets/weather-lottie/anime/winter.json";
 import animeNight from "../assets/weather-lottie/anime/night.json";
-// Realistic
 import realSun from "../assets/weather-lottie/realistic/sun.json";
 import realCloudy from "../assets/weather-lottie/realistic/cloudy.json";
 import realRain from "../assets/weather-lottie/realistic/rain.json";
@@ -24,13 +20,32 @@ import realSnow from "../assets/weather-lottie/realistic/snow.json";
 import realFog from "../assets/weather-lottie/realistic/fog.json";
 import realStorm from "../assets/weather-lottie/realistic/storm.json";
 
-// ----- LOTTIE source object -----
+/* -------------------------
+  small localStorage helpers
+--------------------------*/
+function load(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+function save(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+/* -------------------------
+  Lottie mapping helpers
+--------------------------*/
 const LOTTIE = {
   anime: {
     sun: animeSun,
     cloudy: animeCloudy,
     rain: animeRain,
-    winter: animeWinter,
     night: animeNight,
   },
   realistic: {
@@ -40,73 +55,20 @@ const LOTTIE = {
     snow: realSnow,
     fog: realFog,
     storm: realStorm,
-    // fallbacks
     night: realCloudy,
-    winter: realSnow,
   },
 };
 
-// ----- constants & helpers -----
-const SLOT_ORDER = ["Morning", "Afternoon", "Evening"];
-const PRESETS = [
-  { label: "Gym", task: "Gym: Workout" },
-  { label: "Code", task: "Code: Focus Session" },
-  { label: "DSA", task: "DSA Practice" },
-  { label: "Meal", task: "Meal Prep" },
-  { label: "Walk", task: "Walk 30m" },
-];
-
-const DEFAULT_TASKS = [
-  "Gym: Push",
-  "Gym: Pull",
-  "Gym: Legs",
-  "Code: JS 2h",
-  "DSA Practice",
-  "React Project",
-  "Meal Prep",
-  "Walk 8k steps",
-];
-
-const QUOTES = [
-  "Consistency beats intensity — Win daily.",
-  "Ship small, ship often.",
-  "Systems > Goals.",
-  "Learn. Build. Repeat.",
-  "Discipline shapes destiny.",
-];
-
-function fmt(seconds) {
-  const mm = Math.floor(seconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const ss = (seconds % 60).toString().padStart(2, "0");
-  return `${mm}:${ss}`;
-}
-
-function taskEmoji(t) {
-  if (/gym/i.test(t)) return "💪";
-  if (/code|react|js|dsa/i.test(t)) return "💻";
-  if (/walk|step/i.test(t)) return "🚶";
-  if (/meal/i.test(t)) return "🍱";
-  return "•";
-}
-
-function formatDateKey(d) {
-  return `wd_plan_day_${dayjs(d).format("YYYY-MM-DD")}`;
-}
-
 function mapCodeToAnimationName(code, style) {
-  const isRealistic = style === "realistic";
-
+  const isReal = style === "realistic";
   if (code === 0) return "sun";
   if ([1, 2, 3].includes(code)) return "cloudy";
-  if ([45, 48].includes(code)) return isRealistic ? "fog" : "cloudy";
+  if ([45, 48].includes(code)) return isReal ? "fog" : "cloudy";
   if ([51, 53, 55, 61, 63, 65].includes(code)) return "rain";
-  if ([71, 73, 75].includes(code)) return isRealistic ? "snow" : "winter";
-  if (code === 95) return isRealistic ? "storm" : "rain";
+  if ([71, 73, 75].includes(code)) return isReal ? "snow" : "cloudy";
+  if (code === 95) return isReal ? "storm" : "rain";
   return "sun";
 }
-
 function weatherCodeToMain(code) {
   if (code === 0) return "Clear";
   if ([1, 2, 3].includes(code)) return "Cloudy";
@@ -118,14 +80,42 @@ function weatherCodeToMain(code) {
   return "Weather";
 }
 
-function quoteOfTheDay() {
-  const seed = dayjs().format("YYYY-MM-DD");
-  let s = 0;
-  for (let i = 0; i < seed.length; i++) s += seed.charCodeAt(i);
-  return QUOTES[s % QUOTES.length];
+/* -------------------------
+  UI constants
+--------------------------*/
+const SLOT_ORDER = ["Morning", "Afternoon", "Evening"];
+const DEFAULT_TASKS = [
+  "Gym: Push",
+  "Gym: Pull",
+  "Gym: Legs",
+  "Code: JS 2h",
+  "DSA Practice",
+  "React Project",
+  "Meal Prep",
+  "Walk 8k steps",
+];
+
+function fmt(seconds) {
+  const mm = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const ss = (seconds % 60).toString().padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+function taskEmoji(t) {
+  if (/gym/i.test(t)) return "💪";
+  if (/code|react|js|dsa/i.test(t)) return "💻";
+  if (/walk|step/i.test(t)) return "🚶";
+  if (/meal/i.test(t)) return "🍱";
+  return "•";
+}
+function formatDateKey(d) {
+  return `wd_plan_day_${dayjs(d).format("YYYY-MM-DD")}`;
 }
 
-// ----- MiniCalendar component (self-contained) -----
+/* -------------------------
+  MiniCalendar component
+--------------------------*/
 function MiniCalendar({ selectedDate, setSelectedDate }) {
   const [base, setBase] = useState(dayjs(selectedDate).startOf("month"));
   useEffect(
@@ -138,24 +128,26 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
   for (let i = 0; i < 42; i++) days.push(start.add(i, "day"));
 
   return (
-    <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-3 w-full max-w-xs">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-[#0A1E1B] border border-emerald-800/30 rounded-xl p-3 w-full">
+      <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setBase(base.subtract(1, "month"))}
-          className="px-2 py-1 rounded bg-slate-800"
+          className="px-2 py-1 rounded bg-transparent border border-emerald-800/20 text-sm"
         >
           ◀
         </button>
-        <div className="text-sm font-medium">{base.format("MMMM YYYY")}</div>
+        <div className="text-sm font-medium text-emerald-100">
+          {base.format("MMMM YYYY")}
+        </div>
         <button
           onClick={() => setBase(base.add(1, "month"))}
-          className="px-2 py-1 rounded bg-slate-800"
+          className="px-2 py-1 rounded bg-transparent border border-emerald-800/20 text-sm"
         >
           ▶
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-xs text-slate-400 mb-2">
+      <div className="grid grid-cols-7 gap-1 text-xs text-emerald-300 mb-2">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
           <div key={i} className="text-center">
             {d}
@@ -174,10 +166,10 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
             Evening: [],
           });
           const hasTasks =
-            (plans.Morning?.length ||
-              plans.Afternoon?.length ||
-              plans.Evening?.length) > 0;
-
+            (plans.Morning?.length || 0) +
+              (plans.Afternoon?.length || 0) +
+              (plans.Evening?.length || 0) >
+            0;
           return (
             <button
               key={k + i}
@@ -186,9 +178,9 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
                 isSelected
                   ? "bg-emerald-600 text-black"
                   : isCurrentMonth
-                  ? "text-slate-200"
-                  : "text-slate-500"
-              } ${hasTasks ? "ring-1 ring-emerald-500/30" : ""}`}
+                  ? "text-emerald-100"
+                  : "text-emerald-400/60"
+              } ${hasTasks ? "ring-1 ring-emerald-500/20" : ""}`}
             >
               <div>{d.date()}</div>
               {hasTasks && (
@@ -199,7 +191,7 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
         })}
       </div>
 
-      <div className="mt-3 text-xs text-slate-400">
+      <div className="mt-3 text-xs text-emerald-300">
         Selected:{" "}
         <span className="font-medium">
           {dayjs(selectedDate).format("DD MMM YYYY")}
@@ -209,7 +201,9 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
   );
 }
 
-// ----- WeatherCard (uses LOTTIE object) -----
+/* -------------------------
+  WeatherCard component
+--------------------------*/
 function WeatherCard({
   cityInput,
   setCityInput,
@@ -221,6 +215,7 @@ function WeatherCard({
   setWeatherStyle,
   showSearch,
   setShowSearch,
+  lottieData,
 }) {
   const [localInput, setLocalInput] = useState(cityInput || "");
   useEffect(() => setLocalInput(cityInput || ""), [cityInput]);
@@ -228,38 +223,6 @@ function WeatherCard({
   const code = weatherData?.weather?.[0]?.code ?? 0;
   const condition = weatherData?.weather?.[0]?.main ?? "—";
   const temp = weatherData?.main?.temp ?? "—";
-  const sunriseISO = weatherData?.meta?.sunrise;
-  const sunsetISO = weatherData?.meta?.sunset;
-
-  function computeTOD() {
-    try {
-      const now = new Date();
-      if (sunriseISO && sunsetISO) {
-        const sunrise = new Date(sunriseISO).getHours();
-        const sunset = new Date(sunsetISO).getHours();
-        const h = now.getHours();
-        if (h >= sunrise - 1 && h < sunrise + 2) return "sunrise";
-        if (h >= sunrise + 2 && h < sunset - 1) return "day";
-        if (h >= sunset - 1 && h < sunset + 2) return "sunset";
-        return "night";
-      } else {
-        const h = now.getHours();
-        if (h >= 5 && h < 8) return "sunrise";
-        if (h >= 8 && h < 17) return "day";
-        if (h >= 17 && h < 19) return "sunset";
-        return "night";
-      }
-    } catch {
-      return "day";
-    }
-  }
-
-  const tod = computeTOD();
-
-  const animName =
-    tod === "night" ? "night" : mapCodeToAnimationName(code, weatherStyle);
-  const animationData =
-    LOTTIE[weatherStyle][animName] || LOTTIE[weatherStyle].sun;
 
   const title = (() => {
     if (!selectedCity) return "—";
@@ -270,22 +233,22 @@ function WeatherCard({
   })();
 
   return (
-    <div className="relative w-full h-full">
-      <div className="flex items-center justify-between mb-2">
+    <div className="w-full h-full relative">
+      <div className="flex items-center justify-between mb-2 w-full">
         <button
           onClick={() => setShowSearch((s) => !s)}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
+          className="px-2 py-1 rounded bg-transparent border border-emerald-800/20 text-xs"
         >
           🔍
         </button>
-        <div className="text-sm text-slate-200 truncate">{title}</div>
+        <div className="text-sm text-emerald-100 truncate">{title}</div>
         <div className="flex gap-2">
           <button
             onClick={() => setWeatherStyle("realistic")}
             className={`px-3 py-1 text-xs rounded ${
               weatherStyle === "realistic"
                 ? "bg-emerald-500 text-black"
-                : "bg-slate-800"
+                : "bg-transparent border border-emerald-800/20"
             }`}
           >
             Realistic
@@ -295,7 +258,7 @@ function WeatherCard({
             className={`px-3 py-1 text-xs rounded ${
               weatherStyle === "anime"
                 ? "bg-emerald-500 text-black"
-                : "bg-slate-800"
+                : "bg-transparent border border-emerald-800/20"
             }`}
           >
             Anime
@@ -312,21 +275,21 @@ function WeatherCard({
               setCityInput(e.target.value);
             }}
             placeholder="Search city..."
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 mb-2"
+            className="w-full bg-transparent border border-emerald-800/20 rounded px-3 py-2 mb-2 text-sm"
           />
-          <div className="max-h-40 overflow-auto border border-slate-700 rounded">
+          <div className="max-h-40 overflow-auto border border-emerald-800/20 rounded">
             {suggestions?.map((s, i) => (
               <div
                 key={i}
                 onClick={() => onSelect(s)}
-                className="px-3 py-2 hover:bg-slate-800 cursor-pointer"
+                className="px-3 py-2 hover:bg-emerald-900/10 cursor-pointer"
               >
-                <div className="font-medium">
+                <div className="font-medium text-emerald-100">
                   {s.name}
                   {s.admin1 ? `, ${s.admin1}` : ""}
                 </div>
-                <div className="text-xs text-slate-400">
-                  {s.country} • {s.latitude?.toFixed(2)},{" "}
+                <div className="text-xs text-emerald-300">
+                  {s.country} • {s.latitude?.toFixed(2)},
                   {s.longitude?.toFixed(2)}
                 </div>
               </div>
@@ -335,42 +298,47 @@ function WeatherCard({
         </div>
       )}
 
-      <div className="relative bg-[#0f1923] border border-slate-800 rounded-xl overflow-hidden">
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          {/* Parallax SVG + background optional - keep simple */}
-          <div
-            style={{ background: "linear-gradient(180deg,#071018,#072028)" }}
-            className="absolute inset-0"
-          />
+      {/* Card visual */}
+      <div className="relative rounded-xl overflow-hidden border border-emerald-800/20 bg-transparent h-[270px]">
+        {/* Lottie background */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{ opacity: 0.35 }}
+        >
+          {lottieData && (
+            <Lottie
+              animationData={lottieData}
+              loop
+              autoplay
+              style={{ width: "100%", height: "100%" }}
+            />
+          )}
         </div>
 
-        {/* Lottie */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center opacity-100">
-          <Lottie
-            animationData={animationData}
-            loop
-            autoplay
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
-
-        {/* Text overlay */}
-        <div className="relative z-30 p-4 text-center">
-          <div className="text-4xl font-semibold">
+        {/* Info panel at top */}
+        <div className="relative z-20 p-6 flex flex-col items-center gap-2 mt-8">
+          <div className="text-4xl font-semibold text-emerald-100">
             {temp !== "—" ? Math.round(temp) + "°C" : "—"}
           </div>
-          <div className="text-sm text-slate-300 mt-1">{condition}</div>
+          <div className="text-sm text-emerald-200">{condition}</div>
         </div>
 
-        <div className="p-3 bg-[#071119] relative z-30 text-xs text-slate-300">
-          <div>
-            Humidity: {weatherData?.main?.humidity ?? "—"}% • Wind:{" "}
-            {Math.round(weatherData?.wind?.speed ?? 0)} m/s
-          </div>
+        {/* stats panel at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-emerald-300 grid grid-cols-2 gap-y-1">
+          <div>Humidity: {weatherData?.main?.humidity ?? "—"}%</div>
+          <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
           <div>UV: {weatherData?.meta?.uv ?? "—"}</div>
           <div>
-            Sunrise: {sunriseISO ? dayjs(sunriseISO).format("hh:mm A") : "—"} •
-            Sunset: {sunsetISO ? dayjs(sunsetISO).format("hh:mm A") : "—"}
+            Sunrise:{" "}
+            {weatherData?.meta?.sunrise
+              ? dayjs(weatherData.meta.sunrise).format("h:mm A")
+              : "—"}
+          </div>
+          <div>
+            Sunset:{" "}
+            {weatherData?.meta?.sunset
+              ? dayjs(weatherData.meta.sunset).format("h:mm A")
+              : "—"}
           </div>
         </div>
       </div>
@@ -378,9 +346,11 @@ function WeatherCard({
   );
 }
 
-// ----- Main Planner component (clean rebuilt) -----
+/* -------------------------
+  Main Planner component
+--------------------------*/
 export default function Planner() {
-  // ---------- Storage & states ----------
+  // states
   const [tasks, setTasks] = useState(() => load("wd_tasks", DEFAULT_TASKS));
   const [query, setQuery] = useState("");
   const [inlineAdd, setInlineAdd] = useState("");
@@ -388,15 +358,13 @@ export default function Planner() {
   const [day, setDay] = useState(() =>
     load(formatDateKey(new Date()), { Morning: [], Afternoon: [], Evening: [] })
   );
-
   const [streak, setStreak] = useState(() => load("wd_streak", 0));
-  const [successScore, setSuccessScore] = useState(0);
 
-  // Drag & planner UI
+  // drag
   const [dragging, setDragging] = useState(false);
   const [activeDrop, setActiveDrop] = useState(null);
 
-  // Weather states
+  // weather
   const [cityInput, setCityInput] = useState(() =>
     load("wd_weather_city_input", "")
   );
@@ -412,25 +380,25 @@ export default function Planner() {
   const [showSearch, setShowSearch] = useState(false);
   const geoDebounce = useRef(null);
 
-  // Pomodoro
+  // pomodoro & habits
   const [pomodoroSeconds, setPomodoroSeconds] = useState(() =>
     load("wd_pom_seconds", 25 * 60)
   );
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const pomInterval = useRef(null);
-
-  // Habits
   const [habits, setHabits] = useState(() =>
     load("wd_habits", { water: 0, meditate: false, reading: 0 })
   );
 
-  // Focus & queues & toast
   const [focusTask, setFocusTask] = useState(
     () => localStorage.getItem("wd_focus_task") || ""
   );
   const [toast, setToast] = useState(null);
 
-  // Derived / memoized
+  // hamburger menu state: index of open menu or null
+  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+
+  // derived
   const filteredTemplates = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return tasks;
@@ -442,28 +410,21 @@ export default function Planner() {
     (day.Afternoon?.length || 0) +
     (day.Evening?.length || 0);
 
-  // ---------- Effects ----------
-
-  // Persist day when selectedDate changes
+  // effects
   useEffect(() => {
     const key = formatDateKey(selectedDate);
     const saved = load(key, { Morning: [], Afternoon: [], Evening: [] });
     setDay(saved);
   }, [selectedDate]);
 
-  // Save day plan whenever it changes
   useEffect(() => {
     const key = formatDateKey(selectedDate);
     save(key, day);
   }, [day, selectedDate]);
 
-  // Save tasks
   useEffect(() => save("wd_tasks", tasks), [tasks]);
-
-  // Save pomodoro
   useEffect(() => save("wd_pom_seconds", pomodoroSeconds), [pomodoroSeconds]);
 
-  // Pomodoro timer
   useEffect(() => {
     if (pomodoroRunning) {
       if (pomInterval.current) clearInterval(pomInterval.current);
@@ -472,7 +433,6 @@ export default function Planner() {
           if (s <= 1) {
             setPomodoroRunning(false);
             save("wd_pom_sessions", (load("wd_pom_sessions", 0) || 0) + 1);
-            // small beep
             try {
               const beep = new Audio();
               beep.src =
@@ -494,12 +454,11 @@ export default function Planner() {
     };
   }, [pomodoroRunning]);
 
-  // Save style
   useEffect(() => {
     save("wd_weather_style", weatherStyle);
   }, [weatherStyle]);
 
-  // Geocoding debounce for suggestions
+  // geocode suggestions
   useEffect(() => {
     if (geoDebounce.current) clearTimeout(geoDebounce.current);
     if (!cityInput || cityInput.trim().length < 2) {
@@ -533,7 +492,7 @@ export default function Planner() {
     return () => clearTimeout(geoDebounce.current);
   }, [cityInput]);
 
-  // Load weather whenever selectedCity or style changes
+  // load weather for selectedCity
   useEffect(() => {
     async function loadWeatherForCity(city, style) {
       if (!city) {
@@ -557,14 +516,12 @@ export default function Planner() {
           json.current_weather?.weathercode ??
           json.daily?.weather_code?.[0] ??
           0;
-
-        // compute TOD
-        const now = new Date();
         const sunriseStr = json.daily?.sunrise?.[0];
         const sunsetStr = json.daily?.sunset?.[0];
+
         const sunriseH = sunriseStr ? new Date(sunriseStr).getHours() : 6;
         const sunsetH = sunsetStr ? new Date(sunsetStr).getHours() : 18;
-        const h = now.getHours();
+        const h = new Date().getHours();
         let todLocal = "day";
         if (h >= sunriseH - 1 && h < sunriseH + 2) todLocal = "sunrise";
         else if (h >= sunriseH + 2 && h < sunsetH - 1) todLocal = "day";
@@ -573,7 +530,8 @@ export default function Planner() {
 
         const animName =
           todLocal === "night" ? "night" : mapCodeToAnimationName(code, style);
-        const anim = LOTTIE[style][animName] || LOTTIE[style].sun;
+        const anim =
+          (LOTTIE[style] && LOTTIE[style][animName]) || LOTTIE[style].sun;
 
         setWeatherData({
           weather: [{ code, main: weatherCodeToMain(code) }],
@@ -603,7 +561,7 @@ export default function Planner() {
     loadWeatherForCity(selectedCity, weatherStyle);
   }, [selectedCity, weatherStyle]);
 
-  // ---------- helpers ----------
+  // helpers & actions
   const showToast = (msg, t = 2000) => {
     setToast(msg);
     if (t > 0) setTimeout(() => setToast(null), t);
@@ -616,7 +574,6 @@ export default function Planner() {
     save("wd_tasks", next);
     showToast("Template added");
   };
-
   const deleteTemplate = (idx) => {
     const next = [...tasks];
     next.splice(idx, 1);
@@ -624,30 +581,8 @@ export default function Planner() {
     save("wd_tasks", next);
     showToast("Template deleted");
   };
-
   const duplicateTemplate = (t) => addTask(t + " (copy)");
 
-  const pushToStudyQueue = (task) => {
-    const arr = JSON.parse(localStorage.getItem("wd_study_queue") || "[]");
-    arr.push({ task, created: Date.now() });
-    localStorage.setItem("wd_study_queue", JSON.stringify(arr));
-    showToast("Added to Study queue");
-  };
-
-  const pushToGymQueue = (task) => {
-    const arr = JSON.parse(localStorage.getItem("wd_gym_queue") || "[]");
-    arr.push({ task, created: Date.now() });
-    localStorage.setItem("wd_gym_queue", JSON.stringify(arr));
-    showToast("Added to Gym queue");
-  };
-
-  const updateHabit = (k, v) => {
-    const n = { ...habits, [k]: v };
-    setHabits(n);
-    save("wd_habits", n);
-  };
-
-  // Drag & Drop handlers
   const onDragStart = (e, task) => {
     try {
       e.dataTransfer.setData("text/plain", task);
@@ -696,65 +631,53 @@ export default function Planner() {
     showToast(`Moved to ${nextSlot}`);
   };
 
-  // ---------- UI derived ----------
-  const streakDisplay = streak;
-  const successScoreValue = Math.min(
-    100,
-    Math.round(
-      totalPlanned * 2 +
-        (load("wd_pom_sessions", 0) || 0) * 3 +
-        streak * 2 +
-        (habits.water || 0)
-    )
-  );
+  // close any open hamburger menu on outside click
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!e.target) return;
+      // close menu if clicked outside
+      if (!e.target.closest) {
+        setOpenMenuIndex(null);
+        return;
+      }
+      const inside = e.target.closest?.("[data-hamburger-root]");
+      if (!inside) setOpenMenuIndex(null);
+    }
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, []);
 
-  // ---------- render ----------
+  // render
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto text-slate-200">
+    <div className="p-6 max-w-7xl mx-auto text-emerald-100">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Planner — Developer Mode</h1>
-          <p className="text-sm text-slate-400">
-            Dark green developer theme — focused, responsive.
+          <h1 className="text-2xl font-semibold">Planner — Gym Theme</h1>
+          <p className="text-sm text-emerald-200">
+            Green, dark, focused — drag tasks to plan your day.
           </p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <div className="text-xs text-slate-400">Streak</div>
-            <div className="text-lg font-medium">{streakDisplay} days</div>
-          </div>
-
-          <div className="w-40 bg-slate-800 rounded-full h-2 overflow-hidden">
-            <div
-              className="h-2 rounded-full bg-emerald-500 transition-all"
-              style={{
-                width: `${Math.min(
-                  100,
-                  Math.round((streakDisplay / 30) * 100)
-                )}%`,
-              }}
-            />
-          </div>
-
-          <div className="text-sm text-slate-300 ml-2">
-            Score {successScoreValue}/100
+            <div className="text-xs text-emerald-300">Streak</div>
+            <div className="text-lg font-medium">{streak} days</div>
           </div>
         </div>
       </div>
 
-      {/* TOP ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
+      {/* TOP ROW — templates and weather (2.1fr / 0.9fr) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2.1fr_0.9fr] gap-6 mb-4">
         {/* TEMPLATES */}
-        <div className="min-w-0 lg:col-span-2">
-          <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-4">
+        <div className="min-w-0 lg:col-span-1">
+          <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
             <div className="flex flex-col md:flex-row gap-3 md:items-center">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search templates..."
-                className="flex-1 bg-transparent border border-slate-800 rounded px-3 py-2 placeholder:text-slate-500 text-sm min-w-0"
+                className="flex-1 bg-transparent border border-emerald-800/20 rounded px-3 py-2 placeholder:text-emerald-400 text-sm min-w-0"
               />
 
               <form
@@ -771,19 +694,19 @@ export default function Planner() {
                   value={inlineAdd}
                   onChange={(e) => setInlineAdd(e.target.value)}
                   placeholder="Add new..."
-                  className="bg-transparent border border-slate-800 px-3 py-2 rounded text-sm"
+                  className="bg-transparent border border-emerald-800/20 px-3 py-2 rounded text-sm"
                 />
                 <button className="px-3 py-2 rounded bg-emerald-500 text-black text-sm">
                   Add
                 </button>
               </form>
 
-              <div className="text-xs text-slate-500 hidden md:block">
+              <div className="text-xs text-emerald-400 hidden md:block">
                 {tasks.length} templates
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[420px] overflow-auto scrollbar-thin">
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[440px] overflow-auto pr-2">
               <AnimatePresence>
                 {filteredTemplates.map((t, i) => (
                   <motion.div
@@ -795,38 +718,141 @@ export default function Planner() {
                     draggable
                     onDragStart={(e) => onDragStart(e, t)}
                     onDragEnd={onDragEnd}
-                    className="flex items-center justify-between gap-3 p-3 rounded-md border border-slate-800 bg-gradient-to-br from-[#081218] to-[#0b1116]"
+                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-md border border-emerald-800/20 bg-gradient-to-br from-[#061614] to-[#071a18]"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    {/* left: icon + text */}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="text-lg">{taskEmoji(t)}</div>
                       <div className="text-sm truncate">{t}</div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => pushToStudyQueue(t)}
-                        className="px-2 py-1 rounded bg-slate-800 text-xs"
-                      >
-                        Study
-                      </button>
-                      <button
-                        onClick={() => pushToGymQueue(t)}
-                        className="px-2 py-1 rounded bg-slate-800 text-xs"
-                      >
-                        Gym
-                      </button>
-                      <button
-                        onClick={() => duplicateTemplate(t)}
-                        className="px-2 py-1 rounded bg-slate-800 text-xs"
-                      >
-                        ⎘
-                      </button>
-                      <button
-                        onClick={() => deleteTemplate(i)}
-                        className="px-2 py-1 rounded bg-red-600 text-white text-xs"
-                      >
-                        🗑
-                      </button>
+                    {/* right: actions (hamburger on small widths) */}
+                    <div className="flex items-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
+                      {/* show normal actions on medium+ widths */}
+                      <div className="hidden sm:flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const arr = JSON.parse(
+                              localStorage.getItem("wd_study_queue") || "[]"
+                            );
+                            arr.push({ task: t, created: Date.now() });
+                            localStorage.setItem(
+                              "wd_study_queue",
+                              JSON.stringify(arr)
+                            );
+                            showToast("Added to Study queue");
+                          }}
+                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                        >
+                          Study
+                        </button>
+                        <button
+                          onClick={() => {
+                            const arr = JSON.parse(
+                              localStorage.getItem("wd_gym_queue") || "[]"
+                            );
+                            arr.push({ task: t, created: Date.now() });
+                            localStorage.setItem(
+                              "wd_gym_queue",
+                              JSON.stringify(arr)
+                            );
+                            showToast("Added to Gym queue");
+                          }}
+                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                        >
+                          Gym
+                        </button>
+                        <button
+                          onClick={() => duplicateTemplate(t)}
+                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                        >
+                          ⎘
+                        </button>
+                        <button
+                          onClick={() => deleteTemplate(i)}
+                          className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
+                        >
+                          🗑
+                        </button>
+                      </div>
+
+                      {/* hamburger (⋮) visible on small screens */}
+                      <div className="lg:hidden relative" data-hamburger-root>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuIndex(openMenuIndex === i ? null : i);
+                          }}
+                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                        >
+                          ⋮
+                        </button>
+
+                        <AnimatePresence>
+                          {openMenuIndex === i && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              className="absolute right-0 mt-2 w-40 bg-[#071E1B] border border-emerald-800/30 rounded shadow p-2 z-40"
+                            >
+                              <button
+                                onClick={() => {
+                                  const arr = JSON.parse(
+                                    localStorage.getItem("wd_study_queue") ||
+                                      "[]"
+                                  );
+                                  arr.push({ task: t, created: Date.now() });
+                                  localStorage.setItem(
+                                    "wd_study_queue",
+                                    JSON.stringify(arr)
+                                  );
+                                  showToast("Added to Study queue");
+                                  setOpenMenuIndex(null);
+                                }}
+                                className="w-full text-left px-2 py-1 rounded hover:bg-emerald-900/10"
+                              >
+                                Study
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const arr = JSON.parse(
+                                    localStorage.getItem("wd_gym_queue") || "[]"
+                                  );
+                                  arr.push({ task: t, created: Date.now() });
+                                  localStorage.setItem(
+                                    "wd_gym_queue",
+                                    JSON.stringify(arr)
+                                  );
+                                  showToast("Added to Gym queue");
+                                  setOpenMenuIndex(null);
+                                }}
+                                className="w-full text-left px-2 py-1 rounded hover:bg-emerald-900/10"
+                              >
+                                Gym
+                              </button>
+                              <button
+                                onClick={() => {
+                                  duplicateTemplate(t);
+                                  setOpenMenuIndex(null);
+                                }}
+                                className="w-full text-left px-2 py-1 rounded hover:bg-emerald-900/10"
+                              >
+                                Duplicate
+                              </button>
+                              <button
+                                onClick={() => {
+                                  deleteTemplate(i);
+                                  setOpenMenuIndex(null);
+                                }}
+                                className="w-full text-left px-2 py-1 rounded text-rose-600 hover:bg-emerald-900/10"
+                              >
+                                Delete
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -834,22 +860,31 @@ export default function Planner() {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.label}
-                  onClick={() => addTask(p.task)}
-                  className="px-3 py-1 rounded bg-slate-800 text-sm"
-                >
-                  {p.label}
-                </button>
-              ))}
+              <button
+                onClick={() => addTask("Gym: Workout")}
+                className="px-3 py-1 rounded bg-emerald-900/20 text-sm"
+              >
+                Gym
+              </button>
+              <button
+                onClick={() => addTask("Code: Focus Session")}
+                className="px-3 py-1 rounded bg-emerald-900/20 text-sm"
+              >
+                Code
+              </button>
+              <button
+                onClick={() => addTask("DSA Practice")}
+                className="px-3 py-1 rounded bg-emerald-900/20 text-sm"
+              >
+                DSA
+              </button>
             </div>
           </div>
         </div>
 
         {/* WEATHER */}
-        <div className="min-w-0">
-          <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-4 min-h-[220px]">
+        <div className="min-w-0 h-[330px]">
+          <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4 min-h-[320px] h-full">
             <WeatherCard
               cityInput={cityInput}
               setCityInput={setCityInput}
@@ -864,6 +899,7 @@ export default function Planner() {
               setWeatherStyle={setWeatherStyle}
               showSearch={showSearch}
               setShowSearch={setShowSearch}
+              lottieData={lottieData}
             />
           </div>
         </div>
@@ -876,42 +912,51 @@ export default function Planner() {
           return (
             <div key={slot} className="min-w-0">
               <div
-                className={`rounded-xl p-3 min-h-[320px] max-h-[420px] overflow-auto border border-slate-800 bg-[#071119] ${
-                  isActive ? "ring-2 ring-emerald-400/25" : ""
-                }`}
                 onDragOver={onDragOver(slot)}
                 onDrop={onDrop(slot)}
                 onDragEnd={onDragEnd}
+                className={`rounded-xl p-3 min-h-[300px] max-h-[420px] overflow-auto border border-emerald-800/20 bg-gradient-to-b from-[#041514] to-[#071716] ${
+                  isActive ? "ring-2 ring-emerald-400/25" : ""
+                }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="text-sm text-slate-400">{slot}</div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-sm text-emerald-200">{slot}</div>
+                    <div className="text-xs text-emerald-300">
                       {(day[slot] || []).length} items
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        const p = PRESETS[0];
+                        const p = "Gym: Workout";
                         const next = {
                           ...day,
-                          [slot]: [...(day[slot] || []), p.task],
+                          [slot]: [...(day[slot] || []), p],
                         };
                         setDay(next);
                         save(formatDateKey(selectedDate), next);
-                        showToast(`Added ${p.task}`);
+                        showToast(`Added ${p}`);
                       }}
-                      className="px-2 py-1 rounded bg-slate-800 text-xs"
+                      className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
                     >
                       +Preset
                     </button>
                     <button
                       onClick={() => {
-                        (day[slot] || []).forEach((t) => pushToStudyQueue(t));
+                        (day[slot] || []).forEach((t) => {
+                          const arr = JSON.parse(
+                            localStorage.getItem("wd_study_queue") || "[]"
+                          );
+                          arr.push({ task: t, created: Date.now() });
+                          localStorage.setItem(
+                            "wd_study_queue",
+                            JSON.stringify(arr)
+                          );
+                        });
                         showToast("Sent to Study queue");
                       }}
-                      className="px-2 py-1 rounded bg-slate-800 text-xs"
+                      className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
                     >
                       →Study
                     </button>
@@ -927,7 +972,7 @@ export default function Planner() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
-                        className="flex items-center justify-between p-2 rounded-md border border-slate-800 bg-[#081218]"
+                        className="flex items-center justify-between p-2 rounded-md border border-emerald-800/10 bg-[#071a18]/60"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="text-lg">{taskEmoji(t)}</div>
@@ -937,13 +982,13 @@ export default function Planner() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => moveToNextSlot(slot, idx)}
-                            className="px-2 py-1 rounded bg-slate-800 text-xs"
+                            className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
                           >
                             ➜
                           </button>
                           <button
                             onClick={() => removeFrom(slot, idx)}
-                            className="px-2 py-1 rounded bg-red-600 text-white text-xs"
+                            className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
                           >
                             ✕
                           </button>
@@ -953,7 +998,7 @@ export default function Planner() {
                   </AnimatePresence>
 
                   {(day[slot] || []).length === 0 && (
-                    <div className="text-sm text-slate-500 border border-dashed border-slate-800 rounded p-4">
+                    <div className="text-sm text-emerald-300 border border-dashed border-emerald-800/10 rounded p-4">
                       Empty — drop a task here
                     </div>
                   )}
@@ -965,13 +1010,13 @@ export default function Planner() {
       </div>
 
       {/* BOTTOM ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         {/* Pomodoro */}
-        <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-4">
+        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-sm text-slate-400">Focus Mode</div>
-              <div className="text-xs text-slate-500">
+              <div className="text-sm text-emerald-300">Focus Mode</div>
+              <div className="text-xs text-emerald-400">
                 One task. One session.
               </div>
             </div>
@@ -982,7 +1027,7 @@ export default function Planner() {
                   localStorage.removeItem("wd_focus_task");
                   showToast("Focus cleared");
                 }}
-                className="px-2 py-1 rounded bg-slate-800 text-xs"
+                className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
               >
                 Clear
               </button>
@@ -996,10 +1041,10 @@ export default function Planner() {
               localStorage.setItem("wd_focus_task", e.target.value);
             }}
             placeholder="Today's focus..."
-            className="w-full bg-transparent border border-slate-800 px-3 py-2 rounded mb-3 text-sm"
+            className="w-full bg-transparent border border-emerald-800/20 px-3 py-2 rounded mb-3 text-sm"
           />
           {focusTask && (
-            <div className="text-sm text-slate-300 mb-3">
+            <div className="text-sm text-emerald-200 mb-3">
               Focus: <span className="font-medium">{focusTask}</span>
             </div>
           )}
@@ -1015,7 +1060,7 @@ export default function Planner() {
               </button>
               <button
                 onClick={() => setPomodoroRunning(false)}
-                className="px-3 py-2 rounded bg-slate-800"
+                className="px-3 py-2 rounded bg-emerald-900/20"
               >
                 Stop
               </button>
@@ -1024,7 +1069,7 @@ export default function Planner() {
                   setPomodoroSeconds(25 * 60);
                   setPomodoroRunning(false);
                 }}
-                className="px-3 py-2 rounded bg-red-600 text-white"
+                className="px-3 py-2 rounded bg-rose-600 text-white"
               >
                 Reset
               </button>
@@ -1033,24 +1078,29 @@ export default function Planner() {
         </div>
 
         {/* Habits */}
-        <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-4">
-          <div className="text-sm text-slate-400 mb-2">Daily Habits</div>
+        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
+          <div className="text-sm text-emerald-300 mb-2">Daily Habits</div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm">Water (glasses)</div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <button
                   onClick={() =>
-                    updateHabit("water", Math.max(0, habits.water - 1))
+                    setHabits({
+                      ...habits,
+                      water: Math.max(0, habits.water - 1),
+                    })
                   }
-                  className="px-2 py-1 bg-slate-800 rounded"
+                  className="px-2 py-1 bg-emerald-900/20 rounded"
                 >
                   -
                 </button>
                 <div className="w-8 text-center">{habits.water}</div>
                 <button
-                  onClick={() => updateHabit("water", habits.water + 1)}
-                  className="px-2 py-1 bg-slate-800 rounded"
+                  onClick={() =>
+                    setHabits({ ...habits, water: habits.water + 1 })
+                  }
+                  className="px-2 py-1 bg-emerald-900/20 rounded"
                 >
                   +
                 </button>
@@ -1062,7 +1112,9 @@ export default function Planner() {
               <input
                 type="checkbox"
                 checked={habits.meditate}
-                onChange={(e) => updateHabit("meditate", e.target.checked)}
+                onChange={(e) =>
+                  setHabits({ ...habits, meditate: e.target.checked })
+                }
               />
             </div>
 
@@ -1071,58 +1123,50 @@ export default function Planner() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() =>
-                    updateHabit("reading", Math.max(0, habits.reading - 5))
+                    setHabits({
+                      ...habits,
+                      reading: Math.max(0, habits.reading - 5),
+                    })
                   }
-                  className="px-2 py-1 bg-slate-800 rounded"
+                  className="px-2 py-1 bg-emerald-900/20 rounded"
                 >
                   -
                 </button>
                 <div className="w-12 text-center">{habits.reading}</div>
                 <button
-                  onClick={() => updateHabit("reading", habits.reading + 5)}
-                  className="px-2 py-1 bg-slate-800 rounded"
+                  onClick={() =>
+                    setHabits({ ...habits, reading: habits.reading + 5 })
+                  }
+                  className="px-2 py-1 bg-emerald-900/20 rounded"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            <div className="pt-2 text-sm text-slate-400">Success Score</div>
-            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div className="pt-2 text-sm text-emerald-400">Success Score</div>
+            <div className="w-full bg-emerald-900/20 rounded-full h-2 overflow-hidden">
               <div
-                className="h-2 rounded-full bg-emerald-500 transition-all"
-                style={{ width: `${successScoreValue}%` }}
+                className="h-2 rounded-full bg-emerald-400 transition-all"
+                style={{ width: `${Math.min(100, totalPlanned * 8)}%` }}
               />
-            </div>
-
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => {
-                  save("wd_pom_sessions", 0);
-                  save("wd_done", {});
-                  showToast("Progress reset");
-                }}
-                className="px-3 py-2 rounded bg-rose-600 text-white text-sm"
-              >
-                Reset Progress
-              </button>
             </div>
           </div>
         </div>
 
         {/* Quick Links */}
-        <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-4">
-          <div className="text-sm text-slate-400 mb-2">Quick Links</div>
+        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
+          <div className="text-sm text-emerald-300 mb-2">Quick Links</div>
           <div className="flex flex-col gap-2">
             <a
               href="/study"
-              className="px-3 py-2 rounded bg-slate-800 text-center"
+              className="px-3 py-2 rounded bg-emerald-900/20 text-center"
             >
               Open Study Page
             </a>
             <a
               href="/gym"
-              className="px-3 py-2 rounded bg-slate-800 text-center"
+              className="px-3 py-2 rounded bg-emerald-900/20 text-center"
             >
               Open Gym Page
             </a>
@@ -1136,7 +1180,7 @@ export default function Planner() {
                 );
                 showToast(`Study: ${s.length} • Gym: ${g.length}`);
               }}
-              className="px-3 py-2 rounded bg-slate-800"
+              className="px-3 py-2 rounded bg-emerald-900/20"
             >
               Preview Queues
             </button>
@@ -1144,24 +1188,26 @@ export default function Planner() {
         </div>
       </div>
 
-      {/* RIGHT SIDE CALENDAR AND PREVIEW */}
-      <div className="mt-6 flex gap-4">
-        <MiniCalendar
-          selectedDate={selectedDate}
-          setSelectedDate={(d) => setSelectedDate(d)}
-        />
+      {/* CALENDAR + DAY PREVIEW */}
+      <div className="mt-6 flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-80">
+          <MiniCalendar
+            selectedDate={selectedDate}
+            setSelectedDate={(d) => setSelectedDate(d)}
+          />
+        </div>
 
-        <div className="bg-[#0f1923] border border-slate-800 rounded-xl p-4 flex-1">
-          <div className="text-sm text-slate-400 mb-2">Selected day plan</div>
-          <div className="space-y-2">
+        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4 flex-1">
+          <div className="text-sm text-emerald-300 mb-2">Selected day plan</div>
+          <div className="space-y-3 max-h-[260px] overflow-auto pr-2">
             {SLOT_ORDER.map((slot) => (
               <div
                 key={slot}
-                className="p-3 rounded bg-[#081218] border border-slate-800"
+                className="p-3 rounded bg-[#041715] border border-emerald-800/20"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm">{slot}</div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-sm text-emerald-200">{slot}</div>
+                  <div className="text-xs text-emerald-400">
                     {(day[slot] || []).length} items
                   </div>
                 </div>
@@ -1170,22 +1216,19 @@ export default function Planner() {
                   {(day[slot] || []).map((t, i) => (
                     <div
                       key={t + i}
-                      className="flex items-center justify-between p-2 rounded bg-[#071019] border border-slate-800"
+                      className="flex items-center justify-between p-2 rounded bg-[#031210] border border-emerald-800/20"
                     >
-                      <div className="truncate">{t}</div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => removeFrom(slot, i)}
-                          className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                      <div className="truncate text-sm">{t}</div>
+                      <button
+                        onClick={() => removeFrom(slot, i)}
+                        className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
+                      >
+                        Remove
+                      </button>
                     </div>
                   ))}
-
                   {(day[slot] || []).length === 0 && (
-                    <div className="text-xs text-slate-500">No tasks</div>
+                    <div className="text-xs text-emerald-400">No tasks</div>
                   )}
                 </div>
               </div>
@@ -1201,7 +1244,7 @@ export default function Planner() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed right-6 bottom-6 bg-slate-900 border border-slate-800 px-4 py-2 rounded shadow"
+            className="fixed right-6 bottom-6 bg-[#031715] border border-emerald-800/20 px-4 py-2 rounded shadow text-emerald-100"
           >
             {toast}
           </motion.div>

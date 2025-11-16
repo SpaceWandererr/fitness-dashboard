@@ -458,7 +458,7 @@ export default function CalendarFullDarkUpdated() {
   const selectedNote = notesMap[selectedDate] || "";
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-3 grid grid-cols-1 lg:grid-cols-[1.7fr,1fr] gap-4 items-start transition-colors duration-500 bg-[#0b1220] rounded-xl">
+    <div className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.7fr,1fr] gap-4 items-start transition-colors duration-500 bg-[#0b1220] rounded-xl">
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -566,8 +566,8 @@ export default function CalendarFullDarkUpdated() {
       </div>
 
       {/* Calendar Section */}
-      <div className="lg:col-span-2 rounded-2xl border p-3 bg-[#071022] space-y-6 min-w-[650px] min-h-[600px]">
-        <div className="flex items-center justify-between">
+      <div className="lg:col-span-2 rounded-2xl border p-3 bg-[#071022] space-y-6 min-w-full md:min-w-[650px] min-h-[400px] md:min-h-[600px]">
+        <div className="flex flex-wrap items-center justify-center sm:justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMonth((m) => m.subtract(1, "month"))}
@@ -585,14 +585,14 @@ export default function CalendarFullDarkUpdated() {
               ▶
             </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2 md:pt-0">
             <button
               onClick={() => setMonth(dayjs())}
               className="px-3 py-1 rounded bg-black text-[#00e5ff]"
             >
               Today
             </button>
-            <div className="px-3 py-1 rounded bg-[#0b0b0b] text-sm text-[#e6ffea]">
+            <div className="px-3 py-1 rounded bg-[#031018] text-sm text-gray-300 max-w-full truncate">
               Monthly:{" "}
               <span className="font-semibold">{monthlyStats.topics} T</span> /{" "}
               <span className="font-semibold text-red-400">
@@ -602,7 +602,7 @@ export default function CalendarFullDarkUpdated() {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-5 sm:grid-cols-7 gap-1 mt-2">
           {days.map((d) => {
             const iso = d.format("YYYY-MM-DD");
             const status = getDayStatusStr(iso);
@@ -753,7 +753,7 @@ export default function CalendarFullDarkUpdated() {
       </div>
 
       {/* Right Panel */}
-      <div className="rounded-2xl border p-3 bg-[#071022] space-y-3 min-h-[600px] min-w-[450px]">
+      <div className=" relative rounded-2xl border p-3 bg-[#071022] space-y-3 min-w-full md:min-w-[380px] min-h-[400px] md:min-h-[600px]">
         <div className="text-sm text-[#60a5fa] mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
         </div>

@@ -4447,7 +4447,6 @@ export default function Syllabus() {
         localStorage.setItem("K_LAST_STUDIED", stamp);
         setShowLastStudied(true);
       }
-
       return t;
     });
 

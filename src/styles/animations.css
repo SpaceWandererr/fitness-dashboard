@@ -39,3 +39,66 @@
     animation: move-fast 30s linear infinite;
   }
   
+
+  /* ===========================
+   CUSTOM DAY PICKER THEME
+   =========================== */
+
+/* ===========================================
+   🔥 FORCE DayPicker to be COMPACT
+   =========================================== */
+
+.rdp {
+  --rdp-cell-size: 32px !important;
+  --rdp-caption-font-size: 14px !important;
+  --rdp-accent-color: #00eaff !important;
+  --rdp-background-color: transparent !important;
+
+  padding: 8px !important;
+  width: 240px !important;
+  max-width: 240px !important;
+  font-size: 12px !important;
+
+  background: rgba(10, 18, 28, 0.92);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+}
+
+/* Reduce month title */
+.rdp-caption_label {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Weekday small & soft */
+.rdp-weekday {
+  font-size: 11px !important;
+  opacity: 0.6;
+}
+
+/* Day cells compact */
+.rdp-day {
+  width: 28px !important;
+  height: 28px !important;
+  margin: 2px !important;
+  border-radius: 6px !important;
+}
+
+/* Selected day */
+.rdp-day_selected {
+  background: #00eaff !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+/* Hover effect */
+.rdp-day:hover {
+  background: rgba(0, 234, 255, 0.2) !important;
+}
+
+.rdp-month {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
