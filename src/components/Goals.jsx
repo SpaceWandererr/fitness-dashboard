@@ -463,19 +463,25 @@ export default function Goals() {
           </p>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
           {/* LEFT: MERN card container (stacked panels) */}
           <motion.div
-            className="relative"
+            className="relative rounded-2xl"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={(e, info) => handleDragEnd(info)}
-            whileHover={{ scale: 1.01 }} // same hover as NZ
-            style={{ transform: "translateZ(0)" }} // prevents blur issue
+            whileHover={{ scale: 1.01 }}
+            style={{
+              transform: "translateZ(0)",
+              willChange: "transform, opacity",
+              isolation: "isolate",
+              WebkitMaskImage: "linear-gradient(white, white)",
+              maskImage: "linear-gradient(white, white)",
+            }}
           >
             <div
               className="relative rounded-2xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-              backdrop-blur-md p-5 shadow-xl"
+              backdrop-blur-md p-5 shadow-xl h-full"
               style={{
                 transformStyle: "preserve-3d",
                 minHeight: 420,
@@ -486,9 +492,10 @@ export default function Goals() {
                 position: "relative",
               }}
             >
+              {/* HOLOGRAPHIC SIDEBAR */}
               <div
                 className="absolute left-0 top-0 h-full w-[4px]
-                bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 blur-[1px]"
+                bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 "
               />
 
               {/* neon corner brackets */}
@@ -499,48 +506,52 @@ export default function Goals() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={page}
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.12}
-                  onDragEnd={(e, info) => handleDragEnd(info)}
                   initial={{ x: 60, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -60, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 220, damping: 28 }}
                   className="absolute inset-0 p-4"
-                  style={{ touchAction: "pan-y" }}
                 >
                   {/* PAGE 0 — Main redesigned MERN Mastery (beautiful) */}
                   {page === 0 && (
                     <div className="w-full h-full flex flex-col">
                       {/* Top: Title + Ring + Dates */}
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold flex flex-row items-center gap-3 ">
-                            <span className="text-xl">💠</span> MERN MASTERY
+                      <div
+                        className="flex flex-col md:flex-row items-center md:items-start justify-between 
+                        gap-6 md:gap-4"
+                      >
+                        {/* LEFT SIDE */}
+                        <div className="flex-1 text-center md:text-left">
+                          <h3 className="text-lg md:text-xl font-bold flex flex-row items-center gap-3 justify-center md:justify-start">
+                            <span className="text-xl md:text-2xl">💠</span>
+                            MERN MASTERY
                           </h3>
 
                           {/* Dates lines */}
-                          <div className="mt-2 text-xs text-muted-foreground/80 space-y-1">
+                          <div className="mt-2 text-xs md:text-sm text-muted-foreground/80 space-y-1">
                             <div>Start: {formatDDMMYYYY(startISO)}</div>
                             <div>End: {formatDDMMYYYY(endISO)}</div>
                           </div>
 
-                          {/* subtle date button (centered below dates) */}
-                          <div className="mt-3 flex justify-center">
+                          {/* subtle date button */}
+                          <div className="mt-3 flex justify-center md:justify-start">
                             <button
                               onClick={() => setShowDatePopup((s) => !s)}
-                              className="text-xs px-2 py-1 rounded-md bg-white/4 border border-white/6 backdrop-blur-sm"
-                              title="Set start / end dates"
+                              className="text-xs px-2 py-1 rounded-md bg-white/5 border border-white/10 backdrop-blur-sm"
                             >
                               🗓 Set Dates
                             </button>
                           </div>
                         </div>
 
-                        {/* Progress ring with neon gradient dynamic */}
-                        <div className="flex-shrink-0">
-                          <svg width="150" height="150" viewBox="0 0 200 200">
+                        {/* PROGRESS RING */}
+                        <div className="flex-shrink-0 flex justify-center md:justify-end">
+                          <svg
+                            width="120"
+                            height="120"
+                            className="sm:w-[140px] sm:h-[140px] md:w-[150px] md:h-[150px]"
+                            viewBox="0 0 200 200"
+                          >
                             <defs>
                               <linearGradient
                                 id={ringGradientStops[0]}
@@ -556,6 +567,7 @@ export default function Goals() {
                                   stopColor={ringGradientStops[2]}
                                 />
                               </linearGradient>
+
                               <filter
                                 id="glow-small"
                                 x="-50%"
@@ -573,6 +585,7 @@ export default function Goals() {
                                 </feMerge>
                               </filter>
                             </defs>
+
                             <g transform="translate(100,100)">
                               <circle
                                 r={R}
@@ -600,7 +613,8 @@ export default function Goals() {
                                 x="0"
                                 y="6"
                                 textAnchor="middle"
-                                fontSize="18"
+                                fontSize="14"
+                                className="md:text-[18px]"
                                 fill="white"
                                 style={{ fontWeight: 700 }}
                               >
@@ -608,9 +622,10 @@ export default function Goals() {
                               </text>
                               <text
                                 x="0"
-                                y="26"
+                                y="28"
                                 textAnchor="middle"
-                                fontSize="10"
+                                fontSize="8"
+                                className="md:text-[10px]"
                                 fill="rgba(255,255,255,0.6)"
                               >
                                 MERN Progress
@@ -620,67 +635,45 @@ export default function Goals() {
                         </div>
                       </div>
 
-                      {/* Middle: Holographic timeline bar + snapshot */}
-                      {/* Middle Section — redesigned for clean spacing */}
-                      <div className="mt-3 w-full">
-                        {/* TIMELINE TITLE */}
-                        <div className="text-sm opacity-80 mb-2">Timeline</div>
+                      {/* Middle Section — Timeline + Snapshot */}
+                      <div className="mt-4 w-full">
+                        <div className="text-sm opacity-80 mb-2 text-center md:text-left">
+                          Timeline
+                        </div>
 
-                        {/* TIMELINE BAR */}
+                        {/* Timeline Bar */}
                         <div className="w-full h-3 bg-white/5 rounded-full relative overflow-hidden">
-                          {/* Inner progress bar */}
                           <div
                             className="h-3 rounded-full absolute top-0 left-0"
                             style={{
                               width: `${timeProgressPct}%`,
-                              background: `linear-gradient(90deg,
-                               ${ringGradientStops[1]},
-                               ${ringGradientStops[2]}
-                               )`,
+                              background: `linear-gradient(90deg, ${ringGradientStops[1]}, ${ringGradientStops[2]})`,
                               transition: "width 0.7s ease",
-                              boxShadow: `
-                              0 0 8px ${ringGradientStops[1]},
-                              0 0 16px ${ringGradientStops[2]},
-                              0 0 24px ${ringGradientStops[2]}
-                              `,
-                            }}
-                          />
-
-                          {/* Glow aura */}
-                          <div
-                            className="absolute inset-0 rounded-full opacity-40"
-                            style={{
-                              background: `radial-gradient(
-                               ellipse at left,
-                               ${ringGradientStops[1]}33,
-                               transparent
-                             )`,
-                              pointerEvents: "none",
+                              boxShadow: `0 0 8px ${ringGradientStops[1]},0 0 16px ${ringGradientStops[2]},
+                               0 0 24px ${ringGradientStops[2]}`,
                             }}
                           />
                         </div>
 
-                        {/* ELAPSED / REMAINING */}
+                        {/* Elapsed / Remaining */}
                         <div className="mt-3 flex justify-between text-xs opacity-70">
                           <div>Elapsed: {timeProgressPct}%</div>
                           <div>Remaining: {100 - timeProgressPct}%</div>
                         </div>
 
-                        {/* SNAPSHOT PANEL — smaller & right aligned */}
-                        <div className=" mt-4 flex justify-center align-center p-2 backdrop-blur border border-white/10 rounded-xl">
-                          <div className=" w-52 bg-card/30 p-4 backdrop-blur rounded-xl flex justify-end align-end  flex-col">
+                        {/* Snapshot Panel */}
+                        <div className="mt-4 flex flex-col sm:flex-row items-center sm:items-start         justify-center sm:justify-between gap-4 p-1 backdrop-blur border border-white/10 rounded-xl">
+                          {/* LEFT snapshot */}
+                          <div className="w-full sm:w-auto bg-card/30 p-4 rounded-xl text-center sm:text-left">
                             <div className="text-xs opacity-70 mb-1">
                               Snapshot
                             </div>
-
                             <div className="text-sm font-semibold">
                               Topics: {doneTopics} / {totalTopics || "—"}
                             </div>
-
                             <div className="mt-2 text-xs opacity-70">
                               Pace needed: {paceRequired} / day
                             </div>
-
                             <div className="mt-1 text-xs opacity-70">
                               Projected finish:{" "}
                               {projectedFinishISO
@@ -688,23 +681,24 @@ export default function Goals() {
                                 : "—"}
                             </div>
                           </div>
-                          {/* Bottom: Days remaining center */}
-                          <div className="mt-4 text-center">
-                            <div className="text-sm opacity-80">
-                              Days Remaining
-                            </div>
-                            <div className="text-3xl font-bold mt-1">
-                              {daysRemaining !== null ? daysRemaining : "—"}
-                            </div>
-                            <div className="text-xs text-muted-foreground/70 mt-1 whitespace-nowrap">
-                              Weeks: {Math.ceil((daysRemaining || 0) / 7)} •
-                              Months: {Math.ceil((daysRemaining || 0) / 30)}
-                            </div>
-                          </div>
                         </div>
                       </div>
+
                       {/* Spacer */}
-                      <div style={{ flex: 1 }} />
+                      <div className="flex-1" />
+
+                      {/* Days Remaining */}
+                      <div className="backdrop-blur mt-2 text-center p-2 border border-white/10 rounded-xl">
+                        <div className="text-sm opacity-80">Days Remaining</div>
+                        <div className="text-3xl font-bold ">
+                          {daysRemaining ?? "—"}
+                        </div>
+
+                        <div className="text-xs text-muted-foreground/70  whitespace-nowrap ">
+                          Weeks: {Math.ceil((daysRemaining || 0) / 7)} • Months:{" "}
+                          {Math.ceil((daysRemaining || 0) / 30)}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -720,7 +714,7 @@ export default function Goals() {
                       <div
                         className="absolute left-0 top-0 h-full w-[4px]
                         bg-gradient-to-b from-teal-300 via-cyan-300 to-purple-400
-                        opacity-60 blur-[1px] rounded-xl mr-2"
+                        opacity-60 blur-none rounded-xl mr-2"
                       />
 
                       {/* HEADER */}
@@ -789,7 +783,7 @@ export default function Goals() {
                       <div
                         className="absolute left-0 top-0 h-full w-[4px]
                           bg-gradient-to-b from-purple-400 via-indigo-400 to-blue-400
-                          opacity-60 blur-[1px] rounded mr-2"
+                          opacity-60 blur-none rounded mr-2"
                       />
 
                       {/* HEADER */}
@@ -859,7 +853,7 @@ export default function Goals() {
                       <div
                         className="absolute left-0 top-0 h-full w-[4px]
                         bg-gradient-to-b from-red-400 via-orange-400 to-yellow-400
-                        opacity-60 blur-[1px] rounded mr-2"
+                        opacity-60 blur-none rounded mr-2"
                       />
 
                       {/* HEADER */}
@@ -992,12 +986,17 @@ export default function Goals() {
               whileHover={{ scale: 1.01 }}
               className="rounded-2xl p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden"
               style={{
+                transform: "translateZ(0)",
+                willChange: "transform, opacity",
+                isolation: "isolate",
+                WebkitMaskImage: "linear-gradient(white, white)",
+                maskImage: "linear-gradient(white, white)",
                 boxShadow:
                   "0 0 25px rgba(0,255,210,0.08), inset 0 0 10px rgba(255,255,255,0.04)",
               }}
             >
               {/* HOLO BAR */}
-              <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 blur-[1px]" />
+              <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 blur-none" />
 
               {/* HEADER */}
               <div className="flex items-center justify-between mb-3">
