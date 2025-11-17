@@ -489,91 +489,107 @@ export default function Goals() {
     return Math.abs(offset) * velocity;
   };
 
-  const DreamBoardSwiper = () => {
-    const [[page, direction], setPage] = useState([0, 0]);
+  // ========================
+  // DREAM BOARD SWIPER — uses global dreamCards
+  // ========================
 
-    const paginate = (dir) => setPage([page + dir, dir]);
+  const DreamBoardSwiper = React.memo(() => {
+    const [[dPage, dDir], setDPage] = useState([0, 0]);
 
+    // Correct looping index
     const index =
-      ((page % dreamCards.length) + dreamCards.length) % dreamCards.length;
+      ((dPage % dreamCards.length) + dreamCards.length) % dreamCards.length;
+
     const card = dreamCards[index];
 
-    // Auto slide every 2 minutes
+    // Move to next/prev
+    const paginate = (dir) => {
+      setDPage([dPage + dir, dir]);
+    };
+
+    // Auto swipe every 2 mins
     useEffect(() => {
-      const t = setInterval(() => paginate(1), 120000);
-      return () => clearInterval(t);
-    }, [page]);
+      const timer = setInterval(() => paginate(1), 120000);
+      return () => clearInterval(timer);
+    }, [dPage]);
+
+    // Slide animation variants
+    const variants = {
+      enter: (dir) => ({
+        x: dir > 0 ? 140 : -140,
+        opacity: 0,
+        scale: 0.95,
+      }),
+      center: {
+        x: 0,
+        opacity: 1,
+        scale: 1,
+        transition: { duration: 0.35 },
+      },
+      exit: (dir) => ({
+        x: dir < 0 ? 140 : -140,
+        opacity: 0,
+        scale: 0.95,
+        transition: { duration: 0.25 },
+      }),
+    };
 
     return (
-      <div className="relative w-full min-h-[180px]">
-        <AnimatePresence initial={false} custom={direction}>
+      <div className="relative w-full h-[190px] overflow-hidden select-none">
+        <AnimatePresence initial={false} custom={dDir}>
           <motion.div
-            key={page}
-            custom={direction}
-            className="absolute top-0 left-0 w-full"
-            variants={{
-              enter: (dir) => ({
-                x: dir > 0 ? 150 : -150,
-                opacity: 0,
-                scale: 0.95,
-              }),
-              center: {
-                x: 0,
-                opacity: 1,
-                scale: 1,
-                transition: { duration: 0.35 },
-              },
-              exit: (dir) => ({
-                x: dir < 0 ? 150 : -150,
-                opacity: 0,
-                scale: 0.95,
-                transition: { duration: 0.25 },
-              }),
-            }}
+            key={dPage}
+            custom={dDir}
+            variants={variants}
             initial="enter"
             animate="center"
             exit="exit"
             drag="x"
             dragElastic={0.6}
             dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={(e, { offset, velocity }) => {
-              const swipe = Math.abs(offset.x) * velocity.x;
-              if (swipe < -800) paginate(1);
-              else if (swipe > 800) paginate(-1);
+            onDragEnd={(e, { offset }) => {
+              if (offset.x < -60) paginate(1); // swipe left → next
+              else if (offset.x > 60) paginate(-1); // swipe right → prev
             }}
+            className="w-full"
           >
-            {/* CONTENT */}
-            <div className="space-y-2">
+            {/* CARD CONTENT */}
+            <div className="space-y-2 pr-1">
               <div className="flex items-center gap-2">
                 {card.icon}
                 <h3 className="text-base font-semibold">{card.title}</h3>
               </div>
 
+              {/* ITEMS */}
               {card.items && (
-                <ul className="text-sm opacity-80 space-y-1 pl-2">
+                <ul className="text-sm opacity-80 space-y-1 pl-1">
                   {card.items.map((p) => (
                     <li key={p}>• {p}</li>
                   ))}
                 </ul>
               )}
 
+              {/* ROADMAP */}
               {card.roadmap && (
-                <ol className="text-sm opacity-80 space-y-1 pl-2 list-decimal">
+                <ol className="text-sm opacity-80 space-y-1 pl-1 list-decimal list-inside">
                   {card.roadmap.map((step) => (
                     <li key={step}>{step}</li>
                   ))}
                 </ol>
               )}
 
+              {/* STATEMENT */}
               {card.statement && (
-                <p className="text-sm opacity-80">{card.statement}</p>
+                <p className="text-sm opacity-80 leading-relaxed">
+                  {card.statement}
+                </p>
               )}
             </div>
           </motion.div>
         </AnimatePresence>
       </div>
     );
-  };
+  });
 
   /* -------------------------
     Render
