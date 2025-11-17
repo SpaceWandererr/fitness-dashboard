@@ -420,24 +420,13 @@ export default function Goals() {
     <div className="w-full min-h-screen relative overflow-hidden bg-background text-foreground transition-colors">
       {/* subtle background holographic grid (kept simple) */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-[rgba(6,30,26,0.18)] via-[rgba(6,18,30,0.12)] to-[rgba(112,14,30,0.06)]" />
+        <div className=" absolute inset-0 bg-gradient-to-br from-[rgba(6,30,26,0.18)] via-[rgba(6,18,30,0.12)] to-[rgba(112,14,30,0.06)]" />
         <div className="absolute inset-0 animate-grid move-grid" />
       </div>
 
-      <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="rounded-lg px-3 py-2 border border-border bg-muted/20 backdrop-blur">
-            <div className="font-extrabold tracking-wider text-teal-300">
-              JAY SINH THAKUR
-            </div>
-            <div className="text-xs opacity-60">Goals • Holographic</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 rounded-xl border border-border bg-card/40 backdrop-blur text-sm">
-            Theme: Holographic
-          </div>
+      <header className="max-w-6xl mx-auto px-6 py-2 flex items-center justify-between">
+        <div className="text-3xl font-extrabold tracking-wider text-teal-300 backdrop-blur">
+          JAY SINH THAKUR
         </div>
       </header>
 
