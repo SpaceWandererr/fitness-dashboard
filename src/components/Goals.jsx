@@ -6,6 +6,76 @@ import { useNavigate } from "react-router-dom";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import "../styles/animations.css"; // MUST come after
+import {
+  Mountain,
+  Briefcase,
+  HeartPulse,
+  Globe,
+  Map,
+  Target,
+  Brain,
+  TrendingUp,
+} from "lucide-react";
+
+const dreamCards = [
+  {
+    title: "Long-Term Vision",
+    icon: <Globe className="w-5 h-5 text-cyan-300" />,
+    items: [
+      "Settle in New Zealand",
+      "Become Senior Full-Stack Developer",
+      "Financial freedom",
+      "Balanced nature lifestyle",
+    ],
+  },
+  {
+    title: "Short-Term Actions",
+    icon: <Target className="w-5 h-5 text-green-300" />,
+    items: [
+      "Master JS + DSA (90 days)",
+      "Build 3 MERN Projects",
+      "Daily coding + gym",
+      "Apply for remote jobs",
+    ],
+  },
+  {
+    title: "NZ Migration Roadmap",
+    icon: <Map className="w-5 h-5 text-blue-300" />,
+    roadmap: [
+      "Master MERN → Build portfolio",
+      "Crack interviews",
+      "Get NZ job offer",
+      "Visa (AEWV) approval",
+      "Relocate + Settle",
+    ],
+  },
+  {
+    title: "Career Excellence",
+    icon: <Briefcase className="w-5 h-5 text-purple-300" />,
+    items: [
+      "MERN + Cloud Skills",
+      "Clean Architecture",
+      "Open Source",
+      "High-level problem solving",
+    ],
+  },
+  {
+    title: "Health & Discipline",
+    icon: <HeartPulse className="w-5 h-5 text-red-300" />,
+    items: [
+      "Lean physique",
+      "6× weekly gym",
+      "Early wake routine",
+      "Mental clarity habits",
+    ],
+  },
+  {
+    title: "Why These Dreams Matter",
+    icon: <Brain className="w-5 h-5 text-indigo-300" />,
+    statement:
+      "Because you want a peaceful, financially stable, skill-rich life full of purpose, calmness, and freedom.",
+  },
+];
 
 /* -----------------------------
   Constants & Helpers
@@ -413,11 +483,103 @@ export default function Goals() {
     return () => clearInterval(interval);
   }, []);
 
+  const swipeConfidenceThreshold = 10000;
+
+  const swipePower = (offset, velocity) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const DreamBoardSwiper = () => {
+    const [[page, direction], setPage] = useState([0, 0]);
+
+    const paginate = (dir) => setPage([page + dir, dir]);
+
+    const index =
+      ((page % dreamCards.length) + dreamCards.length) % dreamCards.length;
+    const card = dreamCards[index];
+
+    // Auto slide every 2 minutes
+    useEffect(() => {
+      const t = setInterval(() => paginate(1), 120000);
+      return () => clearInterval(t);
+    }, [page]);
+
+    return (
+      <div className="relative w-full min-h-[180px]">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={page}
+            custom={direction}
+            className="absolute top-0 left-0 w-full"
+            variants={{
+              enter: (dir) => ({
+                x: dir > 0 ? 150 : -150,
+                opacity: 0,
+                scale: 0.95,
+              }),
+              center: {
+                x: 0,
+                opacity: 1,
+                scale: 1,
+                transition: { duration: 0.35 },
+              },
+              exit: (dir) => ({
+                x: dir < 0 ? 150 : -150,
+                opacity: 0,
+                scale: 0.95,
+                transition: { duration: 0.25 },
+              }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            drag="x"
+            dragElastic={0.6}
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = Math.abs(offset.x) * velocity.x;
+              if (swipe < -800) paginate(1);
+              else if (swipe > 800) paginate(-1);
+            }}
+          >
+            {/* CONTENT */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                {card.icon}
+                <h3 className="text-base font-semibold">{card.title}</h3>
+              </div>
+
+              {card.items && (
+                <ul className="text-sm opacity-80 space-y-1 pl-2">
+                  {card.items.map((p) => (
+                    <li key={p}>• {p}</li>
+                  ))}
+                </ul>
+              )}
+
+              {card.roadmap && (
+                <ol className="text-sm opacity-80 space-y-1 pl-2 list-decimal">
+                  {card.roadmap.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              )}
+
+              {card.statement && (
+                <p className="text-sm opacity-80">{card.statement}</p>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   /* -------------------------
     Render
   --------------------------*/
   return (
-    <div className="w-full min-h-screen relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl -mt-4"> 
+    <div className="w-full min-h-screen relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl -mt-4">
       {/* subtle background holographic grid (kept simple) */}
       <div className="absolute inset-0 -z-10">
         <div className=" absolute inset-0 bg-gradient-to-br from-[rgba(6,30,26,0.18)] via-[rgba(6,18,30,0.12)] to-[rgba(112,14,30,0.06)]" />
@@ -469,7 +631,7 @@ export default function Goals() {
             }}
           >
             <div
-              className="relative rounded-2xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
+              className="relative rounded-xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
               backdrop-blur-md p-5 shadow-xl h-full"
               style={{
                 transformStyle: "preserve-3d",
@@ -481,10 +643,28 @@ export default function Goals() {
                 position: "relative",
               }}
             >
-              {/* HOLOGRAPHIC SIDEBAR */}
+              {/* 🔥 HOLO VERTICAL BAR (updated colors) */}
               <div
-                className="absolute left-0 top-0 h-full w-[4px]
-                bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 "
+                className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              {/* 🔥 HOLO HORIZONTAL BAR (updated colors) */}
+              <div
+                className="absolute bottom-0 left-0  w-full h-[4px] "
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
               />
 
               {/* neon corner brackets */}
@@ -503,44 +683,51 @@ export default function Goals() {
                 >
                   {/* PAGE 0 — Main redesigned MERN Mastery (beautiful) */}
                   {page === 0 && (
-                    <div className="w-full h-full flex flex-col">
-                      {/* Top: Title + Ring + Dates */}
-                      <div
-                        className="flex flex-col md:flex-row items-center md:items-start justify-between 
-                        gap-6 md:gap-4"
-                      >
-                        {/* LEFT SIDE */}
-                        <div className="flex-1 text-center md:text-left">
-                          <h3 className="text-lg md:text-xl font-bold flex flex-row items-center gap-3 justify-center md:justify-start">
-                            <span className="text-xl md:text-2xl">💠</span>
-                            MERN MASTERY
-                          </h3>
+                    <div className="w-full h-full flex flex-col justify-around">
+                      {/* -------------------------------------------------------
+                       SECTION 1 — MERN MASTERY TITLE (ALWAYS ONE LINE)
+                        ------------------------------------------------------- */}
+                      <div className="w-full text-center md:text-left">
+                        <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2 justify-center md:justify-start whitespace-nowrap">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 8,
+                              ease: "linear",
+                            }}
+                            className="text-4xl text-green-400 inline-block drop-shadow-[0_0_8px_rgba(0,255,100,0.6)]"
+                          >
+                            💠
+                          </motion.div>
+                          MERN MASTERY
+                        </h3>
+                      </div>
 
-                          {/* Dates lines */}
-                          <div className="mt-2 text-xs md:text-sm text-muted-foreground/80 space-y-1">
-                            <div>Start: {formatDDMMYYYY(startISO)}</div>
-                            <div>End: {formatDDMMYYYY(endISO)}</div>
+                      {/* -------------------------------------------------------
+                        SECTION 2 — START/END DATES + RING (JUSTIFY BETWEEN)
+                       ------------------------------------------------------- */}
+                      <div className="flex items-center justify-between w-full gap-2">
+                        {/* LEFT — START & END DATES */}
+                        <div className="flex flex-col">
+                          <div className="text-sm opacity-80">
+                            Start: {formatDDMMYYYY(startISO)}
+                          </div>
+                          <div className="text-sm opacity-80">
+                            End: {formatDDMMYYYY(endISO)}
                           </div>
 
-                          {/* subtle date button */}
-                          <div className="mt-3 flex justify-center md:justify-start">
-                            <button
-                              onClick={() => setShowDatePopup((s) => !s)}
-                              className="text-xs px-2 py-1 rounded-md bg-white/5 border border-white/10 backdrop-blur-sm"
-                            >
-                              🗓 Set Dates
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => setShowDatePopup((s) => !s)}
+                            className="mt-2 text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-md"
+                          >
+                            🗓 Set Dates
+                          </button>
                         </div>
 
-                        {/* PROGRESS RING */}
-                        <div className="flex-shrink-0 flex justify-center md:justify-end">
-                          <svg
-                            width="120"
-                            height="120"
-                            className="sm:w-[140px] sm:h-[140px] md:w-[150px] md:h-[150px]"
-                            viewBox="0 0 200 200"
-                          >
+                        {/* RIGHT — PROGRESS RING */}
+                        <div className="flex-shrink-0 overflow-visible">
+                          <svg width="140" height="150" viewBox="0 0 200 200">
                             <defs>
                               <linearGradient
                                 id={ringGradientStops[0]}
@@ -558,7 +745,7 @@ export default function Goals() {
                               </linearGradient>
 
                               <filter
-                                id="glow-small"
+                                id="glow"
                                 x="-50%"
                                 y="-50%"
                                 width="200%"
@@ -566,126 +753,128 @@ export default function Goals() {
                               >
                                 <feGaussianBlur
                                   stdDeviation="6"
-                                  result="coloredBlur"
+                                  result="blur"
                                 />
                                 <feMerge>
-                                  <feMergeNode in="coloredBlur" />
+                                  <feMergeNode in="blur" />
                                   <feMergeNode in="SourceGraphic" />
                                 </feMerge>
                               </filter>
                             </defs>
-
                             <g transform="translate(100,100)">
                               <circle
                                 r={R}
                                 fill="transparent"
-                                stroke="rgba(255,255,255,0.04)"
+                                stroke="rgba(255,255,255,0.08)"
                                 strokeWidth="8"
                               />
+
                               <circle
                                 r={R}
                                 fill="transparent"
                                 stroke={`url(#${ringGradientStops[0]})`}
                                 strokeWidth="8"
                                 strokeDasharray={`${C} ${C}`}
-                                strokeDashoffset={`${
+                                strokeDashoffset={
                                   C - Math.round((merPercent / 100) * C)
-                                }`}
+                                }
                                 strokeLinecap="round"
                                 transform="rotate(-90)"
                                 style={{
-                                  filter: "url(#glow-small)",
-                                  transition: "stroke-dashoffset 0.8s",
+                                  filter: "url(#glow)",
+                                  transition: "stroke-dashoffset .8s",
                                 }}
                               />
+
                               <text
                                 x="0"
-                                y="6"
+                                y="-6"
                                 textAnchor="middle"
-                                fontSize="14"
-                                className="md:text-[18px]"
                                 fill="white"
-                                style={{ fontWeight: 700 }}
+                                className="text-xl font-bold"
                               >
                                 {merPercent}%
                               </text>
                               <text
                                 x="0"
-                                y="28"
+                                y="26"
                                 textAnchor="middle"
-                                fontSize="8"
-                                className="md:text-[10px]"
-                                fill="rgba(255,255,255,0.6)"
+                                fill="white"
+                                className="mt-2 text-xl opacity-70"
                               >
-                                MERN Progress
+                                MERN
                               </text>
                             </g>
                           </svg>
                         </div>
                       </div>
 
-                      {/* Middle Section — Timeline + Snapshot */}
-                      <div className="mt-4 w-full">
-                        <div className="text-sm opacity-80 mb-2 text-center md:text-left">
-                          Timeline
-                        </div>
-
-                        {/* Timeline Bar */}
+                      {/* -------------------------------------------------------
+                                SECTION 3 — TIMELINE + ELAPSED/REMAINING
+                          ------------------------------------------------------- */}
+                      <div className="w-full">
+                        <div className="text-sm opacity-80 mb-2">Timeline</div>
+                        {/* PROGRESS BAR */}
                         <div className="w-full h-3 bg-white/5 rounded-full relative overflow-hidden">
                           <div
-                            className="h-3 rounded-full absolute top-0 left-0"
+                            className="h-3 absolute top-0 left-0 rounded-full"
                             style={{
                               width: `${timeProgressPct}%`,
                               background: `linear-gradient(90deg, ${ringGradientStops[1]}, ${ringGradientStops[2]})`,
-                              transition: "width 0.7s ease",
-                              boxShadow: `0 0 8px ${ringGradientStops[1]},0 0 16px ${ringGradientStops[2]},
-                               0 0 24px ${ringGradientStops[2]}`,
+                              transition: "width .7s",
+                              boxShadow: `0 0 8px ${ringGradientStops[1]}, 0 0 16px ${ringGradientStops[2]}`,
                             }}
                           />
                         </div>
 
-                        {/* Elapsed / Remaining */}
-                        <div className="mt-3 flex justify-between text-xs opacity-70">
+                        {/* ELAPSED + REMAINING */}
+                        <div className="flex justify-between text-xs opacity-70 mt-2">
                           <div>Elapsed: {timeProgressPct}%</div>
                           <div>Remaining: {100 - timeProgressPct}%</div>
                         </div>
+                      </div>
 
-                        {/* Snapshot Panel */}
-                        <div className="mt-4 flex flex-col sm:flex-row items-center sm:items-start         justify-center sm:justify-between gap-4 p-1 backdrop-blur border border-white/10 rounded-xl">
-                          {/* LEFT snapshot */}
-                          <div className="w-full sm:w-auto bg-card/30 p-4 rounded-xl text-center sm:text-left">
-                            <div className="text-xs opacity-70 mb-1">
-                              Snapshot
-                            </div>
-                            <div className="text-sm font-semibold">
+                      {/* -------------------------------------------------------
+                         SECTION 4 — ONE COMBINED CARD WITH TWO INNER SECTIONS
+                         ------------------------------------------------------- */}
+                      <div className="w-full rounded-xl p-2 backdrop-blur border border-white/10">
+                        {/* Inner grid (Snapshot Left + Days Remaining Right) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {/* LEFT — SNAPSHOT */}
+                          <div className="flex flex-col gap-1">
+                            <div className="text-sm opacity-70">Snapshot</div>
+
+                            <div className="text-base font-semibold">
                               Topics: {doneTopics} / {totalTopics || "—"}
                             </div>
-                            <div className="mt-2 text-xs opacity-70">
+
+                            <div className="text-xs opacity-70 mt-1 whitespace-nowrap">
                               Pace needed: {paceRequired} / day
                             </div>
-                            <div className="mt-1 text-xs opacity-70">
+
+                            <div className="text-xs opacity-70">
                               Projected finish:{" "}
                               {projectedFinishISO
                                 ? formatDDMMYYYY(projectedFinishISO)
                                 : "—"}
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Spacer */}
-                      <div className="flex-1" />
+                          {/* RIGHT — DAYS REMAINING */}
+                          <div className="flex flex-col items-center justify-center text-center">
+                            <div className="text-sm opacity-80">
+                              Days Remaining
+                            </div>
 
-                      {/* Days Remaining */}
-                      <div className="backdrop-blur mt-2 text-center p-2 border border-white/10 rounded-xl">
-                        <div className="text-sm opacity-80">Days Remaining</div>
-                        <div className="text-3xl font-bold ">
-                          {daysRemaining ?? "—"}
-                        </div>
+                            <div className="text-4xl font-bold leading-none my-2">
+                              {daysRemaining ?? "—"}
+                            </div>
 
-                        <div className="text-xs text-muted-foreground/70  whitespace-nowrap ">
-                          Weeks: {Math.ceil((daysRemaining || 0) / 7)} • Months:{" "}
-                          {Math.ceil((daysRemaining || 0) / 30)}
+                            <div className="text-xs opacity-70 whitespace-nowrap">
+                              Weeks: {Math.ceil((daysRemaining || 0) / 7)} •
+                              Months: {Math.ceil((daysRemaining || 0) / 30)}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -973,7 +1162,7 @@ export default function Goals() {
               dragConstraints={{ left: 0, right: 0 }}
               onDragEnd={(e, info) => handleNZDrag(info)}
               whileHover={{ scale: 1.01 }}
-              className="rounded-2xl p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+              className="rounded-xl p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden"
               style={{
                 transform: "translateZ(0)",
                 willChange: "transform, opacity",
@@ -984,11 +1173,32 @@ export default function Goals() {
                   "0 0 25px rgba(0,255,210,0.08), inset 0 0 10px rgba(255,255,255,0.04)",
               }}
             >
-              {/* HOLO BAR */}
-              <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 blur-none" />
+              {/* 🔥 HOLO VERTICAL BAR (updated colors) */}
+              <div
+                className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              {/* 🔥 HOLO HORIZONTAL BAR (updated colors) */}
+              <div
+                className="absolute bottom-0 left-0  w-full h-[4px] "
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
 
               {/* HEADER */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-1">
                 <motion.div
                   animate={{ rotate: [0, -5, 5, 0] }}
                   transition={{ duration: 6, repeat: Infinity }}
@@ -1116,80 +1326,245 @@ export default function Goals() {
 
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="rounded-2xl p-4 border border-[rgba(255,255,255,0.02)] bg-card/40 backdrop-blur-lg shadow-lg"
+              className="relative rounded-xl p-5 border border-white/5 bg-[rgba(15,20,30,0.45)]
+             backdrop-blur-xl shadow-lg overflow-hidden"
             >
-              <h4 className="text-lg font-bold mb-2">🏋 Fitness Command</h4>
-              <div className="text-sm opacity-75">
-                Daily gym, macros, sleep — track simple metrics.
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="w-full">
-                  <div className="text-xs opacity-70">Weight Loss Progress</div>
-                  <div className="h-3 bg-[rgba(255,255,255,0.04)] rounded-full mt-2 overflow-hidden">
-                    <div
-                      className="h-3 rounded-full"
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          Math.round((doneTopics / (totalTopics || 1)) * 100)
-                        )}%`,
-                        background: "linear-gradient(90deg,#00ffd1,#a13bff)",
-                      }}
-                    />
+              {/* 🔥 HOLO VERTICAL BAR (updated colors) */}
+              <div
+                className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              {/* 🔥 HOLO HORIZONTAL BAR (updated colors) */}
+              <div
+                className="absolute bottom-0 left-0  w-full h-[4px] "
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              <h4 className="text-lg font-bold mb-1 flex items-center gap-2">
+                🏋 Fitness Command
+              </h4>
+
+              {(() => {
+                // --- LOAD ALL KEYS EXACTLY LIKE gym.jsx ---
+                const logs = JSON.parse(
+                  localStorage.getItem("wd_gym_logs") || "{}"
+                );
+                const overrides = JSON.parse(
+                  localStorage.getItem("wd_weight_overrides") || "{}"
+                );
+                const bmiLogs = JSON.parse(
+                  localStorage.getItem("bmi_logs") || "[]"
+                );
+
+                const goals = JSON.parse(
+                  localStorage.getItem("wd_goals") || "{}"
+                );
+                const target = Number(goals?.targetWeight || 0);
+
+                const start =
+                  Number(localStorage.getItem("wd_start_weight")) || null;
+
+                // get today's date
+                const today = new Date();
+                const dateKey = today.toISOString().slice(0, 10);
+
+                // extract today's logged values
+                const todayLog = logs[dateKey] || {};
+
+                // EXACT SAME currentWeight logic as gym.jsx
+                const recentWeights = bmiLogs
+                  .map((e) => e?.weight)
+                  .filter((w) => typeof w === "number");
+
+                const inferredStart = recentWeights.length
+                  ? Math.max(...recentWeights.slice(-30))
+                  : todayLog.weight ?? target;
+
+                const effectiveStart = start ?? inferredStart;
+
+                const curWeight =
+                  overrides[dateKey] ??
+                  todayLog.weight ??
+                  recentWeights.slice().reverse()[0] ??
+                  effectiveStart;
+
+                // Height (your height 5.8ft = 176.78cm = 1.7678m)
+                const height = 1.7678;
+                const bmi = curWeight
+                  ? (curWeight / (height * height)).toFixed(1)
+                  : "—";
+
+                // PROGRESS
+                const totalNeeded = effectiveStart - target;
+                const lost = effectiveStart - curWeight;
+                const pct =
+                  totalNeeded > 0
+                    ? Math.min(100, ((lost / totalNeeded) * 100).toFixed(1))
+                    : 0;
+
+                return (
+                  <div className="space-y-3">
+                    <div className="text-sm opacity-75">
+                      Current weight, target weight & BMI
+                    </div>
+
+                    {/* PROGRESS BAR */}
+                    <div>
+                      <div className="text-xs opacity-70">
+                        Lost {lost.toFixed(1)}kg / {totalNeeded.toFixed(1)}kg
+                      </div>
+
+                      <div className="h-3 bg-white/5 rounded-full mt-1 overflow-hidden">
+                        <div
+                          className="h-3 rounded-full"
+                          style={{
+                            width: `${pct}%`,
+                            background:
+                              "linear-gradient(90deg,#00ffd1,#56ccff,#a13bff)",
+                            boxShadow: "0 0 8px #00ffd1",
+                            transition: "width .4s",
+                          }}
+                        />
+                      </div>
+
+                      <div className="text-xs opacity-60 mt-1">
+                        {pct}% done
+                        <span className="pl-6">6x / Week</span>
+                      </div>
+                    </div>
+
+                    {/* CURRENT / TARGET / BMI */}
+                    <div className="grid grid-cols-3 gap-1 text-center mt-1">
+                      <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                        <div className="text-sm font-semibold">
+                          {curWeight}kg
+                        </div>
+                        <div className="text-[10px] opacity-70">Current</div>
+                      </div>
+
+                      <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                        <div className="text-sm font-semibold">{target}kg</div>
+                        <div className="text-[10px] opacity-70">Target</div>
+                      </div>
+
+                      <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                        <div className="text-sm font-semibold">{bmi}</div>
+                        <div className="text-[10px] opacity-70">BMI</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs opacity-60 mt-1">
-                    {doneTopics} done • goal: {totalTopics || "—"}
-                  </div>
-                </div>
-                <div className="w-20 text-center">
-                  <div className="text-sm font-semibold">6x / wk</div>
-                  <div className="text-xs opacity-60">Gym</div>
-                </div>
-              </div>
+                );
+              })()}
             </motion.div>
           </div>
 
           {/* Right Column — Routine + Dream Board */}
           <div className="space-y-6">
             <motion.div
-              whileHover={{ y: -6 }}
-              className="rounded-2xl p-5 border border-[rgba(255,255,255,0.02)] bg-card/40 backdrop-blur-lg shadow-lg"
+              whileHover={{ y: -4 }}
+              className="rounded-xl p-5 border border-white/5 bg-[rgba(15,20,30,0.45)]
+             backdrop-blur-xl shadow-lg relative overflow-hidden"
             >
-              <h4 className="text-lg font-bold mb-2 flex items-center gap-2">
+              {/* 🔥 HOLO VERTICAL BAR (updated colors) */}
+              <div
+                className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              {/* 🔥 HOLO HORIZONTAL BAR (updated colors) */}
+              <div
+                className="absolute bottom-0 left-0  w-full h-[4px] "
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              <h4 className="relative z-10 text-lg font-bold mb-2 flex items-center gap-2">
                 ⏱ Daily Routine
               </h4>
-              <div className="text-sm opacity-70">
-                5:30 AM — Wake • 6:00–7:45 — Gym • 9:30–19:00 — Office •
-                20:30–23:30 — Coding • 23:30–00:30 — Journal
+
+              <div className="relative z-10 text-sm opacity-80 leading-relaxed">
+                <div>5:30 — Wake</div>
+                <div>6:00–7:45 — Gym</div>
+                <div>9:30–07:00 — Office</div>
+                <div>08:30–11:30 — Coding (JS + DSA)</div>
+                <div>11:30–12:30 — Journal + Plan</div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-md p-2 bg-muted/10 border">
+
+              <div className="relative z-10 mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
                   Morning Focus
                 </div>
-                <div className="rounded-md p-2 bg-muted/10 border">
+                <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
                   Night Deep Work
                 </div>
-                <div className="rounded-md p-2 bg-muted/10 border">
+                <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
                   Weekly Review
                 </div>
-                <div className="rounded-md p-2 bg-muted/10 border">
+                <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
                   Portfolio Sprint
                 </div>
               </div>
             </motion.div>
-
+            {/* Dream Borad*/}
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="rounded-2xl p-5 border border-[rgba(255,255,255,0.02)] bg-card/40 backdrop-blur-lg shadow-lg"
+              transition={{ duration: 0 }} // prevents re-render
+              className="rounded-xl p-3 border border-white/5 bg-[rgba(15,20,30,0.45)]
+             backdrop-blur-xl shadow-lg relative overflow-hidden"
             >
-              <h4 className="text-lg font-bold mb-2">🌌 Dream Board</h4>
-              <div className="flex gap-2">
-                <div className="flex-1 rounded-md p-3 bg-muted/8 text-xs">
-                  Live in NZ • Nature • Calm life
-                </div>
-                <div className="flex-1 rounded-md p-3 bg-muted/8 text-xs">
-                  Senior Dev • Freedom • Salary
-                </div>
+              {/* 🔥 HOLO VERTICAL BAR */}
+              <div
+                className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              {/* 🔥 HOLO HORIZONTAL BAR */}
+              <div
+                className="absolute bottom-0 left-0 w-full h-[4px]"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
+                  boxShadow:
+                    "0 0 5px rgba(34,211,238,0.9), 0 0 35px rgba(134,239,172,0.8)",
+                  opacity: 0.95,
+                }}
+              />
+
+              <h4 className="text-lg font-bold">🌌 Dream Board</h4>
+
+              {/* ⭐ MUST WRAP SWIPER IN HEIGHT CONTAINER */}
+              <div className="relative min-h-[170px] z-10">
+                <DreamBoardSwiper />
               </div>
             </motion.div>
           </div>
