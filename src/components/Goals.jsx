@@ -465,18 +465,32 @@ export default function Goals() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT: MERN card container (stacked panels) */}
-          <div className="relative">
+          <motion.div
+            className="relative"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={(e, info) => handleDragEnd(info)}
+            whileHover={{ scale: 1.01 }} // same hover as NZ
+            style={{ transform: "translateZ(0)" }} // prevents blur issue
+          >
             <div
-              className="relative rounded-2xl border border-[rgba(150,255,230,0.06)] bg-[linear-gradient(135deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] backdrop-blur-md p-5 shadow-xl"
+              className="relative rounded-2xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
+              backdrop-blur-md p-5 shadow-xl"
               style={{
                 transformStyle: "preserve-3d",
                 minHeight: 420,
                 overflow: "hidden",
                 boxShadow:
-                  "0 20px 60px rgba(6,20,30,0.6), inset 0 1px 0 rgba(255,255,255,0.02)",
+                  "0 0 25px rgba(0,255,210,0.08), inset 0 0 10px rgba(255,255,255,0.04)",
+
                 position: "relative",
               }}
             >
+              <div
+                className="absolute left-0 top-0 h-full w-[4px]
+                bg-gradient-to-b from-blue-300 via-cyan-400 to-green-300 opacity-70 blur-[1px]"
+              />
+
               {/* neon corner brackets */}
               <div className="absolute -top-4 -left-4 w-12 h-12 border-t border-l border-[rgba(60,240,210,0.08)] rounded-bl-xl" />
               <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b border-r border-[rgba(255,80,140,0.06)] rounded-tr-xl" />
@@ -608,7 +622,7 @@ export default function Goals() {
 
                       {/* Middle: Holographic timeline bar + snapshot */}
                       {/* Middle Section — redesigned for clean spacing */}
-                      <div className="mt-8 w-full">
+                      <div className="mt-3 w-full">
                         {/* TIMELINE TITLE */}
                         <div className="text-sm opacity-80 mb-2">Timeline</div>
 
@@ -653,8 +667,8 @@ export default function Goals() {
                         </div>
 
                         {/* SNAPSHOT PANEL — smaller & right aligned */}
-                        <div className=" mt-6 flex justify-end border border-white/10 rounded-xl">
-                          <div className=" w-56 bg-card/30 p-4 backdrop-blur">
+                        <div className=" mt-4 flex justify-center align-center p-2 backdrop-blur border border-white/10 rounded-xl">
+                          <div className=" w-52 bg-card/30 p-4 backdrop-blur rounded-xl flex justify-end align-end  flex-col">
                             <div className="text-xs opacity-70 mb-1">
                               Snapshot
                             </div>
@@ -674,23 +688,23 @@ export default function Goals() {
                                 : "—"}
                             </div>
                           </div>
+                          {/* Bottom: Days remaining center */}
+                          <div className="mt-4 text-center">
+                            <div className="text-sm opacity-80">
+                              Days Remaining
+                            </div>
+                            <div className="text-3xl font-bold mt-1">
+                              {daysRemaining !== null ? daysRemaining : "—"}
+                            </div>
+                            <div className="text-xs text-muted-foreground/70 mt-1 whitespace-nowrap">
+                              Weeks: {Math.ceil((daysRemaining || 0) / 7)} •
+                              Months: {Math.ceil((daysRemaining || 0) / 30)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-
                       {/* Spacer */}
                       <div style={{ flex: 1 }} />
-
-                      {/* Bottom: Days remaining center */}
-                      <div className="mt-4 text-center">
-                        <div className="text-sm opacity-80">Days Remaining</div>
-                        <div className="text-3xl font-bold mt-1">
-                          {daysRemaining !== null ? daysRemaining : "—"}
-                        </div>
-                        <div className="text-xs text-muted-foreground/70 mt-1">
-                          Weeks: {Math.ceil((daysRemaining || 0) / 7)} • Months:{" "}
-                          {Math.ceil((daysRemaining || 0) / 30)}
-                        </div>
-                      </div>
                     </div>
                   )}
 
@@ -706,7 +720,7 @@ export default function Goals() {
                       <div
                         className="absolute left-0 top-0 h-full w-[4px]
                         bg-gradient-to-b from-teal-300 via-cyan-300 to-purple-400
-                        opacity-60 blur-[1px]"
+                        opacity-60 blur-[1px] rounded-xl mr-2"
                       />
 
                       {/* HEADER */}
@@ -774,8 +788,8 @@ export default function Goals() {
                       {/* HOLOGRAPHIC SIDEBAR */}
                       <div
                         className="absolute left-0 top-0 h-full w-[4px]
-      bg-gradient-to-b from-purple-400 via-indigo-400 to-blue-400
-      opacity-60 blur-[1px]"
+                          bg-gradient-to-b from-purple-400 via-indigo-400 to-blue-400
+                          opacity-60 blur-[1px] rounded mr-2"
                       />
 
                       {/* HEADER */}
@@ -845,7 +859,7 @@ export default function Goals() {
                       <div
                         className="absolute left-0 top-0 h-full w-[4px]
                         bg-gradient-to-b from-red-400 via-orange-400 to-yellow-400
-                        opacity-60 blur-[1px]"
+                        opacity-60 blur-[1px] rounded mr-2"
                       />
 
                       {/* HEADER */}
@@ -967,7 +981,7 @@ export default function Goals() {
                 )}
               </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
 
           {/* Middle Column — NZ Migration + Fitness */}
           <div className="space-y-6">
