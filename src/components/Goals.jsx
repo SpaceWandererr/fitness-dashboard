@@ -142,8 +142,7 @@ const dreamCards = [
   - Fade + slide (enter/exit)
   - Drag support
 ---------------------------*/
-function FadeSwiper({ data = [], render,noDrag =   
-  false,innerDrag = true }) {
+function FadeSwiper({ data = [], render, noDrag = false, innerDrag = true }) {
   const [[idx, dir], setIdx] = useState([0, 0]);
   const safeIdx = ((idx % data.length) + data.length) % data.length;
 
@@ -181,16 +180,15 @@ function FadeSwiper({ data = [], render,noDrag =
   return (
     <motion.div className="relative w-full overflow-hidden select-none">
       <AnimatePresence initial={false} custom={dir}>
-         <motion.div
-           key={idx}
-           custom={dir}
-           variants={variants}
-           initial="enter"
-           animate="center"
-           exit="exit"
-           className="w-full h-full"
-
-           {...(innerDrag && !noDrag
+        <motion.div
+          key={idx}
+          custom={dir}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          className="w-full h-full"
+          {...(innerDrag && !noDrag
             ? {
                 drag: "x",
                 dragElastic: 0.6,
@@ -201,11 +199,10 @@ function FadeSwiper({ data = [], render,noDrag =
                 },
               }
             : {})}
-
-           >
-      {render(data[safeIdx], safeIdx)}
-       </motion.div>
-       </AnimatePresence>
+        >
+          {render(data[safeIdx], safeIdx)}
+        </motion.div>
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -313,19 +310,21 @@ export default function Goals() {
     }
   }
   //Insoirational Quotes
-  const inspoLines = useMemo(() => [
-    "A disciplined mind builds a limitless life — this dashboard is your daily proof.",
-    "Every small step you take here shapes the man you're becoming tomorrow.",
-    "Skill. Fitness. Discipline. Dreams. This is where your future self is born.",
-    "Your goals aren’t wishes — they’re blueprints for the life you’re building brick by brick.",
-    "Focus today, freedom tomorrow. This dashboard shows the path.",
-    "One man. One mission. One relentlessly evolving future.",
-    "The world you want is created by the habits you choose every day.",
-    "Rise sharper. Work smarter. Dream louder. Your transformation begins here.",
-    "Don’t chase motivation — build systems. This dashboard *is* your system.",
-    "The grind is temporary. The life you’re chasing through MERN, fitness and discipline is permanent."
-  ], []);
-  
+  const inspoLines = useMemo(
+    () => [
+      "A disciplined mind builds a limitless life — this dashboard is your daily proof.",
+      "Every small step you take here shapes the man you're becoming tomorrow.",
+      "Skill. Fitness. Discipline. Dreams. This is where your future self is born.",
+      "Your goals aren’t wishes — they’re blueprints for the life you’re building brick by brick.",
+      "Focus today, freedom tomorrow. This dashboard shows the path.",
+      "One man. One mission. One relentlessly evolving future.",
+      "The world you want is created by the habits you choose every day.",
+      "Rise sharper. Work smarter. Dream louder. Your transformation begins here.",
+      "Don’t chase motivation — build systems. This dashboard *is* your system.",
+      "The grind is temporary. The life you’re chasing through MERN, fitness and discipline is permanent.",
+    ],
+    []
+  );
 
   // MERN internal page swipe (keeps original 4-page behavior)
   const [page, setPage] = useState(0);
@@ -478,8 +477,8 @@ export default function Goals() {
       // render MERN full card (same markup + logic as original)
       render: () => (
         <motion.div
-          className="relative rounded-2xl"
-          drag="x"
+        className="relative rounded-2xl w-full max-w-full md:max-w-[500px] mx-auto"
+        drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleDragEnd(info)}
           whileHover={{ scale: 1.01 }}
@@ -493,7 +492,7 @@ export default function Goals() {
         >
           <div
             className="relative rounded-xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-              backdrop-blur-md p-5 shadow-xl min-h-[430px]"
+              backdrop-blur-md p-4 md:p-6 shadow-xl min-h-[380px] md:min-h-[450px]"
             style={{
               transformStyle: "preserve-3d",
               minHeight: 420,
@@ -535,7 +534,7 @@ export default function Goals() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -60, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 220, damping: 28 }}
-                className="absolute inset-0 p-4"
+                className="absolute inset-0 p-4 md:p-4"
               >
                 {/* PAGE 0 — Main redesigned MERN Mastery */}
                 {page === 0 && (
@@ -557,7 +556,7 @@ export default function Goals() {
                       </h3>
                     </div>
 
-                    <div className="flex items-center justify-between w-full gap-2">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between w-full gap-2">
                       <div className="flex flex-col">
                         <div className="text-sm opacity-80">
                           Start: {formatDDMMYYYY(startISO)}
@@ -573,7 +572,7 @@ export default function Goals() {
                         </button>
                       </div>
 
-                      <div className="flex-shrink-0 overflow-visible">
+                      <div className="w-[120px] h-[130px] md:w-[140px] md:h-[150px] flex-shrink-0 overflow-visible">
                         <svg width="140" height="150" viewBox="0 0 200 200">
                           <defs>
                             <linearGradient
@@ -653,7 +652,7 @@ export default function Goals() {
 
                     <div className="w-full">
                       <div className="text-sm opacity-80 mb-2">Timeline</div>
-                      <div className="w-full h-3 bg-white/5 rounded-full relative overflow-hidden">
+                      <div className="w-full h-3 bg-white/5 rounded-full h-2 md:h-3 relative overflow-hidden">
                         <div
                           className="h-3 absolute top-0 left-0 rounded-full"
                           style={{
@@ -671,7 +670,7 @@ export default function Goals() {
                     </div>
 
                     <div className="w-full rounded-xl p-2 backdrop-blur border border-white/10">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1">
                           <div className="text-sm opacity-70">Snapshot</div>
                           <div className="text-base font-semibold">
@@ -1195,9 +1194,9 @@ export default function Goals() {
     {
       render: () => (
         <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        whileHover={{ scale: 1.02 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          whileHover={{ scale: 1.02 }}
           whileHover={{ y: -4 }}
           className="min-h-[260px] rounded-xl p-5 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
@@ -1275,11 +1274,11 @@ export default function Goals() {
     {
       render: () => (
         <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0 }}
-          className="min-h-[210px] rounded-xl p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+          className="min-h-[190px] rounded-xl pl-4 p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
           {/* soft NZ-style holo bars */}
           <div
@@ -1379,19 +1378,18 @@ export default function Goals() {
           </h1>
           {/*QuotesSection*/}
           <div className="mt-1 max-w-2xl mx-auto">
-             <div className="rounded-2xl p-0 bg-[rgba(255,255,255,0.01)] text-center">
-            <FadeSwiper
-             data={inspoLines}
-               render={(line) => (
-               <div className="w-full text-center text-sm md:text-base opacity-85 leading-relaxed px-2 py-1">
-             {line}
-           </div>
-                 )}
-                 noDrag
-               />
-             </div>
-           </div>
-
+            <div className="rounded-2xl p-0 bg-[rgba(255,255,255,0.01)] text-center">
+              <FadeSwiper
+                data={inspoLines}
+                render={(line) => (
+                  <div className="w-full text-center text-sm md:text-base opacity-85 leading-relaxed px-2 py-1">
+                    {line}
+                  </div>
+                )}
+                noDrag
+              />
+            </div>
+          </div>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1405,11 +1403,19 @@ export default function Goals() {
           {/* MIDDLE: NZ (tall) + Fitness (short) */}
           <div className="space-y-3">
             <div className="">
-              <FadeSwiper data={nzWrapper} innerDrag={false} render={(it) => it.render()} />
+              <FadeSwiper
+                data={nzWrapper}
+                innerDrag={false}
+                render={(it) => it.render()}
+              />
             </div>
 
             <div className="">
-              <FadeSwiper data={fitnessWrapper} innerDrag={false} render={(it) => it.render()} />
+              <FadeSwiper
+                data={fitnessWrapper}
+                innerDrag={false}
+                render={(it) => it.render()}
+              />
             </div>
           </div>
 
@@ -1420,7 +1426,11 @@ export default function Goals() {
             </div>
 
             <div className="">
-              <FadeSwiper data={dreamWrapper} innerDrag={false} render={(it) => it.render()} />
+              <FadeSwiper
+                data={dreamWrapper}
+                innerDrag={false}
+                render={(it) => it.render()}
+              />
             </div>
           </div>
         </div>
