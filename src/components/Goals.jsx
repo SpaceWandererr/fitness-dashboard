@@ -477,11 +477,12 @@ export default function Goals() {
       // render MERN full card (same markup + logic as original)
       render: () => (
         <motion.div
-        className="relative rounded-2xl w-full max-w-full md:max-w-[500px] mx-auto"
-        drag="x"
+          className="relative rounded-2xl w-[270px] md:w-full mx-auto lg:p-2"
+          drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleDragEnd(info)}
-          whileHover={{ scale: 1.01 }}
+          // whileHover={{ scale: 1.01 }}
+          whileHover={{ y: -4 }}
           style={{
             transform: "translateZ(0)",
             willChange: "transform, opacity",
@@ -492,7 +493,7 @@ export default function Goals() {
         >
           <div
             className="relative rounded-xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-              backdrop-blur-md p-4 md:p-6 shadow-xl min-h-[380px] md:min-h-[450px]"
+              backdrop-blur-md p-4 md:p-2 shadow-xl "
             style={{
               transformStyle: "preserve-3d",
               minHeight: 420,
@@ -710,7 +711,8 @@ export default function Goals() {
                     className="w-full h-full relative flex flex-col p-3"
                     variants={tiltVariants}
                     initial="initial"
-                    whileHover="hover"
+                    // whileHover="hover"
+                    whileHover={{ y: -4 }}
                   >
                     <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-teal-300 via-cyan-300 to-purple-400 opacity-60 blur-none rounded-xl mr-2" />
                     <div className="flex items-center justify-between mb-4">
@@ -763,7 +765,8 @@ export default function Goals() {
                     className="w-full h-full relative flex flex-col p-3"
                     variants={tiltVariants}
                     initial="initial"
-                    whileHover="hover"
+                    // whileHover="hover"
+                    whileHover={{ y: -4 }}
                   >
                     <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-purple-400 via-indigo-400 to-blue-400 opacity-60 blur-none rounded mr-2" />
                     <div className="flex items-center justify-between mb-4">
@@ -818,7 +821,8 @@ export default function Goals() {
                     className="w-full h-full relative flex flex-col p-3"
                     variants={tiltVariants}
                     initial="initial"
-                    whileHover="hover"
+                    // whileHover="hover"
+                    whileHover={{ y: -4 }}
                   >
                     <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-red-400 via-orange-400 to-yellow-400 opacity-60 blur-none rounded mr-2" />
                     <div className="flex items-center justify-between mb-4">
@@ -993,8 +997,9 @@ export default function Goals() {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleNZDrag(info)}
-          whileHover={{ scale: 1.01 }}
-          className="rounded-xl p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
+          // whileHover={{ scale: 1.01 }}
+          whileHover={{ y: -4 }}
+          className="rounded-xl lg:p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px] "
           style={{
             transform: "translateZ(0)",
             willChange: "transform, opacity",
@@ -1006,7 +1011,8 @@ export default function Goals() {
           }}
         >
           <div
-            className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
+            className="absolute left-0 top-0 h-full w-[4px] lg:rounded-r-lg border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
+              backdrop-blur-md "
             style={{
               background:
                 "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
@@ -1071,7 +1077,8 @@ export default function Goals() {
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          whileHover={{ scale: 1.02 }}
+          // whileHover={{ scale: 1.02 }}
+          whileHover={{ y: -4 }}
           className=" min-h-[230px] relative rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg overflow-hidden"
         >
           {/* soft NZ-style holo bars (50% softer glow) */}
@@ -1196,7 +1203,7 @@ export default function Goals() {
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          whileHover={{ scale: 1.02 }}
+          // whileHover={{ scale: 1.02 }}
           whileHover={{ y: -4 }}
           className="min-h-[260px] rounded-xl p-5 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
@@ -1276,7 +1283,8 @@ export default function Goals() {
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          whileHover={{ scale: 1.02 }}
+          // whileHover={{ scale: 1.02 }}
+          whileHover={{ y: -4 }}
           transition={{ duration: 0 }}
           className="min-h-[190px] rounded-xl pl-4 p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
@@ -1346,23 +1354,26 @@ export default function Goals() {
   ---------------------------*/
 
   return (
-    <div className=" w-full min-h-screen relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl -mt-4">
+    <div
+      className="w-full   min-h-[calc(100vh-var(--nav-height)-45px)]
+      relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl "
+    >
       {/* subtle background holographic grid */}
-      <div className="absolute inset-0 -z-10">
+      <div className=" absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgba(6,30,26,0.18)] via-[rgba(6,18,30,0.12)] to-[rgba(112,14,30,0.06)]" />
         <div className="absolute inset-0 animate-grid move-grid" />
       </div>
 
-      <header className="max-w-6xl mx-auto px-6 py-2 flex items-center justify-between">
+      <header className="mb-2 max-w-6xl mx-auto px-6 pb-2 flex items-center justify-between">
         <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-emerald-400 tracking-tight whitespace-nowrap hover:tracking-wider transition-all duration-300">
           JAY SINH THAKUR
         </div>
       </header>
 
       {/* Main Content Section */}
-      <main className="max-w-6xl mx-auto px-6 pb-20">
+      <main className="max-w-6xl mx-auto px-2 pb-1">
         <section
-          className="mb-8 transform-gpu"
+          className="mb-4 transform-gpu"
           style={{ transform: `translateZ(40px)` }}
         >
           <h1
@@ -1392,51 +1403,53 @@ export default function Goals() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* LEFT: MERN (tall) */}
-          <div className="space-y-3">
-            <div className="">
+        {/* Page One */}
+        <section>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* LEFT: MERN (tall) */}
+            <div className="space-y-3 min-h-[520px]">
               <FadeSwiper data={mernWrapper} render={(it) => it.render()} />
             </div>
-          </div>
 
-          {/* MIDDLE: NZ (tall) + Fitness (short) */}
-          <div className="space-y-3">
-            <div className="">
+            {/* MIDDLE: NZ (tall) + Fitness (short) */}
+            <div className="space-y-3">
               <FadeSwiper
                 data={nzWrapper}
                 innerDrag={false}
                 render={(it) => it.render()}
               />
+
+              <div className="">
+                <FadeSwiper
+                  data={fitnessWrapper}
+                  innerDrag={false}
+                  render={(it) => it.render()}
+                />
+              </div>
             </div>
 
-            <div className="">
-              <FadeSwiper
-                data={fitnessWrapper}
-                innerDrag={false}
-                render={(it) => it.render()}
-              />
+            {/* RIGHT: Routine + Dream (shorter) */}
+            <div className="space-y-3">
+              <div className="">
+                <FadeSwiper
+                  data={routineWrapper}
+                  render={(it) => it.render()}
+                />
+              </div>
+
+              <div className="">
+                <FadeSwiper
+                  data={dreamWrapper}
+                  innerDrag={false}
+                  render={(it) => it.render()}
+                />
+              </div>
             </div>
           </div>
-
-          {/* RIGHT: Routine + Dream (shorter) */}
-          <div className="space-y-3">
-            <div className="">
-              <FadeSwiper data={routineWrapper} render={(it) => it.render()} />
-            </div>
-
-            <div className="">
-              <FadeSwiper
-                data={dreamWrapper}
-                innerDrag={false}
-                render={(it) => it.render()}
-              />
-            </div>
-          </div>
-        </div>
+        </section>
 
         {/* Footer CTA (unchanged) */}
-        <section className="mt-10">
+        <section className="mt-1 ">
           <div className="rounded-2xl p-6 border border-[rgba(255,255,255,0.02)] bg-[linear-gradient(90deg,rgba(255,255,255,0.01),rgba(255,255,255,0.00))] backdrop-blur-lg">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
