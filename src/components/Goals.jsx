@@ -215,14 +215,14 @@ export default function Goals() {
 
   // Read syllabus totals live
   const [syllabusTree, setSyllabusTree] = useState(
-    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
+    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
   );
 
   useEffect(() => {
     const onStorage = (e) => {
       if (!e || e.key === SYLLABUS_KEY) {
         setSyllabusTree(
-          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
+          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
         );
       }
     };
@@ -253,10 +253,10 @@ export default function Goals() {
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
   const [startISO, setStartISO] = useState(
-    () => localStorage.getItem(START_KEY) || todayISO
+    () => localStorage.getItem(START_KEY) || todayISO,
   );
   const [endISO, setEndISO] = useState(
-    () => localStorage.getItem(END_KEY) || DEFAULT_END
+    () => localStorage.getItem(END_KEY) || DEFAULT_END,
   );
 
   useEffect(() => {
@@ -274,7 +274,7 @@ export default function Goals() {
   // Derived date metrics
   const startDate = useMemo(
     () => (startISO ? new Date(startISO) : null),
-    [startISO]
+    [startISO],
   );
   const endDate = useMemo(() => (endISO ? new Date(endISO) : null), [endISO]);
   const now = new Date();
@@ -323,7 +323,7 @@ export default function Goals() {
       "Don’t chase motivation — build systems. This dashboard *is* your system.",
       "The grind is temporary. The life you’re chasing through MERN, fitness and discipline is permanent.",
     ],
-    []
+    [],
   );
 
   // MERN internal page swipe (keeps original 4-page behavior)
@@ -360,7 +360,7 @@ export default function Goals() {
   // Date popup & tmp state
   const [showDatePopup, setShowDatePopup] = useState(false);
   const [tmpStart, setTmpStart] = useState(() =>
-    startISO ? startISO : todayISO
+    startISO ? startISO : todayISO,
   );
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
@@ -987,7 +987,7 @@ export default function Goals() {
         items: ["Work visa", "Move to NZ", "Apply for residency"],
       },
     ],
-    []
+    [],
   );
 
   const nzWrapper = [
@@ -999,7 +999,7 @@ export default function Goals() {
           onDragEnd={(e, info) => handleNZDrag(info)}
           // whileHover={{ scale: 1.01 }}
           whileHover={{ y: -4 }}
-          className="rounded-xl lg:p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px] "
+          className="rounded-xl lg:p-5 p-4 border border-[rgba(0,240,210,0.06)]   bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
           style={{
             transform: "translateZ(0)",
             willChange: "transform, opacity",
@@ -1110,13 +1110,13 @@ export default function Goals() {
           {(() => {
             // original gym logic from your provided file (kept intact)
             const logs = JSON.parse(
-              localStorage.getItem("wd_gym_logs") || "{}"
+              localStorage.getItem("wd_gym_logs") || "{}",
             );
             const overrides = JSON.parse(
-              localStorage.getItem("wd_weight_overrides") || "{}"
+              localStorage.getItem("wd_weight_overrides") || "{}",
             );
             const bmiLogs = JSON.parse(
-              localStorage.getItem("bmi_logs") || "[]"
+              localStorage.getItem("bmi_logs") || "[]",
             );
             const goals = JSON.parse(localStorage.getItem("wd_goals") || "{}");
             const target = Number(goals?.targetWeight || 0);
@@ -1130,7 +1130,7 @@ export default function Goals() {
               .filter((w) => typeof w === "number");
             const inferredStart = recentWeights.length
               ? Math.max(...recentWeights.slice(-30))
-              : todayLog.weight ?? target;
+              : (todayLog.weight ?? target);
             const effectiveStart = start ?? inferredStart;
             const curWeight =
               overrides[dateKey] ??
