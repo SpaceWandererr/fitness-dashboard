@@ -9,11 +9,6 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: [".replit.dev", ".repl.co"],
 
-    hmr: {
-      clientPort: 443,
-      host: "0.0.0.0",
-    },
-
     watch: {
       usePolling: true,
     },

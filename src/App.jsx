@@ -8,6 +8,7 @@ import Planner from "./components/Planner.jsx";
 import Gallery from "./components/Gallery.jsx";
 import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
+import Test from "./components/test.jsx";
 import HomeFuturisticDashboard from "./components/HomeFuturisticDashboard.jsx";
 
 import { load, save } from "./utils/localStorage.js";
@@ -151,6 +152,7 @@ export default function App() {
           {/* other pages */}
           <Route path="/syllabus" element={<Syllabus />} />
           <Route path="/gym" element={<Gym />} />
+          <Route path="/test" element={<Test />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/gallery" element={<Gallery />} />
@@ -174,6 +176,7 @@ const links = [
   { to: "/", label: "HOME" }, // fixed
   { to: "/syllabus", label: "STUDY" },
   { to: "/gym", label: "GYM" },
+  { to: "/test", label: "TEST" },
   { to: "/calendar", label: "CALENDAR" },
   { to: "/planner", label: "PLANNER" },
   { to: "/goals", label: "GOALS" },
@@ -196,32 +199,3 @@ function NavLink({ to, children, current }) {
   );
 }
 
-/* ---------- Dashboard ---------- */
-function ModernDashboard({ accent }) {
-  const cards = [
-    { title: "Planner", desc: "Organize your daily tasks efficiently." },
-    { title: "Gym", desc: "Track workouts and progress." },
-    { title: "Syllabus", desc: "Learn MERN + DSA with milestones." },
-    { title: "Goals", desc: "Pomodoro timer for deep work." },
-    { title: "Test", desc: "Sharpen your JS + DSA skills." },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      {cards.map((card) => (
-        <div
-          key={card.title}
-          className="rounded-xl bg-[#00224D]/80 backdrop-blur-md p-6 border border-gray-800 shadow-md hover:shadow-[0_0_20px_hsl(var(--accent)/0.25)] hover:-translate-y-[2px] transition-all duration-300"
-        >
-          <h3
-            className="font-semibold text-lg mb-2"
-            style={{ color: `hsl(${accent})` }}
-          >
-            {card.title}
-          </h3>
-          <p className="text-sm text-gray-400">{card.desc}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
