@@ -3,22 +3,22 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-
   server: {
-    host: true,
+    host: "0.0.0.0",
     port: 5173,
+    strictPort: true,
+    allowedHosts: ["*"],
 
-    // Allow ALL hosts (best for Replit dynamic URLs)
-    allowedHosts: true,
+    hmr: {
+      clientPort: 443,
+      host: "0.0.0.0",
+    },
 
-    // Fix HMR / live reload issues in Replit
     watch: {
       usePolling: true,
     },
   },
-
   preview: {
-    port: 5173,
-    allowedHosts: true,
+    allowedHosts: ["*"],
   },
 });
