@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { load, save } from "../utils/localStorage";
 import { useNavigate } from "react-router-dom";
-import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import "../styles/animations.css"; // MUST come after
 import { Briefcase, HeartPulse, Globe, Map, Target, Brain } from "lucide-react";
@@ -211,8 +210,6 @@ function FadeSwiper({ data = [], render, noDrag = false, innerDrag = true }) {
   MAIN COMPONENT
 ---------------------------*/
 export default function Goals() {
-  const navigate = useNavigate();
-
   // Read syllabus totals live
   const [syllabusTree, setSyllabusTree] = useState(
     () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
@@ -1355,7 +1352,7 @@ export default function Goals() {
 
   return (
     <div
-      className="w-full   min-h-[calc(100vh-var(--nav-height)-45px)]
+      className="w-full 
       relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl "
     >
       {/* subtle background holographic grid */}
@@ -1404,7 +1401,7 @@ export default function Goals() {
         </section>
 
         {/* Page One */}
-        <section>
+        <section class="min-h-[calc(100vh-var(--nav-height)-45px)] min-w-screen">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* LEFT: MERN (tall) */}
             <div className="space-y-3 min-h-[520px]">
@@ -1437,6 +1434,530 @@ export default function Goals() {
               />
             </div>
           </div>
+        </section>
+
+        {/* Page Two */}
+        {/* =====================================================
+           SECTION TWO — NZ MIGRATION TIMELINE ROADMAP (STYLE 1)
+           Teal/Cyan Vertical Roadmap — min-h-screen
+        ====================================================== */}
+        <section className="min-h-screen w-full py-16 px-6 relative">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[rgba(6,30,26,0.12)] to-[rgba(0,0,0,0.2)] pointer-events-none" />
+
+          {/* Header */}
+          <div className="relative text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-cyan-300 drop-shadow-[0_0_12px_rgba(34,211,238,0.4)]">
+              🇳🇿 NZ Migration Roadmap
+            </h2>
+            <p className="text-sm opacity-80 mt-2 max-w-xl mx-auto">
+              A clear, step-by-step migration plan visualized as a glowing
+              vertical journey.
+            </p>
+          </div>
+
+          <div className="relative max-w-4xl mx-auto">
+            {/* Vertical glowing line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] bg-cyan-300/40 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+
+            {/* === STEP 1 === */}
+            <div className="relative mb-20 flex items-start gap-6">
+              {/* Dot */}
+              <div className="absolute left-1/2 -ml-4 w-8 h-8 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+
+              {/* Content left */}
+              <div className="w-1/2 pr-10 text-right">
+                <h3 className="text-2xl font-bold text-emerald-300">
+                  📘 Step 1 — Skills
+                </h3>
+                <p className="text-sm opacity-80 mt-2">
+                  MERN mastery, portfolio, DSA, soft skills, and communication
+                  training.
+                </p>
+              </div>
+              <div className="w-1/2" />
+            </div>
+
+            {/* === STEP 2 === */}
+            <div className="relative mb-20 flex items-start gap-6">
+              <div className="absolute left-1/2 -ml-4 w-8 h-8 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+
+              <div className="w-1/2" />
+              <div className="w-1/2 pl-10">
+                <h3 className="text-2xl font-bold text-cyan-300">
+                  📄 Step 2 — Documents
+                </h3>
+                <p className="text-sm opacity-80 mt-2">
+                  Passport, IELTS, police clearance, skills assessment, NZ
+                  resume.
+                </p>
+              </div>
+            </div>
+
+            {/* === STEP 3 === */}
+            <div className="relative mb-20 flex items-start gap-6">
+              <div className="absolute left-1/2 -ml-4 w-8 h-8 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+
+              <div className="w-1/2 pr-10 text-right">
+                <h3 className="text-2xl font-bold text-blue-300">
+                  💼 Step 3 — Job
+                </h3>
+                <p className="text-sm opacity-80 mt-2">
+                  Apply to AEWV employers, remote interviews, portfolio
+                  improvements.
+                </p>
+              </div>
+              <div className="w-1/2" />
+            </div>
+
+            {/* === STEP 4 === */}
+            <div className="relative mb-20 flex items-start gap-6">
+              <div className="absolute left-1/2 -ml-4 w-8 h-8 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+
+              <div className="w-1/2" />
+              <div className="w-1/2 pl-10">
+                <h3 className="text-2xl font-bold text-purple-300">
+                  💰 Step 4 — Finance
+                </h3>
+                <p className="text-sm opacity-80 mt-2">
+                  ₹4–6L savings, visa fee, flight budget, accommodation fund.
+                </p>
+              </div>
+            </div>
+
+            {/* === STEP 5 === */}
+            <div className="relative mb-20 flex items-start gap-6">
+              <div className="absolute left-1/2 -ml-4 w-8 h-8 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+
+              <div className="w-1/2 pr-10 text-right">
+                <h3 className="text-2xl font-bold text-pink-300">
+                  🛂 Step 5 — Visa
+                </h3>
+                <p className="text-sm opacity-80 mt-2">
+                  Employer-assisted AEWV visa, medicals, biometrics, approval
+                  wait.
+                </p>
+              </div>
+              <div className="w-1/2" />
+            </div>
+
+            {/* === STEP 6 === */}
+            <div className="relative mb-10 flex items-start gap-6">
+              <div className="absolute left-1/2 -ml-4 w-8 h-8 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+
+              <div className="w-1/2" />
+              <div className="w-1/2 pl-10">
+                <h3 className="text-2xl font-bold text-yellow-300">
+                  🏡 Step 6 — Settle
+                </h3>
+                <p className="text-sm opacity-80 mt-2">
+                  Find house, open bank account, IRD number, SIM card, residency
+                  path.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-xs text-center opacity-40 mt-10">
+            Scroll up your journey, scroll down your future — NZ timeline
+            complete.
+          </div>
+        </section>
+
+        {/* =====================================================
+           SECTION TWO — NZ MASTER CHAPTERS (STYLE 2)
+           Clean, Full-width Glass Chapters — min-h-screen
+        ====================================================== */}
+        <section className="min-h-screen w-full py-16 px-6 relative">
+          {/* Background */}
+          <div className="absolute inset-0 opacity-20 bg-gradient-to-b from-[rgba(6,30,26,0.18)] to-[rgba(0,0,0,0.3)] pointer-events-none" />
+
+          {/* MAIN TITLE */}
+          <div className="relative text-center mb-16">
+            <h2 className="text-5xl font-extrabold text-cyan-300 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+              🇳🇿 NZ Migration Master Guide
+            </h2>
+            <p className="text-sm opacity-75 max-w-xl mx-auto mt-3">
+              A clean, elegant, chapter-based breakdown of your entire migration
+              journey.
+            </p>
+          </div>
+
+          {/* ===========================
+              CHAPTER 01
+          ============================ */}
+          <div className="relative mb-20">
+            {/* Top Glow Line */}
+            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent mb-6" />
+
+            <h3 className="text-3xl font-bold text-emerald-300">
+              CHAPTER 01 — Skills Foundation
+            </h3>
+            <p className="text-base opacity-85 mt-4 max-w-3xl">
+              You build your base here — MERN mastery, DSA strength,
+              communication, system design basics, and portfolio projects. This
+              chapter makes you eligible for NZ tech hiring.
+            </p>
+
+            <ul className="mt-6 text-sm opacity-80 space-y-2 pl-3">
+              <li>• Full MERN stack mastery</li>
+              <li>• 2–3 real portfolio projects</li>
+              <li>• DSA + problem solving</li>
+              <li>• Docker, Git, basic CI/CD</li>
+              <li>• English fluency + interview confidence</li>
+            </ul>
+          </div>
+
+          {/* ===========================
+              CHAPTER 02
+          ============================ */}
+          <div className="relative mb-20">
+            <div className="w-full h-[1px] bg-white/10 mb-6" />
+
+            <h3 className="text-3xl font-bold text-cyan-300">
+              CHAPTER 02 — Documentation
+            </h3>
+            <p className="text-base opacity-85 mt-4 max-w-3xl">
+              Your identity, professional credibility, and legal eligibility all
+              depend on this chapter.
+            </p>
+
+            <ul className="mt-6 text-sm opacity-80 space-y-2 pl-3">
+              <li>• Passport + PCC</li>
+              <li>• IELTS (General)</li>
+              <li>• NZ Style Resume & Cover Letter</li>
+              <li>• Skills Assessment for tech profile</li>
+            </ul>
+          </div>
+
+          {/* ===========================
+              CHAPTER 03
+          ============================ */}
+          <div className="relative mb-20">
+            <div className="w-full h-[1px] bg-white/10 mb-6" />
+
+            <h3 className="text-3xl font-bold text-blue-300">
+              CHAPTER 03 — Job Preparation
+            </h3>
+            <p className="text-base opacity-85 mt-4 max-w-3xl">
+              The most important chapter — finding an employer who is AEWV
+              accredited.
+            </p>
+
+            <ul className="mt-6 text-sm opacity-80 space-y-2 pl-3">
+              <li>• Apply to NZ tech companies</li>
+              <li>• Interview practice + coding tests</li>
+              <li>• LinkedIn + GitHub enhancement</li>
+              <li>• Track job applications</li>
+              <li>• Get employer interest/job offer</li>
+            </ul>
+          </div>
+
+          {/* ===========================
+              CHAPTER 04
+          ============================ */}
+          <div className="relative mb-20">
+            <div className="w-full h-[1px] bg-white/10 mb-6" />
+
+            <h3 className="text-3xl font-bold text-purple-300">
+              CHAPTER 04 — Financial Readiness
+            </h3>
+            <p className="text-base opacity-85 mt-4 max-w-3xl">
+              Moving abroad needs a stable financial base. NZ requires secure
+              funds.
+            </p>
+
+            <ul className="mt-6 text-sm opacity-80 space-y-2 pl-3">
+              <li>• Minimum ₹4–6 Lakhs savings</li>
+              <li>• Visa + tickets + documentation cost</li>
+              <li>• Accommodation for 1 month</li>
+              <li>• Emergency buffer for safety</li>
+            </ul>
+          </div>
+
+          {/* ===========================
+              CHAPTER 05
+          ============================ */}
+          <div className="relative mb-20">
+            <div className="w-full h-[1px] bg-white/10 mb-6" />
+
+            <h3 className="text-3xl font-bold text-pink-300">
+              CHAPTER 05 — Visa Process
+            </h3>
+            <p className="text-base opacity-85 mt-4 max-w-3xl">
+              The official migration step — AEWV visa, medical clearance, and
+              document uploads.
+            </p>
+
+            <ul className="mt-6 text-sm opacity-80 space-y-2 pl-3">
+              <li>• AEWV Employer-Assisted Visa</li>
+              <li>• Medical exam & biometrics</li>
+              <li>• Document uploads to INZ portal</li>
+              <li>• Visa approval waiting period</li>
+            </ul>
+          </div>
+
+          {/* ===========================
+              CHAPTER 06
+          ============================ */}
+          <div className="relative mb-20">
+            <div className="w-full h-[1px] bg-white/10 mb-6" />
+
+            <h3 className="text-3xl font-bold text-yellow-300">
+              CHAPTER 06 — Arrival & Settlement
+            </h3>
+            <p className="text-base opacity-85 mt-4 max-w-3xl">
+              First 30 days in New Zealand — small steps that make huge
+              difference.
+            </p>
+
+            <ul className="mt-6 text-sm opacity-80 space-y-2 pl-3">
+              <li>• Accommodation & transport</li>
+              <li>• IRD Number</li>
+              <li>• NZ Bank Account</li>
+              <li>• SIM card + transport card</li>
+              <li>• Start residency pathway</li>
+            </ul>
+          </div>
+
+          {/* END NOTE */}
+          <div className="text-center text-xs opacity-40 mt-20">
+            These chapters will soon support checkboxes, progress bars, and
+            auto-saving.
+          </div>
+        </section>
+
+        {/* ===========================================================
+          SECTION TWO — NZ MIGRATION (ENHANCED STYLE 4)
+          Stepper + Active Scroll + Progress Bar + Click Navigation
+        =========================================================== */}
+        <section
+          className="min-h-screen w-full py-14 px-6 relative"
+          id="nz-migration"
+        >
+          <div className="absolute inset-0 opacity-25 bg-gradient-to-b from-[rgba(6,30,26,0.18)] to-[rgba(0,0,0,0.35)] pointer-events-none" />
+
+          {/* React Logic */}
+          {(() => {
+            const [active, setActive] = React.useState(0);
+            const sectionRefs = React.useRef([]);
+            const progressRef = React.useRef(null);
+
+            const steps = [
+              "Skills",
+              "Documents",
+              "Job",
+              "Finance",
+              "Visa",
+              "Settle",
+            ];
+
+            React.useEffect(() => {
+              const onScroll = () => {
+                const scrollPos = window.scrollY + window.innerHeight / 3;
+
+                sectionRefs.current.forEach((el, i) => {
+                  if (!el) return;
+                  const top = el.offsetTop;
+                  const bottom = top + el.offsetHeight;
+                  if (scrollPos >= top && scrollPos < bottom) {
+                    setActive(i);
+                  }
+                });
+
+                // Update progress bar
+                const fullH = document.body.scrollHeight - window.innerHeight;
+                const progress = Math.min(100, (window.scrollY / fullH) * 100);
+                if (progressRef.current) {
+                  progressRef.current.style.width = `${progress}%`;
+                }
+              };
+
+              window.addEventListener("scroll", onScroll);
+              return () => window.removeEventListener("scroll", onScroll);
+            }, []);
+
+            const scrollToStep = (i) => {
+              const el = sectionRefs.current[i];
+              if (!el) return;
+              window.scrollTo({
+                top: el.offsetTop - 80,
+                behavior: "smooth",
+              });
+            };
+
+            return (
+              <>
+                {/* =======================
+                    STICKY STEPPER
+                ======================== */}
+                <div className="sticky top-0 z-50 bg-background/60 backdrop-blur-xl pb-6 pt-4 border-b border-white/10">
+                  {/* Progress Bar */}
+                  <div className="relative w-full h-[4px] bg-white/10 rounded">
+                    <div
+                      ref={progressRef}
+                      className="absolute top-0 left-0 h-full bg-cyan-300 rounded transition-all duration-200 shadow-[0_0_12px_rgba(34,211,238,0.8)]"
+                    />
+                  </div>
+
+                  {/* Stepper */}
+                  <div className="mt-6 relative max-w-4xl mx-auto">
+                    <div className="absolute top-1/2 left-0 w-full h-[3px] bg-white/10 rounded-full -translate-y-1/2"></div>
+
+                    <div className="relative flex justify-between items-center">
+                      {steps.map((label, i) => (
+                        <div
+                          key={i}
+                          onClick={() => scrollToStep(i)}
+                          className="flex flex-col items-center gap-2 cursor-pointer group"
+                        >
+                          {/* Step Circle */}
+                          <div
+                            className={`
+                              w-10 h-10 flex items-center justify-center rounded-full font-bold
+                              transition-all duration-300
+                              ${
+                                active === i
+                                  ? "bg-cyan-300 text-black shadow-[0_0_15px_rgba(34,211,238,1)] scale-110"
+                                  : "bg-white/10 text-white shadow-[0_0_6px_rgba(255,255,255,0.2)] group-hover:scale-105"
+                              }
+                            `}
+                          >
+                            {i + 1}
+                          </div>
+
+                          <div
+                            className={`text-xs transition-all duration-300 ${
+                              active === i
+                                ? "text-cyan-300 opacity-100"
+                                : "opacity-60 group-hover:opacity-100"
+                            }`}
+                          >
+                            {label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* =======================
+                    TITLE
+                ======================== */}
+                <div className="relative text-center mb-16 mt-10">
+                  <h2 className="text-5xl font-extrabold text-cyan-300 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                    NZ Migration Master Journey
+                  </h2>
+                  <p className="text-sm opacity-75 max-w-xl mx-auto mt-3">
+                    Scroll through the full journey — skill, documents, job,
+                    visa & settling.
+                  </p>
+                </div>
+
+                {/* ====================================================
+                    CONTENT SECTIONS (SCROLL-TRACKED)
+                ===================================================== */}
+                <div className="relative max-w-5xl mx-auto space-y-28">
+                  {/* STEP 1 */}
+                  <div ref={(el) => (sectionRefs.current[0] = el)}>
+                    <h3 className="text-3xl font-bold text-emerald-300">
+                      Step 1 — Skills Foundation
+                    </h3>
+                    <p className="text-sm opacity-80 max-w-3xl mt-2">
+                      Build real technical depth for NZ hiring.
+                    </p>
+                    <ul className="mt-4 text-sm opacity-75 space-y-2 pl-2">
+                      <li>• MERN mastery</li>
+                      <li>• 2–3 strong portfolio projects</li>
+                      <li>• DSA + problem solving</li>
+                      <li>• Docker, Git, CI/CD basics</li>
+                    </ul>
+                  </div>
+
+                  {/* STEP 2 */}
+                  <div ref={(el) => (sectionRefs.current[1] = el)}>
+                    <h3 className="text-3xl font-bold text-cyan-300">
+                      Step 2 — Documents
+                    </h3>
+                    <p className="text-sm opacity-80 max-w-3xl mt-2">
+                      Identity + assessment + eligibility.
+                    </p>
+                    <ul className="mt-4 text-sm opacity-75 space-y-2 pl-2">
+                      <li>• Passport</li>
+                      <li>• IELTS (General)</li>
+                      <li>• NZ Resume</li>
+                      <li>• PCC + Skills Assessment</li>
+                    </ul>
+                  </div>
+
+                  {/* STEP 3 */}
+                  <div ref={(el) => (sectionRefs.current[2] = el)}>
+                    <h3 className="text-3xl font-bold text-blue-300">
+                      Step 3 — Job Applications
+                    </h3>
+                    <p className="text-sm opacity-80 max-w-3xl mt-2">
+                      Apply to AEWV-accredited NZ employers.
+                    </p>
+                    <ul className="mt-4 text-sm opacity-75 space-y-2 pl-2">
+                      <li>• Apply to AEWV employers</li>
+                      <li>• Technical interviews</li>
+                      <li>• LinkedIn + portfolio optimization</li>
+                    </ul>
+                  </div>
+
+                  {/* STEP 4 */}
+                  <div ref={(el) => (sectionRefs.current[3] = el)}>
+                    <h3 className="text-3xl font-bold text-purple-300">
+                      Step 4 — Financial Readiness
+                    </h3>
+                    <p className="text-sm opacity-80 max-w-3xl mt-2">
+                      Savings for NZ move & early stay.
+                    </p>
+                    <ul className="mt-4 text-sm opacity-75 space-y-2 pl-2">
+                      <li>• ₹4–6 Lakhs minimum</li>
+                      <li>• Visa + flight cost</li>
+                      <li>• Accommodation + food</li>
+                    </ul>
+                  </div>
+
+                  {/* STEP 5 */}
+                  <div ref={(el) => (sectionRefs.current[4] = el)}>
+                    <h3 className="text-3xl font-bold text-pink-300">
+                      Step 5 — Visa (AEWV)
+                    </h3>
+                    <p className="text-sm opacity-80 max-w-3xl mt-2">
+                      The official employer-assisted visa pathway.
+                    </p>
+                    <ul className="mt-4 text-sm opacity-75 space-y-2 pl-2">
+                      <li>• Employer-assisted AEWV</li>
+                      <li>• Medical exam + biometrics</li>
+                      <li>• INZ portal submission</li>
+                    </ul>
+                  </div>
+
+                  {/* STEP 6 */}
+                  <div ref={(el) => (sectionRefs.current[5] = el)}>
+                    <h3 className="text-3xl font-bold text-yellow-300">
+                      Step 6 — Arrive & Settle
+                    </h3>
+                    <p className="text-sm opacity-80 max-w-3xl mt-2">
+                      First 30 days in NZ — essential life setup.
+                    </p>
+                    <ul className="mt-4 text-sm opacity-75 space-y-2 pl-2">
+                      <li>• IRD Number</li>
+                      <li>• Bank account</li>
+                      <li>• SIM + transport card</li>
+                      <li>• Begin residency pathway</li>
+                    </ul>
+                  </div>
+
+                  <div className="text-center text-xs opacity-40 mt-20">
+                    Enhanced Stepper Dashboard Complete.
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </section>
 
         {/* Footer CTA (unchanged) */}
