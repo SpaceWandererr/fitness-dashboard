@@ -4236,7 +4236,7 @@ function normalizeWholeTree(src) {
 /* ======================= MAIN ======================= */
 export default function Syllabus() {
   const [lastStudied, setLastStudied] = useState(
-    localStorage.getItem("K_LAST_STUDIED") || ""
+    localStorage.getItem("K_LAST_STUDIED") || "",
   );
 
   const [showLastStudied, setShowLastStudied] = useState(true);
@@ -4248,9 +4248,12 @@ export default function Syllabus() {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
+    const timer = setTimeout(
+      () => {
+        setShowLastStudied(false);
+      },
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
+    );
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4502,7 +4505,7 @@ export default function Syllabus() {
     function filterNode(node) {
       if (isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -4530,7 +4533,7 @@ export default function Syllabus() {
               deadline: it.deadline || "",
               estimate: Math.max(
                 0.25,
-                Number(nr[itemKey(path, idx)]?.estimate || 0.5)
+                Number(nr[itemKey(path, idx)]?.estimate || 0.5),
               ),
             });
         });
@@ -4907,7 +4910,7 @@ function SectionCard({
         onClick={() => onSectionHeaderClick(sectionPath)}
         className="relative  p-3 cursor-pointer 
   bg-[#051C14] border border-[#0B5134]
-  hover:bg-[#0A2F22] 
+  hover:bg-[#0A2F22] dark:bg-[#0F1622] border dark:border-[#00D1FF33] dark:text-[#E6F1FF] 
   transition-all duration-200 overflow-hidden text-[#d9ebe5]"
       >
         {/* ✅ Progress bar (thin + matches main green style) */}
@@ -4947,7 +4950,7 @@ function SectionCard({
             <button
               onClick={() => setAllAtPath(sectionPath, !allDone)}
               className="px-2 py-1 rounded-md border
-              dark:border-gray-700 bg-[#051C14]
+              dark:border-[#00d1b2]/50 bg-[#051C14]
               dark:bg-gray-800 hover:bg-[#051C14]
               dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
             >
@@ -4958,7 +4961,7 @@ function SectionCard({
               type="date"
               value={m.targetDate}
               onChange={(e) => setTargetDate(sectionPath, e.target.value)}
-              className="px-2 py-1 border border-[#0B5134] dark:border-gray-700 rounded-md bg-[#051C14]
+              className="px-2 py-1 border border-[#0B5134] dark:border-[#00d1b2]/50 rounded-md bg-[#051C14]
               dark:bg-gray-800 text-xs shrink-0"
             />
           </div>
@@ -5035,7 +5038,7 @@ function SubNode({
         if (isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5044,7 +5047,7 @@ function SubNode({
             if (isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5068,7 +5071,7 @@ function SubNode({
       {/* Header */}
       <div
         onClick={() => toggleOpen(path)}
-        className="rounded-xl p-2 cursor-pointer bg-[#007bff]/10 hover:bg-[#00d1b2]/10 transition-all"
+        className="rounded-xl p-2 cursor-pointer bg-[#007bff]/10 hover:bg-[#00d1b2]/10 transition-all dark:bg-[#0B0F14] border-l-4 dark:border-[#00FFA3] dark:text-[#D5E1E8]"
       >
         {/* Wrap header content */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -5092,7 +5095,7 @@ function SubNode({
 
             <button
               onClick={() => setAllAtPath(path, !allDone)}
-              className="px-2 py-1 bg-[#FF8F8F]/20 rounded shrink-0"
+              className="px-2 py-1 dark:bg-[#0B0F14] dark:text-[#D5E1E8] rounded shrink-0 border dark:border-[#00d1b2]/50 border-[#00d1b2]/50"
             >
               {allDone ? "Undo all" : "Complete all"}
             </button>
@@ -5101,7 +5104,7 @@ function SubNode({
               type="date"
               value={m.targetDate}
               onChange={(e) => setTargetDate(path, e.target.value)}
-              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-gray-800 text-xs shrink-0"
+              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs shrink-0 bg-[#051C14]"
             />
           </div>
         </div>
@@ -5155,7 +5158,7 @@ function SubNode({
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
-                      }
+                      },
                     );
                     if (diff > 0) {
                       completionMsg = `Completed ${diff} day${
@@ -5197,8 +5200,8 @@ function SubNode({
                         }
                       }
                     }}
-                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-gray-800 p-2 bg-[#051C14]
-                    dark:bg-gray-900/40 cursor-pointer select-none ${
+                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-[#1E2631] p-2 bg-[#051C14]
+                    dark:bg-[#11161D] dark:hover-[##16212D] dark:text-[#B8C1CC] cursor-pointer select-none ${
                       it.done ? "opacity-90" : ""
                     }`}
                   >
@@ -5259,7 +5262,7 @@ function SubNode({
                               setTaskDeadline(path, idx, e.target.value)
                             }
                             className="px-2 py-1 rounded-md border border-[#0B5134]/50 bg-[#051C14]
-                            dark:bg-gray-800 dark:border-gray-700 outline-none w-[110px] text-xs"
+                            dark:bg-gray-800 dark:border-[#00d1b2]/50 outline-none w-[110px] text-xs"
                           />
                         </label>
 
@@ -5283,7 +5286,7 @@ function SubNode({
                               }))
                             }
                             className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-[#051C14]
-                            dark:bg-gray-800 dark:border-gray-700 outline-none text-xs"
+                            dark:bg-gray-800 dark:border-[#00d1b2]/50 outline-none text-xs"
                           />
                           <span>h</span>
                         </label>
@@ -5415,7 +5418,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         // try to find same topic in live tree
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      })
+      }),
     );
   }, [tree]);
 
@@ -5517,9 +5520,9 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               item.deadline && new Date(item.deadline) < new Date()
                 ? "bg-red-500/15 text-red-600 dark:text-red-400"
                 : item.deadline &&
-                  new Date(item.deadline) - new Date() < 86400000 * 2
-                ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
-                : "bg-green-500/10 text-green-700 dark:text-green-400";
+                    new Date(item.deadline) - new Date() < 86400000 * 2
+                  ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
+                  : "bg-green-500/10 text-green-700 dark:text-green-400";
 
             const countdown = daysLeft(item.deadline);
 

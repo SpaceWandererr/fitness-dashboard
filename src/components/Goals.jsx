@@ -999,7 +999,7 @@ export default function Goals() {
           onDragEnd={(e, info) => handleNZDrag(info)}
           // whileHover={{ scale: 1.01 }}
           whileHover={{ y: -4 }}
-          className="rounded-xl lg:p-5 p-4 border border-[rgba(0,240,210,0.06)]   bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
+          className="rounded-xl lg:p-5 p-4 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
           style={{
             transform: "translateZ(0)",
             willChange: "transform, opacity",
@@ -1419,31 +1419,22 @@ export default function Goals() {
                 render={(it) => it.render()}
               />
 
-              <div className="">
-                <FadeSwiper
-                  data={fitnessWrapper}
-                  innerDrag={false}
-                  render={(it) => it.render()}
-                />
-              </div>
+              <FadeSwiper
+                data={fitnessWrapper}
+                innerDrag={false}
+                render={(it) => it.render()}
+              />
             </div>
 
             {/* RIGHT: Routine + Dream (shorter) */}
             <div className="space-y-3">
-              <div className="">
-                <FadeSwiper
-                  data={routineWrapper}
-                  render={(it) => it.render()}
-                />
-              </div>
+              <FadeSwiper data={routineWrapper} render={(it) => it.render()} />
 
-              <div className="">
-                <FadeSwiper
-                  data={dreamWrapper}
-                  innerDrag={false}
-                  render={(it) => it.render()}
-                />
-              </div>
+              <FadeSwiper
+                data={dreamWrapper}
+                innerDrag={false}
+                render={(it) => it.render()}
+              />
             </div>
           </div>
         </section>
