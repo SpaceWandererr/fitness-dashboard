@@ -5,9 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "0.0.0.0",
-    port: 5173,
+    port: 5000,
     strictPort: true,
-    allowedHosts: ["*"],
 
     hmr: {
       clientPort: 443,
@@ -17,8 +16,5 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
-  },
-  preview: {
-    allowedHosts: ["*"],
   },
 });
