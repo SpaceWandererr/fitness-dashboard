@@ -4885,6 +4885,7 @@ function SectionCard({
   const m = meta[pathKey(sectionPath)] || { open: false, targetDate: "" };
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
+  const sectionDateRef = useRef(null);
 
   const wrapRef = useRef(null);
   const [maxH, setMaxH] = useState(0);
@@ -4909,9 +4910,7 @@ function SectionCard({
       <div
         onClick={() => onSectionHeaderClick(sectionPath)}
         className="relative  p-3 cursor-pointer 
-  bg-[#051C14] border border-[#0B5134]
-  hover:bg-[#0A2F22] dark:bg-[#0F1622] border dark:border-[#00D1FF33] dark:text-[#E6F1FF] 
-  transition-all duration-200 overflow-hidden text-[#d9ebe5]"
+  bg-[#051C14] border border-[#0B5134] hover:bg-[#0A2F22] dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF] transition-all duration-200 overflow-hidden text-[#d9ebe5]"
       >
         {/* ✅ Progress bar (thin + matches main green style) */}
         <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#184d3a] overflow-hidden">
@@ -4957,13 +4956,29 @@ function SectionCard({
               {allDone ? "Undo all" : "Mark all"}
             </button>
 
-            <input
-              type="date"
-              value={m.targetDate}
-              onChange={(e) => setTargetDate(sectionPath, e.target.value)}
-              className="px-2 py-1 border border-[#0B5134] dark:border-[#00d1b2]/50 rounded-md bg-[#051C14]
-              dark:bg-gray-800 text-xs shrink-0"
-            />
+            <div className="relative">
+              {/* hidden native date input */}
+              <input
+                type="date"
+                ref={sectionDateRef}
+                value={m.targetDate}
+                onChange={(e) => setTargetDate(sectionPath, e.target.value)}
+                className="absolute opacity-0 pointer-events-none w-0 h-0"
+              />
+
+              {/* custom display button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  sectionDateRef.current?.showPicker();
+                }}
+                className="px-2 py-1 border border-[#0B5134] dark:border-[#00d1b2]/50 rounded-md bg-[#051C14]
+               dark:bg-gray-800 text-xs"
+              >
+                📅{" "}
+                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -5017,6 +5032,7 @@ function SubNode({
   const m = meta[k] || { open: false, targetDate: "" };
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
+  const dateRef = useRef(null);
 
   // ✅ Smooth expand animation
   const contentRef = useRef(null);
@@ -5038,7 +5054,7 @@ function SubNode({
         if (isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5047,7 +5063,7 @@ function SubNode({
             if (isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5074,7 +5090,7 @@ function SubNode({
         className="rounded-xl p-2 cursor-pointer bg-[#007bff]/10 hover:bg-[#00d1b2]/10 transition-all dark:bg-[#0B0F14] border-l-4 dark:border-[#00FFA3] dark:text-[#D5E1E8]"
       >
         {/* Wrap header content */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between sm:flex-wrap gap-3">
           {/* LEFT: arrow + title */}
           <div className="flex items-start gap-2 min-w-0">
             <span className="text-lg shrink-0">{m.open ? "🔽" : "▶️"}</span>
@@ -5085,27 +5101,43 @@ function SubNode({
 
           {/* RIGHT: stats + mark all + date (will drop below on mobile) */}
           <div
-            className="flex flex-wrap items-start gap-2 text-[11px] sm:text-xs"
+            className="flex flex-row flex-wrap items-start gap-2 text-[11px] sm:text-xs"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="leading-tight shrink-0">
+            <span className="leading-tight">
               {totals.done}/{totals.total} • {totals.pct}% • ~
               {hoursRollup.toFixed(1)}h
             </span>
 
             <button
               onClick={() => setAllAtPath(path, !allDone)}
-              className="px-2 py-1 dark:bg-[#0B0F14] dark:text-[#D5E1E8] rounded shrink-0 border dark:border-[#00d1b2]/50 border-[#00d1b2]/50"
+              className="px-2 py-1 dark:bg-[#0B0F14] dark:text-[#D5E1E8] rounded border dark:border-[#00d1b2]/50 border-[#00d1b2]/50"
             >
               {allDone ? "Undo all" : "Complete all"}
             </button>
 
-            <input
-              type="date"
-              value={m.targetDate}
-              onChange={(e) => setTargetDate(path, e.target.value)}
-              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs shrink-0 bg-[#051C14]"
-            />
+            <div className="relative">
+              {/* Hidden actual date input */}
+              <input
+                type="date"
+                ref={dateRef}
+                value={m.targetDate}
+                onChange={(e) => setTargetDate(path, e.target.value)}
+                className="absolute opacity-0 pointer-events-none w-0 h-0"
+              />
+
+              {/* Custom UI Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dateRef.current?.showPicker(); // 👈 opens native date selector
+                }}
+                className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#051C14]"
+              >
+                📅{" "}
+                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -5158,7 +5190,7 @@ function SubNode({
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
-                      },
+                      }
                     );
                     if (diff > 0) {
                       completionMsg = `Completed ${diff} day${
@@ -5254,19 +5286,6 @@ function SubNode({
                         onClick={(e) => e.stopPropagation()}
                       >
                         <label className="text-xs flex items-center gap-1">
-                          ⏰
-                          <input
-                            type="date"
-                            value={it.deadline || ""}
-                            onChange={(e) =>
-                              setTaskDeadline(path, idx, e.target.value)
-                            }
-                            className="px-2 py-1 rounded-md border border-[#0B5134]/50 bg-[#051C14]
-                            dark:bg-gray-800 dark:border-[#00d1b2]/50 outline-none w-[110px] text-xs"
-                          />
-                        </label>
-
-                        <label className="text-xs flex items-center gap-1">
                           ⏱
                           <input
                             type="number"
@@ -5289,6 +5308,36 @@ function SubNode({
                             dark:bg-gray-800 dark:border-[#00d1b2]/50 outline-none text-xs"
                           />
                           <span>h</span>
+                        </label>
+
+                        {/*Dead date line picker */}
+                        <label className="text-xs flex items-center gap-1">
+                          <div className="relative">
+                            {/* Hidden actual date input */}
+                            <input
+                              type="date"
+                              ref={dateRef}
+                              value={m.targetDate}
+                              onChange={(e) =>
+                                setTargetDate(path, e.target.value)
+                              }
+                              className="absolute opacity-0 pointer-events-none w-0 h-0"
+                            />
+
+                            {/* Custom UI Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                dateRef.current?.showPicker(); // 👈 opens native date selector
+                              }}
+                              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#051C14]"
+                            >
+                              📅{" "}
+                              {m.targetDate
+                                ? formatDateDDMMYYYY(m.targetDate)
+                                : "Deadline"}
+                            </button>
+                          </div>
                         </label>
                       </div>
                     </div>
