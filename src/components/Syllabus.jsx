@@ -5066,7 +5066,7 @@ function SubNode({
   return (
     <div
       className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-[#051C14]
-    dark:bg-gray-900/50"
+    dark:bg-[#0B0F14]"
     >
       {/* Header */}
       <div
