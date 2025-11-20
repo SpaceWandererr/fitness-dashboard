@@ -8,7 +8,7 @@ import Planner from "./components/Planner.jsx";
 import Gallery from "./components/Gallery.jsx";
 import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
-import Test from "./components/test.jsx";
+import Projects from "./components/Projects.jsx";
 import HomeFuturisticDashboard from "./components/HomeFuturisticDashboard.jsx";
 
 import { load, save } from "./utils/localStorage.js";
@@ -40,11 +40,10 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-[100dvh] overflow-x-hidden text-gray-200 transition-colors duration-300 ${
-        dark
+      className={`min-h-[100dvh] overflow-x-hidden text-gray-200 transition-colors duration-300 ${dark
           ? "bg-gradient-to-br from-[#0d0d0f] via-[#121212] to-[#1a1a1a]"
           : "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]"
-      }`}
+        }`}
       style={{ "--accent": accent }}
     >
       {/* Navbar MUST be outside the flex parent */}
@@ -77,12 +76,17 @@ export default function App() {
 
             {/* Dark Mode Switcher */}
             <button
-              onClick={() => setDark(!dark)}
-              className={`p-2 rounded-full transition-all duration-200 ${
-                dark
+              onClick={() => {
+                setDark((v) => {
+                  const next = !v;
+                  window.dispatchEvent(new Event("theme-changed"));
+                  return next;
+                });
+              }}
+              className={`p-2 rounded-full transition-all duration-200 ${dark
                   ? "text-emerald-400 hover:text-emerald-300 bg-emerald-900/40"
                   : "text-yellow-400 hover:text-yellow-300 bg-white/10"
-              } shadow-md hover:scale-105`}
+                } shadow-md hover:scale-105`}
               title="Toggle Dark Mode"
             >
               {dark ? "🌙" : "☀️"}
@@ -107,11 +111,10 @@ export default function App() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setMenuOpen(false)}
-                  className={`block rounded px-3 py-2 text-sm ${
-                    location.pathname === link.to
+                  className={`block rounded px-3 py-2 text-sm ${location.pathname === link.to
                       ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))]"
                       : "hover:bg-gray-700/60"
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -152,7 +155,7 @@ export default function App() {
           {/* other pages */}
           <Route path="/syllabus" element={<Syllabus />} />
           <Route path="/gym" element={<Gym />} />
-          <Route path="/test" element={<Test />} />
+          <Route path="/Projects" element={<Projects />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/gallery" element={<Gallery />} />
@@ -176,7 +179,7 @@ const links = [
   { to: "/", label: "HOME" }, // fixed
   { to: "/syllabus", label: "STUDY" },
   { to: "/gym", label: "GYM" },
-  { to: "/test", label: "TEST" },
+  { to: "/Projects", label: "PROJECTS" },
   { to: "/calendar", label: "CALENDAR" },
   { to: "/planner", label: "PLANNER" },
   { to: "/goals", label: "GOALS" },
@@ -188,11 +191,10 @@ function NavLink({ to, children, current }) {
   return (
     <Link
       to={to}
-      className={`px-3 py-1 rounded-md text-sm transition-all duration-200 ${
-        isActive
+      className={`px-3 py-1 rounded-md text-sm transition-all duration-200 ${isActive
           ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))] font-semibold"
           : "hover:bg-gray-800/50"
-      }`}
+        }`}
     >
       {children}
     </Link>
