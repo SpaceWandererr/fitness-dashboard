@@ -366,9 +366,8 @@ export default function StudyProjectsAdvanced() {
   const Checkbox = ({ checked, onChange }) => (
     <button
       onClick={() => onChange(!checked)}
-      className={`w-6 h-6 flex items-center justify-center rounded-md border ${
-        checked ? "bg-emerald-400/20 border-emerald-400" : "bg-transparent border-white/10"
-      } transition-all`}
+      className={`w-6 h-6 flex items-center justify-center rounded-md border ${checked ? "bg-emerald-400/20 border-emerald-400" : "bg-transparent border-white/10"
+        } transition-all`}
       aria-pressed={checked}
     >
       <svg
@@ -385,9 +384,8 @@ export default function StudyProjectsAdvanced() {
   // small component for difficulty pill
   const DiffPill = ({ d }) => (
     <span
-      className={`text-xs px-2 py-1 rounded-full border ${
-        d === "Beginner" ? "bg-white/5 border-white/10" : d === "Intermediate" ? "bg-white/8 border-white/12" : "bg-white/12 border-white/20"
-      }`}
+      className={`text-xs px-2 py-1 rounded-full border ${d === "Beginner" ? "bg-white/5 border-white/10" : d === "Intermediate" ? "bg-white/8 border-white/12" : "bg-white/12 border-white/20"
+        }`}
     >
       {d}
     </span>
@@ -396,9 +394,8 @@ export default function StudyProjectsAdvanced() {
   // render
   return (
     <div
-      className={`min-h-screen rounded-2xl px-6 py-10 transition-all duration-300 ${
-        dark ? "bg-gradient-to-br from-[#002b29] via-[#001b1f] to-[#2a0000] text-foreground" : "bg-gradient-to-br from-[#0C9A7B] via-[#0C729A] to-[#0C2B9A] text-[#FAFAF9]"
-      }`}
+      className={`min-h-screen rounded-2xl px-6 py-10 transition-all duration-300 ${dark ? "bg-gradient-to-br from-[#002b29] via-[#001b1f] to-[#2a0000] text-foreground" : "bg-gradient-to-br from-[#0C9A7B] via-[#0C729A] to-[#0C2B9A] text-[#FAFAF9]"
+        }`}
     >
       <div className="max-w-6xl mx-auto">
         {/* header */}
@@ -463,7 +460,10 @@ export default function StudyProjectsAdvanced() {
           <div className="space-y-6">
             {Object.entries(filteredSections).map(([sec, list]) => (
               <section key={sec} className="rounded-2xl border border-border p-4 backdrop-blur-md bg-black/20">
-                <header className="flex items-center justify-between">
+                <header
+                  onClick={() => setOpenSection(openSection === sec ? null : sec)}
+                  className="flex items-center justify-between cursor-pointer hover:bg-white/5 dark:hover:bg-white/10 rounded-xl px-2 py-3 transition-all"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg border border-border bg-black/30 flex items-center justify-center">
                       {sec.includes("HTML") && <LayoutList className="w-6 h-6 text-cyan-300" />}
@@ -474,19 +474,30 @@ export default function StudyProjectsAdvanced() {
                       {sec.includes("NODE") && <Database className="w-6 h-6 text-green-300" />}
                       {sec.includes("MERN") && <Code className="w-6 h-6 text-amber-300" />}
                     </div>
+
                     <div>
                       <h3 className="text-xl font-semibold">{sec.replaceAll("_", " ")}</h3>
-                      <div className="text-sm opacity-70">{PROJECT_SECTIONS[sec]?.length || list.length} projects • {sectionProgress(sec)}% complete</div>
+                      <div className="text-sm opacity-70">
+                        {PROJECT_SECTIONS[sec]?.length || list.length} projects • {sectionProgress(sec)}% complete
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <div className="w-40 h-3 bg-black/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-400" style={{ width: `${sectionProgress(sec)}%` }} />
+                      <div
+                        className="h-full bg-cyan-400"
+                        style={{ width: `${sectionProgress(sec)}%` }}
+                      />
+                    </div>dd
+
+                    {/* arrow indicator */}
+                    <div className="text-lg opacity-70">
+                      {openSection === sec ? "▲" : "▼"}
                     </div>
-                    <button onClick={() => setOpenSection(openSection === sec ? null : sec)} className="px-3 py-2 rounded-xl border border-border">{openSection === sec ? "Collapse" : "Open"}</button>
                   </div>
                 </header>
+
 
                 <AnimatePresence>
                   {openSection === sec && (
