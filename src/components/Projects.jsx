@@ -396,8 +396,8 @@ export default function StudyProjectsAdvanced() {
   // render
   return (
     <div
-      className={`min-h-screen px-6 py-10 transition-all duration-300 ${
-        dark ? "bg-gradient-to-br from-[#002b29] via-[#001b1f] to-[#2a0000] text-foreground" : "bg-gradient-to-br from-[#dfffe7] via-[#f5e9e9] to-[#ffd7d7] text-[#1f1f1f]"
+      className={`min-h-screen rounded-2xl px-6 py-10 transition-all duration-300 ${
+        dark ? "bg-gradient-to-br from-[#002b29] via-[#001b1f] to-[#2a0000] text-foreground" : "bg-gradient-to-br from-[#0C9A7B] via-[#0C729A] to-[#0C2B9A] text-[#FAFAF9]"
       }`}
     >
       <div className="max-w-6xl mx-auto">
@@ -438,11 +438,11 @@ export default function StudyProjectsAdvanced() {
           </div>
 
           <div className="flex items-center gap-2">
-            <select value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)} className="px-3 py-2 rounded-xl border border-border bg-black/10 text-sm">
-              <option>All</option>
-              <option>Beginner</option>
-              <option>Intermediate</option>
-              <option>Advanced</option>
+            <select value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)} className="px-3 py-2 rounded-xl border border-border  bg-black/10 text-sm">
+              <option className="bg-[#0C9A7B]">All</option>
+              <option className="bg-[#0C9A7B]">Beginner</option>
+              <option className="bg-[#0C9A7B]">Intermediate</option>
+              <option className="bg-[#0C9A7B]">Advanced</option>
             </select>
 
             <div className="flex items-center gap-2 rounded-xl overflow-hidden border border-border bg-black/10">
