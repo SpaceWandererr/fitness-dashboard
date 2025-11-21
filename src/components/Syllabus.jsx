@@ -4634,11 +4634,19 @@ export default function Syllabus() {
 
   /* ======================= RENDER ======================= */
   return (
-    <div className="min-h-[80vh] rounded-xl bg-[#0c1f18]/90 text-[#dceee8] dark:bg-[#050f0a] dark:text-[#d1fae5] p-2">
+    <div className="
+  min-h-[80vh] rounded-xl p-2
+  text-[#dceee8] dark:text-[#E6F1FF]
+  bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+  dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+  dark:border-[#00D1FF33]
+">
+
       <header
         className="rounded-xl sticky top-0 z-40
-  bg-[#0c1f18]/80 backdrop-blur-xl
- border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)]"
+        bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
+        dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
+        backdrop-blur-xl border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)] dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF]"
       >
         {/* === INNER WRAPPER (handles spacing) === */}
         <div className="max-w-6xl mx-auto px-3 py-4 space-y-3 md:space-y-4">
@@ -4804,7 +4812,15 @@ export default function Syllabus() {
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
           {/* 🗓️ Daily Planner */}
-          <div className="rounded-2xl bg-[#11342b]/70 border border-[#1a4a39]/40 backdrop-blur-md dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm">
+          <div className="
+           rounded-2xl 
+           border border-[#1a4a39]/40 
+           backdrop-blur-md p-4
+           shadow-[0_0_20px_rgba(0,0,0,0.2)]
+           bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
+           dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
+           dark:border-gray-800
+           ">
             <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
             <p className="text-sm opacity-80 mb-3">
               Closest-deadline topics not yet done.
@@ -4814,8 +4830,10 @@ export default function Syllabus() {
 
           {/* 🤖 Smart Suggest */}
           <div
-            className="rounded-2xl bg-[#11342b]/70 border border-[#1a4a39]/40
-             backdrop-blur-md dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm"
+            className="rounded-2xl border border-[#1a4a39]/40
+             backdrop-blur-md p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
+             bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
+             dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]"
           >
             <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
           </div>
@@ -4905,7 +4923,18 @@ function SectionCard({
   }, [m.open, node, meta, nr]);
 
   return (
-    <section className="rounded  dark:border-gray-800 bg-[#0f2f25]/70 border border-[#1c5b44]/30 backdrop-blur-md dark:bg-gray-900/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm overflow-hidden">
+    <section className="rounded
+  border border-[#1c5b44]/40
+  dark:border-[#00D1FF33]
+  backdrop-blur-md
+
+  bg-gradient-to-br 
+  from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
+  dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+
+  shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
+  overflow-hidden"
+    >
       {/* Header */}
       <div
         onClick={() => onSectionHeaderClick(sectionPath)}
@@ -5081,13 +5110,16 @@ function SubNode({
 
   return (
     <div
-      className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-[#051C14]
-    dark:bg-[#0B0F14]"
+      className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-gradient-to-br 
+      from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      text-[#d9ebe5] dark:text-[#E6F1FF] shadow-[0_0_15px_rgba(0,0,0,0.2)]"
     >
       {/* Header */}
       <div
         onClick={() => toggleOpen(path)}
-        className="rounded-xl p-2 cursor-pointer bg-[#007bff]/10 hover:bg-[#00d1b2]/10 transition-all dark:bg-[#0B0F14] border-l-4 dark:border-[#00FFA3] dark:text-[#D5E1E8]"
+        className="rounded-xl p-2 cursor-pointer bg-[#134039] text-[#fffff] hover:bg-[#00d1b2]/10 transition-all dark:bg-[#0B0F14] border-l-4 
+        border-[#D42916] dark:border-[#00FFA3] dark:text-[#D5E1E8]"
       >
         {/* Wrap header content */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between sm:flex-wrap gap-3">
@@ -5101,7 +5133,7 @@ function SubNode({
 
           {/* RIGHT: stats + mark all + date (will drop below on mobile) */}
           <div
-            className="flex flex-row flex-wrap items-start gap-2 text-[11px] sm:text-xs"
+            className="flex flex-row flex-wrap items-center gap-2 text-[11px] sm:text-xs"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="leading-tight">
@@ -5113,7 +5145,7 @@ function SubNode({
               onClick={() => setAllAtPath(path, !allDone)}
               className="px-2 py-1 dark:bg-[#0B0F14] dark:text-[#D5E1E8] rounded border dark:border-[#00d1b2]/50 border-[#00d1b2]/50"
             >
-              {allDone ? "Undo all" : "Complete all"}
+              {allDone ? "Undo all" : "Mark all"}
             </button>
 
             <div className="relative">
@@ -5132,7 +5164,7 @@ function SubNode({
                   e.stopPropagation();
                   dateRef.current?.showPicker(); // 👈 opens native date selector
                 }}
-                className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#051C14]"
+                className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#134039]"
               >
                 📅{" "}
                 {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
@@ -5142,7 +5174,7 @@ function SubNode({
         </div>
       </div>
 
-      {/* ✅ Smooth expanding content */}
+      {/* ✅ Smooth expanding content Topics*/}
       <div
         ref={contentRef}
         style={{ maxHeight: height }}
@@ -5232,7 +5264,8 @@ function SubNode({
                         }
                       }
                     }}
-                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-[#1E2631] p-2 bg-[#051C14]
+                    /* Topic Section */
+                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-[#1E2631] p-2 bg-[#134039] text-white hover:bg-[#00d1b2]/10
                     dark:bg-[#11161D] dark:hover-[##16212D] dark:text-[#B8C1CC] cursor-pointer select-none ${
                       it.done ? "opacity-90" : ""
                     }`}
@@ -5304,7 +5337,7 @@ function SubNode({
                                 },
                               }))
                             }
-                            className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-[#051C14]
+                            className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-[#134039]
                             dark:bg-gray-800 dark:border-[#00d1b2]/50 outline-none text-xs"
                           />
                           <span>h</span>
@@ -5330,7 +5363,7 @@ function SubNode({
                                 e.stopPropagation();
                                 dateRef.current?.showPicker(); // 👈 opens native date selector
                               }}
-                              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#051C14]"
+                              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#134039]"
                             >
                               📅{" "}
                               {m.targetDate
@@ -5518,8 +5551,10 @@ function SmartSuggest({ generateSmartPlan, tree }) {
 
   return (
     <div
-      className="rounded-2xl border border-[#0B5134]/40 bg-[#051C14]
-    dark:bg-gray-900/60 dark:border-gray-800 p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300"
+      className="rounded-2xl border border-[#0B5134]/40
+       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+       dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-#00D1FF33] p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300
+        "
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
@@ -5541,8 +5576,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
           type="number"
           value={minutes}
           onChange={(e) => setMinutes(Number(e.target.value))}
-          className="flex-1 px-2 py-1 text-sm rounded-md border border-[#0B5134] dark:border-gray-700 bg-[#051C14]
-          dark:bg-gray-800 min-w-[70px]"
+          className="flex-1 px-2 py-1 text-sm rounded-md border bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-[#00D1FF33] min-w-[70px] border-[#0B5134] outline-none text-white"
         />
         <button
           onClick={handleSuggest}
@@ -5554,7 +5588,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
 
       {/* Summary */}
       {summary && (
-        <p className="text-xs italic mb-3 text-gray-700 dark:text-gray-300">
+        <p className="text-xs italic mb-3 text-white/60 dark:text-gray-300">
           {summary}
         </p>
       )}
@@ -5612,7 +5646,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       </div>
 
       {/* Footer */}
-      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 border-t border-[#0B5134] dark:border-gray-800 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+      <div className="mt-4 text-xs text-white/60 dark:text-gray-400 border-t border-[#0B5134] dark:border-gray-800 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <span>
           {plan.length > 0
             ? `Remaining buffer: ${remaining} mins`
