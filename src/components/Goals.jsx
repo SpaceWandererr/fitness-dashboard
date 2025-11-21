@@ -16,8 +16,8 @@ const END_KEY = "wd_mern_end_date";
 const AUTO_ADVANCE_MS = 120000; // 2 minutes
 
 /* --------------------------
-  Helpers (unchanged)
----------------------------*/
+        Helpers (unchanged)
+      ---------------------------*/
 function parseISOFromDDMMYYYY(str) {
   if (!str) return null;
   if (/\d{2}\/\d{2}\/\d{4}/.test(str)) {
@@ -73,8 +73,8 @@ function computeTotals(tree) {
 }
 
 /* --------------------------
-  DREAM CARDS (original content)
----------------------------*/
+        DREAM CARDS (original content)
+      ---------------------------*/
 const dreamCards = [
   {
     title: "Long-Term Vision",
@@ -136,11 +136,11 @@ const dreamCards = [
 ];
 
 /* --------------------------
-  UNIVERSAL FadeSwiper
-  - Autoplay only when data.length > 1
-  - Fade + slide (enter/exit)
-  - Drag support
----------------------------*/
+        UNIVERSAL FadeSwiper
+        - Autoplay only when data.length > 1
+        - Fade + slide (enter/exit)
+        - Drag support
+      ---------------------------*/
 function FadeSwiper({ data = [], render, noDrag = false, innerDrag = true }) {
   const [[idx, dir], setIdx] = useState([0, 0]);
   const safeIdx = ((idx % data.length) + data.length) % data.length;
@@ -207,19 +207,19 @@ function FadeSwiper({ data = [], render, noDrag = false, innerDrag = true }) {
 }
 
 /* --------------------------
-  MAIN COMPONENT
----------------------------*/
+        MAIN COMPONENT
+      ---------------------------*/
 export default function Goals() {
   // Read syllabus totals live
   const [syllabusTree, setSyllabusTree] = useState(
-    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
+    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
   );
 
   useEffect(() => {
     const onStorage = (e) => {
       if (!e || e.key === SYLLABUS_KEY) {
         setSyllabusTree(
-          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
+          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
         );
       }
     };
@@ -250,10 +250,10 @@ export default function Goals() {
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
   const [startISO, setStartISO] = useState(
-    () => localStorage.getItem(START_KEY) || todayISO
+    () => localStorage.getItem(START_KEY) || todayISO,
   );
   const [endISO, setEndISO] = useState(
-    () => localStorage.getItem(END_KEY) || DEFAULT_END
+    () => localStorage.getItem(END_KEY) || DEFAULT_END,
   );
 
   useEffect(() => {
@@ -271,7 +271,7 @@ export default function Goals() {
   // Derived date metrics
   const startDate = useMemo(
     () => (startISO ? new Date(startISO) : null),
-    [startISO]
+    [startISO],
   );
   const endDate = useMemo(() => (endISO ? new Date(endISO) : null), [endISO]);
   const now = new Date();
@@ -320,7 +320,7 @@ export default function Goals() {
       "Don’t chase motivation — build systems. This dashboard *is* your system.",
       "The grind is temporary. The life you’re chasing through MERN, fitness and discipline is permanent.",
     ],
-    []
+    [],
   );
 
   // MERN internal page swipe (keeps original 4-page behavior)
@@ -357,7 +357,7 @@ export default function Goals() {
   // Date popup & tmp state
   const [showDatePopup, setShowDatePopup] = useState(false);
   const [tmpStart, setTmpStart] = useState(() =>
-    startISO ? startISO : todayISO
+    startISO ? startISO : todayISO,
   );
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
@@ -463,11 +463,11 @@ export default function Goals() {
   };
 
   /* --------------------------
-    Now we prepare the five "section-cards" as single-item arrays
-    so we can wrap them in FadeSwiper without removing any logic.
-    Each element is an object with a `render` function that returns the exact same UI
-    that existed before. This keeps all logic intact while making sections swipable.
-  ---------------------------*/
+          Now we prepare the five "section-cards" as single-item arrays
+          so we can wrap them in FadeSwiper without removing any logic.
+          Each element is an object with a `render` function that returns the exact same UI
+          that existed before. This keeps all logic intact while making sections swipable.
+        ---------------------------*/
 
   const mernWrapper = [
     {
@@ -490,7 +490,7 @@ export default function Goals() {
         >
           <div
             className="relative rounded-xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-              backdrop-blur-md p-4 md:p-2 shadow-xl h-[500px] md:w-full"
+                    backdrop-blur-md p-4 md:p-2 shadow-xl h-[500px] md:w-full"
             style={{
               transformStyle: "preserve-3d",
               minHeight: 420,
@@ -983,7 +983,7 @@ export default function Goals() {
         items: ["Work visa", "Move to NZ", "Apply for residency"],
       },
     ],
-    []
+    [],
   );
 
   const nzWrapper = [
@@ -1008,7 +1008,7 @@ export default function Goals() {
         >
           <div
             className="absolute left-0 top-0 h-full w-[4px] lg:rounded-r-lg border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-              backdrop-blur-md "
+                    backdrop-blur-md "
             style={{
               background:
                 "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
@@ -1106,13 +1106,13 @@ export default function Goals() {
           {(() => {
             // original gym logic from your provided file (kept intact)
             const logs = JSON.parse(
-              localStorage.getItem("wd_gym_logs") || "{}"
+              localStorage.getItem("wd_gym_logs") || "{}",
             );
             const overrides = JSON.parse(
-              localStorage.getItem("wd_weight_overrides") || "{}"
+              localStorage.getItem("wd_weight_overrides") || "{}",
             );
             const bmiLogs = JSON.parse(
-              localStorage.getItem("bmi_logs") || "[]"
+              localStorage.getItem("bmi_logs") || "[]",
             );
             const goals = JSON.parse(localStorage.getItem("wd_goals") || "{}");
             const target = Number(goals?.targetWeight || 0);
@@ -1126,7 +1126,7 @@ export default function Goals() {
               .filter((w) => typeof w === "number");
             const inferredStart = recentWeights.length
               ? Math.max(...recentWeights.slice(-30))
-              : todayLog.weight ?? target;
+              : (todayLog.weight ?? target);
             const effectiveStart = start ?? inferredStart;
             const curWeight =
               overrides[dateKey] ??
@@ -1347,14 +1347,14 @@ export default function Goals() {
   ];
 
   /* --------------------------
-    Now render the layout, replacing original sections
-    with FadeSwiper wrappers while preserving all logic/UI.
-  ---------------------------*/
+          Now render the layout, replacing original sections
+          with FadeSwiper wrappers while preserving all logic/UI.
+        ---------------------------*/
 
   return (
     <div
       className="w-full
-      relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl "
+            relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl "
     >
       {/* subtle background holographic grid */}
       <div className="absolute inset-0 -z-10">
@@ -1402,8 +1402,8 @@ export default function Goals() {
         </section>
 
         {/* Page One */}
-        <section className="min-h-[calc(60vh-var(--nav-height))] min-w-screen">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 justify-items-center md:justify-items-start">
+        <section className="min-h-[calc(60vh-var(--nav-height))] w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 justify-items-center lg:justify-items-start">
             {/* LEFT: MERN (tall) */}
             <div className="space-y-3">
               <FadeSwiper data={mernWrapper} render={(it) => it.render()} />
@@ -1439,11 +1439,11 @@ export default function Goals() {
 
         {/* Page Two */}
         {/* =====================================================
-            NZ MIGRATION — TIMELINE ROADMAP + CHAPTER DETAILS
-             (Your requested Style 1 layout + Chapter content)
-             ===================================================== */}
+                  NZ MIGRATION — TIMELINE ROADMAP + CHAPTER DETAILS
+                   (Your requested Style 1 layout + Chapter content)
+                   ===================================================== */}
 
-        <section className="min-h-screen w-full py-20 px-6elative">
+        <section className="relative min-h-screen w-full py-16 px-4 sm:px-6 md:px-10">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(6,20,26,0.15)] to-[rgba(0,0,0,0.2)] opacity-50 pointer-events-none" />
 
@@ -1459,16 +1459,16 @@ export default function Goals() {
 
           <div className="relative max-w-4xl mx-auto">
             {/* Vertical glowing line */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] bg-cyan-300/40 shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
+            <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] bg-cyan-300/40 shadow-[0_0_12px_rgba(34,211,238,0.6)] pointer-events-none" />
 
             {/* ===========================================
-            CHAPTER 01 — Skills Foundation
-             ============================================ */}
-            <div className="relative mb-28 flex items-start gap-6">
+                  CHAPTER 01 — Skills Foundation
+                   ============================================ */}
+            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
               {/* Left Text */}
-              <div className="w-1/2 pr-10 text-right">
+              <div className="w-full md:w-1/2 md:pr-10 text-left md:text-right">
                 {/* Glow Line */}
                 <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent mb-5" />
 
@@ -1490,18 +1490,18 @@ export default function Goals() {
                 </ul>
               </div>
 
-              <div className="w-1/2" />
+              <div className="hidden md:block md:w-1/2" />
             </div>
 
             {/* ===========================================
-             CHAPTER 02 — Documentation
-              ============================================ */}
-            <div className="relative mb-28 flex items-start gap-6">
+                   CHAPTER 02 — Documentation
+                    ============================================ */}
+            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
-              <div className="w-1/2" />
+              <div className="hidden md:block md:w-1/2" />
 
-              <div className="w-1/2 pl-10">
+              <div className="w-full md:w-1/2 md:pl-10">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
                 <h3 className="text-3xl font-bold text-cyan-300">
@@ -1522,12 +1522,12 @@ export default function Goals() {
             </div>
 
             {/* ===========================================
-                CHAPTER 03 — Job Preparation
-              ============================================ */}
-            <div className="relative mb-28 flex items-start gap-6">
+                      CHAPTER 03 — Job Preparation
+                    ============================================ */}
+            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
-              <div className="w-1/2 pr-10 text-right">
+              <div className="w-full md:w-1/2 md:pr-10 text-left md:text-right">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
                 <h3 className="text-3xl font-bold text-blue-300">
@@ -1547,18 +1547,18 @@ export default function Goals() {
                 </ul>
               </div>
 
-              <div className="w-1/2" />
+              <div className="hidden md:block md:w-1/2" />
             </div>
 
             {/* ===========================================
-              CHAPTER 04 — Finance
-              ============================================ */}
-            <div className="relative mb-28 flex items-start gap-6">
+                    CHAPTER 04 — Finance
+                    ============================================ */}
+            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
-              <div className="w-1/2" />
+              <div className="hidden md:block md:w-1/2" />
 
-              <div className="w-1/2 pl-10">
+              <div className="w-full md:w-1/2 md:pl-10">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
                 <h3 className="text-3xl font-bold text-purple-300">
@@ -1579,12 +1579,12 @@ export default function Goals() {
             </div>
 
             {/* ===========================================
-              CHAPTER 05 — Visa Process
-              ============================================ */}
-            <div className="relative mb-28 flex items-start gap-6">
+                    CHAPTER 05 — Visa Process
+                    ============================================ */}
+            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
-              <div className="w-1/2 pr-10 text-right">
+              <div className="w-full md:w-1/2 md:pr-10 text-left md:text-right">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
                 <h3 className="text-3xl font-bold text-pink-300">
@@ -1603,18 +1603,18 @@ export default function Goals() {
                 </ul>
               </div>
 
-              <div className="w-1/2" />
+              <div className="hidden md:block md:w-1/2" />
             </div>
 
             {/* ===========================================
-               CHAPTER 06 — Arrival & Settlement
-                ============================================ */}
-            <div className="relative mb-10 flex items-start gap-6">
+                     CHAPTER 06 — Arrival & Settlement
+                      ============================================ */}
+            <div className="relative mb-10 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
-              <div className="w-1/2" />
+              <div className="hidden md:block md:w-1/2" />
 
-              <div className="w-1/2 pl-10">
+              <div className="w-full md:w-1/2 md:pl-10">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
                 <h3 className="text-3xl font-bold text-yellow-300">
@@ -1661,70 +1661,71 @@ export default function Goals() {
       </main>
 
       {/* Styles (kept same) */}
-      <style>{`
-        .animate-grid {
-          background-image:
-            radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 1px),
-            linear-gradient(transparent 0 0);
-          background-size: 24px 24px, 100% 100%;
-          animation: gridShift 8s linear infinite;
-          opacity: 0.05;
-        }
-        @keyframes gridShift {
-          0% { background-position: 0 0; transform: translateZ(-100px); }
-          50% { background-position: 100px 60px; transform: translateZ(-120px); }
-          100% { background-position: 0 0; transform: translateZ(-100px); }
-        }
-        .move-grid::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-image: linear-gradient(120deg, rgba(255,255,255,0.02) 0%, rgba(0,240,210,0.02) 30%, rgba(161,59,255,0.01) 70%, rgba(255,80,140,0.01) 100%);
-          mix-blend-mode: overlay;
-          pointer-events: none;
-          animation: streak 14s linear infinite;
-          opacity: 0.6;
-        }
-        @keyframes streak {
-          0% { transform: translate3d(-30%, -10%, 0) skewX(-6deg); opacity: 0.5; }
-          50% { transform: translate3d(30%, 10%, 0) skewX(-6deg); opacity: 0.6; }
-          100% { transform: translate3d(-30%, -10%, 0) skewX(-6deg); opacity: 0.5; }
-        }
-          @keyframes sway {
-           0%   { transform: translateX(0px) rotate(0deg); }
-           25%  { transform: translateX(-4px) rotate(-4deg); }
-           50%  { transform: translateX(0px) rotate(0deg); }
-           75%  { transform: translateX(4px) rotate(4deg); }
-           100% { transform: translateX(0px) rotate(0deg); }
-              } 
-
-              .animate-sway {
-              display: inline-block;
-              animation: sway 2.5s ease-in-out infinite;
-              transform-origin: center;
+      <style>
+        {`
+              .animate-grid {
+                background-image:
+                  radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 1px),
+                  linear-gradient(transparent 0 0);
+                background-size: 24px 24px, 100% 100%;
+                animation: gridShift 8s linear infinite;
+                opacity: 0.05;
               }
-              @keyframes flagwave {
-              0%   { transform: rotate(0deg); }
-              50%  { transform: rotate(6deg); }
-              100% { transform: rotate(0deg); }
-             }
+              @keyframes gridShift {
+                0% { background-position: 0 0; transform: translateZ(-100px); }
+                50% { background-position: 100px 60px; transform: translateZ(-120px); }
+                100% { background-position: 0 0; transform: translateZ(-100px); }
+              }
+              .move-grid::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background-image: linear-gradient(120deg, rgba(255,255,255,0.02) 0%, rgba(0,240,210,0.02) 30%, rgba(161,59,255,0.01) 70%, rgba(255,80,140,0.01) 100%);
+                mix-blend-mode: overlay;
+                pointer-events: none;
+                animation: streak 14s linear infinite;
+                opacity: 0.6;
+              }
+              @keyframes streak {
+                0% { transform: translate3d(-30%, -10%, 0) skewX(-6deg); opacity: 0.5; }
+                50% { transform: translate3d(30%, 10%, 0) skewX(-6deg); opacity: 0.6; }
+                100% { transform: translate3d(-30%, -10%, 0) skewX(-6deg); opacity: 0.5; }
+              }
+                @keyframes sway {
+                 0%   { transform: translateX(0px) rotate(0deg); }
+                 25%  { transform: translateX(-4px) rotate(-4deg); }
+                 50%  { transform: translateX(0px) rotate(0deg); }
+                 75%  { transform: translateX(4px) rotate(4deg); }
+                 100% { transform: translateX(0px) rotate(0deg); }
+                    } 
 
-             .animate-flag {
-              display: inline-block;
-              animation: flagwave 2s ease-in-out infinite;
-             }
+                    .animate-sway {
+                    display: inline-block;
+                    animation: sway 2.5s ease-in-out infinite;
+                    transform-origin: center;
+                    }
+                    @keyframes flagwave {
+                    0%   { transform: rotate(0deg); }
+                    50%  { transform: rotate(6deg); }
+                    100% { transform: rotate(0deg); }
+                   }
 
-             @keyframes bounceSway {
-              0%   { transform: translateY(0) rotate(0deg); }
-              30%  { transform: translateY(-3px) rotate(-5deg); }
-              60%  { transform: translateY(1px) rotate(5deg); }
-              100% { transform: translateY(0) rotate(0deg); }
-             }
-         .animate-bounce-sway {
-          animation: bounceSway 2.8s ease-in-out infinite;
-         }
-              `}
-    </style>
+                   .animate-flag {
+                    display: inline-block;
+                    animation: flagwave 2s ease-in-out infinite;
+                   }
+
+                   @keyframes bounceSway {
+                    0%   { transform: translateY(0) rotate(0deg); }
+                    30%  { transform: translateY(-3px) rotate(-5deg); }
+                    60%  { transform: translateY(1px) rotate(5deg); }
+                    100% { transform: translateY(0) rotate(0deg); }
+                   }
+               .animate-bounce-sway {
+                animation: bounceSway 2.8s ease-in-out infinite;
+               }
+                    `}
+      </style>
     </div>
   );
 }
