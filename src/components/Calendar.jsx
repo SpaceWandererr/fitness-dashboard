@@ -749,7 +749,6 @@ export default function CalendarFullDarkUpdated() {
               ▶
             </button>
 
-
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
 
@@ -761,16 +760,15 @@ export default function CalendarFullDarkUpdated() {
                setSelectedDate(today.format("YYYY-MM-DD")); // highlight today date
              }}
               className="
-      px-3 py-1.5 rounded-md
-      bg-transparent
-      text-[#9FF2E8] text-sm font-medium
-      border border-[#2F6B60]/50
-      shadow-[0_0_6px_rgba(0,0,0,0.3)]
-      transition-all duration-200
-      hover:border-[#4ade80] hover:text-[#CFFFF7]
-      hover:shadow-[0_0_8px_#4ade80]
-      active:scale-95
-    "
+               px-3 py-1.5 rounded-md
+               bg-transparent
+               text-[#9FF2E8] text-sm font-medium
+               border border-[#2F6B60]/50
+               shadow-[0_0_6px_rgba(0,0,0,0.3)]
+               transition-all duration-200
+               hover:border-[#4ade80] hover:text-[#CFFFF7]
+               hover:shadow-[0_0_8px_#4ade80]
+               active:scale-95"
             >
               Today
             </button>
