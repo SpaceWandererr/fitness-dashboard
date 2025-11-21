@@ -1,7 +1,10 @@
-// Planner.jsx — Full slim+features version with H1 hamburger (⋮) menu
-// Paste into src/components/Planner.jsx (replace existing).
-// Requires: react, framer-motion, lottie-react, dayjs, tailwindcss
-// Adjust Lottie import paths if your assets live elsewhere.
+// Planner.jsx — Full feature version aligned with Calendar theme
+// - Calendar light/dark colors
+// - Templates LEFT, Morning/Afternoon/Evening RIGHT
+// - Temp + Sunrise + Sunset in header
+// - Weather Lottie more visible
+// - Mini-calendar selection glow
+// All original features preserved (drag/drop, pomodoro, habits, queues, etc.)
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -128,26 +131,32 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
   for (let i = 0; i < 42; i++) days.push(start.add(i, "day"));
 
   return (
-    <div className="bg-[#0A1E1B] border border-emerald-800/30 rounded-xl p-3 w-full">
+    <div
+      className="
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      border border-[#2F6B60]/40 rounded-xl p-3 w-full
+    "
+    >
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setBase(base.subtract(1, "month"))}
-          className="px-2 py-1 rounded bg-transparent border border-emerald-800/20 text-sm"
+          className="px-2 py-1 rounded bg-transparent border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
         >
           ◀
         </button>
-        <div className="text-sm font-medium text-emerald-100">
+        <div className="text-sm font-medium text-[#9FF2E8]">
           {base.format("MMMM YYYY")}
         </div>
         <button
           onClick={() => setBase(base.add(1, "month"))}
-          className="px-2 py-1 rounded bg-transparent border border-emerald-800/20 text-sm"
+          className="px-2 py-1 rounded bg-transparent border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
         >
           ▶
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-xs text-emerald-300 mb-2">
+      <div className="grid grid-cols-7 gap-1 text-xs text-[#7FAFA4] mb-2">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
           <div key={i} className="text-center">
             {d}
@@ -160,40 +169,53 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
           const k = d.format("YYYY-MM-DD");
           const isCurrentMonth = d.month() === base.month();
           const isSelected = dayjs(selectedDate).isSame(d, "day");
-          const plans = load(formatDateKey(d), {
-            Morning: [],
-            Afternoon: [],
-            Evening: [],
-          });
-          const hasTasks =
-            (plans.Morning?.length || 0) +
-              (plans.Afternoon?.length || 0) +
-              (plans.Evening?.length || 0) >
-            0;
+
+          const hasTasks = (() => {
+            const plans = load(formatDateKey(d), {
+              Morning: [],
+              Afternoon: [],
+              Evening: [],
+            });
+            return (
+              (plans.Morning?.length || 0) +
+                (plans.Afternoon?.length || 0) +
+                (plans.Evening?.length || 0) >
+              0
+            );
+          })();
+
+          const baseClasses =
+            "relative p-2 rounded text-xs h-10 flex items-center justify-center flex-col transition-all duration-200";
+
+          const colorClasses = isSelected
+            ? "bg-[#0A2B22] text-[#E8FFFA] ring-2 ring-[#3FA796] shadow-[0_0_10px_rgba(63,167,150,0.5)]"
+            : isCurrentMonth
+            ? "text-[#CDEEE8] hover:bg-black/20"
+            : "text-[#7FAFA4]/60";
+
           return (
             <button
               key={k + i}
               onClick={() => setSelectedDate(d.toDate())}
-              className={`p-2 rounded text-xs h-10 flex items-center justify-center flex-col ${
-                isSelected
-                  ? "bg-emerald-600 text-black"
-                  : isCurrentMonth
-                  ? "text-emerald-100"
-                  : "text-emerald-400/60"
-              } ${hasTasks ? "ring-1 ring-emerald-500/20" : ""}`}
+              className={`${baseClasses} ${colorClasses}`}
             >
-              <div>{d.date()}</div>
+              {/* Today / selected glow */}
+              {isSelected && (
+                <span className="absolute inset-0 rounded-lg ring-2 ring-[#22c55e]/40 animate-[pulse_2s_infinite]" />
+              )}
+
+              <div className="relative z-10">{d.date()}</div>
               {hasTasks && (
-                <div className="w-1 h-1 rounded-full bg-emerald-400 mt-1" />
+                <div className="relative z-10 w-1 h-1 rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]" />
               )}
             </button>
           );
         })}
       </div>
 
-      <div className="mt-3 text-xs text-emerald-300">
+      <div className="mt-3 text-xs text-[#7FAFA4]">
         Selected:{" "}
-        <span className="font-medium">
+        <span className="font-medium text-[#E8FFFA]">
           {dayjs(selectedDate).format("DD MMM YYYY")}
         </span>
       </div>
@@ -225,7 +247,7 @@ function WeatherCard({
   const temp = weatherData?.main?.temp ?? "—";
 
   const title = (() => {
-    if (!selectedCity) return "—";
+    if (!selectedCity) return "Select a city";
     if (typeof selectedCity === "string") return selectedCity;
     return `${selectedCity.name}${
       selectedCity.admin1 ? ", " + selectedCity.admin1 : ""
@@ -237,28 +259,28 @@ function WeatherCard({
       <div className="flex items-center justify-between mb-2 w-full">
         <button
           onClick={() => setShowSearch((s) => !s)}
-          className="px-2 py-1 rounded bg-transparent border border-emerald-800/20 text-xs"
+          className="px-2 py-1 rounded bg-transparent border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
         >
           🔍
         </button>
-        <div className="text-sm text-emerald-100 truncate">{title}</div>
+        <div className="text-sm text-[#CDEEE8] truncate">{title}</div>
         <div className="flex gap-2">
           <button
             onClick={() => setWeatherStyle("realistic")}
-            className={`px-3 py-1 text-xs rounded ${
+            className={`px-3 py-1 text-xs rounded border ${
               weatherStyle === "realistic"
-                ? "bg-emerald-500 text-black"
-                : "bg-transparent border border-emerald-800/20"
+                ? "bg-[#0A2B22] text-[#E8FFFA] border-[#3FA796] shadow-[0_0_8px_rgba(63,167,150,0.5)]"
+                : "bg-transparent text-[#CDEEE8] border-[#2F6B60]/40"
             }`}
           >
-            Realistic
+            Real
           </button>
           <button
             onClick={() => setWeatherStyle("anime")}
-            className={`px-3 py-1 text-xs rounded ${
+            className={`px-3 py-1 text-xs rounded border ${
               weatherStyle === "anime"
-                ? "bg-emerald-500 text-black"
-                : "bg-transparent border border-emerald-800/20"
+                ? "bg-[#071A2F] text-[#E8FFFA] border-[#60A5FA] shadow-[0_0_8px_rgba(96,165,250,0.5)]"
+                : "bg-transparent text-[#CDEEE8] border-[#2F6B60]/40"
             }`}
           >
             Anime
@@ -275,20 +297,20 @@ function WeatherCard({
               setCityInput(e.target.value);
             }}
             placeholder="Search city..."
-            className="w-full bg-transparent border border-emerald-800/20 rounded px-3 py-2 mb-2 text-sm"
+            className="w-full bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 mb-2 text-sm text-[#E8FFFA] placeholder:text-[#7FAFA4]"
           />
-          <div className="max-h-40 overflow-auto border border-emerald-800/20 rounded">
+          <div className="max-h-40 overflow-auto border border-[#2F6B60]/40 rounded bg-black/40">
             {suggestions?.map((s, i) => (
               <div
                 key={i}
                 onClick={() => onSelect(s)}
-                className="px-3 py-2 hover:bg-emerald-900/10 cursor-pointer"
+                className="px-3 py-2 hover:bg-[#0F1622] cursor-pointer"
               >
-                <div className="font-medium text-emerald-100">
+                <div className="font-medium text-[#E8FFFA]">
                   {s.name}
                   {s.admin1 ? `, ${s.admin1}` : ""}
                 </div>
-                <div className="text-xs text-emerald-300">
+                <div className="text-xs text-[#7FAFA4]">
                   {s.country} • {s.latitude?.toFixed(2)},
                   {s.longitude?.toFixed(2)}
                 </div>
@@ -299,11 +321,11 @@ function WeatherCard({
       )}
 
       {/* Card visual */}
-      <div className="relative rounded-xl overflow-hidden border border-emerald-800/20 bg-transparent h-[270px]">
+      <div className="relative rounded-xl overflow-hidden border border-[#2F6B60]/40 bg-black/20 h-[270px]">
         {/* Lottie background */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
-          style={{ opacity: 0.35 }}
+          style={{ opacity: 0.7 }} // more visible animation
         >
           {lottieData && (
             <Lottie
@@ -315,16 +337,16 @@ function WeatherCard({
           )}
         </div>
 
-        {/* Info panel at top */}
-        <div className="relative z-20 p-6 flex flex-col items-center gap-2 mt-8">
-          <div className="text-4xl font-semibold text-emerald-100">
+        {/* Info panel at top (keep temp + condition here) */}
+        <div className="relative z-20 p-6 flex flex-col items-center gap-2 mt-4">
+          <div className="text-2xl font-medium text-[#E8FFFA] drop-shadow">
             {temp !== "—" ? Math.round(temp) + "°C" : "—"}
           </div>
-          <div className="text-sm text-emerald-200">{condition}</div>
+          <div className="text-sm text-[#9FF2E8]">{condition}</div>
         </div>
 
         {/* stats panel at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-emerald-300 grid grid-cols-2 gap-y-1">
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8] grid grid-cols-2 gap-y-1">
           <div>Humidity: {weatherData?.main?.humidity ?? "—"}%</div>
           <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
           <div>UV: {weatherData?.meta?.uv ?? "—"}</div>
@@ -635,7 +657,6 @@ export default function Planner() {
   useEffect(() => {
     function onDocClick(e) {
       if (!e.target) return;
-      // close menu if clicked outside
       if (!e.target.closest) {
         setOpenMenuIndex(null);
         return;
@@ -647,37 +668,156 @@ export default function Planner() {
     return () => document.removeEventListener("click", onDocClick);
   }, []);
 
+  const [liveTime, setLiveTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+  const selectedWeatherMeta = {
+    temp:
+      weatherData?.main?.temp !== null && weatherData?.main?.temp !== undefined
+        ? Math.round(weatherData.main.temp)
+        : null,
+    sunrise: weatherData?.meta?.sunrise || null,
+    sunset: weatherData?.meta?.sunset || null,
+  };
+
   // render
   return (
-    <div className="p-6 max-w-7xl mx-auto text-emerald-100">
+    <div
+      className="
+      p-6 max-w-7xl mx-auto 
+      rounded-xl
+      text-[#E8FFFA]
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      transition-colors duration-500
+    "
+    >
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Planner — Gym Theme</h1>
-          <p className="text-sm text-emerald-200">
-            Green, dark, focused — drag tasks to plan your day.
+          <h1 className="text-2xl font-semibold text-[#9FF2E8]">
+            Daily Auto Planner
+          </h1>
+          <p className="text-sm text-[#7FAFA4]">
+            Templates vs Time Slots • Same theme as Calendar.jsx
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Right side: Streak + Weather mini summary */}
+        <div className="flex flex-col sm:flex-row items-stretch gap-3">
           <div className="text-right">
-            <div className="text-xs text-emerald-300">Streak</div>
-            <div className="text-lg font-medium">{streak} days</div>
+            <div className="text-xs text-[#7FAFA4]">Streak</div>
+            <div className="text-lg font-medium text-[#E8FFFA]">
+              {streak} days
+            </div>
           </div>
+
+          {selectedWeatherMeta.temp !== null && (
+            <div className="flex flex-wrap items-center gap-5 px-4 py-2 rounded-lg border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm text-xs sm:text-sm">
+              {/* Date */}
+              <div className="text-center">
+                <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
+                  Date
+                </div>
+                <div className="text-sm font-medium text-[#E8FFFA]">
+                  {dayjs(liveTime).format("DD MMM YYYY")}
+                </div>
+              </div>
+
+              {/* Time */}
+              <div className="text-center">
+                <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
+                  Time
+                </div>
+                <div className="text-sm font-semibold text-[#9FF2E8]">
+                  {dayjs(liveTime).format("hh:mm A")}
+                </div>
+              </div>
+
+              {/* Location */}
+              {selectedCity && (
+                <div className="text-center max-w-[150px] truncate">
+                  <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
+                    Location
+                  </div>
+                  <div className="text-sm text-[#E8FFFA] truncate">
+                    {selectedCity.name}, {selectedCity.admin1}
+                  </div>
+                  <div className="text-[11px] text-[#7FAFA4]">
+                    {selectedCity.country}
+                  </div>
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="h-8 w-px bg-[#2F6B60]/40 hidden sm:block" />
+
+              {/* Temp */}
+              {selectedWeatherMeta.temp !== null && (
+                <div className="text-center">
+                  <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
+                    Temp
+                  </div>
+                  <div className="text-base font-semibold text-[#9FF2E8]">
+                    {selectedWeatherMeta.temp}°C
+                  </div>
+                </div>
+              )}
+
+              {/* Sunrise */}
+              <div className="text-center">
+                <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
+                  Sunrise
+                </div>
+                <div className="text-sm text-[#E8FFFA]">
+                  {selectedWeatherMeta.sunrise
+                    ? dayjs(selectedWeatherMeta.sunrise).format("h:mm A")
+                    : "—"}
+                </div>
+              </div>
+
+              {/* Sunset */}
+              <div className="text-center">
+                <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
+                  Sunset
+                </div>
+                <div className="text-sm text-[#E8FFFA]">
+                  {selectedWeatherMeta.sunset
+                    ? dayjs(selectedWeatherMeta.sunset).format("h:mm A")
+                    : "—"}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* TOP ROW — templates and weather (2.1fr / 0.9fr) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[2.1fr_0.9fr] gap-6 mb-4">
-        {/* TEMPLATES */}
-        <div className="min-w-0 lg:col-span-1">
-          <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
+      {/* MAIN TOP LAYOUT — Templates LEFT,  Slots RIGHT */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1.1fr,1.5fr] gap-4 mb-6">
+        {/* LEFT: Templates */}
+        <div className="min-w-0 flex flex-col gap-4">
+          <div
+            className="
+            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+            rounded-xl p-4
+            border border-[#2F6B60]/40
+            backdrop-blur-sm
+            shadow-[0_0_12px_rgba(0,0,0,0.35)]
+          "
+          >
             <div className="flex flex-col md:flex-row gap-3 md:items-center">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search templates..."
-                className="flex-1 bg-transparent border border-emerald-800/20 rounded px-3 py-2 placeholder:text-emerald-400 text-sm min-w-0"
+                className="flex-1 bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 placeholder:text-[#7FAFA4] text-sm min-w-0"
               />
 
               <form
@@ -694,14 +834,14 @@ export default function Planner() {
                   value={inlineAdd}
                   onChange={(e) => setInlineAdd(e.target.value)}
                   placeholder="Add new..."
-                  className="bg-transparent border border-emerald-800/20 px-3 py-2 rounded text-sm"
+                  className="bg-black/20 border border-[#2F6B60]/40 px-3 py-2 rounded text-sm"
                 />
-                <button className="px-3 py-2 rounded bg-emerald-500 text-black text-sm">
+                <button className="px-3 py-2 rounded bg-[#0A2B22] text-[#E8FFFA] text-sm border border-[#3FA796] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
                   Add
                 </button>
               </form>
 
-              <div className="text-xs text-emerald-400 hidden md:block">
+              <div className="text-xs text-[#7FAFA4] hidden md:block">
                 {tasks.length} templates
               </div>
             </div>
@@ -718,7 +858,7 @@ export default function Planner() {
                     draggable
                     onDragStart={(e) => onDragStart(e, t)}
                     onDragEnd={onDragEnd}
-                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-md border border-emerald-800/20 bg-gradient-to-br from-[#061614] to-[#071a18]"
+                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-md border border-[#2F6B60]/30 bg-gradient-to-br from-[#081C18] to-[#0F0F0F]"
                   >
                     {/* left: icon + text */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -728,7 +868,7 @@ export default function Planner() {
 
                     {/* right: actions (hamburger on small widths) */}
                     <div className="flex items-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
-                      {/* show normal actions on medium+ widths */}
+                      {/* normal actions on medium+ widths */}
                       <div className="hidden sm:flex items-center gap-2">
                         <button
                           onClick={() => {
@@ -742,7 +882,7 @@ export default function Planner() {
                             );
                             showToast("Added to Study queue");
                           }}
-                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
                         >
                           Study
                         </button>
@@ -758,19 +898,19 @@ export default function Planner() {
                             );
                             showToast("Added to Gym queue");
                           }}
-                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
                         >
                           Gym
                         </button>
                         <button
                           onClick={() => duplicateTemplate(t)}
-                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
                         >
                           ⎘
                         </button>
                         <button
                           onClick={() => deleteTemplate(i)}
-                          className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
+                          className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
                         >
                           🗑
                         </button>
@@ -783,7 +923,7 @@ export default function Planner() {
                             e.stopPropagation();
                             setOpenMenuIndex(openMenuIndex === i ? null : i);
                           }}
-                          className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
                         >
                           ⋮
                         </button>
@@ -794,7 +934,7 @@ export default function Planner() {
                               initial={{ opacity: 0, y: -6 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -6 }}
-                              className="absolute right-0 mt-2 w-40 bg-[#071E1B] border border-emerald-800/30 rounded shadow p-2 z-40"
+                              className="absolute right-0 mt-2 w-40 bg-[#0F0F0F] border border-[#2F6B60]/40 rounded shadow p-2 z-40"
                             >
                               <button
                                 onClick={() => {
@@ -810,7 +950,7 @@ export default function Planner() {
                                   showToast("Added to Study queue");
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-emerald-900/10"
+                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
                               >
                                 Study
                               </button>
@@ -827,7 +967,7 @@ export default function Planner() {
                                   showToast("Added to Gym queue");
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-emerald-900/10"
+                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
                               >
                                 Gym
                               </button>
@@ -836,7 +976,7 @@ export default function Planner() {
                                   duplicateTemplate(t);
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-emerald-900/10"
+                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
                               >
                                 Duplicate
                               </button>
@@ -845,7 +985,7 @@ export default function Planner() {
                                   deleteTemplate(i);
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded text-rose-600 hover:bg-emerald-900/10"
+                                className="w-full text-left px-2 py-1 rounded text-[#FF8F8F] hover:bg-[#071827]"
                               >
                                 Delete
                               </button>
@@ -862,19 +1002,19 @@ export default function Planner() {
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 onClick={() => addTask("Gym: Workout")}
-                className="px-3 py-1 rounded bg-emerald-900/20 text-sm"
+                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
               >
                 Gym
               </button>
               <button
                 onClick={() => addTask("Code: Focus Session")}
-                className="px-3 py-1 rounded bg-emerald-900/20 text-sm"
+                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
               >
                 Code
               </button>
               <button
                 onClick={() => addTask("DSA Practice")}
-                className="px-3 py-1 rounded bg-emerald-900/20 text-sm"
+                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
               >
                 DSA
               </button>
@@ -882,141 +1022,133 @@ export default function Planner() {
           </div>
         </div>
 
-        {/* WEATHER */}
-        <div className="min-w-0 h-[330px]">
-          <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4 min-h-[320px] h-full">
-            <WeatherCard
-              cityInput={cityInput}
-              setCityInput={setCityInput}
-              suggestions={suggestions}
-              onSelect={(c) => {
-                setSelectedCity(c);
-                save("wd_weather_city", c);
-              }}
-              selectedCity={selectedCity}
-              weatherData={weatherData}
-              weatherStyle={weatherStyle}
-              setWeatherStyle={setWeatherStyle}
-              showSearch={showSearch}
-              setShowSearch={setShowSearch}
-              lottieData={lottieData}
-            />
+        {/* Planner Slots */}
+        <div className="min-w-0 flex flex-col gap-4">
+          {/* PLANNER COLUMNS (Morning / Afternoon / Evening) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-full ">
+            {SLOT_ORDER.map((slot) => {
+              const isActive = activeDrop === slot && dragging;
+              return (
+                <div key={slot} className="min-w-0">
+                  <div
+                    onDragOver={onDragOver(slot)}
+                    onDrop={onDrop(slot)}
+                    onDragEnd={onDragEnd}
+                    className={`rounded-xl p-3 min-h-full max-h-[360px] overflow-auto border border-[#2F6B60]/40
+                    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+                  dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+             ${
+              isActive
+                ? "ring-2 ring-[#3FA796] shadow-[0_0_12px_rgba(63,167,150,0.5)]"
+                : ""
+            }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <div className="text-sm text-[#9FF2E8]">{slot}</div>
+                        <div className="text-xs text-[#7FAFA4]">
+                          {(day[slot] || []).length} items
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const p = "Gym: Workout";
+                            const next = {
+                              ...day,
+                              [slot]: [...(day[slot] || []), p],
+                            };
+                            setDay(next);
+                            save(formatDateKey(selectedDate), next);
+                            showToast(`Added ${p}`);
+                          }}
+                          className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                        >
+                          +Preset
+                        </button>
+                        <button
+                          onClick={() => {
+                            (day[slot] || []).forEach((t) => {
+                              const arr = JSON.parse(
+                                localStorage.getItem("wd_study_queue") || "[]"
+                              );
+                              arr.push({ task: t, created: Date.now() });
+                              localStorage.setItem(
+                                "wd_study_queue",
+                                JSON.stringify(arr)
+                              );
+                            });
+                            showToast("Sent to Study queue");
+                          }}
+                          className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                        >
+                          →Study
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <AnimatePresence>
+                        {(day[slot] || []).map((t, idx) => (
+                          <motion.div
+                            key={t + idx}
+                            layout
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            className="flex items-center justify-between p-2 rounded-md border border-[#2F6B60]/30 bg-[#071227]/70"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="text-lg">{taskEmoji(t)}</div>
+                              <div className="text-sm truncate">{t}</div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => moveToNextSlot(slot, idx)}
+                                className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                              >
+                                ➜
+                              </button>
+                              <button
+                                onClick={() => removeFrom(slot, idx)}
+                                className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+
+                      {(day[slot] || []).length === 0 && (
+                        <div className="text-sm text-[#7FAFA4] border border-dashed border-[#2F6B60]/40 rounded p-4">
+                          Empty — drop a task here
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
-
-      {/* PLANNER COLUMNS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        {SLOT_ORDER.map((slot) => {
-          const isActive = activeDrop === slot && dragging;
-          return (
-            <div key={slot} className="min-w-0">
-              <div
-                onDragOver={onDragOver(slot)}
-                onDrop={onDrop(slot)}
-                onDragEnd={onDragEnd}
-                className={`rounded-xl p-3 min-h-[300px] max-h-[420px] overflow-auto border border-emerald-800/20 bg-gradient-to-b from-[#041514] to-[#071716] ${
-                  isActive ? "ring-2 ring-emerald-400/25" : ""
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <div className="text-sm text-emerald-200">{slot}</div>
-                    <div className="text-xs text-emerald-300">
-                      {(day[slot] || []).length} items
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        const p = "Gym: Workout";
-                        const next = {
-                          ...day,
-                          [slot]: [...(day[slot] || []), p],
-                        };
-                        setDay(next);
-                        save(formatDateKey(selectedDate), next);
-                        showToast(`Added ${p}`);
-                      }}
-                      className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
-                    >
-                      +Preset
-                    </button>
-                    <button
-                      onClick={() => {
-                        (day[slot] || []).forEach((t) => {
-                          const arr = JSON.parse(
-                            localStorage.getItem("wd_study_queue") || "[]"
-                          );
-                          arr.push({ task: t, created: Date.now() });
-                          localStorage.setItem(
-                            "wd_study_queue",
-                            JSON.stringify(arr)
-                          );
-                        });
-                        showToast("Sent to Study queue");
-                      }}
-                      className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
-                    >
-                      →Study
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <AnimatePresence>
-                    {(day[slot] || []).map((t, idx) => (
-                      <motion.div
-                        key={t + idx}
-                        layout
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        className="flex items-center justify-between p-2 rounded-md border border-emerald-800/10 bg-[#071a18]/60"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="text-lg">{taskEmoji(t)}</div>
-                          <div className="text-sm truncate">{t}</div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => moveToNextSlot(slot, idx)}
-                            className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
-                          >
-                            ➜
-                          </button>
-                          <button
-                            onClick={() => removeFrom(slot, idx)}
-                            className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {(day[slot] || []).length === 0 && (
-                    <div className="text-sm text-emerald-300 border border-dashed border-emerald-800/10 rounded p-4">
-                      Empty — drop a task here
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
 
       {/* BOTTOM ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         {/* Pomodoro */}
-        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
+        <div
+          className="
+          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          border border-[#2F6B60]/40 rounded-xl p-4
+        "
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-sm text-emerald-300">Focus Mode</div>
-              <div className="text-xs text-emerald-400">
+              <div className="text-sm text-[#9FF2E8]">Focus Mode</div>
+              <div className="text-xs text-[#7FAFA4]">
                 One task. One session.
               </div>
             </div>
@@ -1027,7 +1159,7 @@ export default function Planner() {
                   localStorage.removeItem("wd_focus_task");
                   showToast("Focus cleared");
                 }}
-                className="px-2 py-1 rounded bg-emerald-900/20 text-xs"
+                className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
               >
                 Clear
               </button>
@@ -1041,10 +1173,10 @@ export default function Planner() {
               localStorage.setItem("wd_focus_task", e.target.value);
             }}
             placeholder="Today's focus..."
-            className="w-full bg-transparent border border-emerald-800/20 px-3 py-2 rounded mb-3 text-sm"
+            className="w-full bg-black/20 border border-[#2F6B60]/40 px-3 py-2 rounded mb-3 text-sm"
           />
           {focusTask && (
-            <div className="text-sm text-emerald-200 mb-3">
+            <div className="text-sm text-[#CDEEE8] mb-3">
               Focus: <span className="font-medium">{focusTask}</span>
             </div>
           )}
@@ -1054,13 +1186,13 @@ export default function Planner() {
             <div className="flex gap-2 ml-auto">
               <button
                 onClick={() => setPomodoroRunning(true)}
-                className="px-3 py-2 rounded bg-emerald-500 text-black"
+                className="px-3 py-2 rounded bg-[#22C55E] text-black"
               >
                 Start
               </button>
               <button
                 onClick={() => setPomodoroRunning(false)}
-                className="px-3 py-2 rounded bg-emerald-900/20"
+                className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40"
               >
                 Stop
               </button>
@@ -1069,7 +1201,7 @@ export default function Planner() {
                   setPomodoroSeconds(25 * 60);
                   setPomodoroRunning(false);
                 }}
-                className="px-3 py-2 rounded bg-rose-600 text-white"
+                className="px-3 py-2 rounded bg-[#7A1D2B] text-white"
               >
                 Reset
               </button>
@@ -1078,8 +1210,14 @@ export default function Planner() {
         </div>
 
         {/* Habits */}
-        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
-          <div className="text-sm text-emerald-300 mb-2">Daily Habits</div>
+        <div
+          className="
+          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          border border-[#2F6B60]/40 rounded-xl p-4
+        "
+        >
+          <div className="text-sm text-[#9FF2E8] mb-2">Daily Habits</div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm">Water (glasses)</div>
@@ -1091,7 +1229,7 @@ export default function Planner() {
                       water: Math.max(0, habits.water - 1),
                     })
                   }
-                  className="px-2 py-1 bg-emerald-900/20 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
                 >
                   -
                 </button>
@@ -1100,7 +1238,7 @@ export default function Planner() {
                   onClick={() =>
                     setHabits({ ...habits, water: habits.water + 1 })
                   }
-                  className="px-2 py-1 bg-emerald-900/20 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
                 >
                   +
                 </button>
@@ -1128,7 +1266,7 @@ export default function Planner() {
                       reading: Math.max(0, habits.reading - 5),
                     })
                   }
-                  className="px-2 py-1 bg-emerald-900/20 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
                 >
                   -
                 </button>
@@ -1137,17 +1275,17 @@ export default function Planner() {
                   onClick={() =>
                     setHabits({ ...habits, reading: habits.reading + 5 })
                   }
-                  className="px-2 py-1 bg-emerald-900/20 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            <div className="pt-2 text-sm text-emerald-400">Success Score</div>
-            <div className="w-full bg-emerald-900/20 rounded-full h-2 overflow-hidden">
+            <div className="pt-2 text-sm text-[#7FAFA4]">Success Score</div>
+            <div className="w-full bg-black/30 rounded-full h-2 overflow-hidden border border-[#2F6B60]/40">
               <div
-                className="h-2 rounded-full bg-emerald-400 transition-all"
+                className="h-2 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#22C55E] transition-all"
                 style={{ width: `${Math.min(100, totalPlanned * 8)}%` }}
               />
             </div>
@@ -1155,18 +1293,24 @@ export default function Planner() {
         </div>
 
         {/* Quick Links */}
-        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4">
-          <div className="text-sm text-emerald-300 mb-2">Quick Links</div>
+        <div
+          className="
+          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          border border-[#2F6B60]/40 rounded-xl p-4
+        "
+        >
+          <div className="text-sm text-[#9FF2E8] mb-2">Quick Links</div>
           <div className="flex flex-col gap-2">
             <a
               href="/study"
-              className="px-3 py-2 rounded bg-emerald-900/20 text-center"
+              className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40 text-center text-sm hover:shadow-[0_0_8px_rgba(63,167,150,0.4)]"
             >
               Open Study Page
             </a>
             <a
               href="/gym"
-              className="px-3 py-2 rounded bg-emerald-900/20 text-center"
+              className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40 text-center text-sm hover:shadow-[0_0_8px_rgba(184,33,50,0.4)]"
             >
               Open Gym Page
             </a>
@@ -1180,7 +1324,7 @@ export default function Planner() {
                 );
                 showToast(`Study: ${s.length} • Gym: ${g.length}`);
               }}
-              className="px-3 py-2 rounded bg-emerald-900/20"
+              className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
             >
               Preview Queues
             </button>
@@ -1197,17 +1341,23 @@ export default function Planner() {
           />
         </div>
 
-        <div className="bg-[#071E1B] border border-emerald-800/30 rounded-xl p-4 flex-1">
-          <div className="text-sm text-emerald-300 mb-2">Selected day plan</div>
+        <div
+          className="
+          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          border border-[#2F6B60]/40 rounded-xl p-4 flex-1
+        "
+        >
+          <div className="text-sm text-[#9FF2E8] mb-2">Selected day plan</div>
           <div className="space-y-3 max-h-[260px] overflow-auto pr-2">
             {SLOT_ORDER.map((slot) => (
               <div
                 key={slot}
-                className="p-3 rounded bg-[#041715] border border-emerald-800/20"
+                className="p-3 rounded bg-black/20 border border-[#2F6B60]/40"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-emerald-200">{slot}</div>
-                  <div className="text-xs text-emerald-400">
+                  <div className="text-sm text-[#E8FFFA]">{slot}</div>
+                  <div className="text-xs text-[#7FAFA4]">
                     {(day[slot] || []).length} items
                   </div>
                 </div>
@@ -1216,23 +1366,52 @@ export default function Planner() {
                   {(day[slot] || []).map((t, i) => (
                     <div
                       key={t + i}
-                      className="flex items-center justify-between p-2 rounded bg-[#031210] border border-emerald-800/20"
+                      className="flex items-center justify-between p-2 rounded bg-[#071227] border border-[#2F6B60]/40"
                     >
                       <div className="truncate text-sm">{t}</div>
                       <button
                         onClick={() => removeFrom(slot, i)}
-                        className="px-2 py-1 rounded bg-rose-600 text-white text-xs"
+                        className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
                       >
                         Remove
                       </button>
                     </div>
                   ))}
                   {(day[slot] || []).length === 0 && (
-                    <div className="text-xs text-emerald-400">No tasks</div>
+                    <div className="text-xs text-[#7FAFA4]">No tasks</div>
                   )}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* WEATHER */}
+        <div className="sm:w-full md:max-w-[240px] min-h-[320px]">
+          <div
+            className="
+              bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+              dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+              border border-[#2F6B60]/40
+              rounded-xl p-4 min-h-[320px] h-full
+            "
+          >
+            <WeatherCard
+              cityInput={cityInput}
+              setCityInput={setCityInput}
+              suggestions={suggestions}
+              onSelect={(c) => {
+                setSelectedCity(c);
+                save("wd_weather_city", c);
+              }}
+              selectedCity={selectedCity}
+              weatherData={weatherData}
+              weatherStyle={weatherStyle}
+              setWeatherStyle={setWeatherStyle}
+              showSearch={showSearch}
+              setShowSearch={setShowSearch}
+              lottieData={lottieData}
+            />
           </div>
         </div>
       </div>
@@ -1244,7 +1423,7 @@ export default function Planner() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed right-6 bottom-6 bg-[#031715] border border-emerald-800/20 px-4 py-2 rounded shadow text-emerald-100"
+            className="fixed right-6 bottom-6 bg-[#031715] border border-[#2F6B60]/40 px-4 py-2 rounded shadow text-[#E8FFFA]"
           >
             {toast}
           </motion.div>

@@ -212,14 +212,14 @@ function FadeSwiper({ data = [], render, noDrag = false, innerDrag = true }) {
 export default function Goals() {
   // Read syllabus totals live
   const [syllabusTree, setSyllabusTree] = useState(
-    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
+    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
   );
 
   useEffect(() => {
     const onStorage = (e) => {
       if (!e || e.key === SYLLABUS_KEY) {
         setSyllabusTree(
-          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {},
+          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
         );
       }
     };
@@ -250,10 +250,10 @@ export default function Goals() {
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
   const [startISO, setStartISO] = useState(
-    () => localStorage.getItem(START_KEY) || todayISO,
+    () => localStorage.getItem(START_KEY) || todayISO
   );
   const [endISO, setEndISO] = useState(
-    () => localStorage.getItem(END_KEY) || DEFAULT_END,
+    () => localStorage.getItem(END_KEY) || DEFAULT_END
   );
 
   useEffect(() => {
@@ -271,18 +271,34 @@ export default function Goals() {
   // Derived date metrics
   const startDate = useMemo(
     () => (startISO ? new Date(startISO) : null),
-    [startISO],
+    [startISO]
   );
   const endDate = useMemo(() => (endISO ? new Date(endISO) : null), [endISO]);
   const now = new Date();
-  const totalDays = startDate && endDate ? daysBetween(startISO, endISO) : null;
-  const daysElapsed = startDate
-    ? daysBetween(startISO, now.toISOString().slice(0, 10))
-    : null;
-  const daysRemaining = endDate
-    ? daysBetween(now.toISOString().slice(0, 10), endISO)
-    : null;
+  const today = new Date().toISOString().slice(0, 10);
 
+  const totalDays = startISO && endISO ? daysBetween(startISO, endISO) : null;
+
+  const rawElapsed = startISO ? daysBetween(startISO, today) : null;
+
+  // Prevent negative elapsed time
+  const daysElapsed = rawElapsed !== null ? Math.max(0, rawElapsed) : null;
+
+  // REAL remaining from start → end
+  const daysRemaining =
+    totalDays !== null && daysElapsed !== null
+      ? Math.max(0, totalDays - daysElapsed)
+      : null;
+
+  useEffect(() => {
+    console.log("👇 DATE STATE");
+    console.log("StartISO:", startISO);
+    console.log("EndISO:", endISO);
+    console.log("Today:", today);
+    console.log("TotalDays:", totalDays);
+    console.log("DaysElapsed:", daysElapsed);
+    console.log("DaysRemaining:", daysRemaining);
+  }, [startISO, endISO, daysElapsed, daysRemaining]);
   const timeProgressPct =
     totalDays && daysElapsed !== null && totalDays > 0
       ? Math.max(0, Math.min(100, Math.round((daysElapsed / totalDays) * 100)))
@@ -320,7 +336,7 @@ export default function Goals() {
       "Don’t chase motivation — build systems. This dashboard *is* your system.",
       "The grind is temporary. The life you’re chasing through MERN, fitness and discipline is permanent.",
     ],
-    [],
+    []
   );
 
   // MERN internal page swipe (keeps original 4-page behavior)
@@ -357,7 +373,7 @@ export default function Goals() {
   // Date popup & tmp state
   const [showDatePopup, setShowDatePopup] = useState(false);
   const [tmpStart, setTmpStart] = useState(() =>
-    startISO ? startISO : todayISO,
+    startISO ? startISO : todayISO
   );
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
@@ -689,7 +705,7 @@ export default function Goals() {
                             Days Remaining
                           </div>
                           <div className="text-4xl font-bold leading-none my-2">
-                            {daysRemaining ?? "—"}
+                            {totalDays ?? "—"}
                           </div>
                           <div className="text-xs opacity-70 whitespace-nowrap">
                             Weeks: {Math.ceil((daysRemaining || 0) / 7)} •
@@ -888,8 +904,13 @@ export default function Goals() {
                       </label>
                       <input
                         type="date"
-                        value={startISO}
-                        onChange={(e) => setStartISO(e.target.value)}
+                        value={startISO || ""}
+                        onChange={(e) => {
+                          const val = e.target.value; // always YYYY-MM-DD
+                          console.log("New Start:", val);
+                          setStartISO(val);
+                          localStorage.setItem("wd_mern_start_date", val);
+                        }}
                         className="w-full px-2 py-2 rounded-md bg-white/5 border border-white/10 text-xs focus:outline-none"
                       />
                     </div>
@@ -983,7 +1004,7 @@ export default function Goals() {
         items: ["Work visa", "Move to NZ", "Apply for residency"],
       },
     ],
-    [],
+    []
   );
 
   const nzWrapper = [
@@ -1106,13 +1127,13 @@ export default function Goals() {
           {(() => {
             // original gym logic from your provided file (kept intact)
             const logs = JSON.parse(
-              localStorage.getItem("wd_gym_logs") || "{}",
+              localStorage.getItem("wd_gym_logs") || "{}"
             );
             const overrides = JSON.parse(
-              localStorage.getItem("wd_weight_overrides") || "{}",
+              localStorage.getItem("wd_weight_overrides") || "{}"
             );
             const bmiLogs = JSON.parse(
-              localStorage.getItem("bmi_logs") || "[]",
+              localStorage.getItem("bmi_logs") || "[]"
             );
             const goals = JSON.parse(localStorage.getItem("wd_goals") || "{}");
             const target = Number(goals?.targetWeight || 0);
@@ -1126,7 +1147,7 @@ export default function Goals() {
               .filter((w) => typeof w === "number");
             const inferredStart = recentWeights.length
               ? Math.max(...recentWeights.slice(-30))
-              : (todayLog.weight ?? target);
+              : todayLog.weight ?? target;
             const effectiveStart = start ?? inferredStart;
             const curWeight =
               overrides[dateKey] ??
@@ -1443,7 +1464,10 @@ export default function Goals() {
                    (Your requested Style 1 layout + Chapter content)
                    ===================================================== */}
 
-        <section className="relative min-h-screen w-full py-16 px-4 sm:px-6 md:px-10">
+        <section
+          className="relative min-h-screen w-full
+          py-16 px-4 sm:px-6 md:px-10"
+        >
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(6,20,26,0.15)] to-[rgba(0,0,0,0.2)] opacity-50 pointer-events-none" />
 
