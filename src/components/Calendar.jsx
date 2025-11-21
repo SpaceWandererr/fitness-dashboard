@@ -464,65 +464,135 @@ export default function CalendarFullDarkUpdated() {
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-xl p-4 border bg-gradient-to-b from-[#0b0b0b] to-[#071016] shadow-md transition-all duration-300 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium">🔥 Streak</div>
-              <div className="text-xs opacity-70">
+          <div
+            className=" 
+            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
+            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+             rounded-xl p-4
+             bg-black/30
+             border border-[#2F6B60]/40
+             backdrop-blur-sm
+             shadow-[0_0_12px_rgba(0,0,0,0.35)]
+             transition-all duration-300
+             text-[#E8FFFA]
+           "
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2          ">
+              <div className="text-sm font-medium text-[#FF8F8F] flex items-center gap-1">
+                🔥 <span>Streak</span>
+              </div>
+              <div className="text-xs text-[#9FF2E8] font-semibold">
                 {streakInfo.current} days
               </div>
             </div>
-            <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
+
+            {/* Progress Bar */}
+            <div className="relative w-full h-2.5 bg-[#081C18] rounded-full overflow-hidden border border-[#2F6B60]/30">
+
+              {/* Subtle background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+              {/* Fill */}
               <div
-                className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all"
+                className={`
+        h-full rounded-full transition-all duration-700
+        ${streakInfo.percent < 50
+                    ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
+                    : "bg-gradient-to-r from-[#7A1D2B] to-[#FF8F8F] shadow-[0_0_8px_#FF8F8F]"
+                  }
+      `}
                 style={{ width: `${streakInfo.percent}%` }}
               />
             </div>
-            <div className="mt-2 text-xs opacity-70 flex justify-between">
-              <span>Longest: {streakInfo.longest}d</span>
-              <span>{streakInfo.percent}% of longest</span>
+
+            {/* Footer Info */}
+            <div className="mt-2 text-xs text-[#7FAFA4] flex justify-between">
+              <span>Longest: <b className="text-[#CDEEE8]">{streakInfo.longest}d</b></span>
+              <span>
+                <b className="text-[#9FF2E8]">{streakInfo.percent}%</b> of longest
+              </span>
             </div>
           </div>
 
+
           {/* Today's Stats (replaces quote) */}
-          <div className="rounded-xl p-4 border bg-gradient-to-br from-[#071022] to-[#081427] shadow-md transition-all duration-300 text-white">
-            <div className="text-sm font-semibold text-[#60a5fa] mb-1">
-              📊 Today's Stats
+          <div
+            className="
+            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
+            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+    rounded-xl p-4
+    bg-black/30
+    border border-[#2F6B60]/40
+    backdrop-blur-sm
+    shadow-[0_0_12px_rgba(0,0,0,0.35)]
+    transition-all duration-300
+    text-[#E8FFFA]
+  "
+          >
+            {/* Title */}
+            <div className="text-sm font-semibold text-[#9FF2E8] tracking-wide flex items-center gap-1 mb-2">
+              📊 <span>Today’s Stats</span>
             </div>
-            <div className="grid grid-cols-5 text-center mt-2">
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-5 text-center mt-3 gap-y-2">
+
+              {/* Topics */}
               <div>
-                <p className="text-[#38bdf8] font-semibold">
+                <p className="text-[#4ADE80] font-semibold text-lg">
                   {todayStats.topics}
                 </p>
-                <p className="text-xs opacity-70">Topics</p>
+                <p className="text-xs text-[#7FAFA4]">Topics</p>
               </div>
+
+              {/* Exercises */}
               <div>
-                <p className="text-[#22c55e] font-semibold">
+                <p className="text-[#22C55E] font-semibold text-lg">
                   {todayStats.exercises}
                 </p>
-                <p className="text-xs opacity-70">Exercises</p>
+                <p className="text-xs text-[#7FAFA4]">Exercises</p>
               </div>
+
+              {/* Calories */}
               <div>
-                <p className="text-[#facc15] font-semibold">
+                <p className="text-[#F59E0B] font-semibold text-lg">
                   {todayStats.calories}
                 </p>
-                <p className="text-xs opacity-70">Calories</p>
+                <p className="text-xs text-[#7FAFA4]">Calories</p>
               </div>
+
+              {/* Weight */}
               <div>
-                <p className="text-[#f472b6] font-semibold">
+                <p className="text-[#FF8F8F] font-semibold text-lg">
                   {todayStats.weight}
                 </p>
-                <p className="text-xs opacity-70">Weight</p>
+                <p className="text-xs text-[#7FAFA4]">Weight</p>
               </div>
+
+              {/* BMI */}
               <div>
-                <p className="text-[#34d399] font-semibold">{todayStats.bmi}</p>
-                <p className="text-xs opacity-70">BMI</p>
+                <p className="text-[#9FF2E8] font-semibold text-lg">
+                  {todayStats.bmi}
+                </p>
+                <p className="text-xs text-[#7FAFA4]">BMI</p>
               </div>
+
             </div>
           </div>
+
         </div>
 
         {/* Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
+        <div className="
+  grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center
+  p-2 rounded-lg
+  bg-black/20
+  border border-[#2F6B60]/40
+  backdrop-blur-sm
+  shadow-[0_0_10px_rgba(0,0,0,0.3)]
+">
+
           {[
             { label: "Calendar", val: "calendar" },
             { label: "Weekly", val: "weekly" },
@@ -531,23 +601,65 @@ export default function CalendarFullDarkUpdated() {
             <button
               key={btn.val}
               onClick={() => setView(btn.val)}
-              className={`w-full py-2 rounded-lg text-sm font-medium transition-all duration-300 ${view === btn.val
-                ? "bg-[#000000] text-[#00e5ff] shadow-[0_4px_20px_rgba(0,149,255,0.18)]"
-                : "bg-[#071227] hover:bg-[#0b2a44] text-[#dbeafe]"
-                }`}
+              className={`
+        w-full py-2 rounded-lg text-sm font-medium
+        border transition-all duration-200
+        ${view === btn.val
+                  ? `
+              bg-[#0A2B22]
+              text-[#9FF2E8]
+              border-[#3FA796]
+              ring-2 ring-[#3FA796]/60
+              shadow-[0_0_12px_rgba(63,167,150,0.4)]
+            `
+                  : `
+              bg-transparent
+              text-[#CDEEE8]
+              border-[#2F6B60]/40
+              hover:border-[#4ade80]
+              hover:text-[#E8FFFA]
+              hover:shadow-[0_0_8px_#4ade80]
+            `
+                }
+        active:scale-95
+      `}
             >
               {btn.label}
             </button>
           ))}
 
+          {/* Export Button */}
           <button
             onClick={exportAll}
-            className="w-full py-2 rounded-lg text-sm bg-[#15803d] hover:bg-[#166534] text-white"
+            className="
+      w-full py-2 rounded-lg text-sm font-medium
+      text-[#B6FFD7]
+      bg-transparent
+      border border-[#15803d]/60
+      shadow-[0_0_6px_rgba(21,128,61,0.3)]
+      transition-all duration-200
+      hover:bg-[#052E19]
+      hover:border-[#22c55e]
+      hover:shadow-[0_0_8px_#22c55e]
+      active:scale-95
+    "
           >
             Export
           </button>
 
-          <label className="w-full py-2 rounded-lg text-sm bg-[#0369a1] hover:bg-[#075985] text-white cursor-pointer">
+          {/* Import Button */}
+          <label className="
+    w-full py-2 rounded-lg text-sm font-medium cursor-pointer text-center
+    text-[#AEE7FF]
+    bg-transparent
+    border border-[#0369a1]/60
+    shadow-[0_0_6px_rgba(3,105,161,0.3)]
+    transition-all duration-200
+    hover:bg-[#031927]
+    hover:border-[#0ea5e9]
+    hover:shadow-[0_0_8px_#0ea5e9]
+    active:scale-95
+  ">
             Import
             <input
               type="file"
@@ -557,13 +669,26 @@ export default function CalendarFullDarkUpdated() {
             />
           </label>
 
+          {/* Reset Gym */}
           <button
             onClick={resetGymProgress}
-            className="w-full py-2 rounded-lg text-sm bg-[#b91c1c] hover:bg-[#991b1b] text-white"
+            className="
+      w-full py-2 rounded-lg text-sm font-medium
+      text-[#FFDADA]
+      bg-transparent
+      border border-[#7A1D2B]/60
+      shadow-[0_0_6px_rgba(122,29,43,0.35)]
+      transition-all duration-200
+      hover:bg-[#2A0509]
+      hover:border-[#B82132]
+      hover:shadow-[0_0_8px_#B82132]
+      active:scale-95
+    "
           >
             Reset Gym
           </button>
         </div>
+
       </div>
 
       {/* Calendar Section */}
@@ -630,7 +755,11 @@ export default function CalendarFullDarkUpdated() {
 
             {/* Today Button */}
             <button
-              onClick={() => setMonth(dayjs())}
+              onClick={() =>  {
+               const today = dayjs();
+               setMonth(today); // move calendar to current month
+               setSelectedDate(today.format("YYYY-MM-DD")); // highlight today date
+             }}
               className="
       px-3 py-1.5 rounded-md
       bg-transparent
@@ -715,12 +844,12 @@ export default function CalendarFullDarkUpdated() {
                 onMouseLeave={handleMouseLeaveDate}
                 className={`${base} ${notCur} ${bgClass} ${selectedClass}`}
                 title={`${d.format("ddd, DD MMM YYYY")} — ${status === "both"
-                    ? "Study + Gym"
-                    : status === "study"
-                      ? "Study"
-                      : status === "gym"
-                        ? "Gym"
-                        : "No activity"
+                  ? "Study + Gym"
+                  : status === "study"
+                    ? "Study"
+                    : status === "gym"
+                      ? "Gym"
+                      : "No activity"
                   }`}
               >
                 {/* Today glow ring */}
