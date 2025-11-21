@@ -5047,7 +5047,8 @@ function SectionCard({
   }, [m.open, node, meta, nr]);
 
   return (
-    <section className="rounded-xl
+    <section
+      className="rounded-xl
      border border-[#1c5b44]/40
      dark:border-[#00D1FF33]
      backdrop-blur-md
@@ -5055,6 +5056,7 @@ function SectionCard({
      bg-gradient-to-br 
      from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+     
 
      shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
      overflow-hidden"
@@ -5062,15 +5064,16 @@ function SectionCard({
       {/* Header */}
       <div
         onClick={() => onSectionHeaderClick(sectionPath)}
-        className="relative  p-3 cursor-pointer
+        className="relative p-3 cursor-pointer
           border border-[#0B5134] rounded-t-l
-          bg-[#0F1F1B]
-          border border-[#1F3D37]
+          bg-gradient-to-br 
+        from-[#183D3D] via-[#] to-[#B82132] 
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
           text-[#CFE8E1]
           rounded-lg px-4 py-3
           transition-all duration-300
 
-          hover:bg-[#142B25]
+          hover:bg-[#0F0F0F]
           hover:border-[#2F6B60]
           hover:shadow-[0_0_10px_rgba(47,107,96,0.4)]
 
@@ -5082,12 +5085,11 @@ function SectionCard({
           data-[done=true]:border-[#2ED3B6]
           data-[done=true]:text-[#B2FFF0]
 
-         dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF] transition-all duration-200 overflow-hidden text-[#d9ebe5]"
+         dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF]  overflow-hidden"
       >
         {/* ✅ Progress bar (thin + matches main green style) */}
         {/* Animated Smart Progress Bar */}
         <div className="relative absolute top-0 left-0 right-0 mx-1 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
-
           {/* Glass overlay layer */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/0 pointer-events-none" />
 
@@ -5097,30 +5099,28 @@ function SectionCard({
                 h-full rounded-full relative overflow-hidden
                 transition-all duration-700 ease-out
                 ${totals.pct >= 90 ? "animate-heartbeat" : ""}
-                ${totals.pct < 25
-                ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
-                : totals.pct < 50
-                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                  : totals.pct < 75
+                ${
+                  totals.pct < 25
+                    ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
+                    : totals.pct < 50
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
                     ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
                     : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
-              }
+                }
                 `}
             style={{
               width: `${totals.pct}%`,
               minWidth: totals.pct > 0 ? "6px" : "6px",
             }}
           >
-
             {/* Moving Stripes */}
             <div className="absolute inset-0 bg-stripes animate-stripes pointer-events-none" />
 
             {/* Smooth Wave Effect */}
             <div className="absolute inset-0 bg-wave animate-wave pointer-events-none opacity-40" />
-
           </div>
         </div>
-
 
         {/* ✅ Responsive layout container */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
@@ -5182,7 +5182,6 @@ function SectionCard({
         </div>
       </div>
 
-
       {/* Smooth expandable content */}
       <div
         style={{ maxHeight: `${maxH}px`, transition: "max-height 420ms ease" }}
@@ -5208,7 +5207,6 @@ function SectionCard({
         </div>
       </div>
     </section>
-
   );
 
 }

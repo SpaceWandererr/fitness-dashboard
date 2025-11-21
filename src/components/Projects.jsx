@@ -240,10 +240,6 @@ function fireConfetti() {
 /* MAIN COMPONENT — PART 1 START */
 export default function StudyProjectsAdvanced() {
   // theme
-  const [dark, setDark] = useState(() => {
-    const v = localStorage.getItem("wd_dark");
-    return v === null ? true : JSON.parse(v);
-  });
 
   // tick for timers
   const [tick, setTick] = useState(0);
@@ -277,19 +273,18 @@ export default function StudyProjectsAdvanced() {
 
   // theme listener
   useEffect(() => {
-    const handler = () => {
-      const v = localStorage.getItem("wd_dark");
-      setDark(v === null ? true : JSON.parse(v));
-    };
-    handler();
-    window.addEventListener("theme-changed", handler);
-    return () => window.removeEventListener("theme-changed", handler);
-  }, []);
+    const syncTheme = () => {
+      const root = document.documentElement;
+      const isDark = root.classList.contains("dark");
 
-  // tick interval to update timers every second
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(id);
+      // Optional: if you still need state for icons/toggles
+      // setIsDark?.(isDark);
+    };
+
+    syncTheme();
+    window.addEventListener("theme-changed", syncTheme);
+
+    return () => window.removeEventListener("theme-changed", syncTheme);
   }, []);
 
   // compute level from XP
@@ -500,11 +495,12 @@ export default function StudyProjectsAdvanced() {
 
   return (
     <div
-      className={`min-h-screen rounded-2xl px-6 py-10 transition-all duration-300 ${
-        dark
-          ? "bg-gradient-to-br from-[#002b29] via-[#001b1f] to-[#2a0000] text-foreground"
-          : "bg-gradient-to-br from-[#0C9A7B] via-[#0C729A] to-[#0C2B9A] text-[#FAFAF9]"
-      }`}
+      className="
+    min-h-[calc(60vh-var(--nav-height))] rounded-2xl px-6 py-6 transition-all duration-300
+    bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9]
+    dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+    text-foreground
+  "
     >
       <div className="max-w-6xl mx-auto">
         {/* PAGE HEADER */}
@@ -652,7 +648,7 @@ export default function StudyProjectsAdvanced() {
 
         {/* MAIN VIEW */}
         {view === "sections" && (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {Object.entries(filteredSections).map(([sec, list]) => (
               <section
                 key={sec}
@@ -663,10 +659,10 @@ export default function StudyProjectsAdvanced() {
                   onClick={() =>
                     setOpenSection(openSection === sec ? null : sec)
                   }
-                  className="flex items-center justify-between cursor-pointer hover:bg-white/5 dark:hover:bg-white/10 rounded-xl px-2 py-3 transition-all"
+                  className="flex items-center justify-between cursor-pointer hover:bg-white/5 dark:hover:bg-white/10 rounded-xl px-2 py-1 transition-all "
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg border border-border bg-black/30 flex items-center justify-center">
+                  <div className="flex items-center gap-3 ">
+                    <div className="w-12 h-12 rounded-lg border border-border bg-black/30 flex items-center justify-center ">
                       {sec.includes("HTML") && (
                         <LayoutList className="w-6 h-6 text-cyan-300" />
                       )}
@@ -761,7 +757,7 @@ export default function StudyProjectsAdvanced() {
 
                             <div className="flex-0">
                               {/* TITLE + DIFFICULTY + DETAILS */}
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between min-w-[482px]">
                                 <h4
                                   className={`font-medium ${
                                     done ? "line-through opacity-60" : ""

@@ -711,15 +711,14 @@ export default function Planner() {
 
         {/* Right side: Streak + Weather mini summary */}
         <div className="flex flex-col sm:flex-row items-stretch gap-3">
-          <div className="text-right">
-            <div className="text-xs text-[#7FAFA4]">Streak</div>
-            <div className="text-lg font-medium text-[#E8FFFA]">
-              {streak} days
-            </div>
-          </div>
-
           {selectedWeatherMeta.temp !== null && (
             <div className="flex flex-wrap items-center gap-5 px-4 py-2 rounded-lg border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm text-xs sm:text-sm">
+              <div className="text-right">
+                <div className="text-xs text-[#7FAFA4]">Streak</div>
+                <div className="text-lg font-medium text-[#E8FFFA]">
+                  {streak} days
+                </div>
+              </div>
               {/* Date */}
               <div className="text-center">
                 <div className="text-[11px] uppercase tracking-wide text-[#7FAFA4]">
@@ -1038,10 +1037,10 @@ export default function Planner() {
                     bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
                   dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
              ${
-              isActive
-                ? "ring-2 ring-[#3FA796] shadow-[0_0_12px_rgba(63,167,150,0.5)]"
-                : ""
-            }`}
+               isActive
+                 ? "ring-2 ring-[#3FA796] shadow-[0_0_12px_rgba(63,167,150,0.5)]"
+                 : ""
+             }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div>
