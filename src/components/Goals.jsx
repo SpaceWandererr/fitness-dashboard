@@ -1704,27 +1704,27 @@ export default function Goals() {
               transform-origin: center;
               }
               @keyframes flagwave {
-  0%   { transform: rotate(0deg); }
-  50%  { transform: rotate(6deg); }
-  100% { transform: rotate(0deg); }
-}
+              0%   { transform: rotate(0deg); }
+              50%  { transform: rotate(6deg); }
+              100% { transform: rotate(0deg); }
+             }
 
-.animate-flag {
-  display: inline-block;
-  animation: flagwave 2s ease-in-out infinite;
-}
+             .animate-flag {
+              display: inline-block;
+              animation: flagwave 2s ease-in-out infinite;
+             }
 
-@keyframes bounceSway {
-  0%   { transform: translateY(0) rotate(0deg); }
-  30%  { transform: translateY(-3px) rotate(-5deg); }
-  60%  { transform: translateY(1px) rotate(5deg); }
-  100% { transform: translateY(0) rotate(0deg); }
-}
-
-.animate-bounce-sway {
-  animation: bounceSway 2.8s ease-in-out infinite;
-}
-      `}</style>
+             @keyframes bounceSway {
+              0%   { transform: translateY(0) rotate(0deg); }
+              30%  { transform: translateY(-3px) rotate(-5deg); }
+              60%  { transform: translateY(1px) rotate(5deg); }
+              100% { transform: translateY(0) rotate(0deg); }
+             }
+         .animate-bounce-sway {
+          animation: bounceSway 2.8s ease-in-out infinite;
+         }
+              `}
+    </style>
     </div>
   );
 }

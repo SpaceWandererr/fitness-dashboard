@@ -4262,14 +4262,14 @@ export default function Syllabus() {
     try {
       const s = localStorage.getItem(K_TREE);
       if (s) return JSON.parse(s);
-    } catch {}
+    } catch { }
     return normalizeWholeTree(TREE);
   });
   const [meta, setMeta] = useState(() => {
     try {
       const s = localStorage.getItem(K_META);
       if (s) return JSON.parse(s);
-    } catch {}
+    } catch { }
     const m = {};
     for (const [secKey, secVal] of Object.entries(tree)) {
       m[pathKey([secKey])] = { open: false, targetDate: "", targetPct: 100 };
@@ -4281,14 +4281,14 @@ export default function Syllabus() {
     try {
       const s = localStorage.getItem(K_NOTES);
       if (s) return JSON.parse(s);
-    } catch {}
+    } catch { }
     return {};
   });
   const [daySet, setDaySet] = useState(() => {
     try {
       const s = localStorage.getItem(K_STREAK);
       if (s) return new Set(JSON.parse(s));
-    } catch {}
+    } catch { }
     return new Set();
   });
 
@@ -4307,7 +4307,7 @@ export default function Syllabus() {
     const has = (iso) => daySet.has(iso);
     let st = 0;
     const d = new Date();
-    for (;;) {
+    for (; ;) {
       const iso = d.toISOString().slice(0, 10);
       if (has(iso)) st++;
       else break;
@@ -4323,14 +4323,14 @@ export default function Syllabus() {
       const now = new Date();
       localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
       setLastSaved(now);
-    } catch {}
+    } catch { }
   }, [tree]);
 
   useEffect(() => {
     try {
       localStorage.setItem(K_META, JSON.stringify(meta));
       updateLastSaved(); // ✅ record save time
-    } catch {}
+    } catch { }
   }, [meta]);
 
   const nrSaveRef = useRef(null);
@@ -4341,7 +4341,7 @@ export default function Syllabus() {
       try {
         localStorage.setItem(K_NOTES, JSON.stringify(nr));
         updateLastSaved(); // ✅ record save time
-      } catch {}
+      } catch { }
     }, 200);
     return () => clearTimeout(nrSaveRef.current);
   }, [nr]);
@@ -4350,7 +4350,7 @@ export default function Syllabus() {
     try {
       localStorage.setItem(K_STREAK, JSON.stringify(Array.from(daySet)));
       updateLastSaved(); // ✅ record save time
-    } catch {}
+    } catch { }
   }, [daySet]);
 
   /* ui misc */
@@ -4641,171 +4641,207 @@ export default function Syllabus() {
   dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
   dark:border-[#00D1FF33]
 ">
+        <header
+  className="
+    sticky top-0 z-40 rounded-xl
+    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
+    dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
+    backdrop-blur-xl
+    border border-[#0B5134]/60
+    shadow-[0_0_15px_rgba(0,0,0,0.35)]
+    dark:border-[#00D1FF33]
+    text-[#E6F1FF]
+  "
+>
+  <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
 
-      <header
-        className="rounded-xl sticky top-0 z-40
-        bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
-        dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
-        backdrop-blur-xl border-b border-[#0B5134] shadow-[0_0_15px_rgba(0,0,0,0.35)] dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF]"
-      >
-        {/* === INNER WRAPPER (handles spacing) === */}
-        <div className="max-w-6xl mx-auto px-3 py-4 space-y-3 md:space-y-4">
-          {/* 🔹 Top Row: Title + Buttons in one line */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 w-full">
-            {/* LEFT — Title + Saved */}
-            <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
-                Syllabus Jay's Web Dev-2026
-              </h1>
-            </div>
-            {/* RIGHT — Buttons */}
-            <div className="flex flex-wrap justify-end gap-2">
-              {/* Streak */}
-              <span
-                className="px-3 py-1.5 rounded-xl  border-[#1f6a50]/40 bg-gradient-to-r from-[#0ca56d] to-[#18c481]
-                text-[15px] border border-[#0B5134] font-medium text-[#020504]"
-              >
-                🔥 Streak: <b>{Array.from(daySet).length}</b> days
-              </span>
-              {/* Expand */}
-              <button
-                onClick={() => {
-                  setMeta((m) => {
-                    const c = { ...m };
-                    Object.keys(c).forEach((k) => (c[k].open = true));
-                    return c;
-                  });
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 border-[#1f6a50]/40
-          text-[#d9ebe5] hover:bg-[#0F3A2B] transition"
-              >
-                Expand
-              </button>
-              {/* Collapse */}
-              <button
-                onClick={() => {
-                  setMeta((m) => {
-                    const c = { ...m };
-                    Object.keys(c).forEach((k) => (c[k].open = false));
-                    return c;
-                  });
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 border-[#1f6a50]/40
-          text-[#d9ebe5] hover:bg-[#0F3A2B] transition"
-              >
-                Collapse
-              </button>
-              {/* Reset */}
-              <button
-                onClick={() => {
-                  if (!confirm("Reset ALL syllabus progress? Gym data safe ✅"))
-                    return;
+    {/* 🔹 Top Row */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 
-                  setTree((old) => {
-                    const t = deepClone(old);
-                    (function reset(n) {
-                      if (Array.isArray(n)) {
-                        n.forEach((it) => {
-                          it.done = false;
-                          it.completedOn = "";
-                          it.deadline = "";
-                        });
-                        return;
-                      }
-                      for (const v of Object.values(n || {})) reset(v);
-                    })(t);
-                    return t;
-                  });
+      {/* LEFT — Title */}
+      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
+        Syllabus Jay's Web Dev-2026
+      </h1>
 
-                  setMeta({});
-                  setNR({});
-                  setDaySet(new Set());
+      {/* RIGHT — Buttons */}
+      <div className="flex flex-wrap justify-end gap-2">
 
-                  // 🔥 CLEAR LAST STUDIED
-                  localStorage.removeItem("K_LAST_STUDIED");
-                  setLastStudied("");
-                  setShowLastStudied(false);
+        {/* 🔥 Streak */}
+        <span className="
+          px-3 py-1.5 rounded-xl
+          bg-gradient-to-r from-[#0ca56d] to-[#18c481]
+          border border-[#0B5134]/60
+          text-[14px] font-semibold text-black
+        ">
+          🔥 Streak: <b>{Array.from(daySet).length}</b> days
+        </span>
 
-                  localStorage.removeItem("K_TREE");
-                  localStorage.removeItem("K_META");
-                  localStorage.removeItem("K_NOTES");
-                  localStorage.removeItem("K_STREAK");
-
-                  window.location.reload();
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm bg-red-600 text-white shadow-md hover:bg-red-700 transition"
-              >
-                Reset
-              </button>
-              {/* Export */}
-              <button
-                onClick={exportProgress}
-                className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
-          bg-[#113f30]/80 border-[#1f6a50]/40
+        {/* Expand */}
+        <button
+          onClick={() => {
+            setMeta((m) => {
+              const c = { ...m };
+              Object.keys(c).forEach((k) => (c[k].open = true));
+              return c;
+            });
+          }}
+          className="px-3 py-1.5 rounded-xl text-sm 
+          bg-[#113f30]/80 text-[#d9ebe5]
+          border border-[#1f6a50]/40
           hover:bg-[#0F3A2B] transition"
-              >
-                📤 Export
-              </button>
-              {/* Import */}
-              <label
-                className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
-          bg-[#113f30]/80 border-[#1f6a50]/40 text-[#d9ebe5]
+        >
+          Expand
+        </button>
+
+        {/* Collapse */}
+        <button
+          onClick={() => {
+            setMeta((m) => {
+              const c = { ...m };
+              Object.keys(c).forEach((k) => (c[k].open = false));
+              return c;
+            });
+          }}
+          className="px-3 py-1.5 rounded-xl text-sm 
+          bg-[#113f30]/80 text-[#d9ebe5]
+          border border-[#1f6a50]/40
           hover:bg-[#0F3A2B] transition"
-              >
-                📥 Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importProgress}
-                  className="hidden"
-                />
-              </label>
-            </div>{" "}
-            {/* END Button Row */}
-          </div>{" "}
-          {/* END Title + Button Row */}
-          {/* 🔹 Progress Bar */}
-          <div className="w-full pt-1 md:pt-3">
-            <div className="flex items-center justify-between text-xs mb-1 text-[#d9ebe5]">
-              <span className="font-medium">
-                Progress: {grand.done}/{grand.total}
+        >
+          Collapse
+        </button>
+
+        {/* Reset */}
+        <button
+          onClick={() => {
+            if (!confirm("Reset ALL syllabus progress?")) return;
+            setTree((old) => {
+              const t = structuredClone(old);
+              (function reset(n) {
+                if (Array.isArray(n)) {
+                  n.forEach((it) => {
+                    it.done = false;
+                    it.completedOn = "";
+                    it.deadline = "";
+                  });
+                  return;
+                }
+                for (const v of Object.values(n || {})) reset(v);
+              })(t);
+              return t;
+            });
+
+            setMeta({});
+            setNR({});
+            setDaySet(new Set());
+
+            // clear storage
+            localStorage.removeItem("K_LAST_STUDIED");
+            localStorage.removeItem("K_TREE");
+            localStorage.removeItem("K_META");
+            localStorage.removeItem("K_NOTES");
+            localStorage.removeItem("K_STREAK");
+
+            setLastStudied("");
+            setShowLastStudied(false);
+
+            window.location.reload();
+          }}
+          className="
+            px-3 py-1.5 rounded-xl text-sm
+            bg-[#B82132] text-white
+            shadow-md hover:bg-[#a51b2a] transition
+          "
+        >
+          Reset
+        </button>
+
+        {/* Export */}
+        <button
+          onClick={exportProgress}
+          className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
+          bg-[#113f30]/80 border border-[#1f6a50]/40
+          hover:bg-[#0F3A2B] transition"
+        >
+          📤 Export
+        </button>
+
+        {/* Import */}
+        <label
+          className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
+          bg-[#113f30]/80 border border-[#1f6a50]/40 text-[#d9ebe5]
+          hover:bg-[#0F3A2B] transition"
+        >
+          📥 Import
+          <input
+            type="file"
+            accept=".json"
+            onChange={importProgress}
+            className="hidden"
+          />
+        </label>
+      </div>
+    </div>
+
+    {/* 🔹 Progress Section */}
+    <div className="pt-2">
+
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between text-xs text-[#d9ebe5] gap-1">
+        <span className="font-medium">
+          Progress: {grand.done}/{grand.total}
+        </span>
+
+        {showLastStudied && (
+          lastStudied ? (
+            <div className="text-green-300/90 flex items-center gap-1">
+              📘 <span>Last studied:</span>
+              <span className="font-medium text-green-200">
+                {lastStudied}
               </span>
-              {showLastStudied ? (
-                lastStudied ? (
-                  <div className="text-xs text-green-300/90 mt-1 flex items-center gap-1">
-                    📘 <span>Last studied:</span>
-                    <span className="font-medium text-green-200">
-                      {lastStudied}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-xs text-gray-400 mt-1">
-                    📭 No topics completed yet.
-                  </div>
-                )
-              ) : null}
-
-              <span className="font-semibold">{grand.pct}%</span>
             </div>
-
-            <div className="h-3 mt-2 rounded-full bg-[#184d3a] overflow-hidden relative">
-              <div
-                className="h-full bg-gradient-to-r 
-          from-[#18c47b] via-[#2de89b] to-[#4cf5b9]
-          shadow-[0_0_8px_#22C55E]
-          transition-all duration-700 ease-out rounded-full"
-                style={{
-                  width: `${grand.pct}%`,
-                  minWidth: grand.pct > 0 ? 0 : "6px",
-                }}
-              />
+          ) : (
+            <div className="text-gray-400">
+              📭 No topics completed yet.
             </div>
-          </div>
-        </div>{" "}
-        {/* END inner wrapper */}
-      </header>
+          )
+        )}
+
+        <span className="font-semibold text-[#a7f3d0]">
+          {grand.pct}%
+        </span>
+      </div>
+
+      {/* ✅ Improved Progress Bar */}
+      <div className="relative mt-2 h-2.5 rounded-full bg-[#102720] overflow-hidden">
+
+        {/* Background glow layer */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+        {/* Progress Fill */}
+        <div
+          className={`
+            h-full rounded-full transition-all duration-700 ease-out
+            ${
+              grand.pct < 25
+                ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
+                : grand.pct < 50
+                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                : grand.pct < 75
+                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+            }
+          `}
+          style={{
+            width: `${grand.pct}%`,
+            minWidth: grand.pct > 0 ? "6px" : "6px",
+          }}
+        />
+
+      </div>
+    </div>
+
+  </div>
+</header>
+
 
       {/* === Combined Layout (Planner + Topics) === */}
       <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
@@ -4885,6 +4921,95 @@ export default function Syllabus() {
   );
 }
 
+<style>{`
+  /* Custom scrollbar for better aesthetics */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  /* 🔥 Moving diagonal stripes */
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.15),
+    rgba(255,255,255,0.15) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  background-size: 200% 100%;
+}
+
+/* 🔥 Wave shimmer */
+.bg-wave {
+  background-image: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255,255,255,0.12) 50%,
+    transparent 75%
+  );
+  background-size: 300% 100%;
+}
+
+/* Stripes Animation */
+@keyframes stripeMove {
+  from { background-position: 0 0; }
+  to { background-position: 200% 0; }
+}
+.animate-stripes {
+  animation: stripeMove 3s linear infinite;
+}
+
+/* Smooth Wave Animation */
+@keyframes waveMove {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+.animate-wave {
+  animation: waveMove 3.5s ease-in-out infinite;
+}
+
+/* Heartbeat effect when >= 90% */
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.2); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.15); }
+  80% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+.animate-heartbeat {
+  animation: heartbeat 1s infinite;
+}
+
+.bg-shimmer {
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,0.5) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
+
+
+    `}
+</style>
+
 /* ======================= Main Section ======================= */
 function SectionCard({
   secKey,
@@ -4923,35 +5048,80 @@ function SectionCard({
   }, [m.open, node, meta, nr]);
 
   return (
-    <section className="rounded
-  border border-[#1c5b44]/40
-  dark:border-[#00D1FF33]
-  backdrop-blur-md
+    <section className="rounded-xl
+     border border-[#1c5b44]/40
+     dark:border-[#00D1FF33]
+     backdrop-blur-md
 
-  bg-gradient-to-br 
-  from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
-  dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+     bg-gradient-to-br 
+     from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
+     dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
 
-  shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
-  overflow-hidden"
+     shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
+     overflow-hidden"
     >
       {/* Header */}
       <div
         onClick={() => onSectionHeaderClick(sectionPath)}
-        className="relative  p-3 cursor-pointer 
-  bg-[#051C14] border border-[#0B5134] hover:bg-[#0A2F22] dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF] transition-all duration-200 overflow-hidden text-[#d9ebe5]"
+        className="relative  p-3 cursor-pointer
+          border border-[#0B5134] rounded-t-l
+          bg-[#0F1F1B]
+          border border-[#1F3D37]
+          text-[#CFE8E1]
+          rounded-lg px-4 py-3
+          transition-all duration-300
+
+          hover:bg-[#142B25]
+          hover:border-[#2F6B60]
+          hover:shadow-[0_0_10px_rgba(47,107,96,0.4)]
+
+          data-[expanded=true]:bg-[#112924]
+          data-[expanded=true]:border-[#3FA796]
+          data-[expanded=true]:text-[#ECFFFA]
+
+          data-[done=true]:bg-[#081C18]
+          data-[done=true]:border-[#2ED3B6]
+          data-[done=true]:text-[#B2FFF0]
+
+         dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF] transition-all duration-200 overflow-hidden text-[#d9ebe5]"
       >
         {/* ✅ Progress bar (thin + matches main green style) */}
-        <div className="absolute top-0.5 left-0 right-0 mx-1 h-1.5 rounded-full bg-[#184d3a] overflow-hidden">
+        {/* Animated Smart Progress Bar */}
+        <div className="relative absolute top-0 left-0 right-0 mx-1 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
+
+          {/* Glass overlay layer */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/0 pointer-events-none" />
+
+          {/* Main Progress Fill */}
           <div
-            className="h-full bg-gradient-to-r from-[#16C47F] via-[#22E58F] to-[#34F5A8] 
-               shadow-[0_0_6px_#22C55E] transition-all duration-700 ease-out rounded-full"
+            className={`
+                h-full rounded-full relative overflow-hidden
+                transition-all duration-700 ease-out
+                ${totals.pct >= 90 ? "animate-heartbeat" : ""}
+                ${totals.pct < 25
+                ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
+                : totals.pct < 50
+                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                  : totals.pct < 75
+                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+              }
+                `}
             style={{
               width: `${totals.pct}%`,
-              minWidth: totals.pct > 0 ? 0 : "6px", // 👈 always visible dot at 0%
+              minWidth: totals.pct > 0 ? "6px" : "6px",
             }}
-          />
+          >
+
+            {/* Moving Stripes */}
+            <div className="absolute inset-0 bg-stripes animate-stripes pointer-events-none" />
+
+            {/* Smooth Wave Effect */}
+            <div className="absolute inset-0 bg-wave animate-wave pointer-events-none opacity-40" />
+
+          </div>
         </div>
+
 
         {/* ✅ Responsive layout container */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
@@ -4978,6 +5148,7 @@ function SectionCard({
             <button
               onClick={() => setAllAtPath(sectionPath, !allDone)}
               className="px-2 py-1 rounded-md border
+              border-[#00d1b2]/50
               dark:border-[#00d1b2]/50 bg-[#051C14]
               dark:bg-gray-800 hover:bg-[#051C14]
               dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
@@ -5012,7 +5183,6 @@ function SectionCard({
         </div>
       </div>
 
-      {/* Progress bar (kept) */}
 
       {/* Smooth expandable content */}
       <div
@@ -5039,7 +5209,9 @@ function SectionCard({
         </div>
       </div>
     </section>
+
   );
+
 }
 
 /* ======================= Sub Section ======================= */
@@ -5205,10 +5377,10 @@ function SubNode({
                 if (it.done) {
                   const completedStr = completedDate
                     ? new Date(completedDate).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
                     : "";
 
                   if (!it.deadline) {
@@ -5225,15 +5397,13 @@ function SubNode({
                       }
                     );
                     if (diff > 0) {
-                      completionMsg = `Completed ${diff} day${
-                        diff > 1 ? "s" : ""
-                      } after target (${targetStr})`;
+                      completionMsg = `Completed ${diff} day${diff > 1 ? "s" : ""
+                        } after target (${targetStr})`;
                       completionColor =
                         "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
                     } else if (diff < 0) {
-                      completionMsg = `Completed ${Math.abs(diff)} day${
-                        Math.abs(diff) > 1 ? "s" : ""
-                      } before target (${targetStr})`;
+                      completionMsg = `Completed ${Math.abs(diff)} day${Math.abs(diff) > 1 ? "s" : ""
+                        } before target (${targetStr})`;
                       completionColor =
                         "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
                     } else {
@@ -5266,21 +5436,23 @@ function SubNode({
                     }}
                     /* Topic Section */
                     className={`rounded-lg border border-[#00d1b2]/25 dark:border-[#1E2631] p-2 bg-[#134039] text-white hover:bg-[#00d1b2]/10
-                    dark:bg-[#11161D] dark:hover-[##16212D] dark:text-[#B8C1CC] cursor-pointer select-none ${
-                      it.done ? "opacity-90" : ""
-                    }`}
+                    dark:bg-[#11161D] dark:hover-[##16212D] dark:text-[#B8C1CC] cursor-pointer select-none ${it.done ? "opacity-90" : ""
+                      }`}
                   >
                     {/* ✅ Task Row Layout */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       {/* LEFT — Checkbox + Title */}
-                      <div className="flex items-start gap-2 min-w-0">
-                        <input
-                          type="checkbox"
-                          checked={!!it.done}
-                          onChange={(e) => {
+                      <div className="flex items-start gap-3 min-w-0">
+
+                        {/* Custom Checkbox */}
+                        <div
+                          onClick={(e) => {
                             e.stopPropagation();
-                            markTask(path, idx, e.target.checked);
-                            if (e.target.checked) {
+
+                            const newState = !it.done;
+                            markTask(path, idx, newState);
+
+                            if (newState) {
                               setNR((old) => ({
                                 ...old,
                                 [itemKey(path, idx)]: {
@@ -5290,19 +5462,41 @@ function SubNode({
                               }));
                             }
                           }}
-                          className="mt-1 shrink-0 w-4 h-4 accent-[#FF8F8F]"
-                        />
+                          className={`
+                             mt-1 w-5 h-5 flex items-center justify-center 
+                             rounded-md cursor-pointer select-none
+                             border transition-all duration-200
+                             ${it.done
+                              ? "bg-[#ED4135]/80 border-black"
+                              : "bg-[#0B2F2A] border-[#00d1b2]/40 dark:bg-[#0F141A]"
+                            }
+                          `}
+                        >
+                          {/* ✅ Right Tick */}
+                          {it.done && (
+                            <svg
+                              className="w-6 h-8 text-black/80"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="4 12 9.5 17.5 20 6" />
+                            </svg>
+                          )}
+                        </div>
 
+                        {/* Title + Completion */}
                         <div className="min-w-0">
                           <div
-                            className={`font-medium text-sm sm:text-[15px] leading-snug break-words ${
-                              it.done ? "line-through opacity-75" : ""
-                            }`}
+                            className={`font-medium text-sm sm:text-[15px] leading-snug break-words ${it.done ? "line-through opacity-75" : ""
+                              }`}
                           >
                             {it.title}
                           </div>
 
-                          {/* ✅ Completion Message */}
                           {completionMsg && (
                             <div
                               className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium transition-opacity duration-300 ${completionColor}`}
@@ -5312,6 +5506,9 @@ function SubNode({
                           )}
                         </div>
                       </div>
+
+
+
 
                       {/* RIGHT — Inputs */}
                       <div
@@ -5562,11 +5759,19 @@ function SmartSuggest({ generateSmartPlan, tree }) {
           🤖 Smart Suggest
         </h3>
 
-        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#FF8F8F]/20 dark:bg-gray-800 whitespace-nowrap sm:ml-auto">
+        <span className="
+        text-[11px] px-3 py-1 rounded-full
+        bg-[#FF8F8F] text-black font-semibold
+        dark:bg-[#451013] dark:text-[#FFD1D1]
+        border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
+        whitespace-nowrap sm:ml-auto
+        transition-all duration-200
+        hover:bg-[#ff6f6f] dark:hover:bg-[#5A1418]
+      ">
           AI Study Planner
         </span>
-      </div>
 
+      </div>
       {/* Input */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <label className="text-xs font-medium whitespace-nowrap">
@@ -5580,10 +5785,21 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         />
         <button
           onClick={handleSuggest}
-          className="px-3 py-1 rounded-md bg-[#FF8F8F] text-white text-xs hover:bg-[#ff6b6b] transition w-full sm:w-auto"
+          className="
+            px-3 py-1.5 rounded-md 
+            bg-[#FF8F8F] text-black font-semibold text-xs
+            border border-[#FF8F8F]/40
+            shadow-sm
+            transition-all duration-200
+            hover:bg-[#ff6f6f] hover:shadow-[0_0_6px_rgba(255,143,143,0.5)]
+            active:scale-[0.97]
+            dark:bg-[#451013] dark:text-[#FFD1D1]
+            dark:hover:bg-[#5A1418]
+          "
         >
           Suggest
         </button>
+
       </div>
 
       {/* Summary */}
@@ -5603,7 +5819,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               item.deadline && new Date(item.deadline) < new Date()
                 ? "bg-red-500/15 text-red-600 dark:text-red-400"
                 : item.deadline &&
-                    new Date(item.deadline) - new Date() < 86400000 * 2
+                  new Date(item.deadline) - new Date() < 86400000 * 2
                   ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
                   : "bg-green-500/10 text-green-700 dark:text-green-400";
 
@@ -5612,15 +5828,13 @@ function SmartSuggest({ generateSmartPlan, tree }) {
             return (
               <div
                 key={i}
-                className={`rounded-lg border border-[#0B5134]                dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${
-                  item.done ? "opacity-60 line-through" : ""
-                }`}
+                className={`rounded-lg border border-[#0B5134]                dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${item.done ? "opacity-60 line-through" : ""
+                  }`}
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                   <span
-                    className={`font-medium text-[#d9ebe5] dark:text-gray-100 ${
-                      item.done ? "line-through" : ""
-                    }`}
+                    className={`font-medium text-[#d9ebe5] dark:text-gray-100 ${item.done ? "line-through" : ""
+                      }`}
                   >
                     • {item.title}
                   </span>
@@ -5633,9 +5847,8 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                   )}
                 </div>
                 <div
-                  className={`text-xs mt-1 ${
-                    item.done ? "opacity-50" : "opacity-80"
-                  } transition-opacity`}
+                  className={`text-xs mt-1 ${item.done ? "opacity-50" : "opacity-80"
+                    } transition-opacity`}
                 >
                   ⏱ ~{Math.round(item.estimate * 60)} mins
                 </div>
@@ -5661,3 +5874,4 @@ function SmartSuggest({ generateSmartPlan, tree }) {
     </div>
   );
 }
+
