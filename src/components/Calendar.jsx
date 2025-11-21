@@ -458,7 +458,9 @@ export default function CalendarFullDarkUpdated() {
   const selectedNote = notesMap[selectedDate] || "";
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.7fr,1fr] gap-4 items-start transition-colors duration-500 bg-[#0b1220] rounded-xl">
+    <div className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.7fr,1fr] gap-4 items-start transition-colors duration-500 rounded-xl
+    bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+    dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -529,11 +531,10 @@ export default function CalendarFullDarkUpdated() {
             <button
               key={btn.val}
               onClick={() => setView(btn.val)}
-              className={`w-full py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                view === btn.val
-                  ? "bg-[#000000] text-[#00e5ff] shadow-[0_4px_20px_rgba(0,149,255,0.18)]"
-                  : "bg-[#071227] hover:bg-[#0b2a44] text-[#dbeafe]"
-              }`}
+              className={`w-full py-2 rounded-lg text-sm font-medium transition-all duration-300 ${view === btn.val
+                ? "bg-[#000000] text-[#00e5ff] shadow-[0_4px_20px_rgba(0,149,255,0.18)]"
+                : "bg-[#071227] hover:bg-[#0b2a44] text-[#dbeafe]"
+                }`}
             >
               {btn.label}
             </button>
@@ -566,43 +567,115 @@ export default function CalendarFullDarkUpdated() {
       </div>
 
       {/* Calendar Section */}
-      <div className="lg:col-span-2 rounded-2xl border p-3 bg-[#071022] space-y-6 min-w-full md:min-w-[650px] min-h-[400px] md:min-h-[600px]">
+      <div className="lg:col-span-2 rounded-2xl border p-3 space-y-6 
+        min-w-full md:min-w-[650px] min-h-[400px] md:min-h-[600px]
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
         <div className="flex flex-wrap items-center justify-center sm:justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMonth((m) => m.subtract(1, "month"))}
-              className="px-2 py-1 rounded bg-black text-[#00e5ff] hover:scale-105 transition-transform"
+              className="
+    px-2.5 py-1 rounded-md
+    bg-transparent
+    text-[#9FF2E8]
+    border border-[#2F6B60]/50
+    backdrop-blur-sm
+    shadow-[0_0_6px_rgba(0,0,0,0.3)]
+    transition-all duration-200
+    hover:border-[#4ade80] hover:text-[#CFFFF7]
+    hover:shadow-[0_0_8px_#4ade80]
+    active:scale-95
+  "
             >
               ◀
             </button>
-            <h2 className="text-lg font-semibold text-[#00e5ff]">
+
+
+            <h2 className="
+  px-4 py-1.5
+  rounded-md
+  text-sm sm:text-lg font-semibold tracking-wide
+  text-[#9FF2E8]
+  border border-[#2F6B60]/40
+  shadow-[0_0_6px_rgba(0,0,0,0.3)]
+  bg-black/20
+  backdrop-blur-sm
+  transition-all duration-200
+">
               {month.format("MMMM YYYY")}
             </h2>
+
             <button
               onClick={() => setMonth((m) => m.add(1, "month"))}
-              className="px-2 py-1 rounded bg-black text-[#00e5ff] hover:scale-105 transition-transform"
+              className="
+    px-2.5 py-1 rounded-md
+    bg-transparent
+    text-[#9FF2E8]
+    border border-[#2F6B60]/50
+    backdrop-blur-sm
+    shadow-[0_0_6px_rgba(0,0,0,0.3)]
+    transition-all duration-200
+    hover:border-[#4ade80] hover:text-[#CFFFF7]
+    hover:shadow-[0_0_8px_#4ade80]
+    active:scale-95
+  "
             >
               ▶
             </button>
+
+
           </div>
-          <div className="flex gap-2 pt-2 md:pt-0">
+          <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
+
+            {/* Today Button */}
             <button
               onClick={() => setMonth(dayjs())}
-              className="px-3 py-1 rounded bg-black text-[#00e5ff]"
+              className="
+      px-3 py-1.5 rounded-md
+      bg-transparent
+      text-[#9FF2E8] text-sm font-medium
+      border border-[#2F6B60]/50
+      shadow-[0_0_6px_rgba(0,0,0,0.3)]
+      transition-all duration-200
+      hover:border-[#4ade80] hover:text-[#CFFFF7]
+      hover:shadow-[0_0_8px_#4ade80]
+      active:scale-95
+    "
             >
               Today
             </button>
-            <div className="px-3 py-1 rounded bg-[#031018] text-sm text-gray-300 max-w-full truncate">
-              Monthly:{" "}
-              <span className="font-semibold">{monthlyStats.topics} T</span> /{" "}
-              <span className="font-semibold text-red-400">
+
+            {/* Monthly Stats Panel */}
+            <div
+              className="
+      px-3 py-1.5 rounded-md
+      bg-black/30
+      border border-[#2F6B60]/40
+      backdrop-blur-sm
+      text-sm text-[#CDEEE8]
+      shadow-[0_0_6px_rgba(0,0,0,0.25)]
+      max-w-full truncate
+      flex items-center gap-1
+    "
+            >
+              <span className="text-[#9FF2E8]">Monthly:</span>
+
+              <span className="font-semibold text-[#4ADE80]">
+                {monthlyStats.topics} T
+              </span>
+
+              <span className="text-[#5a6f6a]">/</span>
+
+              <span className="font-semibold text-[#FF8F8F]">
                 {monthlyStats.exercises} E
               </span>
             </div>
           </div>
+
         </div>
 
-        <div className="grid grid-cols-5 sm:grid-cols-7 gap-1 mt-2">
+        <div className="grid grid-cols-5 sm:grid-cols-7 gap-2 mt-3">
           {days.map((d) => {
             const iso = d.format("YYYY-MM-DD");
             const status = getDayStatusStr(iso);
@@ -610,17 +683,29 @@ export default function CalendarFullDarkUpdated() {
             const isToday = iso === todayISO();
             const isSelected = iso === selectedDate;
 
-            const base = `aspect-square w-12 h-12 rounded-xl flex items-center justify-center font-medium transition-all duration-300 transform`;
-            const notCur = !isCurMonth ? "opacity-40" : "";
+            const base = `
+      aspect-square w-12 h-12 rounded-xl 
+      flex items-center justify-center 
+      font-medium text-sm
+      transition-all duration-200
+      relative overflow-hidden
+      select-none
+    `;
+
+            const notCur = !isCurMonth ? "opacity-30" : "";
 
             const bgClass =
               status === "both"
-                ? "bg-gradient-to-br from-[#2563eb] to-[#e11d48] text-white"
+                ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
                 : status === "study"
-                ? "bg-[#07391f] text-green-200"
-                : status === "gym"
-                ? "bg-[#071633] text-blue-200"
-                : "bg-[#0b1220] text-[#bfe9ff]";
+                  ? "bg-[#0A2B22] text-[#9FF2E8]"
+                  : status === "gym"
+                    ? "bg-[#071A2F] text-[#9FCAFF]"
+                    : "bg-[#081C18] text-[#B6E5DC]";
+
+            const selectedClass = isSelected
+              ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105"
+              : "hover:scale-105 hover:shadow-[0_0_8px_rgba(63,167,150,0.2)]";
 
             return (
               <button
@@ -628,52 +713,53 @@ export default function CalendarFullDarkUpdated() {
                 onClick={() => openDay(d)}
                 onMouseEnter={(e) => handleMouseEnterDate(e, iso)}
                 onMouseLeave={handleMouseLeaveDate}
-                className={`${base} ${notCur} ${bgClass} ${
-                  isSelected
-                    ? "ring-2 ring-offset-2 ring-[#0ea5ff] shadow-[0_8px_30px_rgba(14,165,255,0.12)] scale-105"
-                    : "hover:scale-105"
-                }`}
-                title={`${d.format("ddd, DD MMM YYYY")} — ${
-                  status === "both"
+                className={`${base} ${notCur} ${bgClass} ${selectedClass}`}
+                title={`${d.format("ddd, DD MMM YYYY")} — ${status === "both"
                     ? "Study + Gym"
                     : status === "study"
-                    ? "Study"
-                    : status === "gym"
-                    ? "Gym"
-                    : ""
-                }`}
-              >
-                <div
-                  className={`relative flex items-center justify-center w-full h-full ${
-                    isToday
-                      ? "before:absolute before:inset-0 before:rounded-xl before:ring-2 before:ring-green-500/40 before:animate-pulse"
-                      : ""
+                      ? "Study"
+                      : status === "gym"
+                        ? "Gym"
+                        : "No activity"
                   }`}
-                >
-                  <span>{d.date()}</span>
-                  {/* small dot indicators */}
-                  <div className="absolute bottom-2 flex gap-1">
-                    {status === "study" || status === "both" ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                    ) : null}
-                    {status === "gym" || status === "both" ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                    ) : null}
-                  </div>
+              >
+                {/* Today glow ring */}
+                {isToday && (
+                  <span className="absolute inset-1 rounded-lg ring-2 ring-[#22c55e]/40 animate-pulse"></span>
+                )}
+
+                {/* Date */}
+                <span className="z-10">{d.date()}</span>
+
+                {/* Bottom dots */}
+                <div className="absolute bottom-1.5 flex gap-1">
+                  {(status === "study" || status === "both") && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+                  )}
+                  {(status === "gym" || status === "both") && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
+                  )}
                 </div>
               </button>
             );
           })}
         </div>
 
+
         {/* Notes */}
-        <div className="rounded-xl p-3 border bg-[#071227] transition-all">
+        <div className="rounded-xl p-3 border bg-[#071227] transition-all    
+        duration-3000 text-white    
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
           <h4 className="font-semibold text-[#00e5ff] mb-2">📝 Notes</h4>
           <textarea
             value={selectedNote}
             onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
             placeholder="Write a short note about today..."
-            className="w-full min-h-[70px] p-2 border rounded bg-[#02060a] text-[#cfefff] border-[#233446]"
+            className="w-full min-h-[70px] p-2 border rounded 
+             bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
+             dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+            text-[#cfefff] border-[#233446]"
           />
         </div>
 
@@ -723,11 +809,11 @@ export default function CalendarFullDarkUpdated() {
                     const iso = compareDates[i];
                     const info = iso
                       ? {
-                          studyCount: (studyMap[iso] || []).length,
-                          gymDone: !!gymLogs[iso],
-                          exercises: combinedExercisesForDateWrapper(iso),
-                          notes: notesMap[iso] || "",
-                        }
+                        studyCount: (studyMap[iso] || []).length,
+                        gymDone: !!gymLogs[iso],
+                        exercises: combinedExercisesForDateWrapper(iso),
+                        notes: notesMap[iso] || "",
+                      }
                       : null;
                     return (
                       <div className="p-2 border rounded bg-[#071323]">
@@ -753,12 +839,19 @@ export default function CalendarFullDarkUpdated() {
       </div>
 
       {/* Right Panel */}
-      <div className=" relative rounded-2xl border p-3 bg-[#071022] space-y-3 min-w-full md:min-w-[380px] min-h-[400px] md:min-h-[600px]">
-        <div className="text-sm text-[#60a5fa] mb-2">
+      <div className=" relative rounded-2xl border p-3
+       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
+       dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+       space-y-3 min-w-full md:min-w-[380px] min-h-[400px] md:min-h-[600px]">
+
+        <div className="text-sm text-white font-bold mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
         </div>
 
-        <div className="rounded-2xl p-3 border bg-[#071827]">
+        <div className="rounded-2xl p-3 border
+         bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
+         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
+         ">
           <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
           <div className="grid grid-cols-5 text-center mt-2">
             <div>
@@ -794,7 +887,10 @@ export default function CalendarFullDarkUpdated() {
           </div>
         </div>
 
-        <div className="rounded-xl p-3 border bg-[#132f27] border-green-600/40 dark:bg-[#0c2f28] dark:border-gray-700 transition-colors">
+        <div className="rounded-xl p-3 border
+         bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
+         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]        
+        border-green-600/40 dark:bg-[#0c2f28] dark:border-gray-700 transition-colors">
           <h4 className="font-semibold text-green-400 mb-2">
             📚 Topics Studied
           </h4>
@@ -807,8 +903,11 @@ export default function CalendarFullDarkUpdated() {
           )) || <div className="text-sm opacity-60">—</div>}
         </div>
 
-        <div className="rounded-xl p-3 border bg-[#071427] min-h-[160px]">
-          <h4 className="font-semibold text-[#60a5fa] mb-2">🏋️ Gym Summary</h4>
+        <div className="rounded-xl p-3 border 
+         bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
+         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
+          min-h-[160px]">
+          <h4 className="font-semibold text-red-500 mb-2">🏋️ Gym Summary</h4>
           <div className="text-sm space-y-1 text-[#e2e8f0]">
             <div className="mt-2">
               <b>Exercises:</b>

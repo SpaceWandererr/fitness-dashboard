@@ -4641,8 +4641,8 @@ export default function Syllabus() {
   dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
   dark:border-[#00D1FF33]
 ">
-        <header
-  className="
+      <header
+        className="
     sticky top-0 z-40 rounded-xl
     bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
     dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
@@ -4652,195 +4652,194 @@ export default function Syllabus() {
     dark:border-[#00D1FF33]
     text-[#E6F1FF]
   "
->
-  <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
+      >
+        <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
 
-    {/* 🔹 Top Row */}
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* 🔹 Top Row */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 
-      {/* LEFT — Title */}
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
-        Syllabus Jay's Web Dev-2026
-      </h1>
+            {/* LEFT — Title */}
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
+              Syllabus Jay's Web Dev-2026
+            </h1>
 
-      {/* RIGHT — Buttons */}
-      <div className="flex flex-wrap justify-end gap-2">
+            {/* RIGHT — Buttons */}
+            <div className="flex flex-wrap justify-end gap-2">
 
-        {/* 🔥 Streak */}
-        <span className="
+              {/* 🔥 Streak */}
+              <span className="
           px-3 py-1.5 rounded-xl
           bg-gradient-to-r from-[#0ca56d] to-[#18c481]
           border border-[#0B5134]/60
           text-[14px] font-semibold text-black
         ">
-          🔥 Streak: <b>{Array.from(daySet).length}</b> days
-        </span>
+                🔥 Streak: <b>{Array.from(daySet).length}</b> days
+              </span>
 
-        {/* Expand */}
-        <button
-          onClick={() => {
-            setMeta((m) => {
-              const c = { ...m };
-              Object.keys(c).forEach((k) => (c[k].open = true));
-              return c;
-            });
-          }}
-          className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 text-[#d9ebe5]
-          border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-        >
-          Expand
-        </button>
-
-        {/* Collapse */}
-        <button
-          onClick={() => {
-            setMeta((m) => {
-              const c = { ...m };
-              Object.keys(c).forEach((k) => (c[k].open = false));
-              return c;
-            });
-          }}
-          className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 text-[#d9ebe5]
-          border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-        >
-          Collapse
-        </button>
-
-        {/* Reset */}
-        <button
-          onClick={() => {
-            if (!confirm("Reset ALL syllabus progress?")) return;
-            setTree((old) => {
-              const t = structuredClone(old);
-              (function reset(n) {
-                if (Array.isArray(n)) {
-                  n.forEach((it) => {
-                    it.done = false;
-                    it.completedOn = "";
-                    it.deadline = "";
+              {/* Expand */}
+              <button
+                onClick={() => {
+                  setMeta((m) => {
+                    const c = { ...m };
+                    Object.keys(c).forEach((k) => (c[k].open = true));
+                    return c;
                   });
-                  return;
-                }
-                for (const v of Object.values(n || {})) reset(v);
-              })(t);
-              return t;
-            });
+                }}
+                className="px-3 py-1.5 rounded-xl text-sm 
+          bg-[#113f30]/80 text-[#d9ebe5]
+          border border-[#1f6a50]/40
+          hover:bg-[#0F3A2B] transition"
+              >
+                Expand
+              </button>
 
-            setMeta({});
-            setNR({});
-            setDaySet(new Set());
+              {/* Collapse */}
+              <button
+                onClick={() => {
+                  setMeta((m) => {
+                    const c = { ...m };
+                    Object.keys(c).forEach((k) => (c[k].open = false));
+                    return c;
+                  });
+                }}
+                className="px-3 py-1.5 rounded-xl text-sm 
+          bg-[#113f30]/80 text-[#d9ebe5]
+          border border-[#1f6a50]/40
+          hover:bg-[#0F3A2B] transition"
+              >
+                Collapse
+              </button>
 
-            // clear storage
-            localStorage.removeItem("K_LAST_STUDIED");
-            localStorage.removeItem("K_TREE");
-            localStorage.removeItem("K_META");
-            localStorage.removeItem("K_NOTES");
-            localStorage.removeItem("K_STREAK");
+              {/* Reset */}
+              <button
+                onClick={() => {
+                  if (!confirm("Reset ALL syllabus progress?")) return;
+                  setTree((old) => {
+                    const t = structuredClone(old);
+                    (function reset(n) {
+                      if (Array.isArray(n)) {
+                        n.forEach((it) => {
+                          it.done = false;
+                          it.completedOn = "";
+                          it.deadline = "";
+                        });
+                        return;
+                      }
+                      for (const v of Object.values(n || {})) reset(v);
+                    })(t);
+                    return t;
+                  });
 
-            setLastStudied("");
-            setShowLastStudied(false);
+                  setMeta({});
+                  setNR({});
+                  setDaySet(new Set());
 
-            window.location.reload();
-          }}
-          className="
+                  // clear storage
+                  localStorage.removeItem("K_LAST_STUDIED");
+                  localStorage.removeItem("K_TREE");
+                  localStorage.removeItem("K_META");
+                  localStorage.removeItem("K_NOTES");
+                  localStorage.removeItem("K_STREAK");
+
+                  setLastStudied("");
+                  setShowLastStudied(false);
+
+                  window.location.reload();
+                }}
+                className="
             px-3 py-1.5 rounded-xl text-sm
             bg-[#B82132] text-white
             shadow-md hover:bg-[#a51b2a] transition
           "
-        >
-          Reset
-        </button>
+              >
+                Reset
+              </button>
 
-        {/* Export */}
-        <button
-          onClick={exportProgress}
-          className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
+              {/* Export */}
+              <button
+                onClick={exportProgress}
+                className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
           bg-[#113f30]/80 border border-[#1f6a50]/40
           hover:bg-[#0F3A2B] transition"
-        >
-          📤 Export
-        </button>
+              >
+                📤 Export
+              </button>
 
-        {/* Import */}
-        <label
-          className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
+              {/* Import */}
+              <label
+                className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
           bg-[#113f30]/80 border border-[#1f6a50]/40 text-[#d9ebe5]
           hover:bg-[#0F3A2B] transition"
-        >
-          📥 Import
-          <input
-            type="file"
-            accept=".json"
-            onChange={importProgress}
-            className="hidden"
-          />
-        </label>
-      </div>
-    </div>
+              >
+                📥 Import
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importProgress}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
 
-    {/* 🔹 Progress Section */}
-    <div className="pt-2">
+          {/* 🔹 Progress Section */}
+          <div className="pt-2">
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between text-xs text-[#d9ebe5] gap-1">
-        <span className="font-medium">
-          Progress: {grand.done}/{grand.total}
-        </span>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between text-xs text-[#d9ebe5] gap-1">
+              <span className="font-medium">
+                Progress: {grand.done}/{grand.total}
+              </span>
 
-        {showLastStudied && (
-          lastStudied ? (
-            <div className="text-green-300/90 flex items-center gap-1">
-              📘 <span>Last studied:</span>
-              <span className="font-medium text-green-200">
-                {lastStudied}
+              {showLastStudied && (
+                lastStudied ? (
+                  <div className="text-green-300/90 flex items-center gap-1">
+                    📘 <span>Last studied:</span>
+                    <span className="font-medium text-green-200">
+                      {lastStudied}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-gray-400">
+                    📭 No topics completed yet.
+                  </div>
+                )
+              )}
+
+              <span className="font-semibold text-[#a7f3d0]">
+                {grand.pct}%
               </span>
             </div>
-          ) : (
-            <div className="text-gray-400">
-              📭 No topics completed yet.
-            </div>
-          )
-        )}
 
-        <span className="font-semibold text-[#a7f3d0]">
-          {grand.pct}%
-        </span>
-      </div>
+            {/* ✅ Improved Progress Bar */}
+            <div className="relative mt-2 h-2.5 rounded-full bg-[#102720] overflow-hidden">
 
-      {/* ✅ Improved Progress Bar */}
-      <div className="relative mt-2 h-2.5 rounded-full bg-[#102720] overflow-hidden">
+              {/* Background glow layer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
-        {/* Background glow layer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-
-        {/* Progress Fill */}
-        <div
-          className={`
+              {/* Progress Fill */}
+              <div
+                className={`
             h-full rounded-full transition-all duration-700 ease-out
-            ${
-              grand.pct < 25
-                ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
-                : grand.pct < 50
-                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                : grand.pct < 75
-                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
-            }
+            ${grand.pct < 25
+                    ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
+                    : grand.pct < 50
+                      ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                      : grand.pct < 75
+                        ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                        : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                  }
           `}
-          style={{
-            width: `${grand.pct}%`,
-            minWidth: grand.pct > 0 ? "6px" : "6px",
-          }}
-        />
+                style={{
+                  width: `${grand.pct}%`,
+                  minWidth: grand.pct > 0 ? "6px" : "6px",
+                }}
+              />
 
-      </div>
-    </div>
+            </div>
+          </div>
 
-  </div>
-</header>
+        </div>
+      </header>
 
 
       {/* === Combined Layout (Planner + Topics) === */}
