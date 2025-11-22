@@ -666,11 +666,15 @@ export default function GymSimplified() {
     <div
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500 
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9]
-      dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-     [#2a0000]
+      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
       border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+      <header
+        className="flex flex-col md:flex-row items-start
+        md:items-center justify-between gap-4 mb-4
+        "
+      >
         <div>
           <h1 className="text-2xl font-extrabold tracking-wide text-emerald-200">
             Gym
@@ -684,7 +688,10 @@ export default function GymSimplified() {
           <select
             value={weekday}
             onChange={(e) => setWeekday(e.target.value)}
-            className="px-3 py-2 rounded-md border border-emerald-700 bg-[#07201f] text-emerald-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 transition"
+            className="px-3 py-2 rounded-md border border-emerald-700 
+            bg-[#07201f] text-[#FAFAF9] border-gray-700 dark:border-emerald-800
+            text-emerald-100 text-sm focus:outline-none focus:ring-1
+            focus:ring-emerald-400 transition"
           >
             {WEEK.map((d) => (
               <option
@@ -701,12 +708,20 @@ export default function GymSimplified() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-md border border-emerald-700 bg-[#07201f] text-emerald-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 transition"
+            className="px-3 py-2 rounded-md border border-emerald-700
+            bg-[#07201f] border-gray-700 dark:border-emerald-800
+            to-[#0F0F0F] text-[#FAFAF9]
+            text-emerald-100 text-sm focus:outline-none focus:ring-1 
+            focus:ring-emerald-400 transition"
           />
 
           <button
             onClick={resetProgress}
-            className="ml-auto bg-gradient-to-r from-red-700 via-red-600 to-red-500 hover:from-red-600 hover:to-red-400 text-white px-4 py-2 rounded-md text-sm font-semibold shadow-md transition-all duration-200"
+            className="ml-auto
+            bg-gradient-to-r from-red-700 via-red-600 to-red-500
+            hover:from-red-600 hover:to-red-400
+            text-white px-4 py-2 rounded-md text-sm font-semibold 
+            shadow-md transition-all duration-200"
           >
             Reset Progress
           </button>
@@ -714,7 +729,14 @@ export default function GymSimplified() {
       </header>
 
       {/* Progress / weight */}
-      <section className="mb-4 border border-emerald-800 rounded-2xl p-4 space-y-3 bg-[#071b1b]/60 backdrop-blur-md min-h-[120px]">
+      <section
+        className="mb-4 border rounded-2xl
+        p-4 space-y-3 border-gray-700 dark:border-emerald-800
+        bg-gradient-to-br dark:from-[#071b1b]/60 dark:via-[#071b1b]/60 dark:to- 
+        [#071b1b]/60
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#B82132]
+        backdrop-blur-md min-h-[120px]"
+      >
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-emerald-100">
@@ -723,7 +745,10 @@ export default function GymSimplified() {
             <input
               type="number"
               step="0.1"
-              className="w-24 px-2 py-1 rounded-md border border-emerald-700 bg-[#0c2624] text-emerald-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              className="w-24 px-2 py-1 rounded-md border
+              border-gray-700 dark:border-emerald-800
+              bg-[#0c2624] text-emerald-100 text-sm focus:outline-none
+              focus:ring-1 focus:ring-emerald-400"
               value={targetWeight}
               onChange={(e) => setTargetWeight(Number(e.target.value || 0))}
             />
@@ -737,7 +762,10 @@ export default function GymSimplified() {
             <input
               type="number"
               step="0.1"
-              className="w-24 px-2 py-1 rounded-md border border-emerald-700 bg-[#0c2624] text-emerald-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              className="w-24 px-2 py-1 rounded-md border
+              border-gray-700 dark:border-emerald-800 bg-[#0c2624] 
+              text-emerald-100 text-sm focus:outline-none 
+              focus:ring-1 focus:ring-emerald-400"
               value={startWeight ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -816,7 +844,13 @@ export default function GymSimplified() {
       </section>
 
       {/* Workout Section */}
-      <section className="mb-4 border rounded-2xl p-4 bg-[#071514]/60 backdrop-blur-md min-h-[300px] transition-all duration-500">
+      <section
+        className="mb-4 border rounded-2xl p-4
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
+        bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+        backdrop-blur-md min-h-[300px] 
+        transition-all duration-500"
+      >
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
             <h2 className="text-lg font-semibold text-emerald-200">
@@ -843,7 +877,9 @@ export default function GymSimplified() {
           <>
             {/* Exercises: Stable three-column layout (Left, Right, Finisher) */}
             <div
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 transition-all duration-300 ease-in-out"
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4
+              transition-all duration-300 ease-in-out
+              "
               style={{ minHeight: "340px" }} // keeps same height between days
             >
               {["left", "right", "finisher"].map((sectionKey, idx) => {
@@ -860,7 +896,12 @@ export default function GymSimplified() {
                 return (
                   <div
                     key={sectionKey}
-                    className="rounded-xl bg-white/5 dark:bg-emerald-900/10 p-4 shadow-sm border border-emerald-800/40 backdrop-blur-md transition-transform duration-300 hover:scale-[1.01]"
+                    className="rounded-xl bg-white/5
+                    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] text-[#FAFAFA]
+                    bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+                    p-4 shadow-sm border border-emerald-800/40 
+                    backdrop-blur-md transition-transform duration-300
+                    hover:scale-[1.01]"
                   >
                     <h3 className="text-emerald-300 text-lg font-semibold mb-3">
                       {label}
@@ -976,7 +1017,10 @@ export default function GymSimplified() {
       </section>
 
       {/* Calendar + Daily Summary */}
-      <section className="grid md:grid-cols-2 gap-4 mb-2">
+      <section
+        className="grid md:grid-cols-2 gap-4 mb-2
+        "
+      >
         <MiniCalendar date={date} setDate={(d) => setDate(d)} />
         <DailySummary date={date} logs={logs} dateKey={dateKey} />
       </section>
@@ -1083,9 +1127,14 @@ function DailySummary({ date, logs, dateKey }) {
   const latestBmi = bmiLogs.slice().reverse()[0] || null;
 
   return (
-    <div className="border rounded-2xl p-4 h-full bg-[#071b1b]/60 backdrop-blur-md">
+    <div
+      className="border rounded-2xl p-4 h-full
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
+      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+      backdrop-blur-md"
+    >
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-emerald-200">Daily Summary</h3>
+        <h3 className="font-bold text-emerald-200">Daily Summary</h3>
         <span
           className={`text-xs px-2 py-1 rounded ${
             entry?.done
@@ -1159,7 +1208,12 @@ function MiniCalendar({ date, setDate }) {
   const today = dayjs();
 
   return (
-    <section className="border rounded-2xl p-4 bg-[#071b1b]/60 backdrop-blur-md">
+    <section
+      className="border rounded-2xl p-4
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
+      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+      backdrop-blur-md"
+    >
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
@@ -1167,7 +1221,7 @@ function MiniCalendar({ date, setDate }) {
         >
           〈
         </button>
-        <div className="font-semibold text-sm text-emerald-200">
+        <div className="font-bold text-sm text-emerald-200">
           {viewMonth.format("MMMM YYYY")}
         </div>
         <button
@@ -1197,7 +1251,7 @@ function MiniCalendar({ date, setDate }) {
               key={key}
               onClick={() => setDate(key)}
               title={d.format("DD-MM-YYYY")}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-md text-[11px] flex items-center justify-center border transition
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full text-[11px] flex items-center justify-center border transition
                 ${!isCurMonth ? "opacity-30" : ""}
                 ${
                   doneMap[key]
@@ -1205,7 +1259,7 @@ function MiniCalendar({ date, setDate }) {
                     : "bg-gray-700 text-gray-200"
                 }
                 ${isSelected ? "ring-2 ring-emerald-400" : ""}
-                ${isToday ? "border-cyan-400" : "border-white/10"}
+                ${isToday ? "border-cyan-400 font-bold" : "border-white/10"}
                 hover:scale-[1.03] hover:shadow`}
             >
               {d.date()}
