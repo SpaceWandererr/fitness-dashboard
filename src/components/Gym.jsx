@@ -950,7 +950,9 @@ export default function GymSimplified() {
             <div className="flex flex-wrap gap-3 mt-6 items-center transition-all duration-200">
               <button
                 onClick={toggleMarkAll}
-                className="px-4 py-2 rounded border border-emerald-700 text-emerald-100 hover:bg-emerald-700/10 transition-all duration-200"
+                className="px-4 py-2 rounded border
+                border-gray-700 dark:border-emerald-800 text-emerald-100 
+                hover:bg-emerald-700/10 transition-all duration-200"
               >
                 {checks.left.every(Boolean) &&
                 checks.right.every(Boolean) &&
@@ -983,7 +985,9 @@ export default function GymSimplified() {
               {checks.done && (
                 <button
                   onClick={editCalories}
-                  className="px-3 py-2 border rounded hover:bg-white/5 transition-all duration-200"
+                  className="px-3 py-2 border rounded hover:bg-white/5
+                  transition-all duration-200
+                  border-gray-700 dark:border-emerald-800"
                 >
                   ✏ Edit
                 </button>
