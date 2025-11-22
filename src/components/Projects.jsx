@@ -241,9 +241,6 @@ function fireConfetti() {
 export default function StudyProjectsAdvanced() {
   // theme
 
-  // tick for timers
-  const [tick, setTick] = useState(0);
-
   // filters / view
   const [query, setQuery] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("All");

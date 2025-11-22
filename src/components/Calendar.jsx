@@ -72,7 +72,7 @@ function combinedExercisesForDate(iso) {
             v[k] === true ||
             v[k] === false ||
             typeof v[k] === "string" ||
-            typeof v[k] === "number"
+            typeof v[k] === "number",
         );
       if (isMapOfTrues) {
         const ignoreKeys = [
@@ -379,7 +379,7 @@ export default function CalendarFullDarkUpdated() {
   function resetGymProgress() {
     if (
       !confirm(
-        "Reset all gym logs and wd_done calendar marks? This cannot be undone."
+        "Reset all gym logs and wd_done calendar marks? This cannot be undone.",
       )
     )
       return;
@@ -458,9 +458,14 @@ export default function CalendarFullDarkUpdated() {
   const selectedNote = notesMap[selectedDate] || "";
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.7fr,1fr] gap-4 items-start transition-colors duration-500 rounded-xl
-    bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-    dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
+    <div
+      className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden grid grid- 
+      cols-1 lg:grid-cols-2 xl:grid-cols-[1.7fr,1fr] gap-4 items-start transition- 
+      colors duration-500 rounded-xl
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+      dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
+      [#0A0F1C]"
+    >
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -489,7 +494,6 @@ export default function CalendarFullDarkUpdated() {
 
             {/* Progress Bar */}
             <div className="relative w-full h-2.5 bg-[#081C18] rounded-full overflow-hidden border border-[#2F6B60]/30">
-
               {/* Subtle background glow */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
@@ -497,10 +501,11 @@ export default function CalendarFullDarkUpdated() {
               <div
                 className={`
         h-full rounded-full transition-all duration-700
-        ${streakInfo.percent < 50
-                    ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
-                    : "bg-gradient-to-r from-[#7A1D2B] to-[#FF8F8F] shadow-[0_0_8px_#FF8F8F]"
-                  }
+        ${
+          streakInfo.percent < 50
+            ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
+            : "bg-gradient-to-r from-[#7A1D2B] to-[#FF8F8F] shadow-[0_0_8px_#FF8F8F]"
+        }
       `}
                 style={{ width: `${streakInfo.percent}%` }}
               />
@@ -508,13 +513,15 @@ export default function CalendarFullDarkUpdated() {
 
             {/* Footer Info */}
             <div className="mt-2 text-xs text-[#7FAFA4] flex justify-between">
-              <span>Longest: <b className="text-[#CDEEE8]">{streakInfo.longest}d</b></span>
               <span>
-                <b className="text-[#9FF2E8]">{streakInfo.percent}%</b> of longest
+                Longest: <b className="text-[#CDEEE8]">{streakInfo.longest}d</b>
+              </span>
+              <span>
+                <b className="text-[#9FF2E8]">{streakInfo.percent}%</b> of
+                longest
               </span>
             </div>
           </div>
-
 
           {/* Today's Stats (replaces quote) */}
           <div
@@ -537,7 +544,6 @@ export default function CalendarFullDarkUpdated() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-5 text-center mt-3 gap-y-2">
-
               {/* Topics */}
               <div>
                 <p className="text-[#4ADE80] font-semibold text-lg">
@@ -577,22 +583,21 @@ export default function CalendarFullDarkUpdated() {
                 </p>
                 <p className="text-xs text-[#7FAFA4]">BMI</p>
               </div>
-
             </div>
           </div>
-
         </div>
 
         {/* Buttons */}
-        <div className="
+        <div
+          className="
   grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center
   p-2 rounded-lg
   bg-black/20
   border border-[#2F6B60]/40
   backdrop-blur-sm
   shadow-[0_0_10px_rgba(0,0,0,0.3)]
-">
-
+"
+        >
           {[
             { label: "Calendar", val: "calendar" },
             { label: "Weekly", val: "weekly" },
@@ -604,15 +609,16 @@ export default function CalendarFullDarkUpdated() {
               className={`
         w-full py-2 rounded-lg text-sm font-medium
         border transition-all duration-200
-        ${view === btn.val
-                  ? `
+        ${
+          view === btn.val
+            ? `
               bg-[#0A2B22]
               text-[#9FF2E8]
               border-[#3FA796]
               ring-2 ring-[#3FA796]/60
               shadow-[0_0_12px_rgba(63,167,150,0.4)]
             `
-                  : `
+            : `
               bg-transparent
               text-[#CDEEE8]
               border-[#2F6B60]/40
@@ -620,7 +626,7 @@ export default function CalendarFullDarkUpdated() {
               hover:text-[#E8FFFA]
               hover:shadow-[0_0_8px_#4ade80]
             `
-                }
+        }
         active:scale-95
       `}
             >
@@ -648,7 +654,8 @@ export default function CalendarFullDarkUpdated() {
           </button>
 
           {/* Import Button */}
-          <label className="
+          <label
+            className="
     w-full py-2 rounded-lg text-sm font-medium cursor-pointer text-center
     text-[#AEE7FF]
     bg-transparent
@@ -659,7 +666,8 @@ export default function CalendarFullDarkUpdated() {
     hover:border-[#0ea5e9]
     hover:shadow-[0_0_8px_#0ea5e9]
     active:scale-95
-  ">
+  "
+          >
             Import
             <input
               type="file"
@@ -688,14 +696,15 @@ export default function CalendarFullDarkUpdated() {
             Reset Gym
           </button>
         </div>
-
       </div>
 
       {/* Calendar Section */}
-      <div className="lg:col-span-2 rounded-2xl border p-3 space-y-6 
+      <div
+        className="lg:col-span-2 rounded-2xl border p-3 space-y-6 
         min-w-full md:min-w-[650px] min-h-[400px] md:min-h-[600px]
         bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+      >
         <div className="flex flex-wrap items-center justify-center sm:justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -716,8 +725,8 @@ export default function CalendarFullDarkUpdated() {
               ◀
             </button>
 
-
-            <h2 className="
+            <h2
+              className="
   px-4 py-1.5
   rounded-md
   text-sm sm:text-lg font-semibold tracking-wide
@@ -727,7 +736,8 @@ export default function CalendarFullDarkUpdated() {
   bg-black/20
   backdrop-blur-sm
   transition-all duration-200
-">
+"
+            >
               {month.format("MMMM YYYY")}
             </h2>
 
@@ -748,17 +758,15 @@ export default function CalendarFullDarkUpdated() {
             >
               ▶
             </button>
-
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
-
             {/* Today Button */}
             <button
-              onClick={() =>  {
-               const today = dayjs();
-               setMonth(today); // move calendar to current month
-               setSelectedDate(today.format("YYYY-MM-DD")); // highlight today date
-             }}
+              onClick={() => {
+                const today = dayjs();
+                setMonth(today); // move calendar to current month
+                setSelectedDate(today.format("YYYY-MM-DD")); // highlight today date
+              }}
               className="
                px-3 py-1.5 rounded-md
                bg-transparent
@@ -799,7 +807,6 @@ export default function CalendarFullDarkUpdated() {
               </span>
             </div>
           </div>
-
         </div>
 
         <div className="grid grid-cols-5 sm:grid-cols-7 gap-2 mt-3">
@@ -841,14 +848,15 @@ export default function CalendarFullDarkUpdated() {
                 onMouseEnter={(e) => handleMouseEnterDate(e, iso)}
                 onMouseLeave={handleMouseLeaveDate}
                 className={`${base} ${notCur} ${bgClass} ${selectedClass}`}
-                title={`${d.format("ddd, DD MMM YYYY")} — ${status === "both"
-                  ? "Study + Gym"
-                  : status === "study"
-                    ? "Study"
-                    : status === "gym"
-                      ? "Gym"
-                      : "No activity"
-                  }`}
+                title={`${d.format("ddd, DD MMM YYYY")} — ${
+                  status === "both"
+                    ? "Study + Gym"
+                    : status === "study"
+                      ? "Study"
+                      : status === "gym"
+                        ? "Gym"
+                        : "No activity"
+                }`}
               >
                 {/* Today glow ring */}
                 {isToday && (
@@ -872,12 +880,13 @@ export default function CalendarFullDarkUpdated() {
           })}
         </div>
 
-
         {/* Notes */}
-        <div className="rounded-xl p-3 border bg-[#071227] transition-all    
+        <div
+          className="rounded-xl p-3 border bg-[#071227] transition-all    
         duration-3000 text-white    
         bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+        >
           <h4 className="font-semibold text-[#00e5ff] mb-2">📝 Notes</h4>
           <textarea
             value={selectedNote}
@@ -936,11 +945,11 @@ export default function CalendarFullDarkUpdated() {
                     const iso = compareDates[i];
                     const info = iso
                       ? {
-                        studyCount: (studyMap[iso] || []).length,
-                        gymDone: !!gymLogs[iso],
-                        exercises: combinedExercisesForDateWrapper(iso),
-                        notes: notesMap[iso] || "",
-                      }
+                          studyCount: (studyMap[iso] || []).length,
+                          gymDone: !!gymLogs[iso],
+                          exercises: combinedExercisesForDateWrapper(iso),
+                          notes: notesMap[iso] || "",
+                        }
                       : null;
                     return (
                       <div className="p-2 border rounded bg-[#071323]">
@@ -966,19 +975,22 @@ export default function CalendarFullDarkUpdated() {
       </div>
 
       {/* Right Panel */}
-      <div className=" relative rounded-2xl border p-3
+      <div
+        className=" relative rounded-2xl border p-3
        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-       space-y-3 min-w-full md:min-w-[380px] min-h-[400px] md:min-h-[600px]">
-
+       space-y-3 min-w-full md:min-w-[380px] min-h-[400px] md:min-h-[600px]"
+      >
         <div className="text-sm text-white font-bold mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
         </div>
 
-        <div className="rounded-2xl p-3 border
+        <div
+          className="rounded-2xl p-3 border
          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
-         ">
+         "
+        >
           <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
           <div className="grid grid-cols-5 text-center mt-2">
             <div>
@@ -1014,10 +1026,12 @@ export default function CalendarFullDarkUpdated() {
           </div>
         </div>
 
-        <div className="rounded-xl p-3 border
+        <div
+          className="rounded-xl p-3 border
          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]        
-        border-green-600/40 dark:bg-[#0c2f28] dark:border-gray-700 transition-colors">
+        border-green-600/40 dark:bg-[#0c2f28] dark:border-gray-700 transition-colors"
+        >
           <h4 className="font-semibold text-green-400 mb-2">
             📚 Topics Studied
           </h4>
@@ -1030,10 +1044,12 @@ export default function CalendarFullDarkUpdated() {
           )) || <div className="text-sm opacity-60">—</div>}
         </div>
 
-        <div className="rounded-xl p-3 border 
+        <div
+          className="rounded-xl p-3 border 
          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
-          min-h-[160px]">
+          min-h-[160px]"
+        >
           <h4 className="font-semibold text-red-500 mb-2">🏋️ Gym Summary</h4>
           <div className="text-sm space-y-1 text-[#e2e8f0]">
             <div className="mt-2">

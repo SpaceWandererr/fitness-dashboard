@@ -83,7 +83,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       fn: async () => {
         const encoded = encodeURIComponent("https://zenquotes.io/api/random");
         const res = await fetch(
-          `https://api.codetabs.com/v1/proxy?quest=${encoded}`
+          `https://api.codetabs.com/v1/proxy?quest=${encoded}`,
         );
         if (!res.ok) throw res;
         const data = await res.json();
@@ -114,7 +114,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       try {
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), text: txt })
+          JSON.stringify({ ts: Date.now(), text: txt }),
         );
       } catch (e) {
         /* ignore storage failures */
@@ -147,7 +147,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   try {
     localStorage.setItem(
       cacheKey,
-      JSON.stringify({ ts: Date.now(), text: localPick })
+      JSON.stringify({ ts: Date.now(), text: localPick }),
     );
   } catch {}
   return localPick;
@@ -264,7 +264,7 @@ export default function GymSimplified() {
   const dateKey = fmtISO(date);
   // 💬 Sunday quote text
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   /* persist plan */
@@ -324,7 +324,7 @@ export default function GymSimplified() {
   }, [targetWeight]);
 
   const [startWeight, setStartWeight] = useState(() =>
-    load("wd_start_weight", null)
+    load("wd_start_weight", null),
   );
   useEffect(() => {
     if (startWeight !== null && startWeight !== undefined) {
@@ -333,11 +333,11 @@ export default function GymSimplified() {
   }, [startWeight]);
 
   const [weightOverrides, setWeightOverrides] = useState(() =>
-    load("wd_weight_overrides", {})
+    load("wd_weight_overrides", {}),
   );
   useEffect(
     () => save("wd_weight_overrides", weightOverrides),
-    [weightOverrides]
+    [weightOverrides],
   );
 
   const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
@@ -411,18 +411,18 @@ export default function GymSimplified() {
       left: Array.isArray(prev.left)
         ? prev.left
         : Array.isArray(def.left)
-        ? def.left.map(() => false)
-        : [],
+          ? def.left.map(() => false)
+          : [],
       right: Array.isArray(prev.right)
         ? prev.right
         : Array.isArray(def.right)
-        ? def.right.map(() => false)
-        : [],
+          ? def.right.map(() => false)
+          : [],
       finisher: Array.isArray(prev.finisher)
         ? prev.finisher
         : Array.isArray(def.finisher)
-        ? def.finisher.map(() => false)
-        : [],
+          ? def.finisher.map(() => false)
+          : [],
       done: !!prev.done,
       calories: prev.calories,
       bmi: prev.bmi,
@@ -475,7 +475,7 @@ export default function GymSimplified() {
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
-      ((checks.weight ?? overrideWeight ?? "") || "").toString()
+      ((checks.weight ?? overrideWeight ?? "") || "").toString(),
     );
     setShowModal(true);
   };
@@ -538,7 +538,7 @@ export default function GymSimplified() {
     const prev = logs[dateKey] || {};
     setCaloriesInput((prev.calories ?? "").toString());
     setCurrentWeightInput(
-      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString()
+      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString(),
     );
     setShowModal(true);
   };
@@ -592,7 +592,7 @@ export default function GymSimplified() {
     .filter((w) => typeof w === "number");
   const inferredStart = recentWeights.length
     ? Math.max(...recentWeights.slice(-30))
-    : checks.weight ?? targetWeight;
+    : (checks.weight ?? targetWeight);
   const effectiveStart = startWeight ?? inferredStart;
   const overrideWeight = weightOverrides[dateKey];
   let curWeight =
@@ -627,7 +627,7 @@ export default function GymSimplified() {
   const resetProgress = () => {
     if (
       !confirm(
-        "Reset ALL gym progress? This will clear logs, weights, streaks. Plan and goals will remain."
+        "Reset ALL gym progress? This will clear logs, weights, streaks. Plan and goals will remain.",
       )
     )
       return;
@@ -644,7 +644,7 @@ export default function GymSimplified() {
 
   /* normalized weekday safety */
   const normalizedWeekday = WEEK.find(
-    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
+    (d) => d.toLowerCase() === (weekday || "").toLowerCase(),
   );
   const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
     DEFAULT_PLAN[normalizedWeekday] || {
@@ -665,7 +665,9 @@ export default function GymSimplified() {
   return (
     <div
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500 
-      bg-gradient-to-br from-[#02272f]/60 via-[#0f2624]/90 to-[#0b3f2f]/70 border-gray-800 text-emerald-100 font-medium"
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9]
+      dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-     [#2a0000]
+      border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
@@ -798,7 +800,7 @@ export default function GymSimplified() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 15px)`,
             }}
           >
@@ -849,8 +851,8 @@ export default function GymSimplified() {
                   sectionKey === "left"
                     ? "Left"
                     : sectionKey === "right"
-                    ? "Right"
-                    : dayPlan.finisherLabel || "Finisher";
+                      ? "Right"
+                      : dayPlan.finisherLabel || "Finisher";
 
                 const list = dayPlan[sectionKey] || [];
                 const state = checks[sectionKey] || [];
@@ -1106,7 +1108,7 @@ function DailySummary({ date, logs, dateKey }) {
           ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
         </div>
         <div>
-          📊 BMI: {entry?.bmi != null ? entry.bmi : latestBmi?.bmi ?? "—"}
+          📊 BMI: {entry?.bmi != null ? entry.bmi : (latestBmi?.bmi ?? "—")}
         </div>
         <div className="mt-2">
           <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>

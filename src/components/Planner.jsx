@@ -123,7 +123,7 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
   const [base, setBase] = useState(dayjs(selectedDate).startOf("month"));
   useEffect(
     () => setBase(dayjs(selectedDate).startOf("month")),
-    [selectedDate]
+    [selectedDate],
   );
 
   const start = base.startOf("month").startOf("week");
@@ -134,14 +134,16 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
     <div
       className="
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
       border border-[#2F6B60]/40 rounded-xl p-3 w-full
+      dark:border-gray-700 transition-colors
     "
     >
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setBase(base.subtract(1, "month"))}
-          className="px-2 py-1 rounded bg-transparent border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
+          className="px-2 py-1 rounded bg-transparent border
+          border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
         >
           ◀
         </button>
@@ -150,7 +152,8 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
         </div>
         <button
           onClick={() => setBase(base.add(1, "month"))}
-          className="px-2 py-1 rounded bg-transparent border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
+          className="px-2 py-1 rounded bg-transparent
+          border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
         >
           ▶
         </button>
@@ -190,8 +193,8 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
           const colorClasses = isSelected
             ? "bg-[#0A2B22] text-[#E8FFFA] ring-2 ring-[#3FA796] shadow-[0_0_10px_rgba(63,167,150,0.5)]"
             : isCurrentMonth
-            ? "text-[#CDEEE8] hover:bg-black/20"
-            : "text-[#7FAFA4]/60";
+              ? "text-[#CDEEE8] hover:bg-black/20"
+              : "text-[#7FAFA4]/60";
 
           return (
             <button
@@ -206,7 +209,8 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
 
               <div className="relative z-10">{d.date()}</div>
               {hasTasks && (
-                <div className="relative z-10 w-1 h-1 rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]" />
+                <div className="relative z-10 w-1 h-1
+                  rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]" />
               )}
             </button>
           );
@@ -299,7 +303,9 @@ function WeatherCard({
             placeholder="Search city..."
             className="w-full bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 mb-2 text-sm text-[#E8FFFA] placeholder:text-[#7FAFA4]"
           />
-          <div className="max-h-40 overflow-auto border border-[#2F6B60]/40 rounded bg-black/40">
+          <div className="max-h-40 overflow-auto border
+            border-[#2F6B60]/40 rounded bg-black/40
+            ">
             {suggestions?.map((s, i) => (
               <div
                 key={i}
@@ -321,7 +327,11 @@ function WeatherCard({
       )}
 
       {/* Card visual */}
-      <div className="relative rounded-xl overflow-hidden border border-[#2F6B60]/40 bg-black/20 h-[270px]">
+      <div className="relative rounded-xl overflow-hidden 
+        border border-[#2F6B60]/40 bg-black/20 h-[270px]
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+        bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+        dark:to-[#0A0F1C]">
         {/* Lottie background */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
@@ -346,7 +356,12 @@ function WeatherCard({
         </div>
 
         {/* stats panel at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8] grid grid-cols-2 gap-y-1">
+        <div className="absolute bottom-0 left-0 right-0 p-3
+          bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8]
+          grid grid-cols-2 gap-y-1
+          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+          bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+          dark:to-[#0A0F1C]">
           <div>Humidity: {weatherData?.main?.humidity ?? "—"}%</div>
           <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
           <div>UV: {weatherData?.meta?.uv ?? "—"}</div>
@@ -378,7 +393,11 @@ export default function Planner() {
   const [inlineAdd, setInlineAdd] = useState("");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [day, setDay] = useState(() =>
-    load(formatDateKey(new Date()), { Morning: [], Afternoon: [], Evening: [] })
+    load(formatDateKey(new Date()), {
+      Morning: [],
+      Afternoon: [],
+      Evening: [],
+    }),
   );
   const [streak, setStreak] = useState(() => load("wd_streak", 0));
 
@@ -388,32 +407,32 @@ export default function Planner() {
 
   // weather
   const [cityInput, setCityInput] = useState(() =>
-    load("wd_weather_city_input", "")
+    load("wd_weather_city_input", ""),
   );
   const [selectedCity, setSelectedCity] = useState(() =>
-    load("wd_weather_city", null)
+    load("wd_weather_city", null),
   );
   const [suggestions, setSuggestions] = useState([]);
   const [weatherData, setWeatherData] = useState(null);
   const [lottieData, setLottieData] = useState(null);
   const [weatherStyle, setWeatherStyle] = useState(() =>
-    load("wd_weather_style", "realistic")
+    load("wd_weather_style", "realistic"),
   );
   const [showSearch, setShowSearch] = useState(false);
   const geoDebounce = useRef(null);
 
   // pomodoro & habits
   const [pomodoroSeconds, setPomodoroSeconds] = useState(() =>
-    load("wd_pom_seconds", 25 * 60)
+    load("wd_pom_seconds", 25 * 60),
   );
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const pomInterval = useRef(null);
   const [habits, setHabits] = useState(() =>
-    load("wd_habits", { water: 0, meditate: false, reading: 0 })
+    load("wd_habits", { water: 0, meditate: false, reading: 0 }),
   );
 
   const [focusTask, setFocusTask] = useState(
-    () => localStorage.getItem("wd_focus_task") || ""
+    () => localStorage.getItem("wd_focus_task") || "",
   );
   const [toast, setToast] = useState(null);
 
@@ -491,7 +510,7 @@ export default function Planner() {
       try {
         const q = encodeURIComponent(cityInput.trim());
         const res = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=6`
+          `https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=6`,
         );
         const json = await res.json();
         if (!json || !json.results) {
@@ -694,19 +713,19 @@ export default function Planner() {
       rounded-xl
       text-[#E8FFFA]
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
       transition-colors duration-500
     "
     >
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div
+        className="flex flex-col md:flex-row md:items-center
+        md:justify-between gap-4 mb-6"
+      >
         <div>
           <h1 className="text-2xl font-semibold text-[#9FF2E8]">
             Daily Auto Planner
           </h1>
-          <p className="text-sm text-[#7FAFA4]">
-            Templates vs Time Slots • Same theme as Calendar.jsx
-          </p>
         </div>
 
         {/* Right side: Streak + Weather mini summary */}
@@ -803,12 +822,14 @@ export default function Planner() {
         <div className="min-w-0 flex flex-col gap-4">
           <div
             className="
-            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+            bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+            bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
             rounded-xl p-4
             border border-[#2F6B60]/40
             backdrop-blur-sm
-            shadow-[0_0_12px_rgba(0,0,0,0.35)]
+            shadow-[0_0_12px_rgba(0,0,0,0.35)]            
+            transition-all duration-200
+            dark:border-gray-700 transition-colors
           "
           >
             <div className="flex flex-col md:flex-row gap-3 md:items-center">
@@ -816,7 +837,11 @@ export default function Planner() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search templates..."
-                className="flex-1 bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 placeholder:text-[#7FAFA4] text-sm min-w-0"
+                className="flex-1 bg-black/20 border border-[#3FA796] rounded px-3 
+                py-2 placeholder:text-[#7FAFA4] text-sm min-w-0
+                dark:border-gray-700 transition-colors
+                bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
+                [#0A0F1C]"
               />
 
               <form
@@ -833,9 +858,17 @@ export default function Planner() {
                   value={inlineAdd}
                   onChange={(e) => setInlineAdd(e.target.value)}
                   placeholder="Add new..."
-                  className="bg-black/20 border border-[#2F6B60]/40 px-3 py-2 rounded text-sm"
+                  className="bg-black/20 border border-[#3FA796] px-3 py-2 
+                  dark:border-gray-700 transition-colors rounded text-sm"
                 />
-                <button className="px-3 py-2 rounded bg-[#0A2B22] text-[#E8FFFA] text-sm border border-[#3FA796] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
+                <button
+                  className="px-3 py-2 rounded
+                  bg-[#0A2B22]
+                  bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033]                           dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
+                  text-[#E8FFFA] text-sm border
+                  border-[#3FA796] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] 
+                  transition"
+                >
                   Add
                 </button>
               </form>
@@ -845,7 +878,10 @@ export default function Planner() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[440px] overflow-auto pr-2">
+            <div
+              className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h- 
+             [440px] overflow-auto pr-2"
+            >
               <AnimatePresence>
                 {filteredTemplates.map((t, i) => (
                   <motion.div
@@ -857,59 +893,88 @@ export default function Planner() {
                     draggable
                     onDragStart={(e) => onDragStart(e, t)}
                     onDragEnd={onDragEnd}
-                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-md border border-[#2F6B60]/30 bg-gradient-to-br from-[#081C18] to-[#0F0F0F]"
+                    className="relative flex flex-col sm:flex-row sm:items-center 
+                justify-between gap-3 p-3 rounded-md border border-[#2F6B60]/30 
+                    bg-gradient-to-br from-[#081C18] via-[#] to-[#0F0F0F]
+                    bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033]                           dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
+                    hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                    dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                    transition-all duration-200"
                   >
                     {/* left: icon + text */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="text-lg">{taskEmoji(t)}</div>
-                      <div className="text-sm truncate">{t}</div>
+                      <div className="text-sm truncate ">{t}</div>
                     </div>
 
                     {/* right: actions (hamburger on small widths) */}
-                    <div className="flex items-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
+                    <div
+                      className="flex items-center gap-2
+                      whitespace-nowrap mt-2 sm:mt-0"
+                    >
                       {/* normal actions on medium+ widths */}
                       <div className="hidden sm:flex items-center gap-2">
                         <button
                           onClick={() => {
                             const arr = JSON.parse(
-                              localStorage.getItem("wd_study_queue") || "[]"
+                              localStorage.getItem("wd_study_queue") || "[]",
                             );
                             arr.push({ task: t, created: Date.now() });
                             localStorage.setItem(
                               "wd_study_queue",
-                              JSON.stringify(arr)
+                              JSON.stringify(arr),
                             );
                             showToast("Added to Study queue");
                           }}
-                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
+                          className="px-2 py-1 rounded bg-black/20 border
+                          border-[#2F6B60]/40 text-xs
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          dark:border-gray-700 transition-colors"
                         >
                           Study
                         </button>
                         <button
                           onClick={() => {
                             const arr = JSON.parse(
-                              localStorage.getItem("wd_gym_queue") || "[]"
+                              localStorage.getItem("wd_gym_queue") || "[]",
                             );
                             arr.push({ task: t, created: Date.now() });
                             localStorage.setItem(
                               "wd_gym_queue",
-                              JSON.stringify(arr)
+                              JSON.stringify(arr),
                             );
                             showToast("Added to Gym queue");
                           }}
-                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
+                          className="px-2 py-1 rounded bg-black/20
+                          border border-[#2F6B60]/40 text-xs
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          dark:border-gray-700 transition-colors"
                         >
                           Gym
                         </button>
                         <button
                           onClick={() => duplicateTemplate(t)}
-                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
+                          className="
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          dark:border-gray-700 transition-colors
+                          px-2 py-1 rounded bg-black/20
+                          border border-[#2F6B60]/40 text-xs"
                         >
                           ⎘
                         </button>
                         <button
                           onClick={() => deleteTemplate(i)}
-                          className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
+                          className="
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
                         >
                           🗑
                         </button>
@@ -922,7 +987,13 @@ export default function Planner() {
                             e.stopPropagation();
                             setOpenMenuIndex(openMenuIndex === i ? null : i);
                           }}
-                          className="px-2 py-1 rounded bg-black/20 border border-[#2F6B60]/40 text-xs"
+                          className="
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          dark:border-gray-700 transition-colors                   
+                          px-2 py-1 rounded bg-black/20
+                          border border-[#2F6B60]/40 text-xs"
                         >
                           ⋮
                         </button>
@@ -933,40 +1004,45 @@ export default function Planner() {
                               initial={{ opacity: 0, y: -6 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -6 }}
-                              className="absolute right-0 mt-2 w-40 bg-[#0F0F0F] border border-[#2F6B60]/40 rounded shadow p-2 z-40"
+                              className="absolute right-0 mt-2 w-40
+                              bg-[#0F0F0F] border border-[#2F6B60]/40
+                              rounded shadow p-2 z-40"
                             >
                               <button
                                 onClick={() => {
                                   const arr = JSON.parse(
                                     localStorage.getItem("wd_study_queue") ||
-                                      "[]"
+                                      "[]",
                                   );
                                   arr.push({ task: t, created: Date.now() });
                                   localStorage.setItem(
                                     "wd_study_queue",
-                                    JSON.stringify(arr)
+                                    JSON.stringify(arr),
                                   );
                                   showToast("Added to Study queue");
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
+                                className="w-full text-left px-2 py-1
+                                rounded hover:bg-[#071827]"
                               >
                                 Study
                               </button>
                               <button
                                 onClick={() => {
                                   const arr = JSON.parse(
-                                    localStorage.getItem("wd_gym_queue") || "[]"
+                                    localStorage.getItem("wd_gym_queue") ||
+                                      "[]",
                                   );
                                   arr.push({ task: t, created: Date.now() });
                                   localStorage.setItem(
                                     "wd_gym_queue",
-                                    JSON.stringify(arr)
+                                    JSON.stringify(arr),
                                   );
                                   showToast("Added to Gym queue");
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
+                                className="w-full text-left px-2 py-1
+                                rounded hover:bg-[#071827]"
                               >
                                 Gym
                               </button>
@@ -975,7 +1051,8 @@ export default function Planner() {
                                   duplicateTemplate(t);
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
+                                className="w-full text-left px-2 py-1
+                                rounded hover:bg-[#071827]"
                               >
                                 Duplicate
                               </button>
@@ -984,7 +1061,8 @@ export default function Planner() {
                                   deleteTemplate(i);
                                   setOpenMenuIndex(null);
                                 }}
-                                className="w-full text-left px-2 py-1 rounded text-[#FF8F8F] hover:bg-[#071827]"
+                                className="w-full text-left px-2 py-1
+                                rounded text-[#FF8F8F] hover:bg-[#071827]"
                               >
                                 Delete
                               </button>
@@ -1001,19 +1079,34 @@ export default function Planner() {
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 onClick={() => addTask("Gym: Workout")}
-                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
+                className="px-3 py-1 rounded bg-black/30 
+                border text-sm border-[#2F6B60]/40
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                transition-all duration-200
+                dark:border-gray-700 transition-colors"
               >
                 Gym
               </button>
               <button
                 onClick={() => addTask("Code: Focus Session")}
-                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
+                className="px-3 py-1 rounded bg-black/30
+                border border-[#2F6B60]/40 text-sm
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                transition-all duration-200
+                dark:border-gray-700 transition-colors"
               >
                 Code
               </button>
               <button
                 onClick={() => addTask("DSA Practice")}
-                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
+                className="px-3 py-1 rounded bg-black/30
+                border border-[#2F6B60]/40 text-sm
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                transition-all duration-200
+                dark:border-gray-700 transition-colors"
               >
                 DSA
               </button>
@@ -1033,9 +1126,15 @@ export default function Planner() {
                     onDragOver={onDragOver(slot)}
                     onDrop={onDrop(slot)}
                     onDragEnd={onDragEnd}
-                    className={`rounded-xl p-3 min-h-full max-h-[360px] overflow-auto border border-[#2F6B60]/40
-                    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-                  dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+                    className={`rounded-xl p-3 min-h-full max-h-[360px]
+                    overflow-auto border border-[#2F6B60]/40
+                    bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+                    bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+                    dark:to-[#0A0F1C]
+                    hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                    dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                    transition-all duration-200
+                    dark:border-gray-700 transition-colors
              ${
                isActive
                  ? "ring-2 ring-[#3FA796] shadow-[0_0_12px_rgba(63,167,150,0.5)]"
@@ -1061,7 +1160,12 @@ export default function Planner() {
                             save(formatDateKey(selectedDate), next);
                             showToast(`Added ${p}`);
                           }}
-                          className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                          className="px-2 py-1 rounded bg-black/30
+                          border border-[#2F6B60]/40 text-xs
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          dark:border-gray-700 transition-colors"
                         >
                           +Preset
                         </button>
@@ -1069,17 +1173,24 @@ export default function Planner() {
                           onClick={() => {
                             (day[slot] || []).forEach((t) => {
                               const arr = JSON.parse(
-                                localStorage.getItem("wd_study_queue") || "[]"
+                                localStorage.getItem("wd_study_queue") || "[]",
                               );
                               arr.push({ task: t, created: Date.now() });
                               localStorage.setItem(
                                 "wd_study_queue",
-                                JSON.stringify(arr)
+                                JSON.stringify(arr),
                               );
                             });
                             showToast("Sent to Study queue");
                           }}
-                          className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                          className="px-2 py-1 rounded bg-black/30
+                          border
+                          border-[#2F6B60]/40
+                          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                          transition-all duration-200
+                          dark:border-gray-700 transition-colors
+                          text-xs"
                         >
                           →Study
                         </button>
@@ -1095,9 +1206,17 @@ export default function Planner() {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
-                            className="flex items-center justify-between p-2 rounded-md border border-[#2F6B60]/30 bg-[#071227]/70"
+                            className="flex items-center 
+                            justify-between p-2 rounded-md
+                            border border-[#2F6B60]/30                            
+                            transition-all duration-200
+                            dark:border-gray-700 transition-colors
+                            "
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className="flex items-center gap-3 min-w-0
+                              "
+                            >
                               <div className="text-lg">{taskEmoji(t)}</div>
                               <div className="text-sm truncate">{t}</div>
                             </div>
@@ -1105,13 +1224,23 @@ export default function Planner() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => moveToNextSlot(slot, idx)}
-                                className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                                className="px-2 py-1 rounded bg-black/30
+                                border border-[#2F6B60]/40 text-xs
+                                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                                transition-all duration-200
+                                dark:border-gray-700 transition-colors"
                               >
                                 ➜
                               </button>
                               <button
                                 onClick={() => removeFrom(slot, idx)}
-                                className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
+                                className="px-2 py-1 rounded bg-[#7A1D2B]
+                                text-white text-xs
+                                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                                transition-all duration-200
+                                dark:border-gray-700 transition-colors"
                               >
                                 ✕
                               </button>
@@ -1121,7 +1250,11 @@ export default function Planner() {
                       </AnimatePresence>
 
                       {(day[slot] || []).length === 0 && (
-                        <div className="text-sm text-[#7FAFA4] border border-dashed border-[#2F6B60]/40 rounded p-4">
+                        <div
+                          className="text-sm text-[#7FAFA4]
+                          border border-dashed border-[#2F6B60]/40 rounded p-4
+                          dark:border-gray-700"
+                        >
                           Empty — drop a task here
                         </div>
                       )}
@@ -1135,14 +1268,21 @@ export default function Planner() {
       </div>
 
       {/* BOTTOM ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div
+        className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6
+        "
+      >
         {/* Pomodoro */}
         <div
           className="
-          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+          bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+          dark:to-[#0A0F1C]
           border border-[#2F6B60]/40 rounded-xl p-4
-        "
+          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+          transition-all duration-200
+          dark:border-gray-700 transition-colors"
         >
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -1158,7 +1298,12 @@ export default function Planner() {
                   localStorage.removeItem("wd_focus_task");
                   showToast("Focus cleared");
                 }}
-                className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs"
+                className="px-2 py-1 rounded bg-black/30 
+                border border-[#2F6B60]/40 text-xs
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                transition-all duration-200
+                dark:border-gray-700 transition-colors"
               >
                 Clear
               </button>
@@ -1172,7 +1317,10 @@ export default function Planner() {
               localStorage.setItem("wd_focus_task", e.target.value);
             }}
             placeholder="Today's focus..."
-            className="w-full bg-black/20 border border-[#2F6B60]/40 px-3 py-2 rounded mb-3 text-sm"
+            className="w-full bg-black/20 border border-[#2F6B60]/40 
+            px-3 py-2 rounded mb-3 text-sm
+            transition-all duration-200
+            dark:border-gray-700 transition-colors"
           />
           {focusTask && (
             <div className="text-sm text-[#CDEEE8] mb-3">
@@ -1185,13 +1333,22 @@ export default function Planner() {
             <div className="flex gap-2 ml-auto">
               <button
                 onClick={() => setPomodoroRunning(true)}
-                className="px-3 py-2 rounded bg-[#22C55E] text-black"
+                className="px-3 py-2 rounded bg-[#22C55E] text-black
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                transition-all duration-200
+                transition-colors"
               >
                 Start
               </button>
               <button
                 onClick={() => setPomodoroRunning(false)}
-                className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40"
+                className="px-3 py-2 rounded bg-black/30 border
+                border-[#2F6B60]/40
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                transition-all duration-200
+                dark:border-gray-700 transition-colors"
               >
                 Stop
               </button>
@@ -1200,7 +1357,11 @@ export default function Planner() {
                   setPomodoroSeconds(25 * 60);
                   setPomodoroRunning(false);
                 }}
-                className="px-3 py-2 rounded bg-[#7A1D2B] text-white"
+                className="px-3 py-2 rounded bg-[#7A1D2B] text-white
+                hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                dark:hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                transition-all duration-200
+                transition-colors"
               >
                 Reset
               </button>
@@ -1211,9 +1372,15 @@ export default function Planner() {
         {/* Habits */}
         <div
           className="
-          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+          bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+          dark:to-[#0A0F1C]
+          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+          transition-all duration-200
+          dark:border-gray-700 transition-colors
           border border-[#2F6B60]/40 rounded-xl p-4
+          
         "
         >
           <div className="text-sm text-[#9FF2E8] mb-2">Daily Habits</div>
@@ -1228,7 +1395,12 @@ export default function Planner() {
                       water: Math.max(0, habits.water - 1),
                     })
                   }
-                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
+                  className="px-2 py-1 bg-black/30
+                  border border-[#2F6B60]/40 rounded
+                  hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                  dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                  transition-all duration-200
+                  dark:border-gray-700 transition-colors"
                 >
                   -
                 </button>
@@ -1237,7 +1409,11 @@ export default function Planner() {
                   onClick={() =>
                     setHabits({ ...habits, water: habits.water + 1 })
                   }
-                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 
+                  hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                  dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                  transition-all duration-200
+                  dark:border-gray-700 transition-colors rounded"
                 >
                   +
                 </button>
@@ -1265,7 +1441,11 @@ export default function Planner() {
                       reading: Math.max(0, habits.reading - 5),
                     })
                   }
-                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 
+                  hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                  dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                  transition-all duration-200
+                  dark:border-gray-700 transition-colors rounded"
                 >
                   -
                 </button>
@@ -1274,7 +1454,11 @@ export default function Planner() {
                   onClick={() =>
                     setHabits({ ...habits, reading: habits.reading + 5 })
                   }
-                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 rounded"
+                  className="px-2 py-1 bg-black/30 border border-[#2F6B60]/40 
+                  hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+                  dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+                  transition-all duration-200
+                  dark:border-gray-700 transition-colors rounded"
                 >
                   +
                 </button>
@@ -1282,9 +1466,16 @@ export default function Planner() {
             </div>
 
             <div className="pt-2 text-sm text-[#7FAFA4]">Success Score</div>
-            <div className="w-full bg-black/30 rounded-full h-2 overflow-hidden border border-[#2F6B60]/40">
+            <div
+              className="w-full bg-black/30 rounded-full h-2
+              overflow-hidden border border-[#2F6B60]/40
+              transition-all duration-200
+              dark:border-gray-700 transition-colors"
+            >
               <div
-                className="h-2 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#22C55E] transition-all"
+                className="h-2 rounded-full
+                bg-gradient-to-r from-[#4ADE80] to-[#22C55E] transition-all
+                "
                 style={{ width: `${Math.min(100, totalPlanned * 8)}%` }}
               />
             </div>
@@ -1294,36 +1485,56 @@ export default function Planner() {
         {/* Quick Links */}
         <div
           className="
-          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+          bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+          dark:to-[#0A0F1C]
           border border-[#2F6B60]/40 rounded-xl p-4
+          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+          transition-all duration-200
+          dark:border-gray-700 transition-colors
         "
         >
           <div className="text-sm text-[#9FF2E8] mb-2">Quick Links</div>
           <div className="flex flex-col gap-2">
             <a
               href="/study"
-              className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40 text-center text-sm hover:shadow-[0_0_8px_rgba(63,167,150,0.4)]"
+              className="px-3 py-2 rounded bg-black/30 border
+              border-[#2F6B60]/40 text-center text-sm 
+              hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+              dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+              transition-all duration-200
+              dark:border-gray-700 transition-colors"
             >
               Open Study Page
             </a>
             <a
               href="/gym"
-              className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40 text-center text-sm hover:shadow-[0_0_8px_rgba(184,33,50,0.4)]"
+              className="px-3 py-2 rounded bg-black/30 border
+              border-[#2F6B60]/40 text-center text-sm
+              hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+              dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+              transition-all duration-200
+              dark:border-gray-700 transition-colors"
             >
               Open Gym Page
             </a>
             <button
               onClick={() => {
                 const s = JSON.parse(
-                  localStorage.getItem("wd_study_queue") || "[]"
+                  localStorage.getItem("wd_study_queue") || "[]",
                 );
                 const g = JSON.parse(
-                  localStorage.getItem("wd_gym_queue") || "[]"
+                  localStorage.getItem("wd_gym_queue") || "[]",
                 );
                 showToast(`Study: ${s.length} • Gym: ${g.length}`);
               }}
-              className="px-3 py-2 rounded bg-black/30 border border-[#2F6B60]/40 text-sm"
+              className="px-3 py-2 rounded bg-black/30 border 
+              border-[#2F6B60]/40 text-sm
+              hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+              dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+              transition-all duration-200
+              dark:border-gray-700 transition-colors"
             >
               Preview Queues
             </button>
@@ -1333,7 +1544,10 @@ export default function Planner() {
 
       {/* CALENDAR + DAY PREVIEW */}
       <div className="mt-6 flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-80">
+        <div
+          className="w-full lg:w-80 
+          "
+        >
           <MiniCalendar
             selectedDate={selectedDate}
             setSelectedDate={(d) => setSelectedDate(d)}
@@ -1342,17 +1556,25 @@ export default function Planner() {
 
         <div
           className="
-          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+          bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+          dark:to-[#0A0F1C]
           border border-[#2F6B60]/40 rounded-xl p-4 flex-1
+          hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+          dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+          transition-all duration-200
+          dark:border-gray-700 transition-colors
         "
         >
           <div className="text-sm text-[#9FF2E8] mb-2">Selected day plan</div>
-          <div className="space-y-3 max-h-[260px] overflow-auto pr-2">
+          <div
+            className="space-y-3 max-h-[260px] overflow-auto pr-2
+            "
+          >
             {SLOT_ORDER.map((slot) => (
               <div
                 key={slot}
-                className="p-3 rounded bg-black/20 border border-[#2F6B60]/40"
+                className="p-3 rounded bg-black/20 border border-[#2F6B60]/40                      dark:border-gray-700 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm text-[#E8FFFA]">{slot}</div>
@@ -1365,12 +1587,21 @@ export default function Planner() {
                   {(day[slot] || []).map((t, i) => (
                     <div
                       key={t + i}
-                      className="flex items-center justify-between p-2 rounded bg-[#071227] border border-[#2F6B60]/40"
+                      className="flex items-center
+                      justify-between p-2 rounded border
+                      border-[#2F6B60]/40                      
+                      transition-all duration-200
+                      dark:border-gray-700 transition-colors
+                      dark:bg-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
                     >
                       <div className="truncate text-sm">{t}</div>
                       <button
                         onClick={() => removeFrom(slot, i)}
-                        className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs"
+                        className="px-2 py-1 rounded bg-[#7A1D2B]
+                        text-white text-xs
+                        hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]                
+                        transition-all duration-200
+                        transition-colors"
                       >
                         Remove
                       </button>
@@ -1389,10 +1620,15 @@ export default function Planner() {
         <div className="sm:w-full md:max-w-[240px] min-h-[320px]">
           <div
             className="
-              bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-              dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+            bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+            bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
+            dark:to-[#0A0F1C]
               border border-[#2F6B60]/40
               rounded-xl p-4 min-h-[320px] h-full
+              hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+              dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+              transition-all duration-200
+              dark:border-gray-700 transition-colors
             "
           >
             <WeatherCard
@@ -1422,7 +1658,12 @@ export default function Planner() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed right-6 bottom-6 bg-[#031715] border border-[#2F6B60]/40 px-4 py-2 rounded shadow text-[#E8FFFA]"
+            className="fixed right-6 bottom-6 bg-[#031715] border
+            border-[#2F6B60]/40 px-4 py-2 rounded shadow text-[#E8FFFA]
+            hover:shadow-[0_0_8px_rgba(214,30,54,0.6)]
+            dark:hover:shadow-[0_0_8px_rgba(63,167,150,0.6)]
+            transition-all duration-200
+            dark:border-gray-700 transition-colors"
           >
             {toast}
           </motion.div>
