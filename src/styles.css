@@ -78,3 +78,16 @@ body {
     #0d9488
   );
 }
+
+@keyframes scan {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+@keyframes pulseGlow {
+  0%, 100% { textShadow: 0 0 40px rgba(16,185,129,0.6); }
+  50% { textShadow: 0 0 80px rgba(16,185,129,0.9); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}

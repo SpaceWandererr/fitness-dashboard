@@ -412,104 +412,239 @@ function HomeDashboard({
   return (
     <div className="min-h-screen space-y-16 pb-20">
       {/* HERO */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="pt-10 text-center"
+      {/* ====== FULL DROP-IN LIFEOS v9 — NEURAL CORE EDITION ====== */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2 }}
+        className="relative min-h-screen overflow-hidden bg-green"
       >
-        <p className="text-xs uppercase tracking-[0.4em] text-teal-300/80">
-          Personal Operating System
-        </p>
-        <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl md:text-7xl">
-          <span className="glow-text">Daily Life Matrix</span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-3xl text-lg text-slate-300/80">
-          One screen that shows <strong>you</strong> — body, code, migration,
-          mindset. Tap a core system below to open its full control room.
-        </p>
-      </motion.section>
-
-      {/* QUICK STATS BAR */}
-      <section className="space-y-6">
-        <div className="flex flex-wrap justify-center gap-3">
-          {["weight", "gym", "topics", "streak"].map((key) => (
-            <button
-              key={key}
-              onClick={() => setActivePanel(key)}
-              className={`rounded-full border px-5 py-2 text-sm font-medium transition-all ${
-                activePanel === key
-                  ? "border-cyan-400 bg-cyan-500/20 text-cyan-200 shadow-lg shadow-cyan-500/30"
-                  : "border-teal-500/30 bg-black/40 text-slate-300 hover:border-cyan-400/70"
-              }`}
-            >
-              {labelForPanel(key)}
-            </button>
-          ))}
+        {/* Scanning ambient background */}
+        <div className="fixed inset-0 opacity-30">
+          <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-black to-black" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(16,185,129,0.03)_50%,transparent_100%)] animate-[scan_12s_ease-in-out_infinite]" />
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            active={activePanel === "weight"}
-            onClick={() => setActivePanel("weight")}
-            label="Weight Engine"
-            value={stats.weight === "—" ? "—" : `${stats.weight} kg`}
-            sub="Last logged"
-            icon="⚖️"
-          />
-          <StatCard
-            active={activePanel === "gym"}
-            onClick={() => setActivePanel("gym")}
-            label="Gym Sessions"
-            value={stats.gymDays}
-            sub="Total logged"
-            icon="💪"
-          />
-          <StatCard
-            active={activePanel === "topics"}
-            onClick={() => setActivePanel("topics")}
-            label="Coding Topics"
-            value={
-              stats.topicsTotal
-                ? `${stats.topicsDone}/${stats.topicsTotal}`
-                : stats.topicsDone
-            }
-            sub="Done / Total"
-            icon="📚"
-          />
-          <StatCard
-            active={activePanel === "streak"}
-            onClick={() => setActivePanel("streak")}
-            label="No-Zero Streak"
-            value={stats.streak}
-            sub={streakLabel}
-            icon="🔥"
-          />
-        </div>
-      </section>
+        {/* Central Core Ring */}
+        <div className="relative z-10 pt-20 pb-32">
+          <div className="max-w-7xl mx-auto px-6">
+            {/* Core Title + Pulse Ring */}
+            <div className="relative flex flex-col items-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-20 w-96 h-96 border border-emerald-500/20 rounded-full"
+              />
+              <motion.div
+                animate={{ rotate: -360 }}
+                transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-32 w-[500px] h-[500px] border border-cyan-500/10 rounded-full"
+              />
 
-      {/* DETAIL PANEL AREA */}
-      <section className="space-y-4">
-        <AnimatePresence mode="wait">
-          {activePanel === "weight" && (
-            <WeightPanel key="weight" history={weightHistory} />
-          )}
-          {activePanel === "gym" && (
-            <GymPanel key="gym" gymDates={gymLogDates} />
-          )}
-          {activePanel === "topics" && (
-            <TopicsPanel key="topics" stats={stats} />
-          )}
-          {activePanel === "streak" && (
-            <StreakPanel key="streak" stats={stats} />
-          )}
-        </AnimatePresence>
-      </section>
+              <p className="text-[10px] tracking-[0.6em] text-emerald-400/60 uppercase font-light mb-4">
+                Personal Operating System v9.1
+              </p>
+
+              <h1 className="relative text-8xl md:text-9xl font-black tracking-tighter">
+                <span
+                  className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-600
+                           drop-shadow-[0_0_60px_rgba(16,185,129,0.8)]
+                           animate-[pulseGlow_4s_ease-in-out_infinite]"
+                >
+                  Jay's
+                </span>
+                <span className="absolute -inset-4 bg-emerald-500/20 blur-3xl animate-[pulse_3s_ease-in-out_infinite]" />
+              </h1>
+
+              <p className="mt-8 text-2xl font-light tracking-widest text-cyan-300/80">
+                VERSION UPGRADE PROTOCOL
+              </p>
+
+              <p className="mt-10 max-w-2xl text-center text-emerald-400 font-medium text-sm leading-relaxed">
+                Body • Code • Discipline • Migration.
+                
+              </p>
+            </div>
+
+            {/* Orbital Module Ring - Floating HUD Cards */}
+            <div className="relative mt-24">
+              {/* Invisible center point for orbit */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1" />
+
+              <div className="relative grid grid-cols-1 md:grid-cols-4 gap-10 max-w-6xl mx-auto">
+                {[
+                  {
+                    panel: "weight",
+                    icon: "Scale",
+                    value: `${stats.weight} kg`,
+                    sub: "Current Mass",
+                    delay: 0.2,
+                  },
+                  {
+                    panel: "gym",
+                    icon: "Strength",
+                    value: stats.gymDays,
+                    sub: "Sessions Executed",
+                    delay: 0.4,
+                  },
+                  {
+                    panel: "topics",
+                    icon: "Neural Map",
+                    value: `${stats.topicsDone}/${stats.topicsTotal}`,
+                    sub: "Nodes Integrated",
+                    delay: 0.6,
+                  },
+                  {
+                    panel: "streak",
+                    icon: "Fire Core",
+                    value: stats.streak,
+                    sub: streakLabel,
+                    delay: 0.8,
+                    critical: stats.streak === 0,
+                  },
+                ].map((module, i) => (
+                  <motion.div
+                    key={module.panel}
+                    initial={{ opacity: 0, y: 100, rotate: -30 }}
+                    animate={{ opacity: 1, y: 0, rotate: 0 }}
+                    transition={{
+                      delay: module.delay,
+                      duration: 1,
+                      ease: "easeOut",
+                    }}
+                    whileHover={{ scale: 1.08, zIndex: 50 }}
+                    onClick={() => setActivePanel(module.panel)}
+                    className={`relative group cursor-pointer ${
+                      i === 0
+                        ? "-rotate-12"
+                        : i === 1
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
+                    } transition-all duration-700`}
+                  >
+                    {/* Holographic Card */}
+                    <div
+                      className={`relative p-8 rounded-3xl border backdrop-blur-2xl
+                ${
+                  activePanel === module.panel
+                    ? "border-emerald-400/80 bg-emerald-900/40 shadow-[0_0_50px_rgba(16,185,129,0.6)] ring-2 ring-emerald-500/40"
+                    : "border-cyan-800/40 bg-black/60 hover:border-emerald-500/60 hover:bg-emerald-950/30"
+                } transition-all duration-500`}
+                    >
+                      {/* Floating Icon */}
+                      <div className="text-6xl mb-4 opacity-90">
+                        {module.icon === "Scale" && "Scale"}
+                        {module.icon === "Strength" && "Strength"}
+                        {module.icon === "Neural Map" && "Neural Map"}
+                        {module.icon === "Fire Core" &&
+                          (module.critical ? "Warning" : "Fire")}
+                      </div>
+
+                      <h3 className="text-xs uppercase tracking-widest text-emerald-400/70 font-light">
+                        {module.panel === "weight" && "WEIGHT ENGINE"}
+                        {module.panel === "gym" && "PHYSICAL CORE"}
+                        {module.panel === "topics" && "KNOWLEDGE MATRIX"}
+                        {module.panel === "streak" && "WILLPOWER REACTOR"}
+                      </h3>
+
+                      <p
+                        className={`mt-4 text-4xl font-black tracking-tight ${
+                          module.critical
+                            ? "text-red-400 animate-pulse"
+                            : "text-cyan-300"
+                        }`}
+                      >
+                        {module.value}
+                      </p>
+                      <p className="mt-2 text-xs text-teal-400/60 font-light">
+                        {module.sub}
+                      </p>
+
+                      {/* Connection line to center (on hover/active) */}
+                      {activePanel === module.panel && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-60" />
+                      )}
+                    </div>
+
+                    {/* Floating particles on active */}
+                    {activePanel === module.panel && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        {[...Array(6)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute w-1 h-1 bg-emerald-400 rounded-full"
+                            initial={{ x: 0, y: 0, opacity: 0 }}
+                            animate={{
+                              x: [0, Math.random() * 200 - 100, 0],
+                              y: [0, Math.random() * 200 - 100, 0],
+                              opacity: [0, 1, 0],
+                            }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              delay: i * 0.3,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Active Module Deep Dive - Neural Terminal */}
+            <motion.div layout className="mt-24 max-w-5xl mx-auto">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/40 bg-black/80 backdrop-blur-3xl shadow-2xl">
+                {/* Terminal Header */}
+                <div className="flex items-center gap-4 p-6 border-b border-emerald-800/50 bg-gradient-to-r from-emerald-950/50 to-cyan-950/20">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <p className="text-emerald-400 font-mono text-sm tracking-wider">
+                    ~/core/modules/{activePanel} ─ neural_terminal.exe
+                  </p>
+                </div>
+
+                <div className="p-8 min-h-96">
+                  <AnimatePresence mode="wait">
+                    {activePanel === "weight" && (
+                      <WeightPanel key="weight" history={weightHistory} />
+                    )}
+                    {activePanel === "gym" && (
+                      <GymPanel key="gym" gymDates={gymLogDates} />
+                    )}
+                    {activePanel === "topics" && (
+                      <TopicsPanel key="topics" stats={stats} />
+                    )}
+                    {activePanel === "streak" && (
+                      <StreakPanel key="streak" stats={stats} />
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Final Horizon Line */}
+            <div className="mt-32 text-center">
+              <p className="text-emerald-600/40 text-xs tracking-[1em] uppercase font-light animate-[pulse_6s_ease-in-out_infinite]">
+                ··· VISION HORIZON 2026–2027 ···
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+      {/* ====== END OF DROP-IN ====== */}
 
       {/* VISION + NZ MIGRATION + CORE DIRECTIVES */}
       {/* SCROLL-SNAP CONTAINER FOR FULL-SCREEN VISION CARDS */}
       <section className="space-y-12 snap-y snap-mandatory">
         <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-200/80 text-center">
-          Vision Horizon · 2025–2027
+          Vision Horizon · 2026–2027
         </h3>
 
         {/* MERN */}
