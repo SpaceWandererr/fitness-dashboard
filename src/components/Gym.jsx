@@ -264,7 +264,7 @@ export default function GymSimplified() {
   const dateKey = fmtISO(date);
   // 💬 Sunday quote text
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   /* persist plan */
@@ -324,7 +324,7 @@ export default function GymSimplified() {
   }, [targetWeight]);
 
   const [startWeight, setStartWeight] = useState(() =>
-    load("wd_start_weight", null),
+    load("wd_start_weight", null)
   );
   useEffect(() => {
     if (startWeight !== null && startWeight !== undefined) {
@@ -333,11 +333,11 @@ export default function GymSimplified() {
   }, [startWeight]);
 
   const [weightOverrides, setWeightOverrides] = useState(() =>
-    load("wd_weight_overrides", {}),
+    load("wd_weight_overrides", {})
   );
   useEffect(
     () => save("wd_weight_overrides", weightOverrides),
-    [weightOverrides],
+    [weightOverrides]
   );
 
   const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
@@ -411,18 +411,18 @@ export default function GymSimplified() {
       left: Array.isArray(prev.left)
         ? prev.left
         : Array.isArray(def.left)
-          ? def.left.map(() => false)
-          : [],
+        ? def.left.map(() => false)
+        : [],
       right: Array.isArray(prev.right)
         ? prev.right
         : Array.isArray(def.right)
-          ? def.right.map(() => false)
-          : [],
+        ? def.right.map(() => false)
+        : [],
       finisher: Array.isArray(prev.finisher)
         ? prev.finisher
         : Array.isArray(def.finisher)
-          ? def.finisher.map(() => false)
-          : [],
+        ? def.finisher.map(() => false)
+        : [],
       done: !!prev.done,
       calories: prev.calories,
       bmi: prev.bmi,
@@ -475,7 +475,7 @@ export default function GymSimplified() {
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
-      ((checks.weight ?? overrideWeight ?? "") || "").toString(),
+      ((checks.weight ?? overrideWeight ?? "") || "").toString()
     );
     setShowModal(true);
   };
@@ -538,7 +538,7 @@ export default function GymSimplified() {
     const prev = logs[dateKey] || {};
     setCaloriesInput((prev.calories ?? "").toString());
     setCurrentWeightInput(
-      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString(),
+      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString()
     );
     setShowModal(true);
   };
@@ -592,7 +592,7 @@ export default function GymSimplified() {
     .filter((w) => typeof w === "number");
   const inferredStart = recentWeights.length
     ? Math.max(...recentWeights.slice(-30))
-    : (checks.weight ?? targetWeight);
+    : checks.weight ?? targetWeight;
   const effectiveStart = startWeight ?? inferredStart;
   const overrideWeight = weightOverrides[dateKey];
   let curWeight =
@@ -627,7 +627,7 @@ export default function GymSimplified() {
   const resetProgress = () => {
     if (
       !confirm(
-        "Reset ALL gym progress? This will clear logs, weights, streaks. Plan and goals will remain.",
+        "Reset ALL gym progress? This will clear logs, weights, streaks. Plan and goals will remain."
       )
     )
       return;
@@ -644,7 +644,7 @@ export default function GymSimplified() {
 
   /* normalized weekday safety */
   const normalizedWeekday = WEEK.find(
-    (d) => d.toLowerCase() === (weekday || "").toLowerCase(),
+    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
   );
   const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
     DEFAULT_PLAN[normalizedWeekday] || {
@@ -665,8 +665,7 @@ export default function GymSimplified() {
   return (
     <div
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500 
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9]
-      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+      bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
       border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
@@ -688,9 +687,9 @@ export default function GymSimplified() {
           <select
             value={weekday}
             onChange={(e) => setWeekday(e.target.value)}
-            className="px-3 py-2 rounded-md border border-emerald-700 
-            bg-[#07201f] text-[#FAFAF9] border-gray-700 dark:border-emerald-800
-            text-emerald-100 text-sm focus:outline-none focus:ring-1
+            className="px-3 py-2 rounded-md border
+            bg-[#07201f] text-[#FAFAF9] border-emerald-800
+            text-sm focus:outline-none focus:ring-1
             focus:ring-emerald-400 transition"
           >
             {WEEK.map((d) => (
@@ -708,10 +707,10 @@ export default function GymSimplified() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-md border border-emerald-700
-            bg-[#07201f] border-gray-700 dark:border-emerald-800
+            className="px-3 py-2 rounded-md border`
+            bg-[#07201f]  border-emerald-800
             to-[#0F0F0F] text-[#FAFAF9]
-            text-emerald-100 text-sm focus:outline-none focus:ring-1 
+            text-sm focus:outline-none focus:ring-1 
             focus:ring-emerald-400 transition"
           />
 
@@ -734,7 +733,7 @@ export default function GymSimplified() {
         p-4 space-y-3 border-gray-700 dark:border-emerald-800
         bg-gradient-to-br dark:from-[#071b1b]/60 dark:via-[#071b1b]/60 dark:to- 
         [#071b1b]/60
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#B82132]
+        bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E]
         backdrop-blur-md min-h-[120px]"
       >
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -828,7 +827,7 @@ export default function GymSimplified() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
+                Math.abs(pctToGoal)
               )}% - 15px)`,
             }}
           >
@@ -845,8 +844,8 @@ export default function GymSimplified() {
 
       {/* Workout Section */}
       <section
-        className="mb-4 border rounded-2xl p-4
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
+        className="mb-4 border rounded-2xl p-4 
+        bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F0F0F] text-[#FAFAFA]
         bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
         backdrop-blur-md min-h-[300px] 
         transition-all duration-500"
@@ -887,8 +886,8 @@ export default function GymSimplified() {
                   sectionKey === "left"
                     ? "Left"
                     : sectionKey === "right"
-                      ? "Right"
-                      : dayPlan.finisherLabel || "Finisher";
+                    ? "Right"
+                    : dayPlan.finisherLabel || "Finisher";
 
                 const list = dayPlan[sectionKey] || [];
                 const state = checks[sectionKey] || [];
@@ -897,7 +896,7 @@ export default function GymSimplified() {
                   <div
                     key={sectionKey}
                     className="rounded-xl bg-white/5
-                    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] text-[#FAFAFA]
+                    bg-gradient-to-br from-[#582717] via-[#183D3D] to-[#0F766E] text-[#FAFAFA]
                     bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
                     p-4 shadow-sm border border-emerald-800/40 
                     backdrop-blur-md transition-transform duration-300
@@ -1133,7 +1132,7 @@ function DailySummary({ date, logs, dateKey }) {
   return (
     <div
       className="border rounded-2xl p-4 h-full
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
+      bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
       bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
       backdrop-blur-md"
     >
@@ -1161,7 +1160,7 @@ function DailySummary({ date, logs, dateKey }) {
           ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
         </div>
         <div>
-          📊 BMI: {entry?.bmi != null ? entry.bmi : (latestBmi?.bmi ?? "—")}
+          📊 BMI: {entry?.bmi != null ? entry.bmi : latestBmi?.bmi ?? "—"}
         </div>
         <div className="mt-2">
           <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>
@@ -1214,7 +1213,7 @@ function MiniCalendar({ date, setDate }) {
   return (
     <section
       className="border rounded-2xl p-4
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
+      bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
       bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
       backdrop-blur-md"
     >

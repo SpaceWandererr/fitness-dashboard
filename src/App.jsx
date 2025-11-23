@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import dayjs from "dayjs";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -9,9 +11,10 @@ import Gallery from "./components/Gallery.jsx";
 import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
-import HomeFuturisticDashboard from "./components/HomeFuturisticDashboard.jsx";
 
 import { load, save } from "./utils/localStorage.js";
+
+/* ======================= MAIN APP ======================= */
 
 export default function App() {
   const [dark, setDark] = useState(() => load("wd_dark", true));
@@ -19,18 +22,83 @@ export default function App() {
   const location = useLocation();
   const navRef = useRef(null);
 
-  const accent = "190 80% 55%"; // cyan-aqua tone
+  const [time, setTime] = useState(new Date());
+
+  const [stats, setStats] = useState({
+    weight: "—",
+    gymDays: 0,
+    topicsDone: 0,
+    topicsTotal: 0,
+    streak: 0,
+  });
+
+  const [weightHistory, setWeightHistory] = useState([]);
+  const [gymLogDates, setGymLogDates] = useState([]);
+  const [activePanel, setActivePanel] = useState("weight"); // weight | gym | topics | streak
+
+  const accent = "hsl(180, 100%, 50%)";
+
+  function FloatingScrollControl() {
+    const [atBottom, setAtBottom] = useState(false);
+
+    useEffect(() => {
+      const onScroll = () => {
+        const scrollTop = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const fullHeight = document.documentElement.scrollHeight;
+
+        setAtBottom(scrollTop + windowHeight >= fullHeight - 200);
+      };
+
+      window.addEventListener("scroll", onScroll);
+      onScroll(); // run once on load
+      return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    const handleClick = () => {
+      if (atBottom) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    return (
+      <button
+        onClick={handleClick}
+        title={atBottom ? "Go to Top" : "Go to Bottom"}
+        className="
+        fixed bottom-6 right-6 z-[999]
+        w-12 h-12 rounded-full
+        flex items-center justify-center
+        bg-black/70 backdrop-blur-md
+        border border-teal-400/40
+        text-teal-300 text-xl
+        shadow-[0_0_20px_rgba(34,211,238,0.4)]
+        hover:bg-teal-500/10 hover:scale-105
+        transition-all duration-200
+      "
+      >
+        {atBottom ? "▲" : "▼"}
+      </button>
+    );
+  }
+
+  /* ---------- global effects ---------- */
 
   useEffect(() => {
-    function adjustPadding() {
-      if (navRef.current) {
-        const h = navRef.current.getBoundingClientRect().height;
-        document.documentElement.style.setProperty("--nav-height", `${h}px`);
-      }
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (navRef.current) {
+      const h = navRef.current.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--nav-height", `${h}px`);
     }
-    adjustPadding();
-    window.addEventListener("resize", adjustPadding);
-    return () => window.removeEventListener("resize", adjustPadding);
   }, []);
 
   useEffect(() => {
@@ -38,166 +106,1377 @@ export default function App() {
     save("wd_dark", dark);
   }, [dark]);
 
+  // Load stats + details from localStorage
+  useEffect(() => {
+    function refresh() {
+      const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
+      const syllabus = JSON.parse(
+        localStorage.getItem("syllabus_tree_v2") || "{}"
+      );
+      const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
+
+      // weight history
+      const wh = Object.entries(gymLogs)
+        .filter(([_, v]) => v.weight)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, v]) => ({ date, weight: v.weight }));
+
+      const latestWeight = wh.length ? wh[wh.length - 1].weight : "—";
+
+      const gymDates = Object.keys(gymLogs).sort();
+
+      // topics total + done
+      function walk(node) {
+        let total = 0;
+        let doneCount = 0;
+        if (Array.isArray(node)) {
+          node.forEach((item) => {
+            if (!item) return;
+            total += 1;
+            if (item.done) doneCount += 1;
+          });
+        } else if (typeof node === "object" && node !== null) {
+          Object.values(node).forEach((child) => {
+            const res = walk(child);
+            total += res.total;
+            doneCount += res.done;
+          });
+        }
+        return { total, done: doneCount };
+      }
+      const { total, done: doneTopics } = walk(syllabus);
+
+      // streak: based on wd_done
+      let streak = 0;
+      const today = dayjs();
+      for (let i = 0; i < 365; i++) {
+        const key = today.subtract(i, "day").format("YYYY-MM-DD");
+        if (done[key]) streak++;
+        else break;
+      }
+
+      setStats({
+        weight: latestWeight,
+        gymDays: gymDates.length,
+        topicsDone: doneTopics,
+        topicsTotal: total,
+        streak,
+      });
+
+      setWeightHistory(wh);
+      setGymLogDates(gymDates);
+    }
+
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+
+  // inject glow CSS once
+  useEffect(() => {
+    if (document.getElementById("life-matrix-glow")) return;
+    const style = document.createElement("style");
+    style.id = "life-matrix-glow";
+    style.textContent = glowCSS;
+    document.head.appendChild(style);
+  }, []);
+
+  const bgClass =
+    "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]";
+
   return (
     <div
-      className={`min-h-[100dvh] overflow-x-hidden text-gray-200 transition-colors duration-300 ${dark
-          ? "bg-gradient-to-br from-[#0d0d0f] via-[#121212] to-[#1a1a1a]"
-          : "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]"
-        }`}
+      className={`min-h-screen text-[#E5F9F6] ${bgClass} relative overflow-x-hidden`}
       style={{ "--accent": accent }}
     >
-      {/* Navbar MUST be outside the flex parent */}
+      {/* subtle background blobs */}
+      <div className="pointer-events-none fixed inset-0 opacity-40">
+        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle_at_center,#b82132aa,transparent_60%)] blur-3xl" />
+      </div>
+
+      {/* NAVBAR */}
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 bg-[#121212]/70 backdrop-blur-lg"
+        className="fixed top-0 left-0 right-0 z-40 border-b border-teal-500/20 bg-[#020617]/70 backdrop-blur-xl"
       >
-        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between p-3 gap-2">
-          {/* Name / Logo */}
-          <Link
-            to="/"
-            onClick={() => setMenuOpen(false)}
-            className="select-none"
-          >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-emerald-400 tracking-tight whitespace-nowrap hover:tracking-wider transition-all duration-300">
-              JAY&nbsp;SINH&nbsp;THAKUR
-            </h1>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+          <Link to="/" onClick={() => setMenuOpen(false)}>
+            <motion.h1
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-xl font-bold tracking-[0.2em] text-teal-300 glow-text"
+            >
+              JAY SINH THAKUR
+            </motion.h1>
           </Link>
 
-          {/* Right-side controls */}
-          <div className="flex items-center gap-3 ml-auto">
-            {/* Desktop Nav Links */}
-            <div className="hidden sm:flex items-center gap-3">
-              {links.map((link) => (
-                <NavLink key={link.to} to={link.to} current={location.pathname}>
-                  {link.label}
-                </NavLink>
-              ))}
-            </div>
+          <div className="hidden gap-2 md:flex">
+            {links.map((l) => (
+              <NavLink key={l.to} {...l} current={location.pathname} />
+            ))}
+          </div>
 
-            {/* Dark Mode Switcher */}
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs font-mono text-teal-200/80 sm:inline">
+              {time.toLocaleTimeString()}
+            </span>
             <button
-              onClick={() => {
-                setDark((v) => {
-                  const next = !v;
-                  window.dispatchEvent(new Event("theme-changed"));
-                  return next;
-                });
-              }}
-              className={`p-2 rounded-full transition-all duration-200 ${dark
-                  ? "text-emerald-400 hover:text-emerald-300 bg-emerald-900/40"
-                  : "text-yellow-400 hover:text-yellow-300 bg-white/10"
-                } shadow-md hover:scale-105`}
-              title="Toggle Dark Mode"
+              onClick={() => setDark((v) => !v)}
+              className="rounded-full border border-teal-500/40 bg-black/40 px-2 py-1 text-xs text-teal-200 shadow-[0_0_12px_rgba(45,212,191,0.4)] transition hover:bg-black/70"
             >
-              {dark ? "🌙" : "☀️"}
+              {dark ? "Dark" : "Light"}
             </button>
-
-            {/* Mobile Toggle */}
             <button
-              className="sm:hidden p-2 rounded hover:bg-gray-800/50"
               onClick={() => setMenuOpen((v) => !v)}
+              className="rounded-md border border-teal-500/40 bg-black/40 p-1.5 text-teal-100 md:hidden"
             >
-              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
         {menuOpen && (
-          <div className="absolute left-0 right-0 top-full z-40 mt-1 px-4 py-4 bg-[#181818]/95 backdrop-blur-md border-t border-gray-700 shadow-xl rounded-b-2xl">
-            <div className="flex flex-col gap-1">
-              {links.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMenuOpen(false)}
-                  className={`block rounded px-3 py-2 text-sm ${location.pathname === link.to
-                      ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))]"
-                      : "hover:bg-gray-700/60"
-                    }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            <div className="mt-3">
-              <button
-                onClick={() => {
-                  setDark((v) => !v);
-                  setMenuOpen(false);
-                }}
-                className="w-full px-3 py-2 rounded border border-gray-600 text-sm bg-gray-800/60 hover:bg-gray-700 transition-colors"
+          <div className="border-t border-teal-500/20 bg-[#020617]/95 px-3 pb-3 pt-1 md:hidden">
+            {links.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                onClick={() => setMenuOpen(false)}
+                className="block rounded-md px-2 py-1.5 text-sm text-slate-100 hover:bg-teal-500/10"
               >
-                {dark ? "☀️ Light" : "🌙 Dark"}
-              </button>
-            </div>
+                {l.label}
+              </Link>
+            ))}
           </div>
         )}
       </nav>
 
-      {/* Main Content */}
+      {/* ROUTES */}
       <main
-        key={location.pathname}
-        className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-2 py-2 transition-all duration-300 ease-in-out"
-        style={{ paddingTop: "calc(var(--nav-height) + 10px)" }}
+        style={{ paddingTop: "calc(var(--nav-height) + 12px)" }}
+        className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-6"
       >
-        <Routes>
-          {/* ✅ Your new homepage */}
-          <Route
-            path="/"
-            element={<HomeFuturisticDashboard accent={accent} />}
-          />
+        <AnimatePresence mode="wait" initial={false}>
+          <Routes location={location} key={location.pathname}>
+            {/* HOME */}
+            <Route
+              path="/"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <HomeDashboard
+                    stats={stats}
+                    weightHistory={weightHistory}
+                    gymLogDates={gymLogDates}
+                    activePanel={activePanel}
+                    setActivePanel={setActivePanel}
+                  />
+                </motion.div>
+              }
+            />
 
-          {/* redirect old /home to / */}
-          <Route path="/home" element={<Navigate to="/" />} />
+            {/* OTHER PAGES WITH SLIDE ANIMATION */}
+            <Route
+              path="/syllabus"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Syllabus />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/gym"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Gym />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/projects"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Projects />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Calendar />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/planner"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Planner />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/gallery"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Gallery />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/goals"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Goals />
+                </motion.div>
+              }
+            />
 
-          {/* other pages */}
-          <Route path="/syllabus" element={<Syllabus />} />
-          <Route path="/gym" element={<Gym />} />
-          <Route path="/Projects" element={<Projects />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/planner" element={<Planner />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/goals" element={<Goals />} />
-
-          {/* fallback */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+            {/* 404 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AnimatePresence>
       </main>
 
-      <footer className="text-center p-1 opacity-80 text-xs text-gray-500">
-        <p>⚡ Built by Jay Sinh Thakur — Focus. Code. Grow.</p>
+      <footer className="relative z-10 bg-black/40 py-3 text-center text-xs text-slate-300/80">
+        Life Matrix v3 • Crafted for Jay • {new Date().getFullYear()}
       </footer>
+      <FloatingScrollControl />
     </div>
   );
 }
 
-/* ---------- helpers ---------- */
+/* ======================= HOME DASHBOARD – FULL SCREEN VISION CARDS ======================= */
+
+function HomeDashboard({
+  stats,
+  weightHistory,
+  gymLogDates,
+  activePanel,
+  setActivePanel,
+}) {
+  const streakLabel =
+    stats.streak === 0 ? "No streak yet" : `${stats.streak} day streak`;
+
+  // derived progress for vision cards
+  const mernProgress =
+    stats.topicsTotal > 0
+      ? Math.min(100, Math.round((stats.topicsDone / stats.topicsTotal) * 100))
+      : 0;
+  const bodyProgress = Math.min(100, stats.gymDays * 3);
+  const disciplineProgress = Math.min(100, stats.streak);
+  const nzProgress = 30; // manual milestone % for now
+  const moneyProgress = 15; // manual for now
+
+  return (
+    <div className="min-h-screen space-y-16 pb-20">
+      {/* HERO */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="pt-10 text-center"
+      >
+        <p className="text-xs uppercase tracking-[0.4em] text-teal-300/80">
+          Personal Operating System
+        </p>
+        <h1 className="mt-3 text-5xl font-black tracking-tight sm:text-6xl md:text-7xl">
+          <span className="glow-text">Daily Life Matrix</span>
+        </h1>
+        <p className="mx-auto mt-6 max-w-3xl text-lg text-slate-300/80">
+          One screen that shows <strong>you</strong> — body, code, migration,
+          mindset. Tap a core system below to open its full control room.
+        </p>
+      </motion.section>
+
+      {/* QUICK STATS BAR */}
+      <section className="space-y-6">
+        <div className="flex flex-wrap justify-center gap-3">
+          {["weight", "gym", "topics", "streak"].map((key) => (
+            <button
+              key={key}
+              onClick={() => setActivePanel(key)}
+              className={`rounded-full border px-5 py-2 text-sm font-medium transition-all ${
+                activePanel === key
+                  ? "border-cyan-400 bg-cyan-500/20 text-cyan-200 shadow-lg shadow-cyan-500/30"
+                  : "border-teal-500/30 bg-black/40 text-slate-300 hover:border-cyan-400/70"
+              }`}
+            >
+              {labelForPanel(key)}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            active={activePanel === "weight"}
+            onClick={() => setActivePanel("weight")}
+            label="Weight Engine"
+            value={stats.weight === "—" ? "—" : `${stats.weight} kg`}
+            sub="Last logged"
+            icon="⚖️"
+          />
+          <StatCard
+            active={activePanel === "gym"}
+            onClick={() => setActivePanel("gym")}
+            label="Gym Sessions"
+            value={stats.gymDays}
+            sub="Total logged"
+            icon="💪"
+          />
+          <StatCard
+            active={activePanel === "topics"}
+            onClick={() => setActivePanel("topics")}
+            label="Coding Topics"
+            value={
+              stats.topicsTotal
+                ? `${stats.topicsDone}/${stats.topicsTotal}`
+                : stats.topicsDone
+            }
+            sub="Done / Total"
+            icon="📚"
+          />
+          <StatCard
+            active={activePanel === "streak"}
+            onClick={() => setActivePanel("streak")}
+            label="No-Zero Streak"
+            value={stats.streak}
+            sub={streakLabel}
+            icon="🔥"
+          />
+        </div>
+      </section>
+
+      {/* DETAIL PANEL AREA */}
+      <section className="space-y-4">
+        <AnimatePresence mode="wait">
+          {activePanel === "weight" && (
+            <WeightPanel key="weight" history={weightHistory} />
+          )}
+          {activePanel === "gym" && (
+            <GymPanel key="gym" gymDates={gymLogDates} />
+          )}
+          {activePanel === "topics" && (
+            <TopicsPanel key="topics" stats={stats} />
+          )}
+          {activePanel === "streak" && (
+            <StreakPanel key="streak" stats={stats} />
+          )}
+        </AnimatePresence>
+      </section>
+
+      {/* VISION + NZ MIGRATION + CORE DIRECTIVES */}
+      {/* SCROLL-SNAP CONTAINER FOR FULL-SCREEN VISION CARDS */}
+      <section className="space-y-12 snap-y snap-mandatory">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-200/80 text-center">
+          Vision Horizon · 2025–2027
+        </h3>
+
+        {/* MERN */}
+        <VisionCard
+          icon="🚀"
+          title="MERN Mastery Overdrive"
+          gradient="from-cyan-500/20 via-teal-600/20 to-emerald-600/10"
+          border="border-cyan-500/40"
+          glow="shadow-[0_0_40px_rgba(34,211,238,0.4)]"
+          progress={mernProgress}
+          phases={[
+            "Foundation (MERN + JS)",
+            "Execution (Projects + DSA)",
+            "Domination (System Design + DevOps)",
+          ]}
+          metrics={[
+            `Topics: ${stats.topicsDone}/${stats.topicsTotal || "?"}`,
+            "Target: 5 SaaS apps",
+            "Goal: 300–500 DSA problems",
+          ]}
+          description={
+            <>
+              Turn MERN + DSA into your default language. Build SaaS products
+              that can pay for visas, tickets, and your new life.
+              <ul className="mt-6 space-y-3 text-sm">
+                <li>
+                  • Master MongoDB: Schema design, aggregation, indexing,
+                  sharding
+                </li>
+                <li>
+                  • Express.js: REST + GraphQL APIs, JWT/OAuth, rate limiting,
+                  error handling
+                </li>
+                <li>
+                  • React: Hooks mastery, Redux Toolkit, React Query, Next.js
+                  14+, App Router
+                </li>
+                <li>
+                  • Node.js: Event loop deep dive, clustering, PM2,
+                  microservices
+                </li>
+                <li>
+                  • DSA: 300+ LeetCode (Medium/Hard), system design (HLD/LLD)
+                </li>
+                <li>
+                  • Build 5 production-grade apps: AI SaaS, fintech dashboard,
+                  real-time collab tool
+                </li>
+                <li>
+                  • Full CI/CD, Docker, AWS ECS/EC2, Terraform, monitoring
+                  (Datadog/Prometheus)
+                </li>
+              </ul>
+              <p className="mt-6 font-mono text-cyan-300">
+                “Code like a warrior: no bugs, no mercy. Every line is a step
+                toward financial independence.”
+              </p>
+            </>
+          }
+        />
+
+        {/* NZ MIGRATION */}
+        <VisionCard
+          icon="🇳🇿"
+          title="New Zealand Migration Launch"
+          gradient="from-emerald-500/20 via-teal-600/20 to-cyan-600/10"
+          border="border-emerald-500/40"
+          glow="shadow-[0_0_40px_rgba(16,185,129,0.4)]"
+          progress={nzProgress}
+          phases={["Skill Alignment", "Offer & AEWV", "Relocation & PR Path"]}
+          metrics={[
+            "Target: Green List role",
+            "AEWV-ready CV & portfolio",
+            "Savings target: 15k NZD",
+          ]}
+          description={
+            <>
+              Relocate as a high-value developer. One consistent, engineered
+              path.
+              <ul className="mt-6 space-y-3 text-sm">
+                <li>
+                  • Green List roles: Software Developer, Full-Stack Engineer
+                  (Tier 1)
+                </li>
+                <li>
+                  • AEWV Visa: Accredited employer + ≥NZD 29.66/hr (2025 rate)
+                </li>
+                <li>• Target cities: Auckland, Wellington, Christchurch</li>
+                <li>
+                  • Job hunt: Seek.co.nz, LinkedIn (NZ filter), TradeMe Jobs
+                </li>
+                <li>
+                  • Timeline: 6–12 months skill → 3–6 months applications →
+                  Offer → Visa (4–8 weeks)
+                </li>
+                <li>
+                  • Post-arrival: Work-to-Residence → Straight-to-Residence → PR
+                  in 3–5 years
+                </li>
+                <li>
+                  • Savings goal: NZD 15,000+ buffer (visa + relocation + first
+                  months)
+                </li>
+              </ul>
+              <p className="mt-6 font-mono text-emerald-300">
+                “From Gujarat grids to Kiwi horizons. Build the rocket first.”
+              </p>
+            </>
+          }
+        />
+
+        {/* BODY TRANSFORMATION */}
+        <VisionCard
+          icon="⚡"
+          title="Body Transformation Protocol"
+          gradient="from-orange-500/20 via-red-600/20 to-rose-600/10"
+          border="border-orange-500/40"
+          glow="shadow-[0_0_40px_rgba(251,146,60,0.4)]"
+          progress={bodyProgress}
+          phases={[
+            "Cutting (Fat Loss)",
+            "Recomp (Lean Build)",
+            "Performance (Endurance)",
+          ]}
+          metrics={[
+            `Gym sessions logged: ${stats.gymDays}`,
+            "Target: -10 to -12 kg fat",
+            "10k steps + 2–3 HIIT/week",
+          ]}
+          description={
+            <>
+              Drop fat. Forge lean muscle. Run 12–14 hour focus days without
+              crashing.
+              <ul className="mt-6 space-y-3 text-sm">
+                <li>• Diet: 500–700 kcal deficit, 2g protein/kg, 16:8 IF</li>
+                <li>
+                  • Training: 4–5× compound lifts, progressive overload, PPL
+                  split
+                </li>
+                <li>• Cardio: 2× HIIT + 10k steps daily</li>
+                <li>
+                  • Supplements: Creatine 5g, whey, omega-3, caffeine
+                  (pre-workout)
+                </li>
+                <li>• Sleep: 7.5–8.5 hrs, consistent schedule</li>
+                <li>• Goal: 12–15% body fat, visible abs, 80+ kg lean mass</li>
+              </ul>
+              <p className="mt-6 font-mono text-orange-300">
+                “Pain now, power permanent.”
+              </p>
+            </>
+          }
+        />
+
+        {/* DISCIPLINE */}
+        <VisionCard
+          icon="🛡️"
+          title="Discipline Dominion"
+          gradient="from-purple-500/20 via-fuchsia-600/20 to-pink-600/10"
+          border="border-purple-500/40"
+          glow="shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+          progress={disciplineProgress}
+          phases={["Routine Setup", "Consistency Lock", "Identity Shift"]}
+          metrics={[
+            `No-zero streak: ${stats.streak} days`,
+            "Daily journaling system",
+            "Screen time < 2hrs/day",
+          ]}
+          description={
+            <>
+              No zero days. Systems over feelings. You dictate reality.
+              <ul className="mt-6 space-y-3 text-sm">
+                <li>
+                  • Morning ritual: 5 AM wake → meditate → plan → deep work
+                </li>
+                <li>• Habit stacking + environment design</li>
+                <li>• Weekly review every Sunday night</li>
+                <li>• Public accountability (X, Discord, mentor)</li>
+                <li>• Mindset: Stoicism, Jocko, Goggins, extreme ownership</li>
+                <li>• Metric: 95%+ daily task completion</li>
+              </ul>
+              <p className="mt-6 font-mono text-purple-300">
+                “Discipline is the only real superpower.”
+              </p>
+            </>
+          }
+        />
+
+        {/* FINANCIAL FREEDOM ENGINE – 5TH CARD */}
+        <VisionCard
+          icon="💸"
+          title="Financial Freedom Engine"
+          gradient="from-yellow-500/20 via-amber-500/20 to-orange-600/10"
+          border="border-yellow-500/40"
+          glow="shadow-[0_0_40px_rgba(250,204,21,0.4)]"
+          progress={moneyProgress}
+          phases={["Skill → Income", "Stable Side Streams", "Location Freedom"]}
+          metrics={[
+            "Target: 2 active income streams",
+            "Freelance / remote MERN work",
+            "Savings runway for NZ move",
+          ]}
+          description={
+            <>
+              Use code, not luck, to buy freedom — in India first, then in NZ.
+              <ul className="mt-6 space-y-3 text-sm">
+                <li>• Build a portfolio that converts into clients</li>
+                <li>• Offer MERN freelancing and dashboards / tools</li>
+                <li>• Experiment with small SaaS (subscriptions in USD)</li>
+                <li>• Maintain 6–12 month emergency fund</li>
+                <li>• System for tracking expenses, savings, investments</li>
+              </ul>
+              <p className="mt-6 font-mono text-yellow-200">
+                “Freedom is not a place. It’s a balance sheet plus skills.”
+              </p>
+            </>
+          }
+        />
+
+        {/* NZ MIGRATION COMMAND BLOCK (DEEP DIVE) */}
+        <NZMigrationBlock />
+      </section>
+
+      {/* NZ Migration Deep Dive + Data */}
+      <section className="w-full snap-y snap-mandatory px-6">
+        <div className="w-full space-y-8">
+          {/* This unlocks width */}
+          <div className="w-full">
+            <DirectivesBlock />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ======================= FULL-SCREEN VISION CARD (UPGRADED) ======================= */
+
+function VisionCard({
+  icon,
+  title,
+  gradient,
+  border,
+  glow,
+  description,
+  progress = 0,
+  phases = [],
+  metrics = [],
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 60 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className={`relative mx-auto max-w-5xl rounded-3xl border ${border} bg-gradient-to-br ${gradient} p-10 shadow-2xl backdrop-blur-xl ${glow} min-h-screen flex flex-col justify-center snap-start`}
+    >
+      <div className="flex flex-col gap-6">
+        {/* Header */}
+        <div className="flex items-start gap-4">
+          <div className="text-5xl sm:text-6xl">{icon}</div>
+          <div className="flex-1">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+              {title}
+            </h2>
+
+            {/* Progress bar */}
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-[11px] text-slate-200/80">
+                <span>Mission Progress</span>
+                <span className="font-mono text-teal-200">
+                  {isNaN(progress) ? "0" : progress.toFixed(0)}%
+                </span>
+              </div>
+              <div className="mt-1 h-2 rounded-full bg-black/40 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 transition-all"
+                  style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Phase timeline */}
+        {phases.length > 0 && (
+          <div className="mt-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-teal-100/80 mb-2">
+              Phase Timeline
+            </p>
+            <div className="grid gap-2 sm:grid-cols-3 text-xs">
+              {phases.map((p, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-teal-400/30 bg-black/40 px-3 py-2"
+                >
+                  <p className="text-[11px] font-semibold text-teal-200">
+                    Phase {i + 1}
+                  </p>
+                  <p className="text-[11px] text-slate-200 mt-1">{p}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Metric tiles */}
+        {metrics.length > 0 && (
+          <div className="mt-2 grid gap-2 sm:grid-cols-3 text-xs">
+            {metrics.map((m, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-cyan-400/25 bg-black/40 px-3 py-2 text-slate-100"
+              >
+                {m}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Original rich description */}
+        <div className="mt-6 max-w-4xl text-lg leading-relaxed text-slate-200">
+          {description}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ======================= DETAIL PANELS ======================= */
+
+function WeightPanel({ history }) {
+  const latest = history.length ? history[history.length - 1].weight : null;
+  const first = history.length ? history[0].weight : null;
+  const diff =
+    latest != null && first != null ? Number(latest) - Number(first) : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl border border-teal-500/25 bg-black/50 p-5 shadow-[0_0_30px_rgba(45,212,191,0.25)]"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-teal-500/20 pb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-teal-300">Weight Engine</h3>
+          <p className="text-xs text-slate-300/80">
+            Tracking body recomposition over time.
+          </p>
+        </div>
+        {latest != null && (
+          <div className="text-right">
+            <p className="text-xs text-slate-300/70">Change from first log</p>
+            <p className="text-sm font-semibold text-emerald-300">
+              {diff > 0 ? "+" : ""}
+              {diff?.toFixed(1)} kg
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 grid gap-4 md:grid-cols-[1.4fr,1fr]">
+        <div className="space-y-2">
+          <p className="text-xs text-slate-300/70">
+            Last 10 entries (most recent at bottom):
+          </p>
+          <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg bg-slate-900/60 p-2 text-xs">
+            {history.length === 0 && (
+              <p className="text-slate-400">
+                No weight logs yet. Log from the gym page to see history here.
+              </p>
+            )}
+            {history.slice(-10).map((h) => (
+              <div
+                key={h.date}
+                className="flex items-center justify-between rounded-md bg-white/5 px-2 py-1"
+              >
+                <span className="text-slate-300">{h.date}</span>
+                <span className="font-mono text-teal-300">{h.weight} kg</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2 rounded-xl bg-gradient-to-br from-teal-500/20 via-teal-500/10 to-emerald-500/20 p-3">
+          <p className="text-xs text-slate-100/90">
+            Snapshot · <span className="font-semibold">Current Body State</span>
+          </p>
+          <div className="space-y-1 text-xs">
+            <InfoRow
+              label="First logged weight"
+              value={first ? `${first} kg` : "—"}
+            />
+            <InfoRow
+              label="Latest logged weight"
+              value={latest ? `${latest} kg` : "—"}
+            />
+            <InfoRow
+              label="Total entries"
+              value={history.length ? history.length : "—"}
+            />
+            <InfoRow
+              label="Direction"
+              value={
+                diff == null
+                  ? "—"
+                  : diff < 0
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
+              }
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-slate-100/70">
+            Rule: don’t obsess over single days. Watch the **trend** and keep
+            gym + diet protocol consistent.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function GymPanel({ gymDates }) {
+  const total = gymDates.length;
+  const lastDate = total ? gymDates[gymDates.length - 1] : null;
+
+  const byMonth = {};
+  gymDates.forEach((d) => {
+    const [y, m] = d.split("-");
+    const key = `${y}-${m}`;
+    byMonth[key] = (byMonth[key] || 0) + 1;
+  });
+
+  const monthEntries = Object.entries(byMonth).slice(-4);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl border border-indigo-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(129,140,248,0.3)]"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-500/30 pb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-indigo-300">
+            Gym Control Room
+          </h3>
+          <p className="text-xs text-slate-300/80">
+            Tracking how often you enter the arena.
+          </p>
+        </div>
+        <div className="text-right text-xs text-slate-200/80">
+          <p>Total sessions logged</p>
+          <p className="text-lg font-semibold text-indigo-200">{total}</p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-4 md:grid-cols-[1.2fr,1fr]">
+        <div className="space-y-2">
+          <p className="text-xs text-slate-300/70">Recent gym days:</p>
+          <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg bg-slate-900/60 p-2 text-xs">
+            {total === 0 && (
+              <p className="text-slate-400">
+                No gym sessions logged yet. Log from the gym page.
+              </p>
+            )}
+            {gymDates.slice(-15).map((d) => (
+              <div
+                key={d}
+                className="flex items-center justify-between rounded-md bg-white/5 px-2 py-1"
+              >
+                <span>{d}</span>
+                <span className="text-indigo-300">✅</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2 rounded-xl bg-gradient-to-br from-indigo-500/20 via-sky-500/10 to-cyan-500/20 p-3 text-xs">
+          <InfoRow
+            label="Last gym visit"
+            value={lastDate || "No sessions yet"}
+          />
+          <InfoRow
+            label="Average per recent month"
+            value={
+              monthEntries.length
+                ? (
+                    monthEntries.reduce((acc, [, v]) => acc + v, 0) /
+                    monthEntries.length
+                  ).toFixed(1)
+                : "—"
+            }
+          />
+          <p className="mt-1 text-[10px] text-slate-100/80">
+            Minimum standard: **3 sessions/week**. Future Jay in New Zealand is
+            built here, not there.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function TopicsPanel({ stats }) {
+  const { topicsDone, topicsTotal } = stats;
+  const percent =
+    topicsTotal > 0 ? Math.round((topicsDone / topicsTotal) * 100) : 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl border border-emerald-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(16,185,129,0.3)]"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/30 pb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-emerald-300">
+            Coding Syllabus Matrix
+          </h3>
+          <p className="text-xs text-slate-300/80">
+            MERN + DSA topics tracked from your syllabus tree.
+          </p>
+        </div>
+        <div className="text-right text-xs text-slate-200/80">
+          <p>Completion</p>
+          <p className="text-lg font-semibold text-emerald-200">
+            {topicsTotal ? `${percent}%` : "—"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-4 md:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-2">
+          <p className="text-xs text-slate-300/70">
+            Progress bar for the full stack roadmap:
+          </p>
+          <div className="overflow-hidden rounded-full bg-slate-900/70">
+            <div
+              className="h-3 rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all"
+              style={{ width: `${topicsTotal ? percent : 0}%` }}
+            />
+          </div>
+          <ul className="mt-2 text-xs text-slate-200/80 space-y-1">
+            <li>• Completed topics: {topicsDone}</li>
+            <li>• Total tracked topics: {topicsTotal || "Not loaded"}</li>
+            <li>
+              • Remaining:{" "}
+              {topicsTotal ? topicsTotal - topicsDone : "Need syllabus data"}
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-2 rounded-xl bg-gradient-to-br from-emerald-500/20 via-lime-500/10 to-teal-500/20 p-3 text-xs">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100">
+            Study Rules
+          </p>
+          <ul className="mt-1 space-y-1 text-[11px] text-slate-100/90">
+            <li>• At least 1 topic move per day.</li>
+            <li>• Code → Commit → Push → Note.</li>
+            <li>• Rotate: JS fundamentals → DSA → React → Backend.</li>
+            <li>• Treat each topic like a gym set: full range, no ego.</li>
+          </ul>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function StreakPanel({ stats }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.25 }}
+      className="rounded-2xl border border-fuchsia-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(217,70,239,0.3)]"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-fuchsia-500/30 pb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-fuchsia-300">
+            No-Zero Day Engine
+          </h3>
+          <p className="text-xs text-slate-300/80">
+            Streak is based on **wd_done** — any day you log progress.
+          </p>
+        </div>
+        <div className="text-right text-xs text-slate-200/80">
+          <p>Current streak</p>
+          <p className="text-lg font-semibold text-fuchsia-200">
+            {stats.streak} days
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 text-xs text-slate-200/85 md:flex-row">
+        <div className="flex-1 rounded-xl bg-gradient-to-br from-fuchsia-500/20 via-pink-500/10 to-rose-500/20 p-3">
+          <p className="font-semibold text-fuchsia-100">Rules of the streak</p>
+          <ul className="mt-1 space-y-1">
+            <li>• One logged action = day is saved.</li>
+            <li>• Gym, code, or deep work — any counts.</li>
+            <li>• If streak breaks: no drama, just restart immediately.</li>
+          </ul>
+        </div>
+        <div className="flex-1 rounded-xl bg-slate-900/70 p-3">
+          <p className="font-semibold text-slate-100">Future Jay Check</p>
+          <p className="mt-1 text-[11px]">
+            Imagine 90 days of this streak. Different body. Different mind.
+            Easier New Zealand interviews. You can’t control the visa officer,
+            but you control the streak.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ======================= VISION / NZ / DATA ======================= */
+
+function NZMigrationBlock() {
+  // small status bar at top to make it feel like a command dashboard
+  const stages = [
+    { label: "Skill Alignment", status: "ON TRACK" },
+    { label: "Job Applications", status: "WARMING UP" },
+    { label: "AEWV Ready", status: "PENDING" },
+    { label: "Relocation Fund", status: "BUILDING" },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 80 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.9, ease: "easeOut" }}
+      className="relative mx-auto max-w-5xl rounded-3xl border border-emerald-500/40 bg-gradient-to-br from-emerald-900/20 via-teal-900/20 to-cyan-900/10 p-10 shadow-2xl backdrop-blur-xl min-h-[85vh] flex flex-col justify-center snap-start"
+      style={{
+        boxShadow:
+          "0 0 60px rgba(16, 185, 129, 0.5), inset 0 0 40px rgba(16, 185, 129, 0.15)",
+      }}
+    >
+      {/* Command status bar */}
+      <div className="mb-6 grid gap-2 text-[10px] sm:grid-cols-4">
+        {stages.map((s) => (
+          <div
+            key={s.label}
+            className="rounded-full border border-emerald-400/40 bg-black/30 px-3 py-1 flex flex-col items-start"
+          >
+            <span className="text-emerald-200 font-semibold">{s.label}</span>
+            <span className="text-[9px] text-emerald-100/80">{s.status}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-start gap-8">
+        <div className="text-5xl sm:text-7xl">🇳🇿</div>
+        <div className="flex-1 space-y-8">
+          <div>
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-emerald-300">
+              New Zealand Migration Protocol · 2025–2027
+            </h2>
+            <p className="mt-4 text-lg font-medium text-emerald-200/90">
+              Not a random dream — a structured, engineered pipeline.
+            </p>
+            <p className="mt-2 text-base text-teal-100/80">
+              Expanded with timelines, costs, contingencies, and weekly KPIs.
+            </p>
+          </div>
+
+          <ol className="space-y-6 text-sm sm:text-base">
+            {[
+              {
+                step: "Align with Green List",
+                desc: "Focus on Software / Web Developer roles on NZ’s Green List. Your MERN + DSA roadmap is literally building this eligibility.",
+                timeline: "6–12 months to skill up",
+              },
+              {
+                step: "Target Accredited Employers",
+                desc: "Seek, LinkedIn, company sites. Only apply to “Accredited Employer” companies. 10+ tailored applications/week.",
+                timeline: "Start now → peak in Q3 2025",
+              },
+              {
+                step: "AEWV – Work Visa",
+                desc: "Job offer → Employer job check → AEWV application. Fees: ~NZD 750 + medical/police (~NZD 500). Processing: 4–6 weeks.",
+                timeline: "Target: Q4 2025 – Q1 2026",
+              },
+              {
+                step: "Residence Pathways",
+                desc: "After 24 months → Green List Straight to Residence or Work to Residence. Points: Level 7+ degree, 3+ years exp, age <55.",
+                timeline: "2027–2028",
+              },
+              {
+                step: "Long-Term Upgrade",
+                desc: "Permanent Residency → Citizenship option after 5 years. High-paying tech career, clean air, safety, freedom.",
+                timeline: "2030+",
+              },
+            ].map((item, i) => (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.15 }}
+                className="flex gap-5"
+              >
+                <span className="flex size-10 sm:size-12 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-lg sm:text-2xl font-bold text-emerald-300 ring-4 ring-emerald-500/30">
+                  {i + 1}
+                </span>
+                <div className="flex-1">
+                  <p className="font-bold text-emerald-300">{item.step}</p>
+                  <p className="mt-1 text-slate-200">{item.desc}</p>
+                  <p className="mt-2 text-xs font-mono text-teal-300/80">
+                    Timeline: {item.timeline}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
+
+          <div className="mt-10 rounded-2xl border border-emerald-500/30 bg-emerald-900/30 p-6 text-center">
+            <p className="text-xl sm:text-2xl font-bold text-emerald-100">
+              Migration isn’t escape.
+            </p>
+            <p className="mt-2 text-2xl sm:text-3xl font-black text-white">
+              It’s a <span className="text-emerald-400">VERSION UPGRADE</span>.
+            </p>
+            <p className="mt-3 text-sm sm:text-base text-teal-200">
+              Current Jay config decides how strong v2.0 in New Zealand will be.
+            </p>
+            <p className="mt-4 font-mono text-[10px] sm:text-xs uppercase tracking-widest text-emerald-300">
+              Monitor immigration policy every quarter • No excuses • Execute
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function DirectivesBlock() {
+  const directives = [
+    {
+      title: "No Zero Days",
+      text: "Even tiny actions compound. No day ends with nothing executed.",
+      code: "EXEC-001",
+    },
+    {
+      title: "Track Everything",
+      text: "What is not tracked is invisible. Logs create leverage.",
+      code: "EXEC-002",
+    },
+    {
+      title: "Dual Assault",
+      text: "Train body + brain daily. No imbalance allowed.",
+      code: "EXEC-003",
+    },
+    {
+      title: "Comfort is Enemy",
+      text: "Comfort kills growth. Discomfort is the upgrade path.",
+      code: "EXEC-004",
+    },
+  ];
+
+  return (
+    <section className="w-full max-w-7xl mx-auto mt-24 px-6 relative">
+      {/* Background glow */}
+      <div
+        className="absolute inset-0 rounded-3xl 
+        bg-[radial-gradient(circle_at_right,rgba(16,185,129,0.2),transparent_70%)] 
+        blur-3xl pointer-events-none"
+      ></div>
+
+      <div
+        className="
+        relative w-full
+        rounded-3xl
+        border border-emerald-500/40
+        bg-gradient-to-br from-emerald-900/20 via-teal-900/20 to-cyan-900/10
+        px-10 py-10
+        backdrop-blur-xl
+        shadow-[0_0_60px_rgba(16,185,129,0.3)]
+      "
+      >
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <div>
+            <h3 className="text-sm tracking-widest uppercase text-emerald-200">
+              Core Directives
+            </h3>
+            <p className="text-xs text-emerald-100/70 mt-1">
+              System behavior rules — non negotiable
+            </p>
+          </div>
+
+          <div className="mt-4 md:mt-0 text-[11px] tracking-wider text-emerald-300/80">
+            MODULE: INTERNAL OS
+          </div>
+        </div>
+
+        {/* Main Layout Grid (unchanged) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT: Directive Cards */}
+          <div className="lg:col-span-2 grid sm:grid-cols-2 gap-4">
+            {directives.map((item, i) => (
+              <div
+                key={i}
+                className="
+                rounded-xl
+                bg-black/30
+                border border-emerald-500/20
+                px-6 py-5
+                shadow-inner shadow-black/60
+                hover:border-emerald-400/40
+                transition-all duration-300
+              "
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-emerald-300 text-sm font-medium">
+                    {item.title}
+                  </span>
+                  <span className="text-[11px] text-emerald-400/70 tracking-wider">
+                    {item.code}
+                  </span>
+                </div>
+
+                <p className="text-xs text-emerald-100/80 leading-relaxed">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* RIGHT: SYSTEM PANEL */}
+          <div
+            className="
+            rounded-xl
+            bg-black/30
+            border border-emerald-500/30
+            px-6 py-6
+            shadow-[0_0_25px_rgba(16,185,129,0.15)]
+          "
+          >
+            <h4 className="text-emerald-200 text-xs tracking-widest mb-4 uppercase">
+              Behavior Engine
+            </h4>
+
+            <div className="space-y-4 text-sm text-emerald-100/70">
+              <div>
+                <span className="text-emerald-300">Mode:</span> Execution Only
+              </div>
+
+              <div>
+                <span className="text-emerald-300">Failure Policy:</span> No
+                emotional exit allowed.
+              </div>
+
+              <div>
+                <span className="text-emerald-300">Override:</span> Comfort
+                rejection enabled.
+              </div>
+
+              <div>
+                <span className="text-emerald-300">Daily Objective:</span>{" "}
+                Increment identity by 1%.
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-emerald-500/20 pt-4 text-[11px] tracking-wider text-emerald-300/70">
+              STATUS: ACTIVE
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ======================= SMALL UI HELPERS ======================= */
+
+function StatCard({ label, value, sub, icon, active, onClick }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ y: -3, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={`group flex w-full flex-col items-start rounded-2xl border px-4 py-3 text-left shadow-lg transition-all ${
+        active
+          ? "border-teal-400 bg-black/70 shadow-[0_0_25px_rgba(45,212,191,0.5)]"
+          : "border-teal-500/25 bg-black/50 hover:border-teal-300/70 hover:shadow-[0_0_18px_rgba(45,212,191,0.4)]"
+      }`}
+    >
+      <div className="flex w-full items-center justify-between">
+        <span className="text-lg">{icon}</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-teal-200/80">
+          {active ? "OPEN" : "TAP TO OPEN"}
+        </span>
+      </div>
+      <p className="mt-2 text-xs font-semibold text-slate-200/90">{label}</p>
+      <p className="text-lg font-bold text-teal-100">{value}</p>
+      <p className="mt-0.5 text-[11px] text-slate-300/75">{sub}</p>
+    </motion.button>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[11px] text-slate-100/85">{label}</span>
+      <span className="text-[11px] font-semibold text-teal-100">{value}</span>
+    </div>
+  );
+}
+
+function NavLink({ to, label, current }) {
+  const active = current === to;
+  return (
+    <Link
+      to={to}
+      className={`rounded-md px-3 py-1 text-xs transition-all ${
+        active
+          ? "bg-teal-500/20 text-teal-200 shadow-[0_0_12px_rgba(45,212,191,0.5)]"
+          : "text-slate-100/90 hover:bg-black/40 hover:text-teal-200"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
 
 const links = [
-  { to: "/", label: "HOME" }, // fixed
+  { to: "/", label: "HOME" },
   { to: "/syllabus", label: "STUDY" },
   { to: "/gym", label: "GYM" },
-  { to: "/Projects", label: "PROJECTS" },
+  { to: "/projects", label: "PROJECTS" },
   { to: "/calendar", label: "CALENDAR" },
   { to: "/planner", label: "PLANNER" },
   { to: "/goals", label: "GOALS" },
   { to: "/gallery", label: "PHOTOS" },
 ];
 
-function NavLink({ to, children, current }) {
-  const isActive = current === to;
-  return (
-    <Link
-      to={to}
-      className={`px-3 py-1 rounded-md text-sm transition-all duration-200 ${isActive
-          ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))] font-semibold"
-          : "hover:bg-gray-800/50"
-        }`}
-    >
-      {children}
-    </Link>
-  );
+/* ======================= UTIL ======================= */
+
+function labelForPanel(key) {
+  switch (key) {
+    case "weight":
+      return "Weight";
+    case "gym":
+      return "Gym";
+    case "topics":
+      return "Coding";
+    case "streak":
+      return "Streak";
+    default:
+      return key;
+  }
 }
 
+const glowCSS = `
+.glow-text {
+  text-shadow:
+    0 0 10px rgba(45,212,191,0.7),
+    0 0 25px rgba(45,212,191,0.6),
+    0 0 45px rgba(248,113,113,0.5);
+}
+`;

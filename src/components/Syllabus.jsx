@@ -5057,7 +5057,6 @@ function SectionCard({
      from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
      
-
      shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
      overflow-hidden"
     >
