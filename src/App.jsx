@@ -232,53 +232,73 @@ export default function App() {
             <button
               onClick={() => setDark((v) => !v)}
               className="relative group rounded-full w-12 h-12 flex items-center justify-center
-             border border-teal-500/60 bg-black/60 backdrop-blur-xl
-             shadow-[0_0_25px_rgba(45,212,191,0.5)]
-             hover:shadow-[0_0_40px_rgba(45,212,191,0.8)]
-             transition-all duration-400"
+    border border-teal-500/60 bg-black/60 backdrop-blur-xl
+    shadow-[0_0_25px_rgba(45,212,191,0.5)]
+    hover:shadow-[0_0_40px_rgba(45,212,191,0.8)]
+    transition-all duration-400"
               aria-label="Toggle dark mode"
             >
               {/* Inner glow pulse */}
               <div className="absolute inset-1 rounded-full bg-teal-500/20 scale-0 group-hover:scale-110 transition-transform duration-500" />
 
-              {/* Sun / Moon EMOJIS with smooth flip animation */}
-              <span className="relative text-2xl">
-                <AnimatePresence mode="wait">
-                  {dark ? (
-                    <motion.div
-                      key="moon"
-                      initial={{ rotate: -180, opacity: 0, scale: 0.8 }}
-                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                      exit={{ rotate: 180, opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                      className="drop-shadow-[0_0_20px_rgba(45,212,191,1)]"
-                    >
-                      Moon
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="sun"
-                      initial={{ rotate: 180, opacity: 0, scale: 0.8 }}
-                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                      exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                      className="drop-shadow-[0_0_20px_rgba(255,200,0,0.9)]"
-                    >
-                      Sun
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </span>
+              {/* CELESTIAL SYSTEM */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {/* CENTER EMOJI (only one now) */}
+                <span className="relative text-2xl z-10">
+                  <AnimatePresence mode="wait">
+                    {dark ? (
+                      <motion.div
+                        key="moon"
+                        initial={{ rotate: -180, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 180, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        className="drop-shadow-[0_0_20px_rgba(45,212,191,1)]"
+                      >
+                        🌙
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="sun"
+                        initial={{ rotate: 180, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -180, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        className="drop-shadow-[0_0_20px_rgba(255,200,0,0.9)]"
+                      >
+                        ☀️
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </span>
 
-              {/* Orbiting emerald dot — shows you're in dark mode (your true form) */}
-              <motion.div
-                className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full shadow-lg"
-                animate={{
-                  rotate: dark ? 360 : 0,
-                  scale: dark ? 1.4 : 1,
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              />
+                {/* ORBIT CONTAINER (full circle size) */}
+                <motion.div
+                  key={dark ? "dark-orbit" : "light-orbit"} // 👈 force re-init on theme change
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ transformOrigin: "50% 50%" }}
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: dark ? 35 : 25, // slower in dark mode
+                    ease: "linear",
+                    repeat: Infinity,
+                  }}
+                >
+                  {/* ORBITING EMOJI (POSITIONED ON THE RING) */}
+                  <div
+                    className="absolute select-none"
+                    style={{
+                      top: "-10px", // adjust if you want closer/further from ring
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      fontSize: "12px", // smaller than center emoji
+                      filter: "drop-shadow(0 0 6px rgba(45,212,191,0.8))",
+                    }}
+                  >
+                    {dark ? "☀️" : "🌙"}
+                  </div>
+                </motion.div>
+              </div>
             </button>
             <button
               onClick={() => setMenuOpen((v) => !v)}
