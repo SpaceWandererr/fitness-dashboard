@@ -362,22 +362,27 @@ export default function GymSimplified() {
   const [saving, setSaving] = useState(false);
 
   /* sync date -> weekday to avoid mismatch */
+  // 🔥 only auto-adjust date when user manually changes weekday
+  const userChangedWeekday = useRef(false);
+
   useEffect(() => {
     const name = dayjs(date).format("dddd");
     setWeekday(name);
   }, [date]);
 
-  // 🧭 When weekday changes manually (via dropdown), adjust date accordingly
   useEffect(() => {
-    // Only run when user manually selects weekday (not initial load)
-    if (!WEEK.includes(weekday)) return;
+    if (!userChangedWeekday.current) return;
 
-    const currentDate = dayjs(date);
-    const startOfWeek = currentDate.startOf("week").add(1, "day"); // Monday start
+    const currentDate = dayjs();
+    const startOfWeek = currentDate.startOf("week").add(1, "day");
+
     const newDate = startOfWeek
       .add(WEEK.indexOf(weekday), "day")
       .format("YYYY-MM-DD");
-    if (newDate !== date) setDate(newDate);
+
+    setDate(newDate);
+
+    userChangedWeekday.current = false;
   }, [weekday]);
 
   function persistLogFor(dateIso, obj) {
@@ -686,7 +691,10 @@ export default function GymSimplified() {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <select
             value={weekday}
-            onChange={(e) => setWeekday(e.target.value)}
+            onChange={(e) => {
+              userChangedWeekday.current = true;
+              setWeekday(e.target.value);
+            }}
             className="px-3 py-2 rounded-md border
             bg-[#07201f] text-[#FAFAF9] border-emerald-800
             text-sm focus:outline-none focus:ring-1

@@ -3,6 +3,13 @@ import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
+import {
+  Scale,
+  Dumbbell,
+  BrainCircuit,
+  Flame,
+  AlertTriangle,
+} from "lucide-react";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -426,7 +433,7 @@ function HomeDashboard({
         </div>
 
         {/* Central Core Ring */}
-        <div className="relative z-10 pt-20 pb-32">
+        <div className="relative z-10 pt-24 pb-32">
           <div className="max-w-7xl mx-auto px-6">
             {/* Core Title + Pulse Ring */}
             <div className="relative flex flex-col items-center">
@@ -462,7 +469,6 @@ function HomeDashboard({
 
               <p className="mt-10 max-w-2xl text-center text-emerald-400 font-medium text-sm leading-relaxed">
                 Body • Code • Discipline • Migration.
-                
               </p>
             </div>
 
@@ -533,13 +539,38 @@ function HomeDashboard({
                     : "border-cyan-800/40 bg-black/60 hover:border-emerald-500/60 hover:bg-emerald-950/30"
                 } transition-all duration-500`}
                     >
-                      {/* Floating Icon */}
-                      <div className="text-6xl mb-4 opacity-90">
-                        {module.icon === "Scale" && "Scale"}
-                        {module.icon === "Strength" && "Strength"}
-                        {module.icon === "Neural Map" && "Neural Map"}
-                        {module.icon === "Fire Core" &&
-                          (module.critical ? "Warning" : "Fire")}
+                      {/* Floating Icon – Lucide + Emoji with perfect dark/light mode */}
+                      <div className="text-6xl md:text-7xl mb-4 opacity-90">
+                        {module.panel === "weight" && (
+                          <div className="text-teal-400 dark:text-emerald-400">
+                            <Scale className="w-20 h-20 mx-auto" />
+                          </div>
+                        )}
+                        {module.panel === "gym" && (
+                          <div className="text-cyan-400 dark:text-cyan-300">
+                            <Dumbbell className="w-20 h-20 mx-auto" />
+                          </div>
+                        )}
+                        {module.panel === "topics" && (
+                          <div className="text-purple-400 dark:text-purple-300">
+                            <BrainCircuit className="w-20 h-20 mx-auto" />
+                          </div>
+                        )}
+                        {module.panel === "streak" && (
+                          <div
+                            className={
+                              module.critical
+                                ? "text-red-500 animate-pulse"
+                                : "text-orange-400 dark:text-orange-300"
+                            }
+                          >
+                            {module.critical ? (
+                              <AlertTriangle className="w-20 h-20 mx-auto" />
+                            ) : (
+                              <Flame className="w-20 h-20 mx-auto" />
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <h3 className="text-xs uppercase tracking-widest text-emerald-400/70 font-light">
@@ -595,22 +626,65 @@ function HomeDashboard({
               </div>
             </div>
 
-            {/* Active Module Deep Dive - Neural Terminal */}
-            <motion.div layout className="mt-24 max-w-5xl mx-auto">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/40 bg-black/80 backdrop-blur-3xl shadow-2xl">
+            {/* NEURAL COMMAND DECK — PURE CYBER BLACK (Light + Dark) */}
+            <motion.div
+              layout
+              className="mt-24 max-w-5xl mx-auto"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <div
+                className="relative rounded-3xl overflow-hidden border-2 
+                  border-teal-500/50 dark:border-emerald-500/60
+                  bg-[#020617]/95 dark:bg-black/98
+                  backdrop-blur-3xl 
+                  shadow-2xl 
+                  ring-1 ring-teal-400/30 dark:ring-emerald-400/30"
+              >
                 {/* Terminal Header */}
-                <div className="flex items-center gap-4 p-6 border-b border-emerald-800/50 bg-gradient-to-r from-emerald-950/50 to-cyan-950/20">
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                <div
+                  className="flex items-center justify-between px-6 py-4 
+                    border-b border-teal-600/40 dark:border-emerald-700/50 
+                    bg-gradient-to-r from-teal-950/60 via-cyan-950/30 to-transparent 
+                    dark:from-emerald-950/70 dark:via-cyan-950/40"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500/90 shadow-md" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/90 shadow-md" />
+                      <div className="w-3 h-3 rounded-full bg-teal-400/90 dark:bg-emerald-400/90 shadow-md" />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <code className="text-xs font-mono text-teal-300 dark:text-emerald-300 tracking-wider">
+                        root@lifeos
+                      </code>
+                      <span className="text-teal-400/60 dark:text-emerald-400/50">
+                        ➜
+                      </span>
+                      <code className="text-sm font-mono tracking-widest text-teal-200 dark:text-emerald-200">
+                        ~/core/{activePanel}
+                      </code>
+                      <span className="text-teal-400 dark:text-emerald-400 text-lg animate-pulse">
+                        █
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-emerald-400 font-mono text-sm tracking-wider">
-                    ~/core/modules/{activePanel} ─ neural_terminal.exe
-                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+                    <span className="text-xs font-mono text-teal-300 dark:text-emerald-300">
+                      EXECUTING
+                    </span>
+                  </div>
                 </div>
 
-                <div className="p-8 min-h-96">
+                {/* Terminal Body — Deep black void */}
+                <div
+                  className="p-8 min-h-96 bg-gradient-to-b from-transparent via-teal-950/10 to-black/40 
+                    dark:via-emerald-950/15"
+                >
                   <AnimatePresence mode="wait">
                     {activePanel === "weight" && (
                       <WeightPanel key="weight" history={weightHistory} />
@@ -625,6 +699,24 @@ function HomeDashboard({
                       <StreakPanel key="streak" stats={stats} />
                     )}
                   </AnimatePresence>
+                </div>
+
+                {/* Bottom Status Bar */}
+                <div
+                  className="px-6 py-3 border-t border-teal-600/30 dark:border-emerald-700/40 
+                    bg-teal-950/40 dark:bg-emerald-950/60 
+                    flex items-center justify-between text-xs font-mono"
+                >
+                  <span className="text-teal-400/80 dark:text-emerald-400/80 tracking-widest">
+                    NO ZERO DAYS • DISCIPLINE = FREEDOM • 2026-2027
+                  </span>
+                  <span className="text-teal-300/90 dark:text-emerald-300/90">
+                    {new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </span>
                 </div>
               </div>
             </motion.div>
