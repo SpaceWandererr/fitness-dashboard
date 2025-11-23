@@ -231,9 +231,54 @@ export default function App() {
             </span>
             <button
               onClick={() => setDark((v) => !v)}
-              className="rounded-full border border-teal-500/40 bg-black/40 px-2 py-1 text-xs text-teal-200 shadow-[0_0_12px_rgba(45,212,191,0.4)] transition hover:bg-black/70"
+              className="relative group rounded-full w-12 h-12 flex items-center justify-center
+             border border-teal-500/60 bg-black/60 backdrop-blur-xl
+             shadow-[0_0_25px_rgba(45,212,191,0.5)]
+             hover:shadow-[0_0_40px_rgba(45,212,191,0.8)]
+             transition-all duration-400"
+              aria-label="Toggle dark mode"
             >
-              {dark ? "Dark" : "Light"}
+              {/* Inner glow pulse */}
+              <div className="absolute inset-1 rounded-full bg-teal-500/20 scale-0 group-hover:scale-110 transition-transform duration-500" />
+
+              {/* Sun / Moon EMOJIS with smooth flip animation */}
+              <span className="relative text-2xl">
+                <AnimatePresence mode="wait">
+                  {dark ? (
+                    <motion.div
+                      key="moon"
+                      initial={{ rotate: -180, opacity: 0, scale: 0.8 }}
+                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                      exit={{ rotate: 180, opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                      className="drop-shadow-[0_0_20px_rgba(45,212,191,1)]"
+                    >
+                      Moon
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="sun"
+                      initial={{ rotate: 180, opacity: 0, scale: 0.8 }}
+                      animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                      exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                      className="drop-shadow-[0_0_20px_rgba(255,200,0,0.9)]"
+                    >
+                      Sun
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </span>
+
+              {/* Orbiting emerald dot — shows you're in dark mode (your true form) */}
+              <motion.div
+                className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full shadow-lg"
+                animate={{
+                  rotate: dark ? 360 : 0,
+                  scale: dark ? 1.4 : 1,
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              />
             </button>
             <button
               onClick={() => setMenuOpen((v) => !v)}
