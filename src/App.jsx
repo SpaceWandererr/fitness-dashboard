@@ -234,10 +234,10 @@ export default function App() {
               className="relative group rounded-full w-12 h-12 flex
               items-center justify-center
               border
-              border-yellow-400/30 dark:border-white/40
+              border-yellow-400/30 dark:border-white/30
               bg-transparent backdrop-blur-xl
               shadow-[0_0_25px_rgba(255,193,7,0.6)]
-              dark:shadow-[0_0_25px_rgba(255,255,255,0.4)]
+              dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
               hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
               dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
               transition-all duration-400"
@@ -270,7 +270,7 @@ export default function App() {
               {/* CELESTIAL SYSTEM */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 {/* CENTER EMOJI (only one now) */}
-                <span className="relative text-2xl z-10">
+                <span className="relative text-xl z-10">
                   <AnimatePresence mode="wait">
                     {dark ? (
                       <motion.div
@@ -311,14 +311,13 @@ export default function App() {
                   }}
                 >
                   {/* ORBITING EMOJI */}
-                  {/* ORBITING EMOJI */}
                   <div
                     className="absolute select-none transition-all duration-300"
                     style={{
-                      top: "-10px",
+                      top: "-6px",
                       left: "50%",
                       transform: "translateX(-50%)",
-                      fontSize: "14px",
+                      fontSize: "10px",
                       filter: dark
                         ? `
                         drop-shadow(0 0 6px #FFD700)
