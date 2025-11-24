@@ -231,7 +231,7 @@ export default function App() {
             </span>
             <button
               onClick={() => setDark((v) => !v)}
-              className="relative group rounded-full w-12 h-12 flex
+              className="relative group rounded-full w-10 h-10 flex
               items-center justify-center
               border
               border-yellow-400/30 dark:border-white/30
@@ -290,8 +290,7 @@ export default function App() {
                         animate={{ rotate: 0, opacity: 1, scale: 1 }}
                         exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_14px_#FFD700]
-                        drop-shadow-[0_0_30px_#FFB800]"
+                        className="drop-shadow-[0_0_30px_#FFB800]"
                       >
                         ☀️
                       </motion.div>
@@ -305,7 +304,7 @@ export default function App() {
                   style={{ transformOrigin: "50% 50%" }}
                   animate={{ rotate: 360 }}
                   transition={{
-                    duration: 22,
+                    duration: 26,
                     ease: "linear",
                     repeat: Infinity,
                   }}
@@ -317,7 +316,7 @@ export default function App() {
                       top: "-6px",
                       left: "50%",
                       transform: "translateX(-50%)",
-                      fontSize: "10px",
+                      fontSize: "8px",
                       filter: dark
                         ? `
                         drop-shadow(0 0 6px #FFD700)
