@@ -280,9 +280,7 @@ export default function App() {
                         animate={{ rotate: 0, opacity: 1 }}
                         exit={{ rotate: 180, opacity: 0 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_8px_#FFFFFF]
-                        drop-shadow-[0_0_18px_#E0F2FF]
-                        drop-shadow-[0_0_40px_#BBDFFF]"
+                        className="drop-shadow-[0_0_16px_rgba(255,255,255,0.9)]"
                       >
                         🌙
                       </motion.div>
@@ -293,10 +291,7 @@ export default function App() {
                         animate={{ rotate: 0, opacity: 1, scale: 1 }}
                         exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_8px_#FFD700]
-                        drop-shadow-[0_0_22px_#FFB800]
-                        drop-shadow-[0_0_50px_#FF8F00]
-                        drop-shadow-[0_0_80px_rgba(255,140,0,0.8)]"
+                        className="drop-shadow-[0_0_16px_rgba(255,255,255,0.9)]"
                       >
                         ☀️
                       </motion.div>
