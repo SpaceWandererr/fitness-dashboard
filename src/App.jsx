@@ -231,15 +231,42 @@ export default function App() {
             </span>
             <button
               onClick={() => setDark((v) => !v)}
-              className="relative group rounded-full w-12 h-12 flex items-center justify-center
-    border border-teal-500/60 bg-black/60 backdrop-blur-xl
-    shadow-[0_0_25px_rgba(45,212,191,0.5)]
-    hover:shadow-[0_0_40px_rgba(45,212,191,0.8)]
-    transition-all duration-400"
+              className="relative group rounded-full w-12 h-12 flex
+              items-center justify-center
+              border
+              border-yellow-400/30 dark:border-white/40
+              bg-black/60 backdrop-blur-xl
+              shadow-[0_0_25px_rgba(255,193,7,0.6)]
+              dark:shadow-[0_0_25px_rgba(255,255,255,0.4)]
+              hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]
+              dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+              transition-all duration-400"
               aria-label="Toggle dark mode"
             >
               {/* Inner glow pulse */}
-              <div className="absolute inset-1 rounded-full bg-teal-500/20 scale-0 group-hover:scale-110 transition-transform duration-500" />
+              <div
+                className="absolute inset-1 rounded-full
+                bg-yellow-400/30 dark:bg-white/30
+                scale-0 group-hover:scale-110
+                transition-transform duration-500"
+              />
+
+              {/* Eclipse overlay */}
+              <AnimatePresence>
+                <motion.div
+                  key={dark ? "eclipse-dark" : "eclipse-light"}
+                  initial={{ scale: 0, opacity: 0.8 }}
+                  animate={{ scale: 1.4, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="absolute inset-2 rounded-full pointer-events-none"
+                  style={{
+                    background: dark
+                      ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
+                      : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
+                  }}
+                />
+              </AnimatePresence>
 
               {/* CELESTIAL SYSTEM */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -253,7 +280,9 @@ export default function App() {
                         animate={{ rotate: 0, opacity: 1 }}
                         exit={{ rotate: 180, opacity: 0 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_20px_rgba(45,212,191,1)]"
+                        className="drop-shadow-[0_0_8px_#FFFFFF]
+                        drop-shadow-[0_0_18px_#E0F2FF]
+                        drop-shadow-[0_0_40px_#BBDFFF]"
                       >
                         🌙
                       </motion.div>
@@ -264,11 +293,10 @@ export default function App() {
                         animate={{ rotate: 0, opacity: 1, scale: 1 }}
                         exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="
-                  drop-shadow-[0_0_12px_#FFD700]
-                  drop-shadow-[0_0_25px_#FFC107]
-                  drop-shadow-[0_0_40px_#FF9800]
-                "
+                        className="drop-shadow-[0_0_8px_#FFD700]
+                        drop-shadow-[0_0_22px_#FFB800]
+                        drop-shadow-[0_0_50px_#FF8F00]
+                        drop-shadow-[0_0_80px_rgba(255,140,0,0.8)]"
                       >
                         ☀️
                       </motion.div>
@@ -278,26 +306,35 @@ export default function App() {
 
                 {/* ORBIT CONTAINER (full circle size) */}
                 <motion.div
-                  //key={dark ? "dark-orbit" : "light-orbit"}
                   className="absolute inset-0 pointer-events-none"
                   style={{ transformOrigin: "50% 50%" }}
                   animate={{ rotate: 360 }}
-                  whileHover={{ rotate: 0 }} // pause on hover
                   transition={{
-                    duration: 22, // slower in dark mode
+                    duration: 22,
                     ease: "linear",
                     repeat: Infinity,
                   }}
                 >
-                  {/* ORBITING EMOJI (POSITIONED ON THE RING) */}
+                  {/* ORBITING EMOJI */}
+                  {/* ORBITING EMOJI */}
                   <div
-                    className="absolute select-none"
+                    className="absolute select-none transition-all duration-300"
                     style={{
-                      top: "-10px", // adjust if you want closer/further from ring
+                      top: "-10px",
                       left: "50%",
                       transform: "translateX(-50%)",
-                      fontSize: "12px", // smaller than center emoji
-                      filter: "drop-shadow(0 0 6px rgba(45,212,191,0.8))",
+                      fontSize: "14px",
+                      filter: dark
+                        ? `
+                        drop-shadow(0 0 6px #FFD700)
+                        drop-shadow(0 0 14px #FFB800)
+                        drop-shadow(0 0 28px #FF8F00)
+                      `
+                        : `
+                        drop-shadow(0 0 6px #FFFFFF)
+                        drop-shadow(0 0 14px #E0F2FF)
+                        drop-shadow(0 0 28px #BBDFFF)
+                      `,
                     }}
                   >
                     {dark ? "☀️" : "🌙"}
@@ -305,6 +342,7 @@ export default function App() {
                 </motion.div>
               </div>
             </button>
+
             <button
               onClick={() => setMenuOpen((v) => !v)}
               className="rounded-md border border-teal-500/40 bg-black/40 p-1.5 text-teal-100 md:hidden"

@@ -97,3 +97,8 @@ body {
   50% { opacity: 0 }
 }
 .animate-pulse { animation: blink 2.5s infinite; }
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
