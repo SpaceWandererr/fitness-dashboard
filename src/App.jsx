@@ -235,10 +235,10 @@ export default function App() {
               items-center justify-center
               border
               border-yellow-400/30 dark:border-white/40
-              bg-black/60 backdrop-blur-xl
+              bg-transparent backdrop-blur-xl
               shadow-[0_0_25px_rgba(255,193,7,0.6)]
               dark:shadow-[0_0_25px_rgba(255,255,255,0.4)]
-              hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]
+              hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
               dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
               transition-all duration-400"
               aria-label="Toggle dark mode"
