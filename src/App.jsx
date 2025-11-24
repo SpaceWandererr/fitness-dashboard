@@ -291,7 +291,8 @@ export default function App() {
                         animate={{ rotate: 0, opacity: 1, scale: 1 }}
                         exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_16px_rgba(255,255,255,0.9)]"
+                        className="drop-shadow-[0_0_14px_#FFD700]
+                        drop-shadow-[0_0_30px_#FFB800]"
                       >
                         ☀️
                       </motion.div>
