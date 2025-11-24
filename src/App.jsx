@@ -245,8 +245,7 @@ export default function App() {
             >
               {/* Inner glow pulse */}
               <div
-                className="absolute inset-1 rounded-full
-                bg-yellow-400/30 dark:bg-white/30
+                className="absolute inset-1 rounded-full                
                 scale-0 group-hover:scale-110
                 transition-transform duration-500"
               />
