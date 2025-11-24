@@ -30,6 +30,10 @@ export default function App() {
   const navRef = useRef(null);
 
   const [time, setTime] = useState(new Date());
+  const [themeFlash, setThemeFlash] = useState(0);
+
+  const themeBtnRef = useRef(null);
+  const [flashOrigin, setFlashOrigin] = useState({ x: 0, y: 0 });
 
   const [stats, setStats] = useState({
     weight: "—",
@@ -118,7 +122,7 @@ export default function App() {
     function refresh() {
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
       const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}",
+        localStorage.getItem("syllabus_tree_v2") || "{}"
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
@@ -196,6 +200,46 @@ export default function App() {
       className={`min-h-screen text-[#E5F9F6] ${bgClass} relative overflow-x-hidden`}
       style={{ "--accent": accent }}
     >
+      <AnimatePresence>
+        {themeFlash > 0 && (
+          <motion.div
+            key={themeFlash}
+            className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none"
+          >
+            <motion.div
+              className="absolute rounded-full"
+              style={{
+                left: flashOrigin.x,
+                top: flashOrigin.y,
+                transform: "translate(-50%, -50%)",
+                width: 160,
+                height: 160,
+
+                // STRONG initial light
+                background: dark
+                  ? "radial-gradient(circle, rgba(180,210,255,0.95), rgba(180,210,255,0.4), transparent 70%)"
+                  : "radial-gradient(circle, rgba(255,200,0,0.95), rgba(255,200,0,0.4), transparent 70%)",
+
+                // Much lighter blur (big performance fix)
+                filter: "blur(12px)",
+
+                // GPU optimization
+                willChange: "transform, opacity",
+              }}
+              initial={{ scale: 0.2, opacity: 1 }}
+              animate={{
+                scale: 18, // still covers full screen
+                opacity: 0,
+              }}
+              transition={{
+                duration: 1.8,
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* subtle background blobs */}
       <div className="pointer-events-none fixed inset-0 opacity-40">
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-3xl" />
@@ -229,8 +273,21 @@ export default function App() {
             <span className="hidden text-xs font-mono text-teal-200/80 sm:inline">
               {time.toLocaleTimeString()}
             </span>
+
             <button
-              onClick={() => setDark((v) => !v)}
+              ref={themeBtnRef}
+              onClick={() => {
+                const rect = themeBtnRef.current.getBoundingClientRect();
+                const x = rect.left + rect.width / 2 - 10;
+                const y = rect.top + rect.height / 2 - 10;
+
+                setFlashOrigin({ x, y });
+
+                setDark((v) => !v);
+
+                // 🔥 Increase counter instead of boolean
+                setThemeFlash((prev) => prev + 1);
+              }}
               className="relative group rounded-full w-10 h-10 flex
               items-center justify-center
               border
@@ -275,24 +332,56 @@ export default function App() {
                     {dark ? (
                       <motion.div
                         key="moon"
-                        initial={{ rotate: -180, opacity: 0 }}
-                        animate={{ rotate: 0, opacity: 1 }}
-                        exit={{ rotate: 180, opacity: 0 }}
-                        transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_16px_rgba(255,255,255,0.9)]"
+                        initial={{ scale: 0.7, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.9, ease: "easeOut" }}
+                        className="relative flex items-center justify-center"
                       >
-                        🌙
+                        {/* COOL MOON LIGHT SPREAD */}
+                        <motion.span
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1.5, opacity: 0.35 }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                          className="absolute w-8 h-8 rounded-full pointer-events-none"
+                          style={{
+                            background:
+                              "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
+                            filter: "blur(7px)",
+                          }}
+                        />
+
+                        {/* MOON ICON */}
+                        <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
+                          🌙
+                        </span>
                       </motion.div>
                     ) : (
                       <motion.div
                         key="sun"
-                        initial={{ rotate: 180, opacity: 0, scale: 0.8 }}
-                        animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                        exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_30px_#FFB800]"
+                        initial={{ scale: 0.4, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.9, ease: "easeOut" }}
+                        className="relative flex items-center justify-center"
                       >
-                        ☀️
+                        {/* SUN RISE GLOW */}
+                        <motion.span
+                          initial={{ scale: 0, opacity: 0.2 }}
+                          animate={{ scale: 1.6, opacity: 0.4 }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                          className="absolute w-8 h-8 rounded-full"
+                          style={{
+                            background:
+                              "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
+                            filter: "blur(8px)",
+                          }}
+                        />
+
+                        {/* SUN ICON */}
+                        <span className="drop-shadow-[0_0_18px_#FFB800]">
+                          ☀️
+                        </span>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -319,14 +408,9 @@ export default function App() {
                       fontSize: "8px",
                       filter: dark
                         ? `
-                        drop-shadow(0 0 6px #FFD700)
-                        drop-shadow(0 0 14px #FFB800)
-                        drop-shadow(0 0 28px #FF8F00)
-                      `
+                        drop-shadow(0 0 6px FFD700)`
                         : `
-                        drop-shadow(0 0 6px #FFFFFF)
-                        drop-shadow(0 0 14px #E0F2FF)
-                        drop-shadow(0 0 28px #BBDFFF)
+                        drop-shadow(0 0 6px #FFFFFF)                        
                       `,
                     }}
                   >
