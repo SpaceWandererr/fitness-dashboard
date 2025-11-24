@@ -118,7 +118,7 @@ export default function App() {
     function refresh() {
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
       const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}"
+        localStorage.getItem("syllabus_tree_v2") || "{}",
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
@@ -260,11 +260,15 @@ export default function App() {
                     ) : (
                       <motion.div
                         key="sun"
-                        initial={{ rotate: 180, opacity: 0 }}
-                        animate={{ rotate: 0, opacity: 1 }}
-                        exit={{ rotate: -180, opacity: 0 }}
+                        initial={{ rotate: 180, opacity: 0, scale: 0.8 }}
+                        animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                        exit={{ rotate: -180, opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                        className="drop-shadow-[0_0_20px_rgba(255,200,0,0.9)]"
+                        className="
+                  drop-shadow-[0_0_12px_#FFD700]
+                  drop-shadow-[0_0_25px_#FFC107]
+                  drop-shadow-[0_0_40px_#FF9800]
+                "
                       >
                         ☀️
                       </motion.div>
@@ -274,12 +278,13 @@ export default function App() {
 
                 {/* ORBIT CONTAINER (full circle size) */}
                 <motion.div
-                  key={dark ? "dark-orbit" : "light-orbit"} // 👈 force re-init on theme change
+                  //key={dark ? "dark-orbit" : "light-orbit"}
                   className="absolute inset-0 pointer-events-none"
                   style={{ transformOrigin: "50% 50%" }}
                   animate={{ rotate: 360 }}
+                  whileHover={{ rotate: 0 }} // pause on hover
                   transition={{
-                    duration: dark ? 35 : 25, // slower in dark mode
+                    duration: 22, // slower in dark mode
                     ease: "linear",
                     repeat: Infinity,
                   }}
@@ -589,10 +594,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1211,10 +1216,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>
@@ -1486,7 +1491,7 @@ function NZMigrationBlock() {
               },
               {
                 step: "Target Accredited Employers",
-                desc: "Seek, LinkedIn, company sites. Only apply to “Accredited Employer” companies. 10+ tailored applications/week.",
+                desc: "Seek, LinkedIn, company sites. Only apply to “Accredited Employeram� companies. 10+ tailored applications/week.",
                 timeline: "Start now → peak in Q3 2025",
               },
               {
