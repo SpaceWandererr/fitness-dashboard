@@ -10,6 +10,7 @@ import {
   Flame,
   AlertTriangle,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -34,6 +35,161 @@ export default function App() {
 
   const themeBtnRef = useRef(null);
   const [flashOrigin, setFlashOrigin] = useState({ x: 0, y: 0 });
+
+  const [showAdmin, setShowAdmin] = useState(false);
+  useEffect(() => {
+    let pressCount = 0;
+    let timer;
+
+    const secretListener = (e) => {
+      // ✅ New secret combo: CTRL + SHIFT + K (twice)
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "k") {
+        e.preventDefault(); // stop browser behavior
+
+        pressCount++;
+        clearTimeout(timer);
+
+        timer = setTimeout(() => {
+          pressCount = 0;
+        }, 800);
+
+        if (pressCount === 1) {
+          setShowAdmin((prev) => !prev);
+          pressCount = 0;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", secretListener);
+
+    return () => window.removeEventListener("keydown", secretListener);
+  }, []);
+
+  function exportAllData() {
+    const data = {};
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      data[key] = localStorage.getItem(key);
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "life-matrix-backup.json";
+    link.click();
+  }
+
+  function importAllData(file) {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+
+        Object.entries(data).forEach(([key, value]) => {
+          localStorage.setItem(key, value);
+        });
+
+        alert("✅ Data imported successfully. Reloading...");
+        window.location.reload();
+      } catch (err) {
+        alert("❌ Invalid backup file");
+      }
+    };
+
+    reader.readAsText(file);
+  }
+  function exportAllToExcelWithTabs() {
+    const parse = (key) => {
+      try {
+        return JSON.parse(localStorage.getItem(key) || "{}");
+      } catch {
+        return {};
+      }
+    };
+
+    const workbook = XLSX.utils.book_new();
+
+    /* ========= THEME TAB ========= */
+    const themeSheet = XLSX.utils.aoa_to_sheet([
+      ["Setting", "Value"],
+      ["Dark Mode", localStorage.getItem("wd_dark")],
+    ]);
+    XLSX.utils.book_append_sheet(workbook, themeSheet, "Theme");
+
+    /* ========= WEIGHT TAB ========= */
+    const weight = parse("wd_weight_history");
+    const weightRows = [["Date", "Weight"]];
+    Object.entries(weight).forEach(([d, w]) => weightRows.push([d, w]));
+
+    const weightSheet = XLSX.utils.aoa_to_sheet(weightRows);
+    XLSX.utils.book_append_sheet(workbook, weightSheet, "Weight");
+
+    /* ========= GYM TAB ========= */
+    const gym = parse("wd_gym_logs");
+    const gymRows = [["Date", "Exercise", "Status"]];
+
+    Object.entries(gym).forEach(([date, exercises]) => {
+      if (typeof exercises === "object") {
+        Object.entries(exercises).forEach(([exercise, status]) => {
+          gymRows.push([date, exercise, status]);
+        });
+      }
+    });
+
+    const gymSheet = XLSX.utils.aoa_to_sheet(gymRows);
+    XLSX.utils.book_append_sheet(workbook, gymSheet, "Gym");
+
+    /* ========= TASK TAB ========= */
+    const done = parse("wd_done");
+    const taskRows = [["Task", "Completed"]];
+
+    Object.entries(done).forEach(([task, status]) => {
+      taskRows.push([task, status]);
+    });
+
+    const taskSheet = XLSX.utils.aoa_to_sheet(taskRows);
+    XLSX.utils.book_append_sheet(workbook, taskSheet, "Tasks");
+
+    /* ========= SYLLABUS TAB ========= */
+    const syllabus = parse("syllabus_tree_v2");
+    const syllabusRows = [["Topic Path", "Status"]];
+
+    function flatten(obj, prefix = "") {
+      Object.entries(obj).forEach(([key, value]) => {
+        const path = prefix ? `${prefix} > ${key}` : key;
+
+        if (typeof value === "object" && value !== null) {
+          flatten(value, path);
+        } else {
+          syllabusRows.push([path, value]);
+        }
+      });
+    }
+
+    flatten(syllabus);
+
+    const syllabusSheet = XLSX.utils.aoa_to_sheet(syllabusRows);
+    XLSX.utils.book_append_sheet(workbook, syllabusSheet, "Syllabus");
+
+    /* ========= GOALS TAB ========= */
+    const goals = parse("wd_goals");
+    const goalRows = [["Goal", "Value"]];
+
+    Object.entries(goals).forEach(([goal, val]) => {
+      goalRows.push([goal, val]);
+    });
+
+    const goalsSheet = XLSX.utils.aoa_to_sheet(goalRows);
+    XLSX.utils.book_append_sheet(workbook, goalsSheet, "Goals");
+
+    /* ========= DOWNLOAD ========= */
+    XLSX.writeFile(workbook, "LifeMatrix-FullData.xlsx");
+  }
 
   const [stats, setStats] = useState({
     weight: "—",
@@ -193,7 +349,7 @@ export default function App() {
   }, []);
 
   const bgClass =
-    "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]";
+    "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
 
   return (
     <div
@@ -209,9 +365,9 @@ export default function App() {
             <motion.div
               className="absolute rounded-full"
               style={{
-                left: flashOrigin.x,
-                top: flashOrigin.y,
-                transform: "translate(-50%, -50%)",
+                left: flashOrigin.x - 70,
+                top: flashOrigin.y - 60,
+
                 width: 160,
                 height: 160,
 
@@ -221,18 +377,18 @@ export default function App() {
                   : "radial-gradient(circle, rgba(255,200,0,0.95), rgba(255,200,0,0.4), transparent 70%)",
 
                 // Much lighter blur (big performance fix)
-                filter: "blur(12px)",
+                filter: "blur(8px)",
 
                 // GPU optimization
                 willChange: "transform, opacity",
               }}
               initial={{ scale: 0.2, opacity: 1 }}
               animate={{
-                scale: 18, // still covers full screen
+                scale: 12, // still covers full screen
                 opacity: 0,
               }}
               transition={{
-                duration: 1.8,
+                duration: 1.4,
                 ease: [0.25, 0.1, 0.25, 1],
               }}
             />
@@ -408,7 +564,7 @@ export default function App() {
                       fontSize: "8px",
                       filter: dark
                         ? `
-                        drop-shadow(0 0 6px FFD700)`
+                        drop-shadow(0 0 6px #FFD700)`
                         : `
                         drop-shadow(0 0 6px #FFFFFF)                        
                       `,
@@ -575,6 +731,66 @@ export default function App() {
         Life Matrix v3 • Crafted for Jay • {new Date().getFullYear()}
       </footer>
       <FloatingScrollControl />
+
+      {showAdmin && (
+        <div
+          className="fixed bottom-6 right-6 z-[9999] w-96 p-4 rounded-2xl
+    bg-[#0F1622]/98 border border-[#2F6B60] shadow-[0_0_40px_rgba(0,255,200,0.2)]"
+        >
+          <h2 className="text-[#9FF2E8] font-bold text-lg mb-3">
+            🔐 Hidden Admin Panel
+          </h2>
+
+          <div className="grid gap-3">
+            {/* Export */}
+            <button
+              onClick={exportAllData}
+              className="px-3 py-2 rounded-lg bg-[#064E3B] hover:bg-[#0F766E] text-white border border-[#2F6B60]"
+            >
+              📤 Export All Data
+            </button>
+
+            {/* Import */}
+            <label className="cursor-pointer px-3 py-2 rounded-lg bg-[#7A1D2B] hover:bg-[#991B1B] text-white border border-[#5B1C23] text-center">
+              📥 Import Backup
+              <input
+                type="file"
+                hidden
+                accept=".json"
+                onChange={(e) => importAllData(e.target.files[0])}
+              />
+            </label>
+
+            {/* Clear All */}
+            <button
+              onClick={() => {
+                if (confirm("⚠ This will erase ALL app data. Continue?")) {
+                  localStorage.clear();
+                  location.reload();
+                }
+              }}
+              className="px-3 py-2 rounded-lg bg-red-700 hover:bg-red-800 text-white border border-red-900"
+            >
+              🗑 Wipe All Data
+            </button>
+            <button
+              onClick={exportAllToExcelWithTabs}
+              className="px-3 py-2 rounded-lg bg-[#064E3B] hover:bg-[#0F766E]
+             text-white border border-[#2F6B60]"
+            >
+              📂 Export All Modules (Separate CSVs)
+            </button>
+
+            {/* Close */}
+            <button
+              onClick={() => setShowAdmin(false)}
+              className="mt-2 text-sm text-[#9FF2E8] opacity-70 hover:opacity-100"
+            >
+              Close Panel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -709,10 +925,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1331,10 +1547,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                    ? "Fat loss in progress ✅"
-                    : diff > 0
-                      ? "Weight increased ⚠️"
-                      : "Stable"
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
               }
             />
           </div>
