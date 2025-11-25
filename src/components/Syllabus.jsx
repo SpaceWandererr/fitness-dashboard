@@ -5227,14 +5227,14 @@ function SubNode({
 }) {
   const k = pathKey(path);
   const m = meta[k] || { open: false, targetDate: "" };
-  const totals = totalsOf(node);
-  const allDone = totals.total > 0 && totals.done === totals.total;
-  const dateRef = useRef(null);
 
-  // ✅ Smooth expand animation
+  const totals = useMemo(() => totalsOf(node), [node]);
+  const allDone = totals.total > 0 && totals.done === totals.total;
+
   const contentRef = useRef(null);
   const [height, setHeight] = useState("0px");
 
+  /* Smooth expand */
   useEffect(() => {
     if (m.open && contentRef.current) {
       setHeight(contentRef.current.scrollHeight + "px");
@@ -5243,12 +5243,30 @@ function SubNode({
     }
   }, [m.open, node]);
 
-  // ✅ Rollup hours
+  /* ✅ SAFE completedDate auto-save */
+  useEffect(() => {
+    if (!Array.isArray(node)) return;
+
+    node.forEach((it, idx) => {
+      const key = itemKey(path, idx);
+
+      if (it.done && !nr[key]?.completedDate) {
+        setNR((old) => ({
+          ...old,
+          [key]: {
+            ...(old[key] || {}),
+            completedDate: new Date().toISOString(),
+          },
+        }));
+      }
+    });
+  }, [node, nr, path, setNR]);
+
   const hoursRollup = useMemo(() => {
-    if (!isArray(node)) {
+    if (!Array.isArray(node)) {
       let est = 0;
       for (const [childKey, childVal] of Object.entries(node || {})) {
-        if (isArray(childVal)) {
+        if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
               nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
@@ -5257,7 +5275,7 @@ function SubNode({
           });
         } else {
           Object.entries(childVal || {}).forEach(([gk, gv]) => {
-            if (isArray(gv)) {
+            if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
                   nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
@@ -5270,6 +5288,7 @@ function SubNode({
       }
       return est;
     }
+
     return node.reduce((s, _, idx) => {
       const e = Number(nr[itemKey(path, idx)]?.estimate || 0.5);
       return s + (isFinite(e) ? e : 0.5);
@@ -5278,347 +5297,140 @@ function SubNode({
 
   return (
     <div
-      className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 bg-gradient-to-br 
-      from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-      text-[#d9ebe5] dark:text-[#E6F1FF] shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+      className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+      text-[#d9ebe5] shadow-[0_0_15px_rgba(0,0,0,0.2)]"
     >
-      {/* Header */}
+      {/* HEADER */}
       <div
         onClick={() => toggleOpen(path)}
-        className="rounded-xl p-2 cursor-pointer bg-[#134039] text-[#fffff] hover:bg-[#00d1b2]/10 transition-all dark:bg-[#0B0F14] border-l-4 
-        border-[#D42916] dark:border-[#00FFA3] dark:text-[#D5E1E8]"
+        className="p-2 cursor-pointer bg-[#134039] hover:bg-[#00d1b2]/10 border-l-4 border-[#D42916] rounded-xl"
       >
-        {/* Wrap header content */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between sm:flex-wrap gap-3">
-          {/* LEFT: arrow + title */}
-          <div className="flex items-start gap-2 min-w-0">
-            <span className="text-lg shrink-0">{m.open ? "🔽" : "▶️"}</span>
-            <span className="font-medium text-base leading-snug break-words">
-              {name}
-            </span>
+        <div className="flex flex-wrap justify-between gap-2">
+          <div className="flex gap-2">
+            <span>{m.open ? "🔽" : "▶️"}</span>
+            <span>{name}</span>
           </div>
 
-          {/* RIGHT: stats + mark all + date (will drop below on mobile) */}
           <div
-            className="flex flex-row flex-wrap items-center gap-2 text-[11px] sm:text-xs"
             onClick={(e) => e.stopPropagation()}
+            className="flex gap-2 text-xs"
           >
-            <span className="leading-tight">
-              {totals.done}/{totals.total} • {totals.pct}% • ~
+            <span>
+              {totals.done}/{totals.total} • {totals.pct}% •{" "}
               {hoursRollup.toFixed(1)}h
             </span>
 
             <button
               onClick={() => setAllAtPath(path, !allDone)}
-              className="px-2 py-1 dark:bg-[#0B0F14] dark:text-[#D5E1E8] rounded border dark:border-[#00d1b2]/50 border-[#00d1b2]/50"
+              className="px-2 py-1 border border-[#00d1b2]/50 rounded"
             >
               {allDone ? "Undo all" : "Mark all"}
             </button>
-
-            <div className="relative">
-              {/* Hidden actual date input */}
-              <input
-                type="date"
-                ref={dateRef}
-                value={m.targetDate}
-                onChange={(e) => setTargetDate(path, e.target.value)}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-              />
-
-              {/* Custom UI Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  dateRef.current?.showPicker(); // 👈 opens native date selector
-                }}
-                className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#134039]"
-              >
-                📅{" "}
-                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* ✅ Smooth expanding content Topics*/}
+      {/* CONTENT */}
       <div
         ref={contentRef}
         style={{ maxHeight: height }}
-        className="transition-all duration-500 ease-in-out overflow-hidden"
+        className="transition-all overflow-hidden"
       >
-        <div className="px-3 pb-3 mt-2">
-          {isArray(node) ? (
+        <div className="px-3 pb-3">
+          {Array.isArray(node) ? (
             <ul className="space-y-2">
               {node.map((it, idx) => {
-                // ✅ Save completion date if marked done
-                if (it.done && !nr[itemKey(path, idx)]?.completedDate) {
-                  setNR((old) => ({
-                    ...old,
-                    [itemKey(path, idx)]: {
-                      ...(old[itemKey(path, idx)] || {}),
-                      completedDate: new Date().toISOString(),
-                    },
-                  }));
-                }
+                const key = itemKey(path, idx);
+                const localDateRef = useRef(null);
 
-                const completedDate = nr[itemKey(path, idx)]?.completedDate;
+                const completedDate = nr[key]?.completedDate;
                 const diff = daysDiff(completedDate, it.deadline);
-
-                // ✅ Completion message & colors
-                let completionMsg = "";
-                let completionColor = "";
-
-                if (it.done) {
-                  const completedStr = completedDate
-                    ? new Date(completedDate).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                    : "";
-
-                  if (!it.deadline) {
-                    completionMsg = `Completed on ${completedStr}`;
-                    completionColor =
-                      "bg-[#051C14] text-[#d9ebe5] dark:bg-gray-800/60 dark:text-gray-300";
-                  } else if (completedDate && diff !== null) {
-                    const targetStr = new Date(it.deadline).toLocaleDateString(
-                      "en-IN",
-                      {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      }
-                    );
-                    if (diff > 0) {
-                      completionMsg = `Completed ${diff} day${diff > 1 ? "s" : ""
-                        } after target (${targetStr})`;
-                      completionColor =
-                        "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
-                    } else if (diff < 0) {
-                      completionMsg = `Completed ${Math.abs(diff)} day${Math.abs(diff) > 1 ? "s" : ""
-                        } before target (${targetStr})`;
-                      completionColor =
-                        "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
-                    } else {
-                      completionMsg = `Completed on target (${targetStr})`;
-                      completionColor =
-                        "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
-                    }
-                  }
-                }
 
                 return (
                   <li
                     key={idx}
-                    onClick={(e) => {
-                      if (
-                        e.target.type !== "date" &&
-                        e.target.type !== "number"
-                      ) {
-                        markTask(path, idx, !it.done);
-                        if (!it.done) {
-                          setNR((old) => ({
-                            ...old,
-                            [itemKey(path, idx)]: {
-                              ...(old[itemKey(path, idx)] || {}),
-                              completedDate: new Date().toISOString(),
-                            },
-                          }));
-                        }
-                      }
-                    }}
-                    /* Topic Section */
-                    className={`rounded-lg border border-[#00d1b2]/25 dark:border-[#1E2631] p-2 bg-[#134039] text-white hover:bg-[#00d1b2]/10
-                    dark:bg-[#11161D] dark:hover-[##16212D] dark:text-[#B8C1CC] cursor-pointer select-none ${it.done ? "opacity-90" : ""
-                      }`}
+                    onClick={() => markTask(path, idx, !it.done)}
+                    className={`p-2 rounded-lg border border-[#00d1b2]/30 
+                        cursor-pointer ${it.done ? "opacity-80" : ""}`}
                   >
-                    {/* ✅ Task Row Layout */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      {/* LEFT — Checkbox + Title */}
-                      <div className="flex items-start gap-3 min-w-0">
-
-                        {/* Custom Checkbox */}
+                    <div className="flex justify-between gap-2">
+                      {/* LEFT */}
+                      <div className="flex items-start gap-2">
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-
                             const newState = !it.done;
                             markTask(path, idx, newState);
-
-                            if (newState) {
-                              setNR((old) => ({
-                                ...old,
-                                [itemKey(path, idx)]: {
-                                  ...(old[itemKey(path, idx)] || {}),
-                                  completedDate: new Date().toISOString(),
-                                },
-                              }));
-                            }
                           }}
-                          className={`
-                             mt-1 w-5 h-5 flex items-center justify-center 
-                             rounded-md cursor-pointer select-none
-                             border transition-all duration-200
-                             ${it.done
-                              ? "bg-[#ED4135]/80 border-black"
-                              : "bg-[#0B2F2A] border-[#00d1b2]/40 dark:bg-[#0F141A]"
-                            }
-                          `}
+                          className={`w-5 h-5 border flex items-center justify-center cursor-pointer 
+                          ${it.done ? "bg-[#ED4135]/80" : "bg-[#0B2F2A]"}`}
                         >
-                          {/* ✅ Right Tick */}
-                          {it.done && (
-                            <svg
-                              className="w-6 h-8 text-black/80"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="3.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="4 12 9.5 17.5 20 6" />
-                            </svg>
-                          )}
+                          {it.done && "✓"}
                         </div>
 
-                        {/* Title + Completion */}
-                        <div className="min-w-0">
-                          <div
-                            className={`font-medium text-sm sm:text-[15px] leading-snug break-words ${it.done ? "line-through opacity-75" : ""
-                              }`}
-                          >
+                        <div>
+                          <div className={it.done ? "line-through" : ""}>
                             {it.title}
                           </div>
 
-                          {completionMsg && (
-                            <div
-                              className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium transition-opacity duration-300 ${completionColor}`}
-                            >
-                              {completionMsg}
+                          {completedDate && (
+                            <div className="text-xs opacity-80">
+                              Completed on{" "}
+                              {new Date(completedDate).toLocaleDateString()}
                             </div>
                           )}
                         </div>
                       </div>
 
-
-
-
-                      {/* RIGHT — Inputs */}
+                      {/* RIGHT */}
                       <div
-                        className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0"
                         onClick={(e) => e.stopPropagation()}
+                        className="flex gap-2"
                       >
-                        <label className="text-xs flex items-center gap-1">
-                          ⏱
-                          <input
-                            type="number"
-                            min={0}
-                            step="0.25"
-                            value={nr[itemKey(path, idx)]?.estimate ?? 0.5}
-                            onChange={(e) =>
-                              setNR((old) => ({
-                                ...old,
-                                [itemKey(path, idx)]: {
-                                  ...(old[itemKey(path, idx)] || {
-                                    notes: "",
-                                    resources: "",
-                                  }),
-                                  estimate: Number(e.target.value || 0),
-                                },
-                              }))
-                            }
-                            className="w-16 px-2 py-1 rounded-md border border-[#00d1b2]/50 bg-[#134039]
-                            dark:bg-gray-800 dark:border-[#00d1b2]/50 outline-none text-xs"
-                          />
-                          <span>h</span>
-                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.25"
+                          value={nr[key]?.estimate ?? 0.5}
+                          onChange={(e) =>
+                            setNR((old) => ({
+                              ...old,
+                              [key]: {
+                                ...(old[key] || {}),
+                                estimate: Number(e.target.value),
+                              },
+                            }))
+                          }
+                          className="w-16 text-xs rounded px-1 border border-[#00d1b2]/40"
+                        />
 
-                        {/*Dead date line picker */}
-                        <label className="text-xs flex items-center gap-1">
-                          <div className="relative">
-                            {/* Hidden actual date input */}
-                            <input
-                              type="date"
-                              ref={dateRef}
-                              value={m.targetDate}
-                              onChange={(e) =>
-                                setTargetDate(path, e.target.value)
-                              }
-                              className="absolute opacity-0 pointer-events-none w-0 h-0"
-                            />
+                        <input
+                          type="date"
+                          ref={localDateRef}
+                          value={it.deadline || ""}
+                          onChange={(e) =>
+                            setTaskDeadline(path, idx, e.target.value)
+                          }
+                          className="hidden"
+                        />
 
-                            {/* Custom UI Button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                dateRef.current?.showPicker(); // 👈 opens native date selector
-                              }}
-                              className="px-2 py-1 rounded border border-[#00d1b2]/50 dark:bg-[#0B0F14] dark:text-[#D5E1E8] text-xs bg-[#134039]"
-                            >
-                              📅{" "}
-                              {m.targetDate
-                                ? formatDateDDMMYYYY(m.targetDate)
-                                : "Deadline"}
-                            </button>
-                          </div>
-                        </label>
+                        <button
+                          onClick={() => localDateRef.current?.showPicker()}
+                          className="text-xs border border-[#00d1b2]/40 px-2 rounded"
+                        >
+                          📅 Deadline
+                        </button>
                       </div>
                     </div>
-
-                    {/* 🗒️ Notes & Resources */}
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-xs opacity-80">
-                        🗒️ Notes & 📚 Resources
-                      </summary>
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                        <textarea
-                          placeholder="Notes…"
-                          value={nr[itemKey(path, idx)]?.notes ?? ""}
-                          onChange={(e) =>
-                            setNR((old) => ({
-                              ...old,
-                              [itemKey(path, idx)]: {
-                                ...(old[itemKey(path, idx)] || {
-                                  estimate: 0.5,
-                                  resources: "",
-                                }),
-                                notes: e.target.value,
-                              },
-                            }))
-                          }
-                          className="min-h-[80px] rounded-md border border-[#0B5134]/40 bg-[#051C14]
-                          dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
-                        />
-                        <textarea
-                          placeholder="Links (comma/newline)…"
-                          value={nr[itemKey(path, idx)]?.resources ?? ""}
-                          onChange={(e) =>
-                            setNR((old) => ({
-                              ...old,
-                              [itemKey(path, idx)]: {
-                                ...(old[itemKey(path, idx)] || {
-                                  estimate: 0.5,
-                                  notes: "",
-                                }),
-                                resources: e.target.value,
-                              },
-                            }))
-                          }
-                          className="min-h-[80px] rounded-md border border-[#0B5134]/40 bg-[#051C14]
-                          dark:bg-gray-800 dark:border-gray-700 p-2 text-sm"
-                        />
-                      </div>
-                    </details>
                   </li>
                 );
               })}
             </ul>
           ) : (
             <div className="space-y-2">
-              {Object.entries(node || {}).map(([childKey, childVal]) => (
+              {Object.entries(node).map(([childKey, childVal]) => (
                 <SubNode
                   key={childKey}
                   name={childKey}
@@ -5641,6 +5453,7 @@ function SubNode({
     </div>
   );
 }
+
 
 /* Daily Planner — excludes completed, shows only titles + deadlines */
 function DailyPlanner({ tree }) {

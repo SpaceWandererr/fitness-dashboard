@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import snapshotRoutes from "./routes/snapshotRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -24,6 +27,9 @@ app.get("/api/test", (req, res) => {
 // MongoDB Connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
+
+app.use("/api/state", dashboardRoutes);
+app.use("/api/snapshots", snapshotRoutes);
 
 mongoose
   .connect(MONGO_URI)

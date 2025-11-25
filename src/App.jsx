@@ -11,6 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+const API_URL = "http://localhost:5000/api/state";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -19,6 +20,7 @@ import Gallery from "./components/Gallery.jsx";
 import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
+import Control from "./components/Control.jsx";
 
 import { load, save } from "./utils/localStorage.js";
 
@@ -40,6 +42,45 @@ export default function App() {
   useEffect(() => {
     let pressCount = 0;
     let timer;
+
+    async function syncToBackend() {
+      const state = {
+        wd_dark: localStorage.getItem("wd_dark"),
+        wd_weight_history: localStorage.getItem("wd_weight_history"),
+        wd_gym_logs: localStorage.getItem("wd_gym_logs"),
+        wd_goals: localStorage.getItem("wd_goals"),
+        wd_done: localStorage.getItem("wd_done"),
+        syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state),
+        });
+        console.log("✅ State synced to backend");
+      } catch (err) {
+        console.error("❌ Sync failed:", err);
+      }
+    }
+
+    async function loadFromBackend() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== null) {
+            localStorage.setItem(key, value);
+          }
+        });
+
+        console.log("✅ State loaded from backend");
+      } catch (err) {
+        console.error("❌ Load failed:", err);
+      }
+    }
 
     const secretListener = (e) => {
       // ✅ New secret combo: CTRL + SHIFT + K (twice)
@@ -276,10 +317,32 @@ export default function App() {
 
   // Load stats + details from localStorage
   useEffect(() => {
-    function refresh() {
+    async function refresh() {
+      // 1. Load latest state from backend first
+      try {
+        const res = await fetch("http://localhost:5000/api/state");
+        const cloudData = await res.json();
+
+        // Hydrate localStorage from backend
+        Object.entries(cloudData).forEach(([key, value]) => {
+          if (
+            value !== null &&
+            typeof value !== "undefined" &&
+            key.startsWith("wd_") // only your tracked keys
+          ) {
+            localStorage.setItem(key, value);
+          }
+        });
+
+        console.log("✅ State pulled from backend");
+      } catch (err) {
+        console.warn("⚠ Backend not reachable, using local data only", err);
+      }
+
+      // 2. Now run your ORIGINAL logic using localStorage
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
       const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}",
+        localStorage.getItem("syllabus_tree_v2") || "{}"
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
@@ -340,8 +403,32 @@ export default function App() {
     }
 
     refresh();
+
+    // Re-run on tab focus
     window.addEventListener("focus", refresh);
+
     return () => window.removeEventListener("focus", refresh);
+  }, []);
+
+  // Auto-sync to backend when localStorage changes
+  useEffect(() => {
+    const syncHandler = () => {
+      fetch("http://localhost:5000/api/state", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wd_weight_history: localStorage.getItem("wd_weight_history"),
+          wd_gym_logs: localStorage.getItem("wd_gym_logs"),
+          wd_goals: localStorage.getItem("wd_goals"),
+          wd_done: localStorage.getItem("wd_done"),
+          syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
+        }),
+      }).catch((err) => console.warn("⚠ Sync failed:", err));
+    };
+
+    window.addEventListener("storage", syncHandler);
+
+    return () => window.removeEventListener("storage", syncHandler);
   }, []);
 
   // inject glow CSS once
@@ -713,6 +800,20 @@ export default function App() {
               }
             />
             <Route
+              path="/control"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Control />
+                </motion.div>
+              }
+            />
+
+            <Route
               path="/goals"
               element={
                 <motion.div
@@ -930,10 +1031,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1552,10 +1653,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                    ? "Fat loss in progress ✅"
-                    : diff > 0
-                      ? "Weight increased ⚠️"
-                      : "Stable"
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
               }
             />
           </div>
@@ -2086,6 +2187,7 @@ const links = [
   { to: "/planner", label: "PLANNER" },
   { to: "/goals", label: "GOALS" },
   { to: "/gallery", label: "PHOTOS" },
+  { to: "/control", label: "CONTROL" },
 ];
 
 /* ======================= UTIL ======================= */

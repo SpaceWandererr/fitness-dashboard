@@ -487,7 +487,13 @@ export default function GymSimplified() {
 
   const saveCaloriesAndComplete = () => {
     const calories = Number(caloriesInput) || 0;
-    const weight = Number(currentWeightInput) || checks.weight || null;
+    const parsedWeight =
+      currentWeightInput === "" ? null : Number(currentWeightInput);
+
+    const weight = Number.isFinite(parsedWeight)
+      ? parsedWeight
+      : checks.weight ?? null;
+
 
     const savedHeight = Number(load("bmi_height", 176));
     const newBmi =
