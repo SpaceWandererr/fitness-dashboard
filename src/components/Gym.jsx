@@ -305,6 +305,9 @@ export default function GymSimplified() {
 
   /* logs & goals */
   const [logs, setLogs] = useState(() => load("wd_gym_logs", {}));
+  useEffect(() => {
+    window.dispatchEvent(new Event("lifeos:update"));
+  }, [logs]);
 
   useEffect(() => {
     if (weekday === "Sunday") {
@@ -494,7 +497,6 @@ export default function GymSimplified() {
       ? parsedWeight
       : checks.weight ?? null;
 
-
     const savedHeight = Number(load("bmi_height", 176));
     const newBmi =
       weight && savedHeight
@@ -532,6 +534,14 @@ export default function GymSimplified() {
     }
     setBmiLogs(arr);
     save("bmi_logs", arr);
+    // 🔥 Sync with wd_weight_history for dashboard
+    if (weight) {
+      const weightHistory = load("wd_weight_history", {});
+
+      weightHistory[dateKey] = weight;
+
+      save("wd_weight_history", weightHistory);
+    }
 
     if (weight) {
       const savedStart = load("wd_start_weight", null);
@@ -541,6 +551,8 @@ export default function GymSimplified() {
         save("wd_start_weight", weight);
       }
     }
+    // 🔥 Force dashboard refresh after gym update
+    window.dispatchEvent(new Event("lifeos:update"));
 
     setShowModal(false);
   };
@@ -635,13 +647,15 @@ export default function GymSimplified() {
     isFinite(curWeight) && isFinite(tw) ? (curWeight - tw).toFixed(1) : null;
 
   /* reset progress */
-  const resetProgress = () => {
+  const resetProgress = async () => {
     if (
       !confirm(
         "Reset ALL gym progress? This will clear logs, weights, streaks. Plan and goals will remain."
       )
     )
       return;
+
+    // Clear local state
     setLogs({});
     save("wd_gym_logs", {});
     save("wd_done", {});
@@ -649,7 +663,21 @@ export default function GymSimplified() {
     setWeightOverrides({});
     setBmiLogs([]);
     save("bmi_logs", []);
+    save("wd_weight_history", {});
+
     setSaving(true);
+
+    // ALSO clear backend state
+    try {
+      await fetch("http://localhost:5000/api/state/reset", {
+        method: "POST",
+      });
+    } catch (e) {
+      console.warn("Backend reset failed, local only", e);
+    }
+
+    window.dispatchEvent(new Event("lifeos:update"));
+
     setTimeout(() => setSaving(false), 900);
   };
 
@@ -1217,6 +1245,21 @@ function DailySummary({ date, logs, dateKey }) {
 
 function MiniCalendar({ date, setDate }) {
   const [viewMonth, setViewMonth] = useState(dayjs(date));
+  const [doneState, setDoneState] = useState(load("wd_done", {}));
+  useEffect(() => {
+    const refreshDone = () => {
+      setDoneState(load("wd_done", {}));
+    };
+
+    window.addEventListener("lifeos:update", refreshDone);
+    window.addEventListener("storage", refreshDone);
+
+    return () => {
+      window.removeEventListener("lifeos:update", refreshDone);
+      window.removeEventListener("storage", refreshDone);
+    };
+  }, []);
+
   useEffect(() => setViewMonth(dayjs(date)), [date]);
 
   const start = viewMonth.startOf("month").startOf("week");

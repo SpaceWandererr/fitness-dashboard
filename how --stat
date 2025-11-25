@@ -1,0 +1,18 @@
+[33mcommit 64d9c457d57649bc168708317c469797aee66452[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: SpaceSpaceWandererr <jsinhthakur@gmail.com>
+Date:   Tue Nov 25 23:37:58 2025 +0530
+
+    Fixing Backend
+
+ backend/models/DashboardState.js  |  20 [32m+++[m
+ backend/models/StateSnapshot.js   |  12 [32m++[m
+ backend/routes/dashboardRoutes.js |  63 [32m+++++++[m
+ backend/routes/snapshotRoutes.js  |  77 [32m++++++++[m
+ backend/server.js                 |   6 [32m+[m
+ src/App.jsx                       | 122 [32m+++++++++++[m[31m--[m
+ src/components/Control.jsx        | 313 [32m++++++++++++++++++++++++++++++++[m
+ src/components/Gym.jsx            |   8 [32m+[m[31m-[m
+ src/components/Syllabus.jsx       | 367 [32m++++++++++[m[31m----------------------------[m
+ src/utils/localStorage.js         |  68 [32m++++++[m[31m-[m
+ vite.config.js                    |   2 [32m+[m[31m-[m
+ 11 files changed, 763 insertions(+), 295 deletions(-)

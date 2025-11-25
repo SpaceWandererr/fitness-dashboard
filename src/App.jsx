@@ -71,9 +71,10 @@ export default function App() {
         const data = await res.json();
 
         Object.entries(data).forEach(([key, value]) => {
-          if (value !== null) {
-            localStorage.setItem(key, value);
-          }
+          if (!value || value === "{}" || value === "[]") return;
+
+          if (value === "{}" || value === "" || value === null) return;
+          localStorage.setItem(key, value);
         });
 
         console.log("✅ State loaded from backend");
@@ -325,13 +326,31 @@ export default function App() {
 
         // Hydrate localStorage from backend
         Object.entries(cloudData).forEach(([key, value]) => {
+          if (!key.startsWith("wd_")) return;
+          if (value === null || typeof value === "undefined") return;
+
+          // Block useless values
           if (
-            value !== null &&
-            typeof value !== "undefined" &&
-            key.startsWith("wd_") // only your tracked keys
-          ) {
-            localStorage.setItem(key, value);
+            typeof value === "string" &&
+            (value === "{}" || value.trim() === "")
+          )
+            return;
+
+          // Block corrupted backend array: ["{}"]
+          if (Array.isArray(value)) {
+            if (value.length === 1 && value[0] === "{}") return;
           }
+
+          // Block empty object
+          if (typeof value === "object" && !Array.isArray(value)) {
+            if (Object.keys(value).length === 0) return;
+          }
+
+          // Safe write
+          localStorage.setItem(
+            key,
+            typeof value === "string" ? value : JSON.stringify(value)
+          );
         });
 
         console.log("✅ State pulled from backend");
@@ -341,18 +360,34 @@ export default function App() {
 
       // 2. Now run your ORIGINAL logic using localStorage
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
+      const oldWeight = JSON.parse(
+        localStorage.getItem("wd_weight_history") || "{}"
+      );
       const syllabus = JSON.parse(
         localStorage.getItem("syllabus_tree_v2") || "{}"
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
       // weight history
-      const wh = Object.entries(gymLogs)
-        .filter(([_, v]) => v.weight)
-        .sort(([a], [b]) => a.localeCompare(b))
+      let wh = Object.entries(gymLogs)
+        .filter(([_, v]) => typeof v.weight === "number" && isFinite(v.weight))
         .map(([date, v]) => ({ date, weight: v.weight }));
 
-      const latestWeight = wh.length ? wh[wh.length - 1].weight : "—";
+      // fallback to old system
+      if (wh.length === 0 && Object.keys(oldWeight).length > 0) {
+        wh = Object.entries(oldWeight).map(([d, w]) => ({
+          date: d,
+          weight: w,
+        }));
+      }
+
+      // sort
+      wh.sort((a, b) => a.date.localeCompare(b.date));
+
+      const latestWeight =
+        wh.length && typeof wh[wh.length - 1].weight === "number"
+          ? wh[wh.length - 1].weight
+          : "—";
 
       const gymDates = Object.keys(gymLogs).sort();
 
@@ -407,7 +442,13 @@ export default function App() {
     // Re-run on tab focus
     window.addEventListener("focus", refresh);
 
-    return () => window.removeEventListener("focus", refresh);
+    // Custom event for SAME TAB updates
+    window.addEventListener("lifeos:update", refresh);
+
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("lifeos:update", refresh);
+    };
   }, []);
 
   // Auto-sync to backend when localStorage changes
