@@ -201,7 +201,8 @@ export default function App() {
 
   const [weightHistory, setWeightHistory] = useState([]);
   const [gymLogDates, setGymLogDates] = useState([]);
-  const [activePanel, setActivePanel] = useState("weight"); // weight | gym | topics | streak
+  const [activePanel, setActivePanel] = useState("weight");
+  // weight | gym | topics | streak
 
   const accent = "hsl(180, 100%, 50%)";
 
@@ -278,7 +279,7 @@ export default function App() {
     function refresh() {
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
       const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}"
+        localStorage.getItem("syllabus_tree_v2") || "{}",
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
@@ -296,11 +297,12 @@ export default function App() {
       function walk(node) {
         let total = 0;
         let doneCount = 0;
+
         if (Array.isArray(node)) {
           node.forEach((item) => {
             if (!item) return;
-            total += 1;
-            if (item.done) doneCount += 1;
+            total++;
+            if (item.done) doneCount++;
           });
         } else if (typeof node === "object" && node !== null) {
           Object.values(node).forEach((child) => {
@@ -309,9 +311,12 @@ export default function App() {
             doneCount += res.done;
           });
         }
+
         return { total, done: doneCount };
       }
-      const { total, done: doneTopics } = walk(syllabus);
+
+      const syllabusData = load("syllabus_tree_v2", {});
+      const { total, done: doneTopics } = walk(syllabusData);
 
       // streak: based on wd_done
       let streak = 0;
@@ -925,10 +930,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1547,10 +1552,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>
