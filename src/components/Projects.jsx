@@ -300,7 +300,7 @@ export default function StudyProjectsAdvanced() {
     const list = PROJECT_SECTIONS[key] || [];
     if (list.length === 0) return 0;
     const done = Object.entries(progress[key] || {}).filter(
-      ([k, v]) => !isNaN(k) && v === true
+      ([k, v]) => !isNaN(k) && v === true,
     ).length;
     return Math.round((done / list.length) * 100);
   };
@@ -311,7 +311,7 @@ export default function StudyProjectsAdvanced() {
     Object.entries(PROJECT_SECTIONS).forEach(([k, v]) => {
       total += v.length;
       const sectionDone = Object.entries(progress[k] || {}).filter(
-        ([k2, v2]) => !isNaN(k2) && v2 === true
+        ([k2, v2]) => !isNaN(k2) && v2 === true,
       ).length;
       done += sectionDone;
     });
@@ -361,7 +361,7 @@ export default function StudyProjectsAdvanced() {
     // full section bonus
     const list = PROJECT_SECTIONS[section];
     const doneCount = Object.entries(next[section]).filter(
-      ([k, v]) => !isNaN(k) && v === true
+      ([k, v]) => !isNaN(k) && v === true,
     ).length;
 
     if (doneCount === list.length && !bonusGiven[section]) {
@@ -480,8 +480,8 @@ export default function StudyProjectsAdvanced() {
         d === "Beginner"
           ? "bg-white/5 border-white/10"
           : d === "Intermediate"
-          ? "bg-white/8 border-white/12"
-          : "bg-white/12 border-white/20"
+            ? "bg-white/8 border-white/12"
+            : "bg-white/12 border-white/20"
       }`}
     >
       {d}
@@ -489,6 +489,8 @@ export default function StudyProjectsAdvanced() {
   );
 
   // --- PART 3 (continues from PART 2) ---
+
+  
 
   return (
     <div
@@ -536,7 +538,7 @@ export default function StudyProjectsAdvanced() {
           </div>
         </header>
         {/* FILTERS */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-center gap-3 mb-6 w-full">
+        <div className="flex flex-col flex-wrap lg:flex-row lg:items-center justify-center gap-3 mb-6 w-full">
           {/* SEARCH BAR */}
           <div className="flex items-center gap-2 border border-border rounded-xl px-3 py-2 bg-black/10 w-full lg:w-auto">
             <input
@@ -594,6 +596,15 @@ export default function StudyProjectsAdvanced() {
                 }`}
               >
                 <Terminal className="inline w-3 h-3 lg:w-4 lg:h-4 mr-1" /> Top10
+              </button>
+              <button
+                onClick={() => setView("timeline")}
+                className={`px-2 lg:px-3 py-2 text-xs lg:text-sm w-full lg:w-auto flex justify-center ${
+                  view === "timeline" ? "bg-black/20" : ""
+                }`}
+              >
+                <Clock className="inline w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                Timeline
               </button>
             </div>
 
@@ -695,7 +706,7 @@ export default function StudyProjectsAdvanced() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="w-40 h-3 bg-black/10 rounded-full overflow-hidden">
+                    <div className="w-24 sm:w-40 h-2 sm:h-3 bg-black/10 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-cyan-400"
                         style={{ width: `${sectionProgress(sec)}%` }}
@@ -715,7 +726,7 @@ export default function StudyProjectsAdvanced() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-4 grid sm:grid-cols-2 gap-4"
+                      className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
                     >
                       {list.map((title, idx) => {
                         const canonList = PROJECT_SECTIONS[sec] || [];
@@ -743,7 +754,7 @@ export default function StudyProjectsAdvanced() {
                               if (e.target.closest("button")) return;
                               toggleProject(sec, canonIdx);
                             }}
-                            className={`p-4 rounded-xl border border-border flex gap-3 items-start cursor-pointer ${
+                            className={`p-4 rounded-xl border border-border flex flex-col sm:flex-row gap-3 items-start cursor-pointer ${
                               done ? "bg-black/40" : "bg-black/20"
                             }`}
                           >
@@ -754,7 +765,11 @@ export default function StudyProjectsAdvanced() {
 
                             <div className="flex-0">
                               {/* TITLE + DIFFICULTY + DETAILS */}
-                              <div className="flex items-center justify-between min-w-[482px]">
+                              <div
+                                className="flex flex-col
+                                  sm:flex-row sm:items-center
+                                  sm:justify-between gap-2 w-full"
+                              >
                                 <h4
                                   className={`font-medium ${
                                     done ? "line-through opacity-60" : ""
@@ -821,7 +836,7 @@ export default function StudyProjectsAdvanced() {
                                     canonIdx
                                   ] &&
                                   `Completed on: ${formatDate(
-                                    progress[sec].completionDates[canonIdx]
+                                    progress[sec].completionDates[canonIdx],
                                   )}`}
                               </div>
                             </div>
@@ -947,6 +962,59 @@ export default function StudyProjectsAdvanced() {
             </div>
           </div>
         )}
+        {/* TimeLine */}
+        {view === "timeline" && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Learning Roadmap</h3>
+
+            {/* Optional: Keep old timeline below */}
+            <div className="border-t border-border pt-6 mt-6">
+              <h4 className="text-md font-semibold mb-3">
+                Completed Tasks Log
+              </h4>
+
+              {Object.keys(progress).length === 0 ? (
+                <p className="text-sm opacity-60 text-center mt-6">
+                  No completed tasks yet — complete some projects to populate
+                  timeline.
+                </p>
+              ) : (
+                Object.entries(progress).map(([section, tasks]) => (
+                  <div
+                    key={section}
+                    className="rounded-xl border border-border p-4 bg-black/20 mb-4"
+                  >
+                    <h4 className="font-semibold text-sm mb-2">
+                      {section.replaceAll("_", " ")}
+                    </h4>
+
+                    {Object.entries(tasks?.completionDates || {}).length ===
+                      0 && (
+                      <p className="text-xs opacity-60">
+                        No completed tasks yet.
+                      </p>
+                    )}
+
+                    {Object.entries(tasks?.completionDates || {}).map(
+                      ([idx, date]) => (
+                        <div
+                          key={idx}
+                          className="flex justify-between text-xs border-b border-border/30 py-1"
+                        >
+                          <span>
+                            {PROJECT_SECTIONS[section]?.[idx] || "Unknown Task"}
+                          </span>
+                          <span className="opacity-70">{date}</span>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* FOOTER */}
 
         {/* DETAIL MODAL */}
