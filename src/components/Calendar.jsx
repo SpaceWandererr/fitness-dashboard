@@ -459,8 +459,8 @@ export default function CalendarFullDarkUpdated() {
 
   return (
     <div
-      className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden grid grid- 
-      cols-1 lg:grid-cols-2 xl:grid-cols-[1.7fr,1fr] gap-4 items-start transition- 
+      className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden
+      grid grid-cols-1 xl:grid-cols-2 gap-4 items-start transition- 
       colors duration-500 rounded-xl
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
       dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
@@ -701,7 +701,7 @@ export default function CalendarFullDarkUpdated() {
       {/* Calendar Section */}
       <div
         className="lg:col-span-2 rounded-2xl border p-3 space-y-6 
-        min-w-full md:min-w-[650px] min-h-[400px] md:min-h-[600px]
+        w-full min-h-[400px] md:min-h-[600px]
         bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
       >
@@ -979,7 +979,7 @@ export default function CalendarFullDarkUpdated() {
         className=" relative rounded-2xl border p-3
        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-       space-y-3 min-w-full md:min-w-[380px] min-h-[400px] md:min-h-[600px]"
+       space-y-3 w-full min-h-[400px] md:min-h-[600px]"
       >
         <div className="text-sm text-white font-bold mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
@@ -992,7 +992,7 @@ export default function CalendarFullDarkUpdated() {
          "
         >
           <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
-          <div className="grid grid-cols-5 text-center mt-2">
+          <div className="grid grid-cols-5 text-center mt-2 min-h-[70px]">
             <div>
               <p className="text-[#38bdf8] font-semibold">
                 {(studyMap[selectedDate] || []).length}
@@ -1036,7 +1036,7 @@ export default function CalendarFullDarkUpdated() {
             📚 Topics Studied
           </h4>
           {(selectedStudy.length && (
-            <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0]">
+            <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] max-h-[200px] overflow-y-auto">
               {selectedStudy.map((t, i) => (
                 <li key={i}>{t}</li>
               ))}
@@ -1048,7 +1048,7 @@ export default function CalendarFullDarkUpdated() {
           className="rounded-xl p-3 border 
          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
-          min-h-[160px]"
+          min-h-[160px] max-h-[260px] overflow-y-auto"
         >
           <h4 className="font-semibold text-red-500 mb-2">🏋️ Gym Summary</h4>
           <div className="text-sm space-y-1 text-[#e2e8f0]">
