@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:5000/api/state";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://fitness-backend-laoe.onrender.com/api/state";
 
 // Debounce timer (prevents spamming backend on rapid updates)
 let syncTimer = null;

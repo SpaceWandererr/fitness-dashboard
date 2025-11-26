@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 const API_URL =
-  import.meta.env.VITE_API_URL || "https://fitness-backend-laoe.onrender.com/api/state"
-";
+  import.meta.env.VITE_API_URL ||
+  "https://fitness-backend-laoe.onrender.com/api/state";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -323,7 +323,9 @@ export default function App() {
     async function refresh() {
       // 1. Load latest state from backend first
       try {
-        const res = await fetch("https://fitness-backend-laoe.onrender.com/api/state");
+        const res = await fetch(
+          "https://fitness-backend-laoe.onrender.com/api/state",
+        );
         const cloudData = await res.json();
 
         // Hydrate localStorage from backend (safe + filtered)
@@ -466,7 +468,7 @@ export default function App() {
   // Auto-sync to backend when state changes (same tab + other tabs)
   useEffect(() => {
     const syncHandler = () => {
-            fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+      fetch("https://fitness-backend-laoe.onrender.com/api/state", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
