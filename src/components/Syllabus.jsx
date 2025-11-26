@@ -4262,14 +4262,14 @@ export default function Syllabus() {
     try {
       const s = localStorage.getItem(K_TREE);
       if (s) return JSON.parse(s);
-    } catch { }
+    } catch {}
     return normalizeWholeTree(TREE);
   });
   const [meta, setMeta] = useState(() => {
     try {
       const s = localStorage.getItem(K_META);
       if (s) return JSON.parse(s);
-    } catch { }
+    } catch {}
     const m = {};
     for (const [secKey, secVal] of Object.entries(tree)) {
       m[pathKey([secKey])] = { open: false, targetDate: "", targetPct: 100 };
@@ -4281,14 +4281,14 @@ export default function Syllabus() {
     try {
       const s = localStorage.getItem(K_NOTES);
       if (s) return JSON.parse(s);
-    } catch { }
+    } catch {}
     return {};
   });
   const [daySet, setDaySet] = useState(() => {
     try {
       const s = localStorage.getItem(K_STREAK);
       if (s) return new Set(JSON.parse(s));
-    } catch { }
+    } catch {}
     return new Set();
   });
 
@@ -4307,7 +4307,7 @@ export default function Syllabus() {
     const has = (iso) => daySet.has(iso);
     let st = 0;
     const d = new Date();
-    for (; ;) {
+    for (;;) {
       const iso = d.toISOString().slice(0, 10);
       if (has(iso)) st++;
       else break;
@@ -4323,14 +4323,14 @@ export default function Syllabus() {
       const now = new Date();
       localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
       setLastSaved(now);
-    } catch { }
+    } catch {}
   }, [tree]);
 
   useEffect(() => {
     try {
       localStorage.setItem(K_META, JSON.stringify(meta));
       updateLastSaved(); // ✅ record save time
-    } catch { }
+    } catch {}
   }, [meta]);
 
   const nrSaveRef = useRef(null);
@@ -4341,7 +4341,7 @@ export default function Syllabus() {
       try {
         localStorage.setItem(K_NOTES, JSON.stringify(nr));
         updateLastSaved(); // ✅ record save time
-      } catch { }
+      } catch {}
     }, 200);
     return () => clearTimeout(nrSaveRef.current);
   }, [nr]);
@@ -4350,7 +4350,7 @@ export default function Syllabus() {
     try {
       localStorage.setItem(K_STREAK, JSON.stringify(Array.from(daySet)));
       updateLastSaved(); // ✅ record save time
-    } catch { }
+    } catch {}
   }, [daySet]);
 
   /* ui misc */
@@ -4634,13 +4634,15 @@ export default function Syllabus() {
 
   /* ======================= RENDER ======================= */
   return (
-    <div className="
+    <div
+      className="
   min-h-[80vh] rounded-xl p-2
   text-[#dceee8] dark:text-[#E6F1FF]
   bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
   dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
   dark:border-[#00D1FF33]
-">
+"
+    >
       <header
         className="
     sticky top-0 z-40 rounded-xl
@@ -4654,10 +4656,8 @@ export default function Syllabus() {
   "
       >
         <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
-
           {/* 🔹 Top Row */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-
             {/* LEFT — Title */}
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
               Syllabus Jay's Web Dev-2026
@@ -4665,14 +4665,15 @@ export default function Syllabus() {
 
             {/* RIGHT — Buttons */}
             <div className="flex flex-wrap justify-end gap-2">
-
               {/* 🔥 Streak */}
-              <span className="
+              <span
+                className="
           px-3 py-1.5 rounded-xl
           bg-gradient-to-r from-[#0ca56d] to-[#18c481]
           border border-[#0B5134]/60
           text-[14px] font-semibold text-black
-        ">
+        "
+              >
                 🔥 Streak: <b>{Array.from(daySet).length}</b> days
               </span>
 
@@ -4784,14 +4785,13 @@ export default function Syllabus() {
 
           {/* 🔹 Progress Section */}
           <div className="pt-2">
-
             <div className="flex flex-col md:flex-row md:items-center md:justify-between text-xs text-[#d9ebe5] gap-1">
               <span className="font-medium">
                 Progress: {grand.done}/{grand.total}
               </span>
 
-              {showLastStudied && (
-                lastStudied ? (
+              {showLastStudied &&
+                (lastStudied ? (
                   <div className="text-green-300/90 flex items-center gap-1">
                     📘 <span>Last studied:</span>
                     <span className="font-medium text-green-200">
@@ -4802,17 +4802,13 @@ export default function Syllabus() {
                   <div className="text-gray-400">
                     📭 No topics completed yet.
                   </div>
-                )
-              )}
+                ))}
 
-              <span className="font-semibold text-[#a7f3d0]">
-                {grand.pct}%
-              </span>
+              <span className="font-semibold text-[#a7f3d0]">{grand.pct}%</span>
             </div>
 
             {/* ✅ Improved Progress Bar */}
             <div className="relative mt-2 h-2.5 rounded-full bg-[#102720] overflow-hidden">
-
               {/* Background glow layer */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
@@ -4820,34 +4816,33 @@ export default function Syllabus() {
               <div
                 className={`
             h-full rounded-full transition-all duration-700 ease-out
-            ${grand.pct < 25
-                    ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
-                    : grand.pct < 50
-                      ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                      : grand.pct < 75
-                        ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                        : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
-                  }
+            ${
+              grand.pct < 25
+                ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
+                : grand.pct < 50
+                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                  : grand.pct < 75
+                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+            }
           `}
                 style={{
                   width: `${grand.pct}%`,
                   minWidth: grand.pct > 0 ? "6px" : "6px",
                 }}
               />
-
             </div>
           </div>
-
         </div>
       </header>
-
 
       {/* === Combined Layout (Planner + Topics) === */}
       <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
           {/* 🗓️ Daily Planner */}
-          <div className="
+          <div
+            className="
            rounded-2xl 
            border border-[#1a4a39]/40 
            backdrop-blur-md p-4
@@ -4855,7 +4850,8 @@ export default function Syllabus() {
            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
            dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
            dark:border-gray-800
-           ">
+           "
+          >
             <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
             <p className="text-sm opacity-80 mb-3">
               Closest-deadline topics not yet done.
@@ -4920,7 +4916,8 @@ export default function Syllabus() {
   );
 }
 
-<style>{`
+<style>
+  {`
   /* Custom scrollbar for better aesthetics */
   ::-webkit-scrollbar {
     width: 8px;
@@ -5007,7 +5004,7 @@ export default function Syllabus() {
 
 
     `}
-</style>
+</style>;
 
 /* ======================= Main Section ======================= */
 function SectionCard({
@@ -5102,10 +5099,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                    : totals.pct < 75
-                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                      : totals.pct < 75
+                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
                 `}
             style={{
@@ -5268,7 +5265,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5277,7 +5274,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5453,7 +5450,6 @@ function SubNode({
   );
 }
 
-
 /* Daily Planner — excludes completed, shows only titles + deadlines */
 function DailyPlanner({ tree }) {
   const items = [];
@@ -5567,7 +5563,8 @@ function SmartSuggest({ generateSmartPlan, tree }) {
           🤖 Smart Suggest
         </h3>
 
-        <span className="
+        <span
+          className="
         text-[11px] px-3 py-1 rounded-full
         bg-[#FF8F8F] text-black font-semibold
         dark:bg-[#451013] dark:text-[#FFD1D1]
@@ -5575,10 +5572,10 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         whitespace-nowrap sm:ml-auto
         transition-all duration-200
         hover:bg-[#ff6f6f] dark:hover:bg-[#5A1418]
-      ">
+      "
+        >
           AI Study Planner
         </span>
-
       </div>
       {/* Input */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -5607,7 +5604,6 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         >
           Suggest
         </button>
-
       </div>
 
       {/* Summary */}
@@ -5627,7 +5623,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               item.deadline && new Date(item.deadline) < new Date()
                 ? "bg-red-500/15 text-red-600 dark:text-red-400"
                 : item.deadline &&
-                  new Date(item.deadline) - new Date() < 86400000 * 2
+                    new Date(item.deadline) - new Date() < 86400000 * 2
                   ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
                   : "bg-green-500/10 text-green-700 dark:text-green-400";
 
@@ -5636,13 +5632,15 @@ function SmartSuggest({ generateSmartPlan, tree }) {
             return (
               <div
                 key={i}
-                className={`rounded-lg border border-[#0B5134]                dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${item.done ? "opacity-60 line-through" : ""
-                  }`}
+                className={`rounded-lg border border-[#0B5134]                dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${
+                  item.done ? "opacity-60 line-through" : ""
+                }`}
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                   <span
-                    className={`font-medium text-[#d9ebe5] dark:text-gray-100 ${item.done ? "line-through" : ""
-                      }`}
+                    className={`font-medium text-[#d9ebe5] dark:text-gray-100 ${
+                      item.done ? "line-through" : ""
+                    }`}
                   >
                     • {item.title}
                   </span>
@@ -5655,8 +5653,9 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                   )}
                 </div>
                 <div
-                  className={`text-xs mt-1 ${item.done ? "opacity-50" : "opacity-80"
-                    } transition-opacity`}
+                  className={`text-xs mt-1 ${
+                    item.done ? "opacity-50" : "opacity-80"
+                  } transition-opacity`}
                 >
                   ⏱ ~{Math.round(item.estimate * 60)} mins
                 </div>
@@ -5682,4 +5681,3 @@ function SmartSuggest({ generateSmartPlan, tree }) {
     </div>
   );
 }
-

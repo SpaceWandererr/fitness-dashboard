@@ -1,0 +1,438 @@
+{
+  "Episode 1 - Code (Foundation)": {
+    "Web & Internet Basics": [
+      {
+        "title": "History of Web (Web 1.0 → Web 3.0)",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Client–Server Architecture",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "What happens when you type a URL?",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "HTTP vs HTTPS and DNS Basics",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Static vs Dynamic Websites",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "System Setup": [
+      {
+        "title": "Install VS Code + Extensions",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Folder & File Structure Basics",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "First Hello Web Page",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  },
+
+  "Episode 2 - Stage (Frontend Core)": {
+    "HTML Essentials": [
+      {
+        "title": "HTML Structure & Semantic Tags",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Forms, Inputs & Buttons",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Images, Links, Lists & Layout Tags",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "Modern CSS + Tailwind": [
+      {
+        "title": "CSS Box Model",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Flexbox Layout",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Grid Layout",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Responsive Design + Media Queries",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Tailwind CSS Fundamentals",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Animations + Transitions (Basics)",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "JavaScript Core": [
+      {
+        "title": "Variables, Data Types & Scope",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Functions & Closures",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Loops & Conditionals",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "DOM Manipulation",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Events & Event Handling",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Async/Await + Fetch API",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Local Storage & Error Handling",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  },
+
+  "Episode 3 - Commit (React + Frontend Power)": {
+    "React Fundamentals": [
+      {
+        "title": "What is React + JSX",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Components, Props & State",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Virtual DOM & Rendering Flow",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "React Hooks & State Management": [
+      {
+        "title": "useState & useEffect",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "useContext & Global State",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "useMemo & useCallback",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "Routing & Forms": [
+      {
+        "title": "React Router",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Dynamic Routes & Params",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Forms & Validations in React",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "API Integration with React",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "Performance Optimization": [
+      {
+        "title": "React Memo & Lazy Loading",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Web Vitals + Lighthouse Optimization",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  },
+
+  "Episode 4 - Push (Backend + MERN)": {
+    "Node + Express": [
+      {
+        "title": "Node.js Fundamentals",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Express Routing & Middleware",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "MVC Architecture",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "Database (MongoDB)": [
+      {
+        "title": "MongoDB Basics & NoSQL Concepts",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Mongoose Models & CRUD",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Aggregation & Indexing",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "Authentication & Security": [
+      {
+        "title": "JWT Authentication",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Password Hashing with bcrypt",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Role-Based Access Control",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "API Development": [
+      {
+        "title": "REST API Design",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "API Validation & Security",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Rate Limiting & Error Handling",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  },
+
+  "Episode 5 - Merge (AI + SaaS)": {
+    "Generative AI": [
+      {
+        "title": "Introduction to Generative AI",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "OpenAI API Integration",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "LangChain & AI Agents",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ],
+
+    "SaaS Layer": [
+      {
+        "title": "SaaS Architecture Basics",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Stripe Payment Integration",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "User Subscription & Plans",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  },
+
+  "Episode 6 - Scale (Future Tech)": {
+    "Advanced Stack": [
+      {
+        "title": "Next.js Fundamentals",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Docker & DevOps Basics",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Microservices Architecture",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Web3 Basics",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  },
+
+  "DSA with JavaScript (Light)": {
+    "Core DSA": [
+      {
+        "title": "Conditionals & Loops",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Arrays & Strings",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Basic OOP Concepts",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      },
+      {
+        "title": "Problem-Solving Mindset",
+        "done": false,
+        "deadline": "",
+        "completedOn": ""
+      }
+    ]
+  }
+}
