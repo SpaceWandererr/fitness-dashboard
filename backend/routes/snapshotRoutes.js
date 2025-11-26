@@ -1,79 +1,71 @@
 import express from "express";
-import DashboardState from "../models/DashboardState.js";
 import StateSnapshot from "../models/StateSnapshot.js";
+import DashboardState from "../models/DashboardState.js";
 
 const router = express.Router();
 
-// GET LAST 20 SNAPSHOTS
+/* ================= GET SNAPSHOTS ================= */
 router.get("/", async (req, res) => {
   try {
     const { userId } = req.query;
+    const query = userId ? { userId } : {};
 
-    console.log("📥 GET /api/snapshots");
-    console.log("👤 User:", userId || "none");
-    console.log("🔌 Mongo State:", StateSnapshot.db.readyState);
-
-    // Optional: safe default user
-    const safeUserId = userId || "default";
-
-    const snapshots = await StateSnapshot.find({ userId: safeUserId })
+    // Only fetch light data
+    const snapshots = await StateSnapshot.find(query, {
+      state: 0, // don't send full giant state
+      fullState: 0,
+    })
       .sort({ createdAt: -1 })
+      .limit(20)
       .lean();
 
     console.log("✅ Snapshots fetched:", snapshots.length);
 
-    res.json(Array.isArray(snapshots) ? snapshots : []);
-  } catch (error) {
-    console.error("❌ SNAPSHOT FETCH ERROR:", error);
-
+    res.json({
+      snapshots: Array.isArray(snapshots) ? snapshots : [],
+    });
+  } catch (err) {
+    console.error("❌ Snapshot fetch error:", err);
     res.status(500).json({
       message: "Error loading history",
-      error: error.message,
-      name: error.name,
+      error: err.message,
     });
   }
 });
 
-// Helper to safely clean broken values
-function safeValue(val, fallback = "{}") {
-  if (val === undefined || val === null || val === "") {
-    return fallback;
-  }
-  return val;
-}
-
-// RESTORE SNAPSHOT
-router.get("/", async (req, res) => {
+/* ================= RESTORE SNAPSHOT ================= */
+router.post("/restore/:id", async (req, res) => {
   try {
-    const { userId } = req.query;
+    const snap = await StateSnapshot.findById(req.params.id).lean();
 
-    console.log("📥 GET /api/snapshots");
-    console.log("UserId received:", userId);
-
-    let query = {};
-
-    // If userId is sent, filter by it
-    if (userId) {
-      query.userId = userId;
+    if (!snap) {
+      return res.status(404).json({ message: "Snapshot not found" });
     }
 
-    const snapshots = await StateSnapshot.find(query)
-      .sort({ createdAt: -1 })
-      .lean();
+    const cleanState = snap.state || snap.fullState;
+    if (!cleanState) {
+      return res.status(400).json({ message: "Snapshot data missing" });
+    }
 
-    console.log("✅ Snapshots found:", snapshots.length);
+    const updated = await DashboardState.findOneAndUpdate(
+      { userId: "default" },
+      { $set: cleanState },
+      { new: true, upsert: true }
+    );
 
-    res.json(Array.isArray(snapshots) ? snapshots : []);
-  } catch (error) {
-    console.error("❌ Snapshot error:", error);
+    console.log("✅ Snapshot restored");
 
+    res.json({
+      success: true,
+      updatedState: updated,
+    });
+  } catch (err) {
+    console.error("❌ Restore error:", err);
     res.status(500).json({
-      message: "Error loading history",
-      error: error.message,
+      message: "Error restoring snapshot",
+      error: err.message,
     });
   }
 });
 
-
-// 🔴 YOU ARE MISSING THIS LINE
 export default router;

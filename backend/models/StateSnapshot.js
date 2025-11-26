@@ -1,12 +1,13 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
-const stateSnapshotSchema = new mongoose.Schema(
-  {
-    userId: { type: String, required: true, index: true },
-    state: { type: Object, required: true }, // all wd_* stuff
-    label: { type: String, default: "" },
-  },
-  { timestamps: true }
-);
+const StateSnapshotSchema = new mongoose.Schema({
+  label: { type: String },
+  fullState: { type: Object },
+  userId: { type: String, default: "default" },
+  createdAt: { type: Date, default: Date.now },
+});
 
-export default mongoose.model("StateSnapshot", stateSnapshotSchema);
+// 🔥 Index for faster sorting & less memory use
+StateSnapshotSchema.index({ createdAt: -1 });
+
+module.exports = mongoose.model("StateSnapshot", StateSnapshotSchema);

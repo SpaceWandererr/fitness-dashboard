@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API_BASE =
+  import.meta.env.VITE_API_BASE || "https://fitness-backend-laoe.onrender.com";
+
 const API_STATE = `${API_BASE}/api/state`;
 const API_SNAPSHOTS = `${API_BASE}/api/snapshots`;
 
@@ -27,13 +29,21 @@ export default function Control() {
   /* ================= LOAD SNAPSHOTS ================= */
   async function loadSnapshots() {
     setLoading(true);
+
     try {
       const res = await fetch(API_SNAPSHOTS);
       const data = await res.json();
-      setSnapshots(Array.isArray(data) ? data : data.snapshots || []);
+
+      const safeSnapshots = Array.isArray(data.snapshots) ? data.snapshots : [];
+
+      setSnapshots(safeSnapshots);
+
+      console.log("✅ Snapshots loaded:", safeSnapshots.length);
     } catch (err) {
       console.error("Error loading snapshots:", err);
+      setSnapshots([]);
     }
+
     setLoading(false);
   }
 
@@ -48,12 +58,11 @@ export default function Control() {
   async function syncNow() {
     setSyncing(true);
 
+    // ⚠️ Skip heavy keys to prevent Quota crash
     const payload = {
       wd_mern_progress: localStorage.getItem("wd_mern_progress"),
       wd_weight_current: localStorage.getItem("wd_weight_current"),
       wd_weight_history: localStorage.getItem("wd_weight_history"),
-      wd_gym_logs: localStorage.getItem("wd_gym_logs"),
-      wd_goals: localStorage.getItem("wd_goals"),
       wd_start_weight: localStorage.getItem("wd_start_weight"),
       wd_done: localStorage.getItem("wd_done"),
       syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
@@ -62,18 +71,22 @@ export default function Control() {
     };
 
     try {
-      await fetch(API_STATE, {
+      const res = await fetch(API_STATE, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      if (!res.ok) throw new Error("Sync failed");
+
+      console.log("✅ All data synced to backend");
+
       setLabel("");
       loadSnapshots();
-      alert("✅ Synced and backup created");
+      alert("✅ Synced and backup created!");
     } catch (err) {
-      console.error(err);
-      alert("❌ Cloud sync failed");
+      console.error("❌ Sync error:", err);
+      alert("❌ Cloud sync failed. Check console.");
     }
 
     setSyncing(false);
@@ -82,15 +95,14 @@ export default function Control() {
   /* ================= RESTORE SNAPSHOT ================= */
   async function restoreSnapshot(id) {
     const confirmRestore = window.confirm(
-      "This will overwrite your current data with this backup.\nDo you want to continue?"
+      "This will overwrite your data with this cloud backup.\nContinue?"
     );
 
     if (!confirmRestore) return;
 
     try {
-      console.log("Restoring snapshot:", id);
+      console.log("🔄 Restoring snapshot:", id);
 
-      // Temporarily block autosync
       window.__DISABLE_AUTOSYNC__ = true;
 
       const res = await fetch(`${API_SNAPSHOTS}/restore/${id}`, {
@@ -100,8 +112,7 @@ export default function Control() {
       const data = await res.json();
 
       if (!res.ok) {
-        console.error("Restore server error:", data);
-        alert("❌ Restore failed. Check console.");
+        alert("❌ Restore failed");
         return;
       }
 
@@ -112,29 +123,25 @@ export default function Control() {
         localStorage.setItem(key, value);
       });
 
-      alert("✅ Snapshot restored. Reloading app...");
+      alert("✅ Snapshot restored! Reloading...");
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      setTimeout(() => window.location.reload(), 600);
 
       setTimeout(() => {
         window.__DISABLE_AUTOSYNC__ = false;
       }, 3000);
     } catch (err) {
-      console.error("Restore error:", err);
-      alert("❌ Restore crashed. See console.");
+      console.error("❌ Restore crash:", err);
+      alert("❌ Restore failed. Check console.");
     }
   }
 
-  /* ================= EXPORT LOCAL BACKUP ================= */
+  /* ================= LOCAL EXPORT ================= */
   function exportLocalBackup() {
     const data = {
       wd_mern_progress: localStorage.getItem("wd_mern_progress"),
       wd_weight_current: localStorage.getItem("wd_weight_current"),
       wd_weight_history: localStorage.getItem("wd_weight_history"),
-      wd_gym_logs: localStorage.getItem("wd_gym_logs"),
-      wd_goals: localStorage.getItem("wd_goals"),
       wd_start_weight: localStorage.getItem("wd_start_weight"),
       wd_done: localStorage.getItem("wd_done"),
       syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
@@ -148,7 +155,6 @@ export default function Control() {
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-
     a.href = url;
     a.download = `mywebsite-backup-${Date.now()}.json`;
     a.click();
@@ -156,7 +162,7 @@ export default function Control() {
     URL.revokeObjectURL(url);
   }
 
-  /* ================= IMPORT LOCAL BACKUP ================= */
+  /* ================= LOCAL IMPORT ================= */
   function importLocalBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -168,23 +174,20 @@ export default function Control() {
         const json = JSON.parse(reader.result);
 
         const confirmRestore = window.confirm(
-          "This will overwrite your current data with the imported file.\nContinue?"
+          "This will overwrite your current data.\nContinue?"
         );
 
         if (!confirmRestore) return;
 
         localStorage.clear();
-
         Object.entries(json).forEach(([key, value]) => {
           if (key === "timestamp") return;
           localStorage.setItem(key, value);
         });
 
-        alert("✅ Local backup restored. Reloading...");
-
+        alert("✅ Local backup restored!");
         window.location.reload();
       } catch (err) {
-        console.error(err);
         alert("❌ Invalid backup file");
       }
     };
@@ -195,6 +198,7 @@ export default function Control() {
   useEffect(() => {
     loadSnapshots();
     checkCloud();
+
     const timer = setInterval(checkCloud, 10000);
     return () => clearInterval(timer);
   }, []);
@@ -205,7 +209,6 @@ export default function Control() {
         Control Panel 🧠
       </h1>
 
-      {/* CLOUD STATUS */}
       <div className="mb-6 flex items-center gap-3">
         <span>Cloud Status:</span>
         <span
@@ -217,7 +220,6 @@ export default function Control() {
         </span>
       </div>
 
-      {/* CLOUD SYNC */}
       <div className="mb-8 p-4 border border-[#2F6B60] rounded-xl bg-black/30">
         <h2 className="text-lg font-semibold mb-3">Cloud Sync</h2>
 
@@ -230,21 +232,19 @@ export default function Control() {
         />
 
         <div className="flex gap-4 flex-wrap">
-          {/* AUTO SYNC TOGGLE */}
           <button
             onClick={toggleAutoSync}
             className={`px-4 py-2 border rounded-lg transition
-              ${
-                autoSync
-                  ? "border-green-500 text-green-400 hover:bg-green-900/30"
-                  : "border-gray-500 text-gray-400 hover:bg-gray-900/30"
-              }
-            `}
+            ${
+              autoSync
+                ? "border-green-500 text-green-400 hover:bg-green-900/30"
+                : "border-gray-500 text-gray-400 hover:bg-gray-900/30"
+            }
+          `}
           >
             Auto Sync: {autoSync ? "ON" : "OFF"}
           </button>
 
-          {/* MANUAL SYNC */}
           <button
             onClick={syncNow}
             disabled={syncing}
@@ -253,7 +253,6 @@ export default function Control() {
             {syncing ? "Syncing..." : "Sync Now"}
           </button>
 
-          {/* EXPORT */}
           <button
             onClick={exportLocalBackup}
             className="px-4 py-2 border border-blue-500 text-blue-400 rounded-lg hover:bg-blue-900/30 transition"
@@ -261,7 +260,6 @@ export default function Control() {
             Export Backup
           </button>
 
-          {/* IMPORT */}
           <label className="px-4 py-2 border border-yellow-500 text-yellow-400 rounded-lg cursor-pointer hover:bg-yellow-900/30 transition">
             Import Backup
             <input
@@ -274,7 +272,6 @@ export default function Control() {
         </div>
       </div>
 
-      {/* BACKUP HISTORY */}
       <div className="p-4 border border-[#2F6B60] rounded-xl bg-black/30">
         <h2 className="text-lg font-semibold mb-4">Backup History</h2>
 
@@ -283,33 +280,27 @@ export default function Control() {
         ) : snapshots.length === 0 ? (
           <p className="text-[#7FAFA4]">No backups yet.</p>
         ) : (
-          <div className="space-y-3">
-            {Array.isArray(snapshots) ? (
-              snapshots.map((snap) => (
-                <div
-                  key={snap._id}
-                  className="flex justify-between items-center p-3 border border-[#2F6B60]/50 rounded-lg bg-black/40"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {snap.label || "Untitled Backup"} —{" "}
-                      {new Date(snap.createdAt).toLocaleString()}
-                    </p>
-                    <p className="text-sm text-[#7FAFA4]">{snap._id}</p>
-                  </div>
+          snapshots.map((snap) => (
+            <div
+              key={snap._id}
+              className="flex justify-between items-center p-3 border border-[#2F6B60]/50 rounded-lg bg-black/40 mb-2"
+            >
+              <div>
+                <p className="font-medium">
+                  {snap.label || "Untitled Backup"} —{" "}
+                  {new Date(snap.createdAt).toLocaleString()}
+                </p>
+                <p className="text-sm text-[#7FAFA4]">{snap._id}</p>
+              </div>
 
-                  <button
-                    onClick={() => restoreSnapshot(snap._id)}
-                    className="px-3 py-1.5 border border-red-500 text-red-400 rounded-md hover:bg-red-950 transition"
-                  >
-                    Restore
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-red-400">No snapshots found</p>
-            )}
-          </div>
+              <button
+                onClick={() => restoreSnapshot(snap._id)}
+                className="px-3 py-1.5 border border-red-500 text-red-400 rounded-md hover:bg-red-950 transition"
+              >
+                Restore
+              </button>
+            </div>
+          ))
         )}
       </div>
     </div>

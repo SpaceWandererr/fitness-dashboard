@@ -75,21 +75,22 @@ function syncToBackend() {
 
 export function save(key, value) {
   try {
-    const data = typeof value === "string" ? value : JSON.stringify(value);
+    const stored = typeof value === "string" ? value : JSON.stringify(value);
 
-    // Prevent huge writes
-    if (data.length > 300000) {
-      console.warn("⚠ Skipping save, data too large:", key);
-      return;
+    localStorage.setItem(key, stored);
+  } catch (err) {
+    console.warn("⚠ Storage full, trimming:", key);
+
+    // 🔥 prevent app crash
+    if (key === "wd_gym_logs") {
+      localStorage.setItem(key, "[]");
     }
-
-    localStorage.setItem(key, data);
-    window.dispatchEvent(new Event("lifeos:update"));
-    syncToBackend();
-  } catch (e) {
-    console.warn("⚠ Save failed:", key, e.message);
+    if (key === "syllabus_tree_v2") {
+      localStorage.removeItem(key);
+    }
   }
 }
+
 
 
 
