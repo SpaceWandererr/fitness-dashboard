@@ -11,9 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://fitness-backend-laoe.onrender.com/api/state";
+const API_URL = import.meta.env.VITE_API_URL || API_URL;
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -323,9 +321,7 @@ export default function App() {
     async function refresh() {
       // 1. Load latest state from backend first
       try {
-        const res = await fetch(
-          "https://fitness-backend-laoe.onrender.com/api/state",
-        );
+        const res = await fetch(API_URL);
         const cloudData = await res.json();
 
         // Hydrate localStorage from backend (safe + filtered)
@@ -359,7 +355,7 @@ export default function App() {
           try {
             localStorage.setItem(
               key,
-              typeof value === "string" ? value : JSON.stringify(value),
+              typeof value === "string" ? value : JSON.stringify(value)
             );
           } catch (err) {
             console.warn("❌ Skipped corrupt backend value for:", key, err);
@@ -374,10 +370,10 @@ export default function App() {
       // 2. Now run your ORIGINAL logic using localStorage
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
       const oldWeight = JSON.parse(
-        localStorage.getItem("wd_weight_history") || "{}",
+        localStorage.getItem("wd_weight_history") || "{}"
       );
       const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}",
+        localStorage.getItem("syllabus_tree_v2") || "{}"
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
@@ -461,34 +457,6 @@ export default function App() {
     return () => {
       window.removeEventListener("focus", refresh);
       window.removeEventListener("lifeos:update", refresh);
-    };
-  }, []);
-
-  // Auto-sync to backend when localStorage changes
-  // Auto-sync to backend when state changes (same tab + other tabs)
-  useEffect(() => {
-    const syncHandler = () => {
-      fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wd_weight_history: localStorage.getItem("wd_weight_history"),
-          wd_gym_logs: localStorage.getItem("wd_gym_logs"),
-          wd_goals: localStorage.getItem("wd_goals"),
-          wd_done: localStorage.getItem("wd_done"),
-          syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
-        }),
-      }).catch((err) => console.warn("⚠ Sync failed:", err));
-    };
-
-    // 🔔 From other tabs
-    window.addEventListener("storage", syncHandler);
-    // 🔔 From this tab (via save())
-    window.addEventListener("lifeos:update", syncHandler);
-
-    return () => {
-      window.removeEventListener("storage", syncHandler);
-      window.removeEventListener("lifeos:update", syncHandler);
     };
   }, []);
 
