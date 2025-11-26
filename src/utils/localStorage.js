@@ -57,10 +57,14 @@ export function save(key, value) {
 
     // 🔔 Tell the app: "data changed" (same-tab + others)
     window.dispatchEvent(new Event("lifeos:update"));
+
+    // 🚀 THIS LINE WAS MISSING → triggers backend sync
+    syncToBackend();
   } catch (err) {
     console.warn("Failed to save to localStorage:", key, err);
   }
 }
+
 
 export const load = (key, fallback = null) => {
   try {
