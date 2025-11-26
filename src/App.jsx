@@ -11,7 +11,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-const API_URL = import.meta.env.VITE_API_URL || API_URL;
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://fitness-backend-laoe.onrender.com/api/state";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
