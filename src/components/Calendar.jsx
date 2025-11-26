@@ -460,7 +460,7 @@ export default function CalendarFullDarkUpdated() {
   return (
     <div
       className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden
-      grid grid-cols-1 xl:grid-cols-2 gap-4 items-start transition- 
+      grid grid-cols-1 lg:grid-cols-2 gap-4 items-start transition- 
       colors duration-500 rounded-xl
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
       dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
@@ -700,7 +700,7 @@ export default function CalendarFullDarkUpdated() {
 
       {/* Calendar Section */}
       <div
-        className="lg:col-span-2 rounded-2xl border p-3 space-y-6 
+        className="xl:col-span-1 rounded-2xl border p-3 space-y-6 
         w-full min-h-[400px] md:min-h-[600px]
         bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
@@ -818,13 +818,17 @@ export default function CalendarFullDarkUpdated() {
             const isSelected = iso === selectedDate;
 
             const base = `
-      aspect-square w-12 h-12 rounded-xl 
-      flex items-center justify-center 
-      font-medium text-sm
-      transition-all duration-200
-      relative overflow-hidden
-      select-none
-    `;
+          aspect-square 
+          w-full 
+          min-w-[32px] 
+          max-w-[56px]
+          rounded-xl 
+          flex items-center justify-center 
+          font-medium text-xs sm:text-sm
+          transition-all duration-200
+          relative overflow-hidden
+          select-none
+        `;
 
             const notCur = !isCurMonth ? "opacity-30" : "";
 
@@ -976,7 +980,7 @@ export default function CalendarFullDarkUpdated() {
 
       {/* Right Panel */}
       <div
-        className=" relative rounded-2xl border p-3
+        className="xl:col-span-1 relative rounded-2xl border p-3
        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
        space-y-3 w-full min-h-[400px] md:min-h-[600px]"

@@ -11,7 +11,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-const API_URL = "http://localhost:5000/api/state";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api/state";
 
 import Calendar from "./components/Calendar.jsx";
 import Syllabus from "./components/Syllabus.jsx";
@@ -324,15 +325,18 @@ export default function App() {
         const res = await fetch("http://localhost:5000/api/state");
         const cloudData = await res.json();
 
-        // Hydrate localStorage from backend
+        // Hydrate localStorage from backend (safe + filtered)
         Object.entries(cloudData).forEach(([key, value]) => {
-          if (!key.startsWith("wd_")) return;
+          // Only allow your app keys
+          if (!key.startsWith("wd_") && key !== "syllabus_tree_v2") return;
+
+          // Block null / undefined
           if (value === null || typeof value === "undefined") return;
 
-          // Block useless values
+          // Block useless empty strings/objects
           if (
             typeof value === "string" &&
-            (value === "{}" || value.trim() === "")
+            (value === "{}" || value === "[]" || value.trim() === "")
           )
             return;
 
@@ -341,16 +345,22 @@ export default function App() {
             if (value.length === 1 && value[0] === "{}") return;
           }
 
-          // Block empty object
-          if (typeof value === "object" && !Array.isArray(value)) {
-            if (Object.keys(value).length === 0) return;
-          }
+          // Block empty pure object
+          if (
+            typeof value === "object" &&
+            !Array.isArray(value) &&
+            Object.keys(value).length === 0
+          )
+            return;
 
-          // Safe write
-          localStorage.setItem(
-            key,
-            typeof value === "string" ? value : JSON.stringify(value)
-          );
+          try {
+            localStorage.setItem(
+              key,
+              typeof value === "string" ? value : JSON.stringify(value),
+            );
+          } catch (err) {
+            console.warn("❌ Skipped corrupt backend value for:", key, err);
+          }
         });
 
         console.log("✅ State pulled from backend");
@@ -361,10 +371,10 @@ export default function App() {
       // 2. Now run your ORIGINAL logic using localStorage
       const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
       const oldWeight = JSON.parse(
-        localStorage.getItem("wd_weight_history") || "{}"
+        localStorage.getItem("wd_weight_history") || "{}",
       );
       const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}"
+        localStorage.getItem("syllabus_tree_v2") || "{}",
       );
       const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
 
@@ -452,6 +462,7 @@ export default function App() {
   }, []);
 
   // Auto-sync to backend when localStorage changes
+  // Auto-sync to backend when state changes (same tab + other tabs)
   useEffect(() => {
     const syncHandler = () => {
       fetch("http://localhost:5000/api/state", {
@@ -467,9 +478,15 @@ export default function App() {
       }).catch((err) => console.warn("⚠ Sync failed:", err));
     };
 
+    // 🔔 From other tabs
     window.addEventListener("storage", syncHandler);
+    // 🔔 From this tab (via save())
+    window.addEventListener("lifeos:update", syncHandler);
 
-    return () => window.removeEventListener("storage", syncHandler);
+    return () => {
+      window.removeEventListener("storage", syncHandler);
+      window.removeEventListener("lifeos:update", syncHandler);
+    };
   }, []);
 
   // inject glow CSS once
@@ -1072,10 +1089,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1694,10 +1711,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>

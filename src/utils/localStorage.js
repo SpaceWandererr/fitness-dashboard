@@ -11,7 +11,7 @@ function syncToBackend() {
   }
 
   const autoSyncEnabled = JSON.parse(
-    localStorage.getItem("wd_auto_sync") || "true"
+    localStorage.getItem("wd_auto_sync") || "true",
   );
 
   if (!autoSyncEnabled) {
@@ -48,15 +48,17 @@ function syncToBackend() {
   }, 400);
 }
 
-export const save = (key, value) => {
-  // Save locally like before
-  localStorage.setItem(key, JSON.stringify(value));
+export function save(key, value) {
+  try {
+    const stored = typeof value === "string" ? value : JSON.stringify(value);
+    localStorage.setItem(key, stored);
 
-  // Only trigger sync for your app's system keys
-  if (key.startsWith("wd_") || key === "syllabus_tree_v2") {
-    syncToBackend();
+    // 🔔 Tell the app: "data changed" (same-tab + others)
+    window.dispatchEvent(new Event("lifeos:update"));
+  } catch (err) {
+    console.warn("Failed to save to localStorage:", key, err);
   }
-};
+}
 
 export const load = (key, fallback = null) => {
   try {
