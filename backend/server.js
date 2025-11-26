@@ -34,7 +34,9 @@ app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    family: 4   // 🔥 Forces IPv4 and fixes Render DNS issue
+  })
   .then(() => {
     console.log("✅ MongoDB Atlas Connected");
     app.listen(PORT, () => {
