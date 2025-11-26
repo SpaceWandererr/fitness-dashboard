@@ -30,7 +30,7 @@ export default function Control() {
     try {
       const res = await fetch(API_SNAPSHOTS);
       const data = await res.json();
-      setSnapshots(data);
+      setSnapshots(Array.isArray(data) ? data : data.snapshots || []);
     } catch (err) {
       console.error("Error loading snapshots:", err);
     }
@@ -284,27 +284,31 @@ export default function Control() {
           <p className="text-[#7FAFA4]">No backups yet.</p>
         ) : (
           <div className="space-y-3">
-            {snapshots.map((snap) => (
-              <div
-                key={snap._id}
-                className="flex justify-between items-center p-3 border border-[#2F6B60]/50 rounded-lg bg-black/40"
-              >
-                <div>
-                  <p className="font-medium">
-                    {snap.label || "Untitled Backup"} —{" "}
-                    {new Date(snap.createdAt).toLocaleString()}
-                  </p>
-                  <p className="text-sm text-[#7FAFA4]">{snap._id}</p>
-                </div>
-
-                <button
-                  onClick={() => restoreSnapshot(snap._id)}
-                  className="px-3 py-1.5 border border-red-500 text-red-400 rounded-md hover:bg-red-950 transition"
+            {Array.isArray(snapshots) ? (
+              snapshots.map((snap) => (
+                <div
+                  key={snap._id}
+                  className="flex justify-between items-center p-3 border border-[#2F6B60]/50 rounded-lg bg-black/40"
                 >
-                  Restore
-                </button>
-              </div>
-            ))}
+                  <div>
+                    <p className="font-medium">
+                      {snap.label || "Untitled Backup"} —{" "}
+                      {new Date(snap.createdAt).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-[#7FAFA4]">{snap._id}</p>
+                  </div>
+
+                  <button
+                    onClick={() => restoreSnapshot(snap._id)}
+                    className="px-3 py-1.5 border border-red-500 text-red-400 rounded-md hover:bg-red-950 transition"
+                  >
+                    Restore
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-red-400">No snapshots found</p>
+            )}
           </div>
         )}
       </div>

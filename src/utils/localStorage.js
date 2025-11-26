@@ -2,6 +2,8 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://fitness-backend-laoe.onrender.com/api/state";
 
+
+
 // Debounce timer (prevents spamming backend on rapid updates)
 let syncTimer = null;
 
@@ -73,18 +75,23 @@ function syncToBackend() {
 
 export function save(key, value) {
   try {
-    const stored = typeof value === "string" ? value : JSON.stringify(value);
-    localStorage.setItem(key, stored);
+    const data = typeof value === "string" ? value : JSON.stringify(value);
 
-    // 🔔 Tell the app: "data changed"
+    // Prevent huge writes
+    if (data.length > 300000) {
+      console.warn("⚠ Skipping save, data too large:", key);
+      return;
+    }
+
+    localStorage.setItem(key, data);
     window.dispatchEvent(new Event("lifeos:update"));
-
-    // 🔥 Actually trigger backend sync
     syncToBackend();
-  } catch (err) {
-    console.warn("Failed to save to localStorage:", key, err);
+  } catch (e) {
+    console.warn("⚠ Save failed:", key, e.message);
   }
 }
+
+
 
 export function load(key, fallback = null) {
   try {

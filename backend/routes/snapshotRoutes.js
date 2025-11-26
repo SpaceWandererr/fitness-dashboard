@@ -7,14 +7,30 @@ const router = express.Router();
 // GET LAST 20 SNAPSHOTS
 router.get("/", async (req, res) => {
   try {
-    const snapshots = await StateSnapshot.find({ userId: "default" })
-      .sort({ createdAt: -1 })
-      .limit(20);
+    const { userId } = req.query;
 
-    res.json(snapshots);
-  } catch (err) {
-    console.error("SNAPSHOT GET ERROR:", err);
-    res.status(500).json({ message: "Error loading history" });
+    console.log("📥 GET /api/snapshots");
+    console.log("👤 User:", userId || "none");
+    console.log("🔌 Mongo State:", StateSnapshot.db.readyState);
+
+    // Optional: safe default user
+    const safeUserId = userId || "default";
+
+    const snapshots = await StateSnapshot.find({ userId: safeUserId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    console.log("✅ Snapshots fetched:", snapshots.length);
+
+    res.json(Array.isArray(snapshots) ? snapshots : []);
+  } catch (error) {
+    console.error("❌ SNAPSHOT FETCH ERROR:", error);
+
+    res.status(500).json({
+      message: "Error loading history",
+      error: error.message,
+      name: error.name,
+    });
   }
 });
 
@@ -27,51 +43,37 @@ function safeValue(val, fallback = "{}") {
 }
 
 // RESTORE SNAPSHOT
-router.post("/restore/:id", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    console.log("RESTORE REQUEST ID:", req.params.id);
+    const { userId } = req.query;
 
-    const snap = await StateSnapshot.findById(req.params.id);
+    console.log("📥 GET /api/snapshots");
+    console.log("UserId received:", userId);
 
-    if (!snap) {
-      return res.status(404).json({ message: "Snapshot not found" });
+    let query = {};
+
+    // If userId is sent, filter by it
+    if (userId) {
+      query.userId = userId;
     }
 
-    if (!snap.state) {
-      return res.status(500).json({ message: "Snapshot state missing" });
-    }
+    const snapshots = await StateSnapshot.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    let cleanState = { ...snap.state };
+    console.log("✅ Snapshots found:", snapshots.length);
 
-    // ✅ FIX wrong values
-    if (cleanState.wd_weight_current === "null") {
-      cleanState.wd_weight_current = null;
-    }
+    res.json(Array.isArray(snapshots) ? snapshots : []);
+  } catch (error) {
+    console.error("❌ Snapshot error:", error);
 
-    if (typeof cleanState.wd_weight_current === "string") {
-      const parsed = parseFloat(cleanState.wd_weight_current);
-      cleanState.wd_weight_current = isNaN(parsed) ? null : parsed;
-    }
-
-    console.log("CLEAN STATE:", cleanState);
-
-    const updatedState = await DashboardState.findOneAndUpdate(
-      { userId: "default" },
-      { $set: cleanState },
-      { new: true, upsert: true }
-    );
-
-    console.log("✅ State successfully restored");
-
-    res.json({
-      success: true,
-      updatedState,
+    res.status(500).json({
+      message: "Error loading history",
+      error: error.message,
     });
-  } catch (err) {
-    console.error("RESTORE ERROR FULL:", err);
-    res.status(500).json({ message: "Error restoring snapshot", error: err });
   }
 });
+
 
 // 🔴 YOU ARE MISSING THIS LINE
 export default router;

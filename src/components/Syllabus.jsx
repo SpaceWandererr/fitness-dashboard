@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-// import { useMemo, useRef } from "react";
+import { save } from "../utils/localStorage";
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4236,7 +4236,7 @@ function normalizeWholeTree(src) {
 /* ======================= MAIN ======================= */
 export default function Syllabus() {
   const [lastStudied, setLastStudied] = useState(
-    localStorage.getItem("K_LAST_STUDIED") || "",
+    localStorage.getItem("K_LAST_STUDIED") || ""
   );
 
   const [showLastStudied, setShowLastStudied] = useState(true);
@@ -4248,12 +4248,9 @@ export default function Syllabus() {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(
-      () => {
-        setShowLastStudied(false);
-      },
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
-    );
+    const timer = setTimeout(() => {
+      setShowLastStudied(false);
+    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4319,7 +4316,7 @@ export default function Syllabus() {
   /* persist */
   useEffect(() => {
     try {
-      localStorage.setItem(K_TREE, tree);
+      save("syllabus_tree_v2", tree);
       const now = new Date();
       localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
       setLastSaved(now);
@@ -4330,7 +4327,6 @@ export default function Syllabus() {
       console.warn("Syllabus save failed:", e);
     }
   }, [tree]);
-
 
   useEffect(() => {
     try {
@@ -4511,7 +4507,7 @@ export default function Syllabus() {
     function filterNode(node) {
       if (isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q),
+          (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
@@ -4539,7 +4535,7 @@ export default function Syllabus() {
               deadline: it.deadline || "",
               estimate: Math.max(
                 0.25,
-                Number(nr[itemKey(path, idx)]?.estimate || 0.5),
+                Number(nr[itemKey(path, idx)]?.estimate || 0.5)
               ),
             });
         });
@@ -4602,10 +4598,10 @@ export default function Syllabus() {
         setMeta(data.meta);
         setNR(data.nr || {});
         setDaySet(new Set(data.daySet || []));
-        localStorage.setItem(K_TREE, JSON.stringify(data.tree));
-        localStorage.setItem(K_META, JSON.stringify(data.meta));
-        localStorage.setItem(K_NOTES, JSON.stringify(data.nr || {}));
-        localStorage.setItem(K_STREAK, JSON.stringify(data.daySet || []));
+        save(K_TREE, tree);
+        save(K_META, meta);
+        save(K_NOTES, data.nr || {});
+        save(K_STREAK, data.daySet || []);
         alert("✅ Import successful! Refreshing...");
         window.location.reload();
       } catch (err) {
@@ -4826,10 +4822,10 @@ export default function Syllabus() {
               grand.pct < 25
                 ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
                 : grand.pct < 50
-                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                  : grand.pct < 75
-                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                : grand.pct < 75
+                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
             }
           `}
                 style={{
