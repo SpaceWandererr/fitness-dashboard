@@ -5,6 +5,27 @@ const API_URL =
 // Debounce timer (prevents spamming backend on rapid updates)
 let syncTimer = null;
 
+function safeParse(value) {
+  // ✅ If it's already an object, don't even warn
+  if (typeof value === "object" && value !== null) {
+    return value;
+  }
+
+  // ✅ If it's a string, try to parse
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // Only warn for REAL broken JSON
+      console.warn("⚠ Corrupt backend JSON skipped:", value);
+      return null;
+    }
+  }
+
+  // ❌ For everything else (undefined, weird stuff)
+  return null;
+}
+
 function syncToBackend() {
   // MASTER KILL SWITCH for restore
   if (window.__DISABLE_AUTOSYNC__) {
@@ -13,7 +34,7 @@ function syncToBackend() {
   }
 
   const autoSyncEnabled = JSON.parse(
-    localStorage.getItem("wd_auto_sync") || "true",
+    localStorage.getItem("wd_auto_sync") || "true"
   );
 
   if (!autoSyncEnabled) {
@@ -65,13 +86,18 @@ export function save(key, value) {
   }
 }
 
-
-
-export const load = (key, fallback = null) => {
+export function load(key, fallback = null) {
   try {
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : fallback;
-  } catch {
+    const s = localStorage.getItem(key);
+    if (!s) return fallback;
+
+    const parsed = safeParse(s);
+
+    if (parsed === null) return fallback;
+
+    return parsed;
+  } catch (e) {
     return fallback;
   }
-};
+}
+

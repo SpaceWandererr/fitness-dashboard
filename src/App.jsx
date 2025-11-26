@@ -11,6 +11,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+
+
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://fitness-backend-laoe.onrender.com/api/state";
@@ -370,14 +372,11 @@ export default function App() {
       }
 
       // 2. Now run your ORIGINAL logic using localStorage
-      const gymLogs = JSON.parse(localStorage.getItem("wd_gym_logs") || "{}");
-      const oldWeight = JSON.parse(
-        localStorage.getItem("wd_weight_history") || "{}"
-      );
-      const syllabus = JSON.parse(
-        localStorage.getItem("syllabus_tree_v2") || "{}"
-      );
-      const done = JSON.parse(localStorage.getItem("wd_done") || "{}");
+
+      const gymLogs = load("wd_gym_logs", {});
+      const oldWeight = load("wd_weight_history", {});
+      const syllabus = load("syllabus_tree_v2", {});
+      const done = load("wd_done", {});
 
       // weight history
       let wh = Object.entries(gymLogs)
