@@ -32,20 +32,33 @@ export default function Control() {
 
     try {
       const res = await fetch(API_SNAPSHOTS);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
 
-      const safeSnapshots = Array.isArray(data.snapshots) ? data.snapshots : [];
+      // 🔥 Handle both possible backend responses
+      let safeSnapshots = [];
+
+      if (Array.isArray(data)) {
+        safeSnapshots = data;
+      } else if (Array.isArray(data.snapshots)) {
+        safeSnapshots = data.snapshots;
+      }
 
       setSnapshots(safeSnapshots);
 
       console.log("✅ Snapshots loaded:", safeSnapshots.length);
     } catch (err) {
-      console.error("Error loading snapshots:", err);
+      console.error("❌ Error loading snapshots:", err.message);
       setSnapshots([]);
     }
 
     setLoading(false);
   }
+
 
   /* ================= AUTO SYNC TOGGLE ================= */
   function toggleAutoSync() {
