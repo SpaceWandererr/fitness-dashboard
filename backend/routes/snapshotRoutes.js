@@ -5,23 +5,18 @@ import DashboardState from "../models/DashboardState.js";
 const router = express.Router();
 
 /* ================= GET SNAPSHOTS ================= */
-router.get("/snapshots", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const snaps = await StateSnapshot.find({})
-      .sort({ createdAt: -1 }) // newest first
-      .limit(20) // 🔥 CRITICAL: prevent memory crash
-      .select("_id label createdAt userId"); // 🔥 don't pull fullState
+    const snapshots = await StateSnapshot.find({}, { fullState: 0 }) // ⬅ don't send heavy data
+      .sort({ createdAt: -1 })
+      .limit(20); // ⬅ avoid loading thousands
 
-    res.json({
-      total: snaps.length,
-      snapshots: snaps,
-    });
-  } catch (err) {
-    console.error("❌ SNAPSHOT FETCH ERROR:", err.message);
-    res.status(500).json({
-      message: "Error loading history",
-      error: err.message,
-    });
+    res.json({ snapshots });
+  } catch (e) {
+    console.error("❌ SNAPSHOT FETCH ERROR:", e);
+    res
+      .status(500)
+      .json({ message: "Error loading history", error: e.message });
   }
 });
 
