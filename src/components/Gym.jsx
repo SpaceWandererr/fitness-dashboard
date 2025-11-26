@@ -8,15 +8,34 @@ function load(key, fallback = null) {
     const s = localStorage.getItem(key);
     if (!s) return fallback;
     return JSON.parse(s);
-  } catch (e) {
+  } catch {
+    console.warn("⚠ Corrupt value, resetting:", key);
+    localStorage.removeItem(key);
     return fallback;
   }
 }
+
 function save(key, val) {
   try {
-    localStorage.setItem(key, JSON.stringify(val));
-  } catch {}
+    const data = JSON.stringify(val);
+
+    // 🛡 Prevent storage overflow
+    if (data.length > 2_000_000) {
+      console.warn("⚠ Value too large, skipping save:", key, data.length);
+      return;
+    }
+
+    localStorage.setItem(key, data);
+  } catch (e) {
+    if (e.name === "QuotaExceededError") {
+      console.warn("⚠ Storage full. Clearing:", key);
+      localStorage.removeItem(key);
+    } else {
+      console.warn("⚠ LocalStorage save failed:", key, e);
+    }
+  }
 }
+
 
 /* ---------------------- Constants ---------------------- */
 const WEEK = [

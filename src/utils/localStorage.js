@@ -55,15 +55,16 @@ export function save(key, value) {
     const stored = typeof value === "string" ? value : JSON.stringify(value);
     localStorage.setItem(key, stored);
 
-    // 🔔 Tell the app: "data changed" (same-tab + others)
+    // 🔔 Tell the app: "data changed"
     window.dispatchEvent(new Event("lifeos:update"));
 
-    // 🚀 THIS LINE WAS MISSING → triggers backend sync
+    // 🔥 Actually trigger backend sync
     syncToBackend();
   } catch (err) {
     console.warn("Failed to save to localStorage:", key, err);
   }
 }
+
 
 
 export const load = (key, fallback = null) => {

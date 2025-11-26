@@ -4319,12 +4319,18 @@ export default function Syllabus() {
   /* persist */
   useEffect(() => {
     try {
-      localStorage.setItem(K_TREE, JSON.stringify(tree));
+      localStorage.setItem(K_TREE, tree);
       const now = new Date();
       localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
       setLastSaved(now);
-    } catch {}
+
+      // 🔔 Trigger backend auto-sync
+      window.dispatchEvent(new Event("lifeos:update"));
+    } catch (e) {
+      console.warn("Syllabus save failed:", e);
+    }
   }, [tree]);
+
 
   useEffect(() => {
     try {
