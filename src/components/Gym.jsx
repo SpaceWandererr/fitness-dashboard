@@ -269,6 +269,32 @@ const DEFAULT_PLAN = {
   },
 };
 
+async function syncDashboardToBackend() {
+  try {
+    const state = {
+      wd_done: load("wd_done", {}),
+      wd_gym_logs: load("wd_gym_logs", {}),
+      wd_weight_history: load("wd_weight_history", {}),
+      wd_weight_current: load("wd_weight_current", null),
+      wd_start_weight: load("wd_start_weight", null),
+      wd_goals: load("wd_goals", []),
+      wd_dark: load("wd_dark", false),
+      wd_mern_progress: load("wd_mern_progress", "0"),
+      syllabus_tree_v2: load("syllabus_tree_v2", {}),
+    };
+
+    await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state),
+    });
+
+    console.log("✅ State synced to backend");
+  } catch (err) {
+    console.error("❌ Backend sync failed:", err);
+  }
+}
+
 /* ---------------------- Main Component ---------------------- */
 export default function GymSimplified() {
   // ✅ move date & weekday inside the component
@@ -282,7 +308,7 @@ export default function GymSimplified() {
   const dateKey = fmtISO(date);
   // 💬 Sunday quote text
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   /* persist plan */
@@ -362,7 +388,7 @@ export default function GymSimplified() {
   }, [targetWeight]);
 
   const [startWeight, setStartWeight] = useState(() =>
-    load("wd_start_weight", null),
+    load("wd_start_weight", null)
   );
   useEffect(() => {
     if (startWeight !== null && startWeight !== undefined) {
@@ -371,11 +397,11 @@ export default function GymSimplified() {
   }, [startWeight]);
 
   const [weightOverrides, setWeightOverrides] = useState(() =>
-    load("wd_weight_overrides", {}),
+    load("wd_weight_overrides", {})
   );
   useEffect(
     () => save("wd_weight_overrides", weightOverrides),
-    [weightOverrides],
+    [weightOverrides]
   );
 
   const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
@@ -454,18 +480,18 @@ export default function GymSimplified() {
       left: Array.isArray(prev.left)
         ? prev.left
         : Array.isArray(def.left)
-          ? def.left.map(() => false)
-          : [],
+        ? def.left.map(() => false)
+        : [],
       right: Array.isArray(prev.right)
         ? prev.right
         : Array.isArray(def.right)
-          ? def.right.map(() => false)
-          : [],
+        ? def.right.map(() => false)
+        : [],
       finisher: Array.isArray(prev.finisher)
         ? prev.finisher
         : Array.isArray(def.finisher)
-          ? def.finisher.map(() => false)
-          : [],
+        ? def.finisher.map(() => false)
+        : [],
       done: !!prev.done,
       calories: prev.calories,
       bmi: prev.bmi,
@@ -518,7 +544,7 @@ export default function GymSimplified() {
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
-      ((checks.weight ?? overrideWeight ?? "") || "").toString(),
+      ((checks.weight ?? overrideWeight ?? "") || "").toString()
     );
     setShowModal(true);
   };
@@ -530,7 +556,7 @@ export default function GymSimplified() {
 
     const weight = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : (checks.weight ?? null);
+      : checks.weight ?? null;
 
     const savedHeight = Number(load("bmi_height", 176));
     const newBmi =
@@ -568,6 +594,7 @@ export default function GymSimplified() {
 
     save("wd_done", mergedDone);
     window.dispatchEvent(new Event("lifeos:update"));
+    syncDashboardToBackend();
 
     const overrides = { ...weightOverrides, [dateKey]: weight };
     setWeightOverrides(overrides);
@@ -615,7 +642,7 @@ export default function GymSimplified() {
     const prev = logs[dateKey] || {};
     setCaloriesInput((prev.calories ?? "").toString());
     setCurrentWeightInput(
-      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString(),
+      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString()
     );
     setShowModal(true);
   };
@@ -641,6 +668,7 @@ export default function GymSimplified() {
 
     save("wd_done", merged);
     window.dispatchEvent(new Event("lifeos:update"));
+    syncDashboardToBackend();
   };
 
   const toggleMarkAll = () => {
@@ -750,7 +778,7 @@ export default function GymSimplified() {
 
   /* normalized weekday safety */
   const normalizedWeekday = WEEK.find(
-    (d) => d.toLowerCase() === (weekday || "").toLowerCase(),
+    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
   );
   const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
     DEFAULT_PLAN[normalizedWeekday] || {
@@ -936,7 +964,7 @@ export default function GymSimplified() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
+                Math.abs(pctToGoal)
               )}% - 15px)`,
             }}
           >
@@ -995,8 +1023,8 @@ export default function GymSimplified() {
                   sectionKey === "left"
                     ? "Left"
                     : sectionKey === "right"
-                      ? "Right"
-                      : dayPlan.finisherLabel || "Finisher";
+                    ? "Right"
+                    : dayPlan.finisherLabel || "Finisher";
 
                 const list = dayPlan[sectionKey] || [];
                 const state = checks[sectionKey] || [];
