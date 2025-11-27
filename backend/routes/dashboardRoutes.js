@@ -21,43 +21,73 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ SAVE dashboard state + snapshot
+// SAVE STATE + SNAPSHOT
 router.put("/", async (req, res) => {
   try {
+    const userId = "default";
     let newState = req.body;
 
-    // backup snapshot before update
-    await StateSnapshot.create({
-      userId: USER_ID,
-      state: newState,
+    // --- FIX CORRUPTED STRING FIELDS ---
+    const mustBeObject = [
+      "wd_done",
+      "wd_gym_logs",
+      "wd_weight_history",
+      "syllabus_tree_v2",
+    ];
+
+    mustBeObject.forEach((key) => {
+      if (typeof newState[key] === "string") {
+        try {
+          newState[key] = JSON.parse(newState[key]);
+        } catch {
+          newState[key] = {};
+        }
+      }
     });
 
-    // 🧹 Fix corrupted weight values
-    if (
-      newState.wd_weight_current === "null" ||
-      newState.wd_weight_current === null ||
-      newState.wd_weight_current === ""
-    ) {
-      newState.wd_weight_current = null;
+    // Fix corrupt array formats
+    if (Array.isArray(newState.wd_weight_history)) {
+      newState.wd_weight_history = newState.wd_weight_history.map((v) => {
+        if (typeof v === "string") {
+          try {
+            return JSON.parse(v);
+          } catch {
+            return null;
+          }
+        }
+        return v;
+      });
     }
+
+    // Fix weight null/string issues
+    if (newState.wd_weight_current === "null")
+      newState.wd_weight_current = null;
 
     if (typeof newState.wd_weight_current === "string") {
       const parsed = Number(newState.wd_weight_current);
       newState.wd_weight_current = isNaN(parsed) ? null : parsed;
     }
 
+    // SAVE SNAPSHOT
+    await StateSnapshot.create({
+      userId,
+      state: newState,
+    });
+
+    // UPDATE MAIN STATE
     const updated = await DashboardState.findOneAndUpdate(
-      { userId: USER_ID },
+      { userId },
       { $set: newState },
-      { new: true, upsert: true },
+      { new: true, upsert: true }
     );
 
     res.json(updated);
   } catch (err) {
-    console.error("❌ PUT ERROR:", err);
-    res.status(500).json({ error: "Failed to save dashboard state" });
+    console.error("PUT ERROR:", err);
+    res.status(500).json({ message: "Error saving state" });
   }
 });
+
 
 // ✅ FULL RESET (Dashboard + Snapshots)
 router.post("/reset", async (req, res) => {

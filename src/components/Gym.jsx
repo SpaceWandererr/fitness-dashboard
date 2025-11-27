@@ -1161,7 +1161,12 @@ export default function GymSimplified() {
         className="grid md:grid-cols-2 gap-4 mb-2
         "
       >
-        <MiniCalendar date={date} setDate={(d) => setDate(d)} />
+        <MiniCalendar
+          date={date}
+          setDate={setDate}
+          dashboardState={dashboardState}
+        />
+
         <DailySummary date={date} logs={logs} dateKey={dateKey} />
       </section>
 
@@ -1297,7 +1302,7 @@ function DailySummary({ date, logs, dateKey }) {
           ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
         </div>
         <div>
-          📊 BMI: {entry?.bmi != null ? entry.bmi : (latestBmi?.bmi ?? "—")}
+          📊 BMI: {entry?.bmi != null ? entry.bmi : latestBmi?.bmi ?? "—"}
         </div>
         <div className="mt-2">
           <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>
@@ -1338,42 +1343,31 @@ function DailySummary({ date, logs, dateKey }) {
   );
 }
 
-function MiniCalendar({ date, setDate }) {
+function MiniCalendar({ date, setDate, dashboardState }) {
   const [viewMonth, setViewMonth] = useState(dayjs(date));
-  const [doneState, setDoneState] = useState(load("wd_done", {}));
+  const today = dayjs();
+
   useEffect(() => {
-    const refreshDone = () => {
-      setDoneState(load("wd_done", {}));
-    };
-
-    window.addEventListener("lifeos:update", refreshDone);
-    window.addEventListener("storage", refreshDone);
-
-    return () => {
-      window.removeEventListener("lifeos:update", refreshDone);
-      window.removeEventListener("storage", refreshDone);
-    };
-  }, []);
-
-  useEffect(() => setViewMonth(dayjs(date)), [date]);
+    setViewMonth(dayjs(date));
+  }, [date]);
 
   const monthStart = viewMonth.startOf("month");
 
   // Convert Sun(0)..Sat(6) → Mon(0)..Sun(6)
   const weekdayIndex = (monthStart.day() + 6) % 7;
 
-  // Proper grid start (Monday-based)
   const start = monthStart.subtract(weekdayIndex, "day");
 
   const cells = Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
-  const doneMap = doneState;
-  const today = dayjs();
+
+  // ✅ FROM MONGO, NOT LOCAL STORAGE
+  const doneMap = dashboardState?.wd_done || {};
 
   return (
     <section
       className="border rounded-2xl p-4
       bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
-      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+      dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
       backdrop-blur-md"
     >
       <div className="flex items-center justify-between mb-2">
@@ -1383,9 +1377,11 @@ function MiniCalendar({ date, setDate }) {
         >
           〈
         </button>
+
         <div className="font-bold text-sm text-emerald-200">
           {viewMonth.format("MMMM YYYY")}
         </div>
+
         <button
           onClick={() => setViewMonth(viewMonth.add(1, "month"))}
           className="px-2 py-1 rounded hover:bg-white/5"
@@ -1408,6 +1404,7 @@ function MiniCalendar({ date, setDate }) {
           const isCurMonth = d.month() === viewMonth.month();
           const isSelected = key === dayjs(date).format("YYYY-MM-DD");
           const isToday = d.isSame(today, "day");
+
           return (
             <button
               key={key}
@@ -1432,6 +1429,8 @@ function MiniCalendar({ date, setDate }) {
     </section>
   );
 }
+
+
 
 function Modal({ children, onClose }) {
   return (
