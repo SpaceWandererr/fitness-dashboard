@@ -1,4 +1,4 @@
-// GymSimplified.jsx
+// GymSimplified.jsx (full feature version, backend-first, no local-merge hacks)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import dayjs from "dayjs";
 
@@ -51,9 +51,7 @@ const fmtISO = (d) => dayjs(d).format("YYYY-MM-DD");
 const fmtDisp = (d) => dayjs(d).format("DD-MM-YYYY");
 
 // 🔹 Sunday Quote Fetcher
-// robust fetch with caching, fallbacks and rate-limit handling
 async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
-  // local fallback quotes (used when APIs fail or rate-limited)
   const LOCAL_FALLBACK = [
     "Discipline is doing what needs to be done even when you don’t feel like doing it. — Unknown",
     "Your body can stand almost anything. It’s your mind that you have to convince. — Unknown",
@@ -62,7 +60,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
     "Small consistent steps every day lead to massive results over time. — Unknown",
   ];
 
-  // quick helpers
   const now = Date.now();
   const cacheKey = "wd_sunday_quote_cache";
   const cache = (() => {
@@ -73,7 +70,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
     }
   })();
 
-  // if cached recently, return it (prevents hammering the APIs)
   if (
     cache &&
     cache.ts &&
@@ -82,9 +78,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
     return cache.text;
   }
 
-  // sources to try in order (CORS-safe or proxied)
   const sources = [
-    // quotable is simple and often works (no key)
     {
       id: "quotable",
       fn: async () => {
@@ -94,14 +88,12 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
         return `“${data.content}” — ${data.author || "Unknown"}`;
       },
     },
-
-    // codetabs proxy to zenquotes (works for many dev setups)
     {
       id: "codetabs-zenquotes",
       fn: async () => {
         const encoded = encodeURIComponent("https://zenquotes.io/api/random");
         const res = await fetch(
-          `https://api.codetabs.com/v1/proxy?quest=${encoded}`,
+          `https://api.codetabs.com/v1/proxy?quest=${encoded}`
         );
         if (!res.ok) throw res;
         const data = await res.json();
@@ -110,8 +102,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
         throw new Error("bad-zen-format");
       },
     },
-
-    // last-resort: fetch from a raw static JSON (may be offline or CORS blocked)
     {
       id: "typefit",
       fn: async () => {
@@ -124,54 +114,44 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
     },
   ];
 
-  // try each source until one succeeds; handle 429 specially
   for (const src of sources) {
     try {
       const txt = await src.fn();
-      // cache success
       try {
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), text: txt }),
+          JSON.stringify({ ts: Date.now(), text: txt })
         );
-      } catch (e) {
-        /* ignore storage failures */
-      }
+      } catch {}
       return txt;
     } catch (err) {
-      // if server returned Response, check status
       if (err && err.status) {
-        // handle 429 (rate-limited) by stopping attempts and using fallback
         if (err.status === 429) {
           console.warn(`[quotes] ${src.id} rate-limited (429)`);
           break;
         }
-        // if 404 / 400 for that particular source, continue to next
         console.warn(`[quotes] ${src.id} failed: ${err.status}`);
         continue;
       }
-      // network or other error: log and try next
       console.warn(`[quotes] ${src.id} error:`, err);
       continue;
     }
   }
 
-  // All sources failed or rate-limited -> try cached value even if older
   if (cache && cache.text) return cache.text;
 
-  // last fallback: pick a random local quote and cache it
   const localPick =
     LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)];
   try {
     localStorage.setItem(
       cacheKey,
-      JSON.stringify({ ts: Date.now(), text: localPick }),
+      JSON.stringify({ ts: Date.now(), text: localPick })
     );
   } catch {}
   return localPick;
 }
 
-/* ---------------------- Full 6-day Workout Plan (exact from user) ---------------------- */
+/* ---------------------- Full 6-day Workout Plan (your original) ---------------------- */
 const DEFAULT_PLAN = {
   Monday: {
     title: "Chest + Core",
@@ -296,8 +276,7 @@ async function syncDashboardToBackend() {
 }
 
 /* ---------------------- Main Component ---------------------- */
-export default function GymSimplified() {
-  // ✅ move date & weekday inside the component
+export default function GymSimplified({ dashboardState }) {
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
@@ -306,27 +285,21 @@ export default function GymSimplified() {
   const [date, setDate] = useState(todayIso);
   const [weekday, setWeekday] = useState(defaultDay);
   const dateKey = fmtISO(date);
-  // 💬 Sunday quote text
+
   const [sundayQuote, setSundayQuote] = useState(
     "Fetching your motivational quote..."
   );
 
-  /* persist plan */
+  /* plan */
   const [plan, setPlan] = useState(() => load("wd_gym_plan", DEFAULT_PLAN));
-  // 🧘 Safe Sunday Quote Fetch
+
   useEffect(() => {
     const wd = dayjs(date).format("dddd");
     if (wd === "Sunday") {
       fetchSundayQuote().then((quote) => {
         setPlan((prev) => {
           const safePrev = prev || {};
-          const sun = safePrev.Sunday || {
-            title: "Sunday Recharge Mode 🌤",
-            left: [],
-            right: [],
-            finisherLabel: "Motivation of the Day",
-            finisher: [],
-          };
+          const sun = safePrev.Sunday || DEFAULT_PLAN.Sunday;
           return {
             ...safePrev,
             Sunday: { ...sun, finisher: [quote] },
@@ -338,18 +311,29 @@ export default function GymSimplified() {
 
   useEffect(() => save("wd_gym_plan", plan), [plan]);
 
-  /* ensure any missing days are filled (safety) */
   useEffect(() => {
     const updated = { ...DEFAULT_PLAN, ...plan };
     setPlan(updated);
     save("wd_gym_plan", updated);
-    // run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* logs & goals */
-  const [logs, setLogs] = useState(() => load("wd_gym_logs", {}));
-  const [doneState, setDoneState] = useState(() => load("wd_done", {}));
+  /* logs & done state — BACKEND FIRST, local fallback */
+  const [logs, setLogs] = useState(
+    () => dashboardState?.wd_gym_logs || load("wd_gym_logs", {})
+  );
+  const [doneState, setDoneState] = useState(
+    () => dashboardState?.wd_done || load("wd_done", {})
+  );
+
+  useEffect(() => {
+    if (dashboardState?.wd_gym_logs) {
+      setLogs(dashboardState.wd_gym_logs);
+    }
+    if (dashboardState?.wd_done) {
+      setDoneState(dashboardState.wd_done);
+    }
+  }, [dashboardState]);
 
   useEffect(() => {
     const refreshDone = () => {
@@ -377,13 +361,13 @@ export default function GymSimplified() {
 
   useEffect(() => save("wd_gym_logs", logs), [logs]);
 
+  /* goals / weight etc */
   const [targetWeight, setTargetWeight] = useState(() => {
     const rawGoals = load("wd_goals", {});
     return Number(rawGoals?.targetWeight) || 70;
   });
 
   useEffect(() => {
-    const goals = load("wd_goals", {});
     save("wd_goals", { targetWeight });
   }, [targetWeight]);
 
@@ -422,11 +406,9 @@ export default function GymSimplified() {
     }
   }, [showModal]);
 
-  /* UI misc */
   const [saving, setSaving] = useState(false);
 
-  /* sync date -> weekday to avoid mismatch */
-  // 🔥 only auto-adjust date when user manually changes weekday
+  /* sync date -> weekday */
   const userChangedWeekday = useRef(false);
 
   useEffect(() => {
@@ -455,7 +437,7 @@ export default function GymSimplified() {
     save("wd_gym_logs", next);
   }
 
-  /* checks initializer - robust and stable layout (always arrays) */
+  /* checks initializer */
   const checks = useMemo(() => {
     const def = plan?.[weekday] ?? { left: [], right: [], finisher: [] };
     const prev = logs?.[dateKey];
@@ -579,20 +561,11 @@ export default function GymSimplified() {
 
     persistLogFor(dateKey, next);
 
-    // 🔥 FIX: Clone state instead of mutating it
-    const currentDone = { ...doneState };
-
-    // Mark this day as done
-    currentDone[dateKey] = true;
-
-    // Merge with what is already in storage
-    const storedDone = load("wd_done", {});
-    const mergedDone = {
-      ...storedDone,
-      ...currentDone,
-    };
-
+    // ✅ no more merging with local: just update current doneState and local
+    const mergedDone = { ...doneState, [dateKey]: true };
+    setDoneState(mergedDone);
     save("wd_done", mergedDone);
+
     window.dispatchEvent(new Event("lifeos:update"));
     syncDashboardToBackend();
 
@@ -611,7 +584,6 @@ export default function GymSimplified() {
     setBmiLogs(arr);
     save("bmi_logs", arr);
 
-    // 🔥 Sync with wd_weight_history for dashboard
     if (weight) {
       let weightHistory = load("wd_weight_history", {});
 
@@ -632,7 +604,6 @@ export default function GymSimplified() {
       }
     }
 
-    // 🔥 Force dashboard refresh after gym update
     window.dispatchEvent(new Event("lifeos:update"));
 
     setShowModal(false);
@@ -653,20 +624,11 @@ export default function GymSimplified() {
     const nextLog = { ...prevLog, calories: undefined, done: false };
     persistLogFor(dateKey, nextLog);
 
-    // Clone state instead of mutating
-    const currentDone = { ...doneState };
-
-    // Remove only this date
-    delete currentDone[dateKey];
-
-    // Merge with storage for safety
-    const storedDone = load("wd_done", {});
-    const merged = {
-      ...storedDone,
-      ...currentDone,
-    };
-
+    const merged = { ...doneState };
+    delete merged[dateKey];
+    setDoneState(merged);
     save("wd_done", merged);
+
     window.dispatchEvent(new Event("lifeos:update"));
     syncDashboardToBackend();
   };
@@ -698,22 +660,19 @@ export default function GymSimplified() {
       else break;
     }
     return s;
-  }, [logs, date]);
+  }, [doneState]);
 
   const totalWorkouts = useMemo(() => {
     const doneMap = doneState;
     return Object.values(doneMap).filter(Boolean).length;
-  }, [logs]);
+  }, [doneState]);
 
-  /* weight progress helpers (light) */
+  /* weight progress helpers */
   const weightHistory = load("wd_weight_history", {});
 
-  // get latest weight based on DATE, not entry order
   const dates = Object.keys(weightHistory).sort();
   const latestDate = dates[dates.length - 1];
   const latestWeight = latestDate ? weightHistory[latestDate] : null;
-
-  // 💡 FIX: no more recentWeightsviewMonth.startOf("month").startOf("week");
 
   const inferredStart =
     startWeight ?? latestWeight ?? checks.weight ?? targetWeight;
@@ -725,7 +684,7 @@ export default function GymSimplified() {
     overrideWeight ?? latestWeight ?? checks.weight ?? effectiveStart;
 
   const tw = Number(targetWeight);
-  // 🧮 Weight progress & regression handling
+
   const pctToGoal = (() => {
     const start = Number(effectiveStart);
     const target = Number(tw);
@@ -738,7 +697,6 @@ export default function GymSimplified() {
 
     const progress = ((start - current) / span) * 100;
 
-    // Clamp to range and keep regression visible
     if (progress > 120) return 120;
     if (progress < -120) return -120;
     return progress;
@@ -776,7 +734,6 @@ export default function GymSimplified() {
     alert("FULL RESET DONE ✅");
   };
 
-  /* normalized weekday safety */
   const normalizedWeekday = WEEK.find(
     (d) => d.toLowerCase() === (weekday || "").toLowerCase()
   );
@@ -799,14 +756,13 @@ export default function GymSimplified() {
   return (
     <div
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500 
-      bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
+      bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
       border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
       <header
         className="flex flex-col md:flex-row items-start
-        md:items-center justify-between gap-4 mb-4
-        "
+        md:items-center justify-between gap-4 mb-4"
       >
         <div>
           <h1 className="text-2xl font-extrabold tracking-wide text-emerald-200">
@@ -844,9 +800,9 @@ export default function GymSimplified() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-md border`
+            className="px-3 py-2 rounded-md border
             bg-[#07201f]  border-emerald-800
-            to-[#0F0F0F] text-[#FAFAF9]
+            text-[#FAFAF9]
             text-sm focus:outline-none focus:ring-1 
             focus:ring-emerald-400 transition"
           />
@@ -868,8 +824,6 @@ export default function GymSimplified() {
       <section
         className="mb-4 border rounded-2xl
         p-4 space-y-3 border-gray-700 dark:border-emerald-800
-        bg-gradient-to-br dark:from-[#071b1b]/60 dark:via-[#071b1b]/60 dark:to- 
-        [#071b1b]/60
         bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E]
         backdrop-blur-md min-h-[120px]"
       >
@@ -939,12 +893,10 @@ export default function GymSimplified() {
           </div>
         </div>
 
-        {/* 🏃 Progress Bar with Directional Runner */}
+        {/* progress bar */}
         <div className="relative mt-1">
-          {/* Base bar */}
           <div className="h-3 rounded-full bg-[#123232]/50 overflow-hidden" />
 
-          {/* Dynamic fill */}
           <div
             className="absolute top-0 h-3 rounded-full transition-all duration-700"
             style={{
@@ -953,12 +905,11 @@ export default function GymSimplified() {
               width: `${Math.min(100, Math.abs(pctToGoal))}%`,
               background:
                 pctToGoal < 0
-                  ? "linear-gradient(90deg, rgba(255,85,85,1), rgba(255,150,150,1))" // 🔴 regression
-                  : "linear-gradient(270deg, rgba(79,209,197,1), rgba(34,197,94,1))", // 🟢 progress
+                  ? "linear-gradient(90deg, rgba(255,85,85,1), rgba(255,150,150,1))"
+                  : "linear-gradient(270deg, rgba(79,209,197,1), rgba(34,197,94,1))",
             }}
           />
 
-          {/* 🏃 Runner */}
           <div
             className="absolute -top-5 mt-1 transition-all duration-700 z-20"
             style={{
@@ -1008,17 +959,14 @@ export default function GymSimplified() {
           </div>
         </div>
 
-        {/* 🧘 Sunday Conditional Layout */}
         {weekday !== "Sunday" ? (
           <>
-            {/* Exercises: Stable three-column layout (Left, Right, Finisher) */}
             <div
               className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4
-              transition-all duration-300 ease-in-out
-              "
-              style={{ minHeight: "340px" }} // keeps same height between days
+              transition-all duration-300 ease-in-out"
+              style={{ minHeight: "340px" }}
             >
-              {["left", "right", "finisher"].map((sectionKey, idx) => {
+              {["left", "right", "finisher"].map((sectionKey) => {
                 const label =
                   sectionKey === "left"
                     ? "Left"
@@ -1043,8 +991,6 @@ export default function GymSimplified() {
                       {label}
                     </h3>
 
-                    {/* Keep consistent height to prevent reflow shake */}
-                    {/* 🪄 Fade + stability wrapper starts here */}
                     <div className="transition-opacity duration-500 ease-in-out opacity-100 will-change-[opacity,transform]">
                       <div
                         className="flex flex-col gap-2"
@@ -1076,13 +1022,11 @@ export default function GymSimplified() {
                         )}
                       </div>
                     </div>
-                    {/* 🪄 Fade + stability wrapper ends here */}
                   </div>
                 );
               })}
             </div>
 
-            {/* Buttons — stay fixed height too */}
             <div className="flex flex-wrap gap-3 mt-6 items-center transition-all duration-200">
               <button
                 onClick={toggleMarkAll}
@@ -1131,22 +1075,17 @@ export default function GymSimplified() {
             </div>
           </>
         ) : (
-          /* 🧘 Sunday Mode – Hide Workouts & Buttons */
           <div className="flex flex-col items-center justify-center text-center mt-8">
             <h2 className="text-2xl font-semibold text-emerald-300 mb-3">
               🌤 Sunday Recharge Mode
             </h2>
-
-            {/* live quote text */}
             <p className="text-emerald-100 italic text-lg mb-4 fade-in">
               {sundayQuote}
             </p>
-
-            {/* new quote button */}
             <button
               onClick={async () => {
                 const newQuote = await fetchSundayQuote();
-                setSundayQuote(newQuote); // ✅ triggers instant re-render
+                setSundayQuote(newQuote);
               }}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow"
             >
@@ -1157,16 +1096,12 @@ export default function GymSimplified() {
       </section>
 
       {/* Calendar + Daily Summary */}
-      <section
-        className="grid md:grid-cols-2 gap-4 mb-2
-        "
-      >
+      <section className="grid md:grid-cols-2 gap-4 mb-2">
         <MiniCalendar
           date={date}
           setDate={setDate}
           dashboardState={dashboardState}
         />
-
         <DailySummary date={date} logs={logs} dateKey={dateKey} />
       </section>
 
@@ -1233,38 +1168,6 @@ export default function GymSimplified() {
 }
 
 /* ---------------------- Subcomponents ---------------------- */
-
-function ExerciseList({ label, list = [], state = [], onToggle }) {
-  return (
-    <div className="min-h-[120px]">
-      <h3 className="font-semibold mb-2 text-emerald-200">{label}</h3>
-      <ul className="space-y-2">
-        {list.map((t, i) => (
-          <li
-            key={i}
-            onClick={() => onToggle(i)}
-            className={`flex items-center gap-3 p-2 border rounded-xl bg-[#061414]/40 hover:shadow-md hover:shadow-emerald-500/10 transition cursor-pointer select-none ${
-              state[i]
-                ? "border-emerald-500 bg-emerald-800/20"
-                : "border-gray-700"
-            }`}
-          >
-            <div
-              className={`w-6 h-6 rounded-md flex items-center justify-center text-xs ${
-                state[i]
-                  ? "bg-emerald-500 text-white"
-                  : "border border-gray-600 text-gray-300"
-              }`}
-            >
-              {state[i] ? "✓" : ""}
-            </div>
-            <span className="text-emerald-100 text-sm">{t}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 function DailySummary({ date, logs, dateKey }) {
   const entry = logs[dateKey];
@@ -1352,15 +1255,10 @@ function MiniCalendar({ date, setDate, dashboardState }) {
   }, [date]);
 
   const monthStart = viewMonth.startOf("month");
-
-  // Convert Sun(0)..Sat(6) → Mon(0)..Sun(6)
   const weekdayIndex = (monthStart.day() + 6) % 7;
-
   const start = monthStart.subtract(weekdayIndex, "day");
-
   const cells = Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
 
-  // ✅ FROM MONGO, NOT LOCAL STORAGE
   const doneMap = dashboardState?.wd_done || {};
 
   return (
@@ -1429,8 +1327,6 @@ function MiniCalendar({ date, setDate, dashboardState }) {
     </section>
   );
 }
-
-
 
 function Modal({ children, onClose }) {
   return (
