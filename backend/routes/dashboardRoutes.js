@@ -3,41 +3,40 @@ import DashboardState from "../models/DashboardState.js";
 import StateSnapshot from "../models/StateSnapshot.js";
 
 const router = express.Router();
+const USER_ID = "default";
 
-// GET CURRENT STATE
+// ✅ GET current dashboard state
 router.get("/", async (req, res) => {
   try {
-    const userId = "default";
+    let state = await DashboardState.findOne({ userId: USER_ID });
 
-    let doc = await DashboardState.findOne({ userId });
-
-    if (!doc) {
-      doc = await DashboardState.create({ userId });
+    if (!state) {
+      state = await DashboardState.create({ userId: USER_ID });
     }
 
-    res.json(doc);
+    res.json(state);
   } catch (err) {
-    console.error("GET ERROR:", err);
-    res.status(500).json({ message: "Error fetching state" });
+    console.error("❌ GET ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch dashboard state" });
   }
 });
 
-// SAVE STATE + SNAPSHOT
+// ✅ SAVE dashboard state + snapshot
 router.put("/", async (req, res) => {
   try {
-    const userId = "default";
     let newState = req.body;
 
-    // Save snapshot before update
+    // backup snapshot before update
     await StateSnapshot.create({
-      userId,
+      userId: USER_ID,
       state: newState,
     });
 
-    // FIX wd_weight_current
+    // 🧹 Fix corrupted weight values
     if (
       newState.wd_weight_current === "null" ||
-      newState.wd_weight_current === null
+      newState.wd_weight_current === null ||
+      newState.wd_weight_current === ""
     ) {
       newState.wd_weight_current = null;
     }
@@ -48,36 +47,45 @@ router.put("/", async (req, res) => {
     }
 
     const updated = await DashboardState.findOneAndUpdate(
-      { userId },
+      { userId: USER_ID },
       { $set: newState },
       { new: true, upsert: true },
     );
 
     res.json(updated);
   } catch (err) {
-    console.error("PUT ERROR:", err);
-    res.status(500).json({ message: "Error saving state" });
+    console.error("❌ PUT ERROR:", err);
+    res.status(500).json({ error: "Failed to save dashboard state" });
   }
 });
 
-// 🔥 RESET ALL STATE (Mongo reset)
+// ✅ FULL RESET (Dashboard + Snapshots)
 router.post("/reset", async (req, res) => {
   try {
-    const userId = "default";
-
-    // delete main dashboard state
-    await DashboardState.deleteMany({ userId });
-
-    // delete snapshots also (otherwise corruption can come back)
-    await StateSnapshot.deleteMany({ userId });
+    await DashboardState.deleteMany({ userId: USER_ID });
+    await StateSnapshot.deleteMany({ userId: USER_ID });
 
     res.json({
       success: true,
-      message: "✅ Mongo state + snapshots fully reset",
+      message: "✅ Mongo Dashboard + Snapshots wiped clean",
     });
   } catch (err) {
-    console.error("RESET ERROR:", err);
+    console.error("❌ RESET ERROR:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ Optional: export snapshot history
+router.get("/snapshots", async (req, res) => {
+  try {
+    const snaps = await StateSnapshot.find({ userId: USER_ID })
+      .sort({ createdAt: -1 })
+      .limit(25);
+
+    res.json({ snapshots: snaps });
+  } catch (err) {
+    console.error("❌ SNAPSHOT ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch snapshots" });
   }
 });
 
