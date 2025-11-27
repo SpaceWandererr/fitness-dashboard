@@ -74,14 +74,13 @@ export default function App() {
         const res = await fetch(API_URL);
         const data = await res.json();
 
-        setDashboardState(data); // ✅ THIS feeds Gym.jsx
+        setDashboardState(data);
+        console.log("✅ State pulled from backend");
 
         Object.entries(data).forEach(([key, value]) => {
           if (!value || value === "{}" || value === "[]") return;
           localStorage.setItem(key, value);
         });
-
-        console.log("✅ State loaded from backend");
       } catch (err) {
         console.error("❌ Load failed:", err);
       }

@@ -27,54 +27,110 @@ router.put("/", async (req, res) => {
     const userId = "default";
     let newState = req.body;
 
-    // --- FIX CORRUPTED STRING FIELDS ---
+    // --- KEYS THAT MUST ALWAYS BE OBJECTS ---
     const mustBeObject = [
       "wd_done",
       "wd_gym_logs",
       "wd_weight_history",
       "syllabus_tree_v2",
+      "wd_goals",
     ];
 
+    // --- STEP 1: FIX STRINGIFIED + NULL VALUES ---
     mustBeObject.forEach((key) => {
-      if (typeof newState[key] === "string") {
+      const val = newState[key];
+
+      if (val === undefined || val === null || val === "" || val === "null") {
+        newState[key] = {};
+        return;
+      }
+
+      // Convert stringified JSON to real object
+      if (typeof val === "string") {
         try {
-          newState[key] = JSON.parse(newState[key]);
+          const parsed = JSON.parse(val);
+          newState[key] = typeof parsed === "object" ? parsed : {};
         } catch {
           newState[key] = {};
         }
       }
+
+      // Force object if wrong type
+      if (typeof newState[key] !== "object") {
+        newState[key] = {};
+      }
     });
 
-    // Fix corrupt array formats
-    if (Array.isArray(newState.wd_weight_history)) {
-      newState.wd_weight_history = newState.wd_weight_history.map((v) => {
-        if (typeof v === "string") {
-          try {
-            return JSON.parse(v);
-          } catch {
-            return null;
-          }
+    // --- STEP 2: FIX BAD ARRAY STRUCTURE (mobile issue) ---
+
+    // Fix wd_gym_logs: flatten nested arrays into final object
+    if (Array.isArray(newState.wd_gym_logs)) {
+      const flatLogs = {};
+
+      newState.wd_gym_logs.forEach((level1) => {
+        if (typeof level1 === "object") {
+          Object.values(level1).forEach((level2) => {
+            if (typeof level2 === "object") {
+              Object.entries(level2).forEach(([date, data]) => {
+                flatLogs[date] = data;
+              });
+            }
+          });
         }
-        return v;
       });
+
+      newState.wd_gym_logs = flatLogs;
     }
 
-    // Fix weight null/string issues
-    if (newState.wd_weight_current === "null")
-      newState.wd_weight_current = null;
+    // Fix wd_done: also flatten if corrupted
+    if (Array.isArray(newState.wd_done)) {
+      const cleanDone = {};
 
-    if (typeof newState.wd_weight_current === "string") {
+      newState.wd_done.forEach((level1) => {
+        if (typeof level1 === "object") {
+          Object.values(level1).forEach((level2) => {
+            if (typeof level2 === "object") {
+              Object.assign(cleanDone, level2);
+            }
+          });
+        }
+      });
+
+      newState.wd_done = cleanDone;
+    }
+
+    // --- STEP 3: FIX wd_weight_history FORMAT ---
+    if (Array.isArray(newState.wd_weight_history)) {
+      const weightObj = {};
+
+      newState.wd_weight_history.forEach((entry) => {
+        if (entry && typeof entry === "object" && entry.date && entry.weight) {
+          weightObj[entry.date] = entry.weight;
+        }
+      });
+
+      newState.wd_weight_history = weightObj;
+    }
+
+    // --- STEP 4: FIX CURRENT WEIGHT ---
+    if (
+      newState.wd_weight_current === "null" ||
+      newState.wd_weight_current === undefined ||
+      newState.wd_weight_current === ""
+    ) {
+      newState.wd_weight_current = null;
+    } else if (typeof newState.wd_weight_current === "string") {
       const parsed = Number(newState.wd_weight_current);
       newState.wd_weight_current = isNaN(parsed) ? null : parsed;
     }
 
-    // SAVE SNAPSHOT
+    // --- STEP 5: CREATE SNAPSHOT ---
     await StateSnapshot.create({
       userId,
       state: newState,
     });
 
-    // UPDATE MAIN STATE
+    // --- STEP 6: UPDATE MAIN STATE ---
     const updated = await DashboardState.findOneAndUpdate(
       { userId },
       { $set: newState },
@@ -87,6 +143,8 @@ router.put("/", async (req, res) => {
     res.status(500).json({ message: "Error saving state" });
   }
 });
+
+
 
 
 // ✅ FULL RESET (Dashboard + Snapshots)
