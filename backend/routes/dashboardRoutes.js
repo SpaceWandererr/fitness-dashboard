@@ -1,5 +1,10 @@
 import express from "express";
 import DashboardState from "../models/DashboardState.js";
+
+
+console.log("🔥 USING DashboardState from:", import.meta.url);
+console.log("🔥 Schema paths:", DashboardState.schema.paths);
+
 import StateSnapshot from "../models/StateSnapshot.js";
 
 const router = express.Router();
@@ -100,16 +105,17 @@ router.put("/", async (req, res) => {
     }
 
     // --- STEP 3: FIX wd_weight_history FORMAT ---
+    // ✅ Normalize weight history
     if (Array.isArray(newState.wd_weight_history)) {
-      const weightObj = {};
+      const cleanHistory = {};
 
       newState.wd_weight_history.forEach((entry) => {
-        if (entry && typeof entry === "object" && entry.date && entry.weight) {
-          weightObj[entry.date] = entry.weight;
+        if (entry?.date && entry?.weight) {
+          cleanHistory[entry.date] = entry.weight;
         }
       });
 
-      newState.wd_weight_history = weightObj;
+      newState.wd_weight_history = cleanHistory;
     }
 
     // --- STEP 4: FIX CURRENT WEIGHT ---
