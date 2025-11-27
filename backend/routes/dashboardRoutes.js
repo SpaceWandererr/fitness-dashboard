@@ -50,13 +50,34 @@ router.put("/", async (req, res) => {
     const updated = await DashboardState.findOneAndUpdate(
       { userId },
       { $set: newState },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     res.json(updated);
   } catch (err) {
     console.error("PUT ERROR:", err);
     res.status(500).json({ message: "Error saving state" });
+  }
+});
+
+// 🔥 RESET ALL STATE (Mongo reset)
+router.post("/reset", async (req, res) => {
+  try {
+    const userId = "default";
+
+    // delete main dashboard state
+    await DashboardState.deleteMany({ userId });
+
+    // delete snapshots also (otherwise corruption can come back)
+    await StateSnapshot.deleteMany({ userId });
+
+    res.json({
+      success: true,
+      message: "✅ Mongo state + snapshots fully reset",
+    });
+  } catch (err) {
+    console.error("RESET ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 

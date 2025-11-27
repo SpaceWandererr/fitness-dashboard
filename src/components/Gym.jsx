@@ -36,7 +36,6 @@ function save(key, val) {
   }
 }
 
-
 /* ---------------------- Constants ---------------------- */
 const WEEK = [
   "Monday",
@@ -283,7 +282,7 @@ export default function GymSimplified() {
   const dateKey = fmtISO(date);
   // 💬 Sunday quote text
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   /* persist plan */
@@ -324,6 +323,22 @@ export default function GymSimplified() {
 
   /* logs & goals */
   const [logs, setLogs] = useState(() => load("wd_gym_logs", {}));
+  const [doneState, setDoneState] = useState(() => load("wd_done", {}));
+
+  useEffect(() => {
+    const refreshDone = () => {
+      setDoneState(load("wd_done", {}));
+    };
+
+    window.addEventListener("lifeos:update", refreshDone);
+    window.addEventListener("storage", refreshDone);
+
+    return () => {
+      window.removeEventListener("lifeos:update", refreshDone);
+      window.removeEventListener("storage", refreshDone);
+    };
+  }, []);
+
   useEffect(() => {
     window.dispatchEvent(new Event("lifeos:update"));
   }, [logs]);
@@ -337,16 +352,17 @@ export default function GymSimplified() {
   useEffect(() => save("wd_gym_logs", logs), [logs]);
 
   const [targetWeight, setTargetWeight] = useState(() => {
-    const goals = load("wd_goals", { targetWeight: 70 });
-    return goals?.targetWeight ?? 70;
+    const rawGoals = load("wd_goals", {});
+    return Number(rawGoals?.targetWeight) || 70;
   });
+
   useEffect(() => {
     const goals = load("wd_goals", {});
-    save("wd_goals", { ...goals, targetWeight });
+    save("wd_goals", { targetWeight });
   }, [targetWeight]);
 
   const [startWeight, setStartWeight] = useState(() =>
-    load("wd_start_weight", null)
+    load("wd_start_weight", null),
   );
   useEffect(() => {
     if (startWeight !== null && startWeight !== undefined) {
@@ -355,11 +371,11 @@ export default function GymSimplified() {
   }, [startWeight]);
 
   const [weightOverrides, setWeightOverrides] = useState(() =>
-    load("wd_weight_overrides", {})
+    load("wd_weight_overrides", {}),
   );
   useEffect(
     () => save("wd_weight_overrides", weightOverrides),
-    [weightOverrides]
+    [weightOverrides],
   );
 
   const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
@@ -438,18 +454,18 @@ export default function GymSimplified() {
       left: Array.isArray(prev.left)
         ? prev.left
         : Array.isArray(def.left)
-        ? def.left.map(() => false)
-        : [],
+          ? def.left.map(() => false)
+          : [],
       right: Array.isArray(prev.right)
         ? prev.right
         : Array.isArray(def.right)
-        ? def.right.map(() => false)
-        : [],
+          ? def.right.map(() => false)
+          : [],
       finisher: Array.isArray(prev.finisher)
         ? prev.finisher
         : Array.isArray(def.finisher)
-        ? def.finisher.map(() => false)
-        : [],
+          ? def.finisher.map(() => false)
+          : [],
       done: !!prev.done,
       calories: prev.calories,
       bmi: prev.bmi,
@@ -502,7 +518,7 @@ export default function GymSimplified() {
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
-      ((checks.weight ?? overrideWeight ?? "") || "").toString()
+      ((checks.weight ?? overrideWeight ?? "") || "").toString(),
     );
     setShowModal(true);
   };
@@ -514,7 +530,7 @@ export default function GymSimplified() {
 
     const weight = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : checks.weight ?? null;
+      : (checks.weight ?? null);
 
     const savedHeight = Number(load("bmi_height", 176));
     const newBmi =
@@ -522,28 +538,42 @@ export default function GymSimplified() {
         ? Number((weight / Math.pow(savedHeight / 100, 2)).toFixed(1))
         : checks.bmi;
 
-    const prev = logs[dateKey] || { ...checks, weekday };
+    const prevLog = logs[dateKey] || { ...checks, weekday };
+
     const next = {
-      ...prev,
-      left: prev.left || checks.left,
-      right: prev.right || checks.right,
-      finisher: prev.finisher || checks.finisher,
+      ...prevLog,
+      left: prevLog.left || checks.left,
+      right: prevLog.right || checks.right,
+      finisher: prevLog.finisher || checks.finisher,
       done: true,
       calories,
       weight,
       bmi: newBmi,
     };
+
     persistLogFor(dateKey, next);
 
-    const doneMap = load("wd_done", {});
-    doneMap[dateKey] = true;
-    save("wd_done", doneMap);
+    // 🔥 FIX: Clone state instead of mutating it
+    const currentDone = { ...doneState };
+
+    // Mark this day as done
+    currentDone[dateKey] = true;
+
+    // Merge with what is already in storage
+    const storedDone = load("wd_done", {});
+    const mergedDone = {
+      ...storedDone,
+      ...currentDone,
+    };
+
+    save("wd_done", mergedDone);
+    window.dispatchEvent(new Event("lifeos:update"));
 
     const overrides = { ...weightOverrides, [dateKey]: weight };
     setWeightOverrides(overrides);
     save("wd_weight_overrides", overrides);
 
-    const disp = fmtDisp(date);
+    const disp = dateKey;
     const arr = load("bmi_logs", []);
     const idx = arr.findIndex((e) => e?.date === disp);
     if (idx >= 0) {
@@ -553,23 +583,28 @@ export default function GymSimplified() {
     }
     setBmiLogs(arr);
     save("bmi_logs", arr);
+
     // 🔥 Sync with wd_weight_history for dashboard
     if (weight) {
-      const weightHistory = load("wd_weight_history", {});
+      let weightHistory = load("wd_weight_history", {});
+
+      if (typeof weightHistory !== "object" || Array.isArray(weightHistory)) {
+        weightHistory = {};
+      }
 
       weightHistory[dateKey] = weight;
-
       save("wd_weight_history", weightHistory);
     }
 
     if (weight) {
       const savedStart = load("wd_start_weight", null);
-      // Only set start weight if it wasn't set before (let user control updates)
+
       if (savedStart === null || savedStart === undefined) {
         setStartWeight(weight);
         save("wd_start_weight", weight);
       }
     }
+
     // 🔥 Force dashboard refresh after gym update
     window.dispatchEvent(new Event("lifeos:update"));
 
@@ -580,18 +615,32 @@ export default function GymSimplified() {
     const prev = logs[dateKey] || {};
     setCaloriesInput((prev.calories ?? "").toString());
     setCurrentWeightInput(
-      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString()
+      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString(),
     );
     setShowModal(true);
   };
 
   const deleteCaloriesAndUnmark = () => {
-    const prev = logs[dateKey] || { ...checks, weekday };
-    const next = { ...prev, calories: undefined, done: false };
-    persistLogFor(dateKey, next);
-    const doneMap = load("wd_done", {});
-    delete doneMap[dateKey];
-    save("wd_done", doneMap);
+    const prevLog = logs[dateKey] || { ...checks, weekday };
+
+    const nextLog = { ...prevLog, calories: undefined, done: false };
+    persistLogFor(dateKey, nextLog);
+
+    // Clone state instead of mutating
+    const currentDone = { ...doneState };
+
+    // Remove only this date
+    delete currentDone[dateKey];
+
+    // Merge with storage for safety
+    const storedDone = load("wd_done", {});
+    const merged = {
+      ...storedDone,
+      ...currentDone,
+    };
+
+    save("wd_done", merged);
+    window.dispatchEvent(new Event("lifeos:update"));
   };
 
   const toggleMarkAll = () => {
@@ -613,7 +662,7 @@ export default function GymSimplified() {
 
   /* streak + totals */
   const streak = useMemo(() => {
-    const doneMap = load("wd_done", {});
+    const doneMap = doneState;
     let s = 0;
     for (let i = 0; i < 365; i++) {
       const k = dayjs().subtract(i, "day").format("YYYY-MM-DD");
@@ -624,24 +673,29 @@ export default function GymSimplified() {
   }, [logs, date]);
 
   const totalWorkouts = useMemo(() => {
-    const doneMap = load("wd_done", {});
+    const doneMap = doneState;
     return Object.values(doneMap).filter(Boolean).length;
   }, [logs]);
 
   /* weight progress helpers (light) */
-  const recentWeights = (load("bmi_logs", []) || [])
-    .map((b) => b?.weight)
-    .filter((w) => typeof w === "number");
-  const inferredStart = recentWeights.length
-    ? Math.max(...recentWeights.slice(-30))
-    : checks.weight ?? targetWeight;
-  const effectiveStart = startWeight ?? inferredStart;
+  const weightHistory = load("wd_weight_history", {});
+
+  // get latest weight based on DATE, not entry order
+  const dates = Object.keys(weightHistory).sort();
+  const latestDate = dates[dates.length - 1];
+  const latestWeight = latestDate ? weightHistory[latestDate] : null;
+
+  // 💡 FIX: no more recentWeightsviewMonth.startOf("month").startOf("week");
+
+  const inferredStart =
+    startWeight ?? latestWeight ?? checks.weight ?? targetWeight;
+
+  const effectiveStart = inferredStart;
   const overrideWeight = weightOverrides[dateKey];
+
   let curWeight =
-    overrideWeight ??
-    checks.weight ??
-    recentWeights.slice().reverse()[0] ??
-    effectiveStart;
+    overrideWeight ?? latestWeight ?? checks.weight ?? effectiveStart;
+
   const tw = Number(targetWeight);
   // 🧮 Weight progress & regression handling
   const pctToGoal = (() => {
@@ -667,42 +721,36 @@ export default function GymSimplified() {
 
   /* reset progress */
   const resetProgress = async () => {
-    if (
-      !confirm(
-        "Reset ALL gym progress? This will clear logs, weights, streaks. Plan and goals will remain."
-      )
-    )
-      return;
+    const confirmReset = confirm("Reset ALL gym data (Mongo + Local)?");
+    if (!confirmReset) return;
 
-    // Clear local state
+    try {
+      await fetch("https://fitness-backend-laoe.onrender.com/api/state/reset", {
+        method: "POST",
+      });
+
+      console.log("Mongo reset done ✅");
+    } catch (err) {
+      console.error("Mongo reset failed:", err);
+    }
+
     setLogs({});
     save("wd_gym_logs", {});
     save("wd_done", {});
-    save("wd_weight_overrides", {});
     setWeightOverrides({});
+    save("wd_weight_overrides", {});
     setBmiLogs([]);
     save("bmi_logs", []);
     save("wd_weight_history", {});
 
-    setSaving(true);
-
-    // ALSO clear backend state
-    try {
-      await fetch("http://localhost:5000/api/state/reset", {
-        method: "POST",
-      });
-    } catch (e) {
-      console.warn("Backend reset failed, local only", e);
-    }
-
     window.dispatchEvent(new Event("lifeos:update"));
 
-    setTimeout(() => setSaving(false), 900);
+    alert("FULL RESET DONE ✅");
   };
 
   /* normalized weekday safety */
   const normalizedWeekday = WEEK.find(
-    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
+    (d) => d.toLowerCase() === (weekday || "").toLowerCase(),
   );
   const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
     DEFAULT_PLAN[normalizedWeekday] || {
@@ -839,7 +887,7 @@ export default function GymSimplified() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-300">Now:</span>
             <span className="text-emerald-300 font-semibold">
-              {curWeight ? `${curWeight} kg` : "—"}
+              {Number.isFinite(curWeight) ? `${curWeight} kg` : "— kg"}
             </span>
           </div>
 
@@ -888,7 +936,7 @@ export default function GymSimplified() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 15px)`,
             }}
           >
@@ -947,8 +995,8 @@ export default function GymSimplified() {
                   sectionKey === "left"
                     ? "Left"
                     : sectionKey === "right"
-                    ? "Right"
-                    : dayPlan.finisherLabel || "Finisher";
+                      ? "Right"
+                      : dayPlan.finisherLabel || "Finisher";
 
                 const list = dayPlan[sectionKey] || [];
                 const state = checks[sectionKey] || [];
@@ -1187,8 +1235,8 @@ function ExerciseList({ label, list = [], state = [], onToggle }) {
 
 function DailySummary({ date, logs, dateKey }) {
   const entry = logs[dateKey];
-  const bmiLogs = load("bmi_logs", []);
-  const latestBmi = bmiLogs.slice().reverse()[0] || null;
+  const bmiLogs = load("bmi_logs", {});
+  const latestBmi = bmiLogs[dateKey] || null;
 
   return (
     <div
@@ -1221,7 +1269,7 @@ function DailySummary({ date, logs, dateKey }) {
           ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
         </div>
         <div>
-          📊 BMI: {entry?.bmi != null ? entry.bmi : latestBmi?.bmi ?? "—"}
+          📊 BMI: {entry?.bmi != null ? entry.bmi : (latestBmi?.bmi ?? "—")}
         </div>
         <div className="mt-2">
           <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>
@@ -1281,9 +1329,16 @@ function MiniCalendar({ date, setDate }) {
 
   useEffect(() => setViewMonth(dayjs(date)), [date]);
 
-  const start = viewMonth.startOf("month").startOf("week");
+  const monthStart = viewMonth.startOf("month");
+
+  // Convert Sun(0)..Sat(6) → Mon(0)..Sun(6)
+  const weekdayIndex = (monthStart.day() + 6) % 7;
+
+  // Proper grid start (Monday-based)
+  const start = monthStart.subtract(weekdayIndex, "day");
+
   const cells = Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
-  const doneMap = load("wd_done", {});
+  const doneMap = doneState;
   const today = dayjs();
 
   return (
@@ -1312,7 +1367,7 @@ function MiniCalendar({ date, setDate }) {
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-[10px] sm:text-xs text-center mb-1 text-gray-400">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
           <div key={d} className="opacity-80">
             {d}
           </div>
@@ -1323,7 +1378,7 @@ function MiniCalendar({ date, setDate }) {
         {cells.map((d) => {
           const key = d.format("YYYY-MM-DD");
           const isCurMonth = d.month() === viewMonth.month();
-          const isSelected = key === date;
+          const isSelected = key === dayjs(date).format("YYYY-MM-DD");
           const isToday = d.isSame(today, "day");
           return (
             <button

@@ -20,38 +20,26 @@ router.get("/", async (req, res) => {
   }
 });
 
-
-
 /* ================= RESTORE SNAPSHOT ================= */
-router.post("/restore/:id", async (req, res) => {
+// RESET ALL DASHBOARD STATE
+router.post("/api/state/reset", async (req, res) => {
   try {
-    const snap = await StateSnapshot.findById(req.params.id).lean();
+    const userId = "default"; // keep same as your other logic
 
-    if (!snap) {
-      return res.status(404).json({ message: "Snapshot not found" });
-    }
+    // if you're using a specific model like DashboardState or StateSnapshot:
+    await DashboardState.deleteMany({ userId });
 
-    const cleanState = snap.state || snap.fullState;
-    if (!cleanState) {
-      return res.status(400).json({ message: "Snapshot data missing" });
-    }
+    // OR if your model is named differently:
+    // await StateSnapshot.deleteMany({ userId });
 
-    const updated = await DashboardState.findOneAndUpdate(
-      { userId: "default" },
-      { $set: cleanState },
-      { new: true, upsert: true }
-    );
-
-    console.log("✅ Snapshot restored");
-
-    res.json({
+    return res.json({
       success: true,
-      updatedState: updated,
+      message: "All dashboard state reset from MongoDB ✅",
     });
   } catch (err) {
-    console.error("❌ Restore error:", err);
+    console.error("Reset state error:", err);
     res.status(500).json({
-      message: "Error restoring snapshot",
+      success: false,
       error: err.message,
     });
   }
