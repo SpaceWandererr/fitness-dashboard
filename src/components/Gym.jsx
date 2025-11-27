@@ -276,7 +276,7 @@ async function syncDashboardToBackend() {
 }
 
 /* ---------------------- Main Component ---------------------- */
-export default function GymSimplified({ dashboardState }) {
+export default function GymSimplified({ dashboardState = {} }) {
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
@@ -1246,7 +1246,7 @@ function DailySummary({ date, logs, dateKey }) {
   );
 }
 
-function MiniCalendar({ date, setDate, dashboardState }) {
+function MiniCalendar({ date, setDate, dashboardState = {} }) {
   const [viewMonth, setViewMonth] = useState(dayjs(date));
   const today = dayjs();
 

@@ -74,10 +74,10 @@ export default function App() {
         const res = await fetch(API_URL);
         const data = await res.json();
 
+        setDashboardState(data); // ✅ THIS feeds Gym.jsx
+
         Object.entries(data).forEach(([key, value]) => {
           if (!value || value === "{}" || value === "[]") return;
-
-          if (value === "{}" || value === "" || value === null) return;
           localStorage.setItem(key, value);
         });
 
@@ -472,6 +472,29 @@ export default function App() {
 
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
+  const API_URL = "https://fitness-backend-laoe.onrender.com/api/state";
+
+  async function loadFromBackend() {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+
+      setDashboardState(data);
+      console.log("✅ State pulled from backend");
+
+      Object.entries(data).forEach(([key, value]) => {
+        if (!value || value === "{}" || value === "[]") return;
+        localStorage.setItem(key, value);
+      });
+    } catch (err) {
+      console.error("❌ Load failed:", err);
+    }
+  }
+
+  const [dashboardState, setDashboardState] = useState({});
+  useEffect(() => {
+    loadFromBackend();
+  }, []);
 
   return (
     <div
@@ -749,7 +772,6 @@ export default function App() {
                 </motion.div>
               }
             />
-
             {/* OTHER PAGES WITH SLIDE ANIMATION */}
             <Route
               path="/syllabus"
@@ -773,7 +795,7 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Gym />
+                  <Gym dashboardState={dashboardState} />
                 </motion.div>
               }
             />
@@ -842,7 +864,6 @@ export default function App() {
                 </motion.div>
               }
             />
-
             <Route
               path="/goals"
               element={
@@ -856,7 +877,6 @@ export default function App() {
                 </motion.div>
               }
             />
-
             {/* 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
