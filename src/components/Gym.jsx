@@ -354,9 +354,71 @@ export default function GymSimplified({ dashboardState = {} }) {
 
   /* ---------------- BACKEND DRIVEN GOALS ---------------- */
 
+  // after:
   const [targetWeight, setTargetWeight] = useState(
-    Number(dashboardState?.wd_goals?.targetWeight) || 70,
+    dashboardState?.wd_goals?.targetWeight ?? 75,
   );
+  useEffect(() => {
+    if (dashboardState?.wd_goals?.targetWeight !== undefined) {
+      setTargetWeight(dashboardState.wd_goals.targetWeight);
+      setTempTargetWeight(dashboardState.wd_goals.targetWeight);
+    }
+  }, [dashboardState]);
+
+  const saveTargetWeight = async () => {
+    if (!tempTargetWeight || isNaN(tempTargetWeight)) {
+      alert("Enter a valid target weight!");
+      return;
+    }
+
+    try {
+      const fullState = {
+        ...dashboardState,
+        wd_goals: {
+          ...(dashboardState?.wd_goals || {}),
+          targetWeight: Number(tempTargetWeight),
+        },
+      };
+
+      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fullState),
+      });
+
+      // ✅ Update local UI state (no dependency on App.jsx)
+      setTargetWeight(Number(tempTargetWeight));
+
+      console.log("✅ Target weight saved:", tempTargetWeight);
+    } catch (err) {
+      console.error("❌ Target save failed:", err);
+    }
+  };
+
+  const [tempTargetWeight, setTempTargetWeight] = useState(
+    dashboardState?.wd_goals?.targetWeight ?? "",
+  );
+
+  // add this:
+  useEffect(() => {
+    if (!dashboardState || !Number.isFinite(Number(targetWeight))) return;
+
+    const fullState = {
+      ...dashboardState, // keep everything else
+      wd_goals: {
+        ...(dashboardState.wd_goals || {}),
+        targetWeight: Number(targetWeight),
+      },
+    };
+
+    fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fullState),
+    })
+      .then(() => console.log("✅ Goals synced:", fullState.wd_goals))
+      .catch((err) => console.error("❌ Goal sync failed:", err));
+  }, [targetWeight, dashboardState]);
 
   /* Backend-only overrides */
   const [weightOverrides, setWeightOverrides] = useState(
@@ -814,16 +876,30 @@ export default function GymSimplified({ dashboardState = {} }) {
             <span className="text-sm font-medium text-emerald-100">
               🎯 Target
             </span>
+
             <input
               type="number"
               step="0.1"
+              placeholder="Target weight"
+              value={tempTargetWeight ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") setTempTargetWeight("");
+                else setTempTargetWeight(Number(v));
+              }}
               className="w-24 px-2 py-1 rounded-md border
-              border-gray-700 dark:border-emerald-800
-              bg-[#0c2624] text-emerald-100 text-sm focus:outline-none
+              border-gray-700 dark:border-emerald-800 bg-[#0c2624] 
+              text-emerald-100 text-sm focus:outline-none 
               focus:ring-1 focus:ring-emerald-400"
-              value={targetWeight}
-              onChange={(e) => setTargetWeight(Number(e.target.value || 0))}
             />
+
+            <button
+              onClick={saveTargetWeight}
+              className="px-2 py-1 rounded bg-cyan-600 text-sm hover:bg-cyan-700 transition"
+            >
+              Set
+            </button>
+
             <span className="text-sm text-gray-300">kg</span>
           </div>
 
