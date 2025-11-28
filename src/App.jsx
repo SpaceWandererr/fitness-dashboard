@@ -1,16 +1,21 @@
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
 import {
+  Menu,
+  X,
   Scale,
   Dumbbell,
   BrainCircuit,
   Flame,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
 } from "lucide-react";
-import * as XLSX from "xlsx";
+import { useMotionValue, animate } from "framer-motion";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -24,8 +29,6 @@ import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
-
-// import { load, save } from "./utils/localStorage.js";
 
 /* ======================= MAIN APP ======================= */
 
@@ -41,161 +44,7 @@ export default function App() {
 
   const themeBtnRef = useRef(null);
   const [flashOrigin, setFlashOrigin] = useState({ x: 0, y: 0 });
-
-  const [showAdmin, setShowAdmin] = useState(false);
-  useEffect(() => {
-    let pressCount = 0;
-    let timer;
-
-    const secretListener = (e) => {
-      // ✅ New secret combo: CTRL + SHIFT + K (twice)
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "k") {
-        e.preventDefault(); // stop browser behavior
-
-        pressCount++;
-        clearTimeout(timer);
-
-        timer = setTimeout(() => {
-          pressCount = 0;
-        }, 800);
-
-        if (pressCount === 1) {
-          setShowAdmin((prev) => !prev);
-          pressCount = 0;
-        }
-      }
-    };
-
-    window.addEventListener("keydown", secretListener);
-
-    return () => window.removeEventListener("keydown", secretListener);
-  }, []);
-
-  function exportAllData() {
-    const data = {};
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      data[key] = localStorage.getItem(key);
-    }
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "life-matrix-backup.json";
-    link.click();
-  }
-
-  function importAllData(file) {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result);
-
-        Object.entries(data).forEach(([key, value]) => {
-          localStorage.setItem(key, value);
-        });
-
-        alert("✅ Data imported successfully. Reloading...");
-        window.location.reload();
-      } catch (err) {
-        alert("❌ Invalid backup file");
-      }
-    };
-
-    reader.readAsText(file);
-  }
-  function exportAllToExcelWithTabs() {
-    const parse = (key) => {
-      try {
-        return JSON.parse(localStorage.getItem(key) || "{}");
-      } catch {
-        return {};
-      }
-    };
-
-    const workbook = XLSX.utils.book_new();
-
-    /* ========= THEME TAB ========= */
-    const themeSheet = XLSX.utils.aoa_to_sheet([
-      ["Setting", "Value"],
-      ["Dark Mode", localStorage.getItem("wd_dark")],
-    ]);
-    XLSX.utils.book_append_sheet(workbook, themeSheet, "Theme");
-
-    /* ========= WEIGHT TAB ========= */
-    const weight = parse("wd_weight_history");
-    const weightRows = [["Date", "Weight"]];
-    Object.entries(weight).forEach(([d, w]) => weightRows.push([d, w]));
-
-    const weightSheet = XLSX.utils.aoa_to_sheet(weightRows);
-    XLSX.utils.book_append_sheet(workbook, weightSheet, "Weight");
-
-    /* ========= GYM TAB ========= */
-    const gym = parse("wd_gym_logs");
-    const gymRows = [["Date", "Exercise", "Status"]];
-
-    Object.entries(gym).forEach(([date, exercises]) => {
-      if (typeof exercises === "object") {
-        Object.entries(exercises).forEach(([exercise, status]) => {
-          gymRows.push([date, exercise, status]);
-        });
-      }
-    });
-
-    const gymSheet = XLSX.utils.aoa_to_sheet(gymRows);
-    XLSX.utils.book_append_sheet(workbook, gymSheet, "Gym");
-
-    /* ========= TASK TAB ========= */
-    const done = parse("wd_done");
-    const taskRows = [["Task", "Completed"]];
-
-    Object.entries(done).forEach(([task, status]) => {
-      taskRows.push([task, status]);
-    });
-
-    const taskSheet = XLSX.utils.aoa_to_sheet(taskRows);
-    XLSX.utils.book_append_sheet(workbook, taskSheet, "Tasks");
-
-    /* ========= SYLLABUS TAB ========= */
-    const syllabus = parse("syllabus_tree_v2");
-    const syllabusRows = [["Topic Path", "Status"]];
-
-    function flatten(obj, prefix = "") {
-      Object.entries(obj).forEach(([key, value]) => {
-        const path = prefix ? `${prefix} > ${key}` : key;
-
-        if (typeof value === "object" && value !== null) {
-          flatten(value, path);
-        } else {
-          syllabusRows.push([path, value]);
-        }
-      });
-    }
-
-    flatten(syllabus);
-
-    const syllabusSheet = XLSX.utils.aoa_to_sheet(syllabusRows);
-    XLSX.utils.book_append_sheet(workbook, syllabusSheet, "Syllabus");
-
-    /* ========= GOALS TAB ========= */
-    const goals = parse("wd_goals");
-    const goalRows = [["Goal", "Value"]];
-
-    Object.entries(goals).forEach(([goal, val]) => {
-      goalRows.push([goal, val]);
-    });
-
-    const goalsSheet = XLSX.utils.aoa_to_sheet(goalRows);
-    XLSX.utils.book_append_sheet(workbook, goalsSheet, "Goals");
-
-    /* ========= DOWNLOAD ========= */
-    XLSX.writeFile(workbook, "LifeMatrix-FullData.xlsx");
-  }
+  const [dashboardState, setDashboardState] = useState(null);
 
   const [stats, setStats] = useState({
     weight: "—",
@@ -263,11 +112,13 @@ export default function App() {
 
   /* ---------- global effects ---------- */
 
+  // live clock
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
+  // nav height → used for main padding
   useEffect(() => {
     if (navRef.current) {
       const h = navRef.current.getBoundingClientRect().height;
@@ -275,150 +126,109 @@ export default function App() {
     }
   }, []);
 
+  // dark mode <html class="dark">
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
-  // Load stats + details from localStorage
+  // 🔗 NEW: load dashboard state from Mongo (backend) and refresh on "lifeos:update"
   useEffect(() => {
-    async function refresh() {
-      // 1. Load latest state from backend first
+    let cancelled = false;
+
+    async function loadState() {
       try {
         const res = await fetch(API_URL);
-        const cloudData = await res.json();
-
-        // // Hydrate localStorage from backend (safe + filtered)
-        // Object.entries(cloudData).forEach(([key, value]) => {
-        //   // Only allow your app keys
-        //   if (!key.startsWith("wd_") && key !== "syllabus_tree_v2") return;
-
-        //   // Block null / undefined
-        //   if (value === null || typeof value === "undefined") return;
-
-        //   // Block useless empty strings/objects
-        //   if (
-        //     typeof value === "string" &&
-        //     (value === "{}" || value === "[]" || value.trim() === "")
-        //   )
-        //     return;
-
-        //   // Block corrupted backend array: ["{}"]
-        //   if (Array.isArray(value)) {
-        //     if (value.length === 1 && value[0] === "{}") return;
-        //   }
-
-        //   // Block empty pure object
-        //   if (
-        //     typeof value === "object" &&
-        //     !Array.isArray(value) &&
-        //     Object.keys(value).length === 0
-        //   )
-        //     return;
-
-        //   try {
-        //     localStorage.setItem(
-        //       key,
-        //       typeof value === "string" ? value : JSON.stringify(value)
-        //     );
-        //   } catch (err) {
-        //     console.warn("❌ Skipped corrupt backend value for:", key, err);
-        //   }
-        // });
-        console.log("✅ State pulled from backend");
-      } catch (err) {
-        console.warn("⚠ Backend not reachable, using local data only", err);
-      }
-
-      // 2. Now run your ORIGINAL logic using localStorage
-
-      const gymLogs = dashboardState?.wd_gym_logs || {};
-      const oldWeight = dashboardState?.wd_weight_history || {};
-      const syllabus = dashboardState?.syllabus_tree_v2 || {};
-      const done = dashboardState?.wd_done || {};
-
-      // weight history
-      let wh = Object.entries(gymLogs)
-        .filter(([_, v]) => typeof v.weight === "number" && isFinite(v.weight))
-        .map(([date, v]) => ({ date, weight: v.weight }));
-
-      // fallback to old system
-      if (wh.length === 0 && Object.keys(oldWeight).length > 0) {
-        wh = Object.entries(oldWeight).map(([d, w]) => ({
-          date: d,
-          weight: w,
-        }));
-      }
-
-      // sort
-      wh.sort((a, b) => a.date.localeCompare(b.date));
-
-      const latestWeight =
-        wh.length && typeof wh[wh.length - 1].weight === "number"
-          ? wh[wh.length - 1].weight
-          : "—";
-
-      const gymDates = Object.keys(gymLogs).sort();
-
-      // topics total + done
-      function walk(node) {
-        let total = 0;
-        let doneCount = 0;
-
-        if (Array.isArray(node)) {
-          node.forEach((item) => {
-            if (!item) return;
-            total++;
-            if (item.done) doneCount++;
-          });
-        } else if (typeof node === "object" && node !== null) {
-          Object.values(node).forEach((child) => {
-            const res = walk(child);
-            total += res.total;
-            doneCount += res.done;
-          });
+        if (!res.ok) {
+          console.error("Failed to load dashboard state", res.status);
+          return;
         }
+        const data = await res.json();
+        // backend may send { state: {...} } or the state directly
+        const state = data.state || data.dashboardState || data || {};
 
-        return { total, done: doneCount };
+        if (!cancelled) {
+          setDashboardState(state);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Error loading dashboard state", err);
+        }
       }
-
-      const syllabusData = dashboardState?.syllabus_tree_v2 || {};
-
-      const { total, done: doneTopics } = walk(syllabusData);
-
-      // streak: based on wd_done
-      let streak = 0;
-      const today = dayjs();
-      for (let i = 0; i < 365; i++) {
-        const key = today.subtract(i, "day").format("YYYY-MM-DD");
-        if (done[key]) streak++;
-        else break;
-      }
-
-      setStats({
-        weight: latestWeight,
-        gymDays: gymDates.length,
-        topicsDone: doneTopics,
-        topicsTotal: total,
-        streak,
-      });
-
-      setWeightHistory(wh);
-      setGymLogDates(gymDates);
     }
 
-    refresh();
+    const handleLifeosUpdate = () => {
+      // Gym / Syllabus will dispatch this after saving
+      loadState();
+    };
 
-    // Re-run on tab focus
-    window.addEventListener("focus", refresh);
+    window.addEventListener("lifeos:update", handleLifeosUpdate);
 
-    // Custom event for SAME TAB updates
-    window.addEventListener("lifeos:update", refresh);
+    // initial load
+    loadState();
 
     return () => {
-      window.removeEventListener("focus", refresh);
-      window.removeEventListener("lifeos:update", refresh);
+      cancelled = true;
+      window.removeEventListener("lifeos:update", handleLifeosUpdate);
     };
   }, []);
+
+  // Load stats from BACKEND ONLY
+  // When dashboardState changes → recalc stats
+  useEffect(() => {
+    if (!dashboardState) return;
+
+    const gymLogs = dashboardState.wd_gym_logs || {};
+    const syllabus = dashboardState.syllabus_tree_v2 || {};
+    const done = dashboardState.wd_done || {};
+
+    let wh = Object.entries(gymLogs)
+      .filter(([_, v]) => typeof v.weight === "number")
+      .map(([date, v]) => ({ date, weight: v.weight }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const latestWeight = wh.length > 0 ? wh[wh.length - 1].weight : "—";
+    const gymDates = Object.keys(gymLogs);
+
+    function walk(node) {
+      let total = 0;
+      let doneCount = 0;
+
+      if (typeof node === "object" && node !== null) {
+        Object.values(node).forEach((child) => {
+          const res = walk(child);
+          total += res.total;
+          doneCount += res.done;
+        });
+      } else if (node === true) {
+        total++;
+        doneCount++;
+      }
+
+      return { total, done: doneCount };
+    }
+
+    const { total, done: doneTopics } = walk(syllabus);
+
+    let streak = 0;
+    const today = dayjs();
+
+    for (let i = 0; i < 365; i++) {
+      const key = today.subtract(i, "day").format("YYYY-MM-DD");
+      if (done[key]) streak++;
+      else break;
+    }
+
+    setStats({
+      weight: latestWeight,
+      gymDays: gymDates.length,
+      topicsDone: doneTopics,
+      topicsTotal: total,
+      streak,
+    });
+
+    setWeightHistory(wh);
+    setGymLogDates(gymDates);
+  }, [dashboardState]);
 
   // inject glow CSS once
   useEffect(() => {
@@ -431,29 +241,6 @@ export default function App() {
 
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
-  const API_URL = "https://fitness-backend-laoe.onrender.com/api/state";
-
-  async function loadFromBackend() {
-    try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-
-      setDashboardState(data);
-      console.log("✅ State pulled from backend");
-
-      Object.entries(data).forEach(([key, value]) => {
-        if (!value || value === "{}" || value === "[]") return;
-        localStorage.setItem(key, value);
-      });
-    } catch (err) {
-      console.error("❌ Load failed:", err);
-    }
-  }
-
-  const [dashboardState, setDashboardState] = useState({});
-  useEffect(() => {
-    loadFromBackend();
-  }, []);
 
   return (
     <div
@@ -471,24 +258,17 @@ export default function App() {
               style={{
                 left: flashOrigin.x - 70,
                 top: flashOrigin.y - 60,
-
                 width: 160,
                 height: 160,
-
-                // STRONG initial light
                 background: dark
                   ? "radial-gradient(circle, rgba(180,210,255,0.95), rgba(180,210,255,0.4), transparent 70%)"
                   : "radial-gradient(circle, rgba(255,200,0,0.95), rgba(255,200,0,0.4), transparent 70%)",
-
-                // Much lighter blur (big performance fix)
                 filter: "blur(8px)",
-
-                // GPU optimization
                 willChange: "transform, opacity",
               }}
               initial={{ scale: 0.2, opacity: 1 }}
               animate={{
-                scale: 12, // still covers full screen
+                scale: 12,
                 opacity: 0,
               }}
               transition={{
@@ -542,10 +322,7 @@ export default function App() {
                 const y = rect.top + rect.height / 2 - 10;
 
                 setFlashOrigin({ x, y });
-
                 setDark((v) => !v);
-
-                // 🔥 Increase counter instead of boolean
                 setThemeFlash((prev) => prev + 1);
               }}
               className="relative group rounded-full w-10 h-10 flex
@@ -586,7 +363,6 @@ export default function App() {
 
               {/* CELESTIAL SYSTEM */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {/* CENTER EMOJI (only one now) */}
                 <span className="relative text-xl z-10">
                   <AnimatePresence mode="wait">
                     {dark ? (
@@ -598,7 +374,6 @@ export default function App() {
                         transition={{ duration: 0.9, ease: "easeOut" }}
                         className="relative flex items-center justify-center"
                       >
-                        {/* COOL MOON LIGHT SPREAD */}
                         <motion.span
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1.5, opacity: 0.35 }}
@@ -610,8 +385,6 @@ export default function App() {
                             filter: "blur(7px)",
                           }}
                         />
-
-                        {/* MOON ICON */}
                         <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
                           🌙
                         </span>
@@ -625,7 +398,6 @@ export default function App() {
                         transition={{ duration: 0.9, ease: "easeOut" }}
                         className="relative flex items-center justify-center"
                       >
-                        {/* SUN RISE GLOW */}
                         <motion.span
                           initial={{ scale: 0, opacity: 0.2 }}
                           animate={{ scale: 1.6, opacity: 0.4 }}
@@ -637,8 +409,6 @@ export default function App() {
                             filter: "blur(8px)",
                           }}
                         />
-
-                        {/* SUN ICON */}
                         <span className="drop-shadow-[0_0_18px_#FFB800]">
                           ☀️
                         </span>
@@ -647,7 +417,6 @@ export default function App() {
                   </AnimatePresence>
                 </span>
 
-                {/* ORBIT CONTAINER (full circle size) */}
                 <motion.div
                   className="absolute inset-0 pointer-events-none"
                   style={{ transformOrigin: "50% 50%" }}
@@ -658,7 +427,6 @@ export default function App() {
                     repeat: Infinity,
                   }}
                 >
-                  {/* ORBITING EMOJI */}
                   <div
                     className="absolute select-none transition-all duration-300"
                     style={{
@@ -667,11 +435,8 @@ export default function App() {
                       transform: "translateX(-50%)",
                       fontSize: "8px",
                       filter: dark
-                        ? `
-                        drop-shadow(0 0 6px #FFD700)`
-                        : `
-                        drop-shadow(0 0 6px #FFFFFF)                        
-                      `,
+                        ? "drop-shadow(0 0 6px #FFD700)"
+                        : "drop-shadow(0 0 6px #FFFFFF)",
                     }}
                   >
                     {dark ? "☀️" : "🌙"}
@@ -846,71 +611,74 @@ export default function App() {
         Life Matrix v3 • Crafted for Jay • {new Date().getFullYear()}
       </footer>
       <FloatingScrollControl />
-
-      {showAdmin && (
-        <div
-          className="fixed bottom-6 right-6 z-[9999] w-96 p-4 rounded-2xl
-    bg-[#0F1622]/98 border border-[#2F6B60] shadow-[0_0_40px_rgba(0,255,200,0.2)]"
-        >
-          <h2 className="text-[#9FF2E8] font-bold text-lg mb-3">
-            🔐 Hidden Admin Panel
-          </h2>
-
-          <div className="grid gap-3">
-            {/* Export */}
-            <button
-              onClick={exportAllData}
-              className="px-3 py-2 rounded-lg bg-[#064E3B] hover:bg-[#0F766E] text-white border border-[#2F6B60]"
-            >
-              📤 Export All Data
-            </button>
-
-            {/* Import */}
-            <label className="cursor-pointer px-3 py-2 rounded-lg bg-[#7A1D2B] hover:bg-[#991B1B] text-white border border-[#5B1C23] text-center">
-              📥 Import Backup
-              <input
-                type="file"
-                hidden
-                accept=".json"
-                onChange={(e) => importAllData(e.target.files[0])}
-              />
-            </label>
-
-            {/* Clear All */}
-            <button
-              onClick={() => {
-                if (confirm("⚠ This will erase ALL app data. Continue?")) {
-                  localStorage.clear();
-                  location.reload();
-                }
-              }}
-              className="px-3 py-2 rounded-lg bg-red-700 hover:bg-red-800 text-white border border-red-900"
-            >
-              🗑 Wipe All Data
-            </button>
-            <button
-              onClick={exportAllToExcelWithTabs}
-              className="px-3 py-2 rounded-lg bg-[#064E3B] hover:bg-[#0F766E]
-             text-white border border-[#2F6B60]"
-            >
-              📂 Export All Modules (Separate CSVs)
-            </button>
-
-            {/* Close */}
-            <button
-              onClick={() => setShowAdmin(false)}
-              className="mt-2 text-sm text-[#9FF2E8] opacity-70 hover:opacity-100"
-            >
-              Close Panel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 /* ======================= HOME DASHBOARD – FULL SCREEN VISION CARDS ======================= */
+
+function VisionCarousel({ cards }) {
+  const [index, setIndex] = useState(0);
+
+  // Auto switch every 60 seconds
+  useEffect(() => {
+    if (!cards || cards.length === 0) return;
+
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % cards.length);
+    }, 60000); // 1 minute
+
+    return () => clearInterval(timer);
+  }, [cards]);
+
+  if (!cards || cards.length === 0) return null;
+
+  const prev = () =>
+    setIndex((prev) => (prev - 1 + cards.length) % cards.length);
+
+  const next = () => setIndex((prev) => (prev + 1) % cards.length);
+
+  return (
+    <div className="relative w-full overflow-hidden">
+      {/* Left / Right buttons */}
+      <button
+        onClick={prev}
+        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-black/70 border border-teal-500/50 rounded-full shadow-lg hover:bg-teal-900/70 transition"
+      >
+        <ChevronLeft size={18} />
+      </button>
+
+      <button
+        onClick={next}
+        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-black/70 border border-teal-500/50 rounded-full shadow-lg hover:bg-teal-900/70 transition"
+      >
+        <ChevronRight size={18} />
+      </button>
+
+      {/* Centered slide – mobile gets narrower, tablet+ uses full width of card */}
+      <div className="flex justify-center px-2 sm:px-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.x < -50) next();
+              if (info.offset.x > 50) prev();
+            }}
+            initial={{ opacity: 0, x: 80 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -80 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="w-full sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[75%]"
+          >
+            {cards[index]}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 function HomeDashboard({
   stats,
@@ -974,7 +742,7 @@ function HomeDashboard({
                            drop-shadow-[0_0_60px_rgba(16,185,129,0.8)]
                            animate-[pulseGlow_4s_ease-in-out_infinite]"
                 >
-                  Jay's
+                  Jay&apos;s
                 </span>
                 <span className="absolute -inset-4 bg-emerald-500/20 blur-3xl animate-[pulse_3s_ease-in-out_infinite]" />
               </h1>
@@ -1043,10 +811,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1058,7 +826,7 @@ function HomeDashboard({
                     : "border-cyan-800/40 bg-black/60 hover:border-emerald-500/60 hover:bg-emerald-950/30"
                 } transition-all duration-500`}
                     >
-                      {/* Floating Icon – Lucide + Emoji with perfect dark/light mode */}
+                      {/* Floating Icon */}
                       <div className="text-6xl md:text-7xl mb-4 opacity-90">
                         {module.panel === "weight" && (
                           <div className="text-teal-400 dark:text-emerald-400">
@@ -1145,7 +913,7 @@ function HomeDashboard({
               </div>
             </div>
 
-            {/* NEURAL COMMAND DECK — PURE CYBER BLACK (Light + Dark) */}
+            {/* NEURAL COMMAND DECK */}
             <motion.div
               layout
               className="mt-24 max-w-5xl mx-auto"
@@ -1199,7 +967,7 @@ function HomeDashboard({
                   </div>
                 </div>
 
-                {/* Terminal Body — Deep black void */}
+                {/* Terminal Body */}
                 <div
                   className="p-8 min-h-96 bg-gradient-to-b from-transparent via-teal-950/10 to-black/40 
                     dark:via-emerald-950/15"
@@ -1252,237 +1020,265 @@ function HomeDashboard({
       {/* ====== END OF DROP-IN ====== */}
 
       {/* VISION + NZ MIGRATION + CORE DIRECTIVES */}
-      {/* SCROLL-SNAP CONTAINER FOR FULL-SCREEN VISION CARDS */}
-      <section className="space-y-12 snap-y snap-mandatory">
+      {/* Same content, but cards shown via VisionCarousel */}
+      <section className="w-full space-y-12">
         <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-200/80 text-center">
           Vision Horizon · 2026–2027
         </h3>
 
-        {/* MERN */}
-        <VisionCard
-          icon="🚀"
-          title="MERN Mastery Overdrive"
-          gradient="from-cyan-500/20 via-teal-600/20 to-emerald-600/10"
-          border="border-cyan-500/40"
-          glow="shadow-[0_0_40px_rgba(34,211,238,0.4)]"
-          progress={mernProgress}
-          phases={[
-            "Foundation (MERN + JS)",
-            "Execution (Projects + DSA)",
-            "Domination (System Design + DevOps)",
+        <VisionCarousel
+          cards={[
+            /* MERN */
+            <VisionCard
+              key="mern"
+              icon="🚀"
+              title="MERN Mastery Overdrive"
+              gradient="from-cyan-500/20 via-teal-600/20 to-emerald-600/10"
+              border="border-cyan-500/40"
+              glow="shadow-[0_0_40px_rgba(34,211,238,0.4)]"
+              progress={mernProgress}
+              phases={[
+                "Foundation (MERN + JS)",
+                "Execution (Projects + DSA)",
+                "Domination (System Design + DevOps)",
+              ]}
+              metrics={[
+                `Topics: ${stats.topicsDone}/${stats.topicsTotal || "?"}`,
+                "Target: 5 SaaS apps",
+                "Goal: 300–500 DSA problems",
+              ]}
+              description={
+                <>
+                  Turn MERN + DSA into your default language. Build SaaS
+                  products that can pay for visas, tickets, and your new life.
+                  <ul className="mt-6 space-y-3 text-sm">
+                    <li>
+                      • Master MongoDB: Schema design, aggregation, indexing,
+                      sharding
+                    </li>
+                    <li>
+                      • Express.js: REST + GraphQL APIs, JWT/OAuth, rate
+                      limiting, error handling
+                    </li>
+                    <li>
+                      • React: Hooks mastery, Redux Toolkit, React Query,
+                      Next.js 14+, App Router
+                    </li>
+                    <li>
+                      • Node.js: Event loop deep dive, clustering, PM2,
+                      microservices
+                    </li>
+                    <li>
+                      • DSA: 300+ LeetCode (Medium/Hard), system design
+                      (HLD/LLD)
+                    </li>
+                    <li>
+                      • Build 5 production-grade apps: AI SaaS, fintech
+                      dashboard, real-time collab tool
+                    </li>
+                    <li>
+                      • Full CI/CD, Docker, AWS ECS/EC2, Terraform, monitoring
+                      (Datadog/Prometheus)
+                    </li>
+                  </ul>
+                  <p className="mt-6 font-mono text-cyan-300">
+                    “Code like a warrior: no bugs, no mercy. Every line is a
+                    step toward financial independence.”
+                  </p>
+                </>
+              }
+            />,
+
+            /* NZ MIGRATION */
+            <VisionCard
+              key="nz"
+              icon="🇳🇿"
+              title="New Zealand Migration Launch"
+              gradient="from-emerald-500/20 via-teal-600/20 to-cyan-600/10"
+              border="border-emerald-500/40"
+              glow="shadow-[0_0_40px_rgba(16,185,129,0.4)]"
+              progress={nzProgress}
+              phases={[
+                "Skill Alignment",
+                "Offer & AEWV",
+                "Relocation & PR Path",
+              ]}
+              metrics={[
+                "Target: Green List role",
+                "AEWV-ready CV & portfolio",
+                "Savings target: 15k NZD",
+              ]}
+              description={
+                <>
+                  Relocate as a high-value developer. One consistent, engineered
+                  path.
+                  <ul className="mt-6 space-y-3 text-sm">
+                    <li>
+                      • Green List roles: Software Developer, Full-Stack
+                      Engineer (Tier 1)
+                    </li>
+                    <li>
+                      • AEWV Visa: Accredited employer + ≥NZD 29.66/hr (2025
+                      rate)
+                    </li>
+                    <li>• Target cities: Auckland, Wellington, Christchurch</li>
+                    <li>
+                      • Job hunt: Seek.co.nz, LinkedIn (NZ filter), TradeMe Jobs
+                    </li>
+                    <li>
+                      • Timeline: 6–12 months skill → 3–6 months applications →
+                      Offer → Visa (4–8 weeks)
+                    </li>
+                    <li>
+                      • Post-arrival: Work-to-Residence → Straight-to-Residence
+                      → PR in 3–5 years
+                    </li>
+                    <li>
+                      • Savings goal: NZD 15,000+ buffer (visa + relocation +
+                      first months)
+                    </li>
+                  </ul>
+                  <p className="mt-6 font-mono text-emerald-300">
+                    “From Gujarat grids to Kiwi horizons. Build the rocket
+                    first.”
+                  </p>
+                </>
+              }
+            />,
+
+            /* BODY */
+            <VisionCard
+              key="body"
+              icon="⚡"
+              title="Body Transformation Protocol"
+              gradient="from-orange-500/20 via-red-600/20 to-rose-600/10"
+              border="border-orange-500/40"
+              glow="shadow-[0_0_40px_rgba(251,146,60,0.4)]"
+              progress={bodyProgress}
+              phases={[
+                "Cutting (Fat Loss)",
+                "Recomp (Lean Build)",
+                "Performance (Endurance)",
+              ]}
+              metrics={[
+                `Gym sessions logged: ${stats.gymDays}`,
+                "Target: -10 to -12 kg fat",
+                "10k steps + 2–3 HIIT/week",
+              ]}
+              description={
+                <>
+                  Drop fat. Forge lean muscle. Run 12–14 hour focus days without
+                  crashing.
+                  <ul className="mt-6 space-y-3 text-sm">
+                    <li>
+                      • Diet: 500–700 kcal deficit, 2g protein/kg, 16:8 IF
+                    </li>
+                    <li>
+                      • Training: 4–5× compound lifts, progressive overload, PPL
+                      split
+                    </li>
+                    <li>• Cardio: 2× HIIT + 10k steps daily</li>
+                    <li>
+                      • Supplements: Creatine 5g, whey, omega-3, caffeine
+                      (pre-workout)
+                    </li>
+                    <li>• Sleep: 7.5–8.5 hrs, consistent schedule</li>
+                    <li>
+                      • Goal: 12–15% body fat, visible abs, 80+ kg lean mass
+                    </li>
+                  </ul>
+                  <p className="mt-6 font-mono text-orange-300">
+                    “Pain now, power permanent.”
+                  </p>
+                </>
+              }
+            />,
+
+            /* DISCIPLINE */
+            <VisionCard
+              key="discipline"
+              icon="🛡️"
+              title="Discipline Dominion"
+              gradient="from-purple-500/20 via-fuchsia-600/20 to-pink-600/10"
+              border="border-purple-500/40"
+              glow="shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+              progress={disciplineProgress}
+              phases={["Routine Setup", "Consistency Lock", "Identity Shift"]}
+              metrics={[
+                `No-zero streak: ${stats.streak} days`,
+                "Daily journaling system",
+                "Screen time < 2hrs/day",
+              ]}
+              description={
+                <>
+                  No zero days. Systems over feelings. You dictate reality.
+                  <ul className="mt-6 space-y-3 text-sm">
+                    <li>
+                      • Morning ritual: 5 AM wake → meditate → plan → deep work
+                    </li>
+                    <li>• Habit stacking + environment design</li>
+                    <li>• Weekly review every Sunday night</li>
+                    <li>• Public accountability (X, Discord, mentor)</li>
+                    <li>
+                      • Mindset: Stoicism, Jocko, Goggins, extreme ownership
+                    </li>
+                    <li>• Metric: 95%+ daily task completion</li>
+                  </ul>
+                  <p className="mt-6 font-mono text-purple-300">
+                    “Discipline is the only real superpower.”
+                  </p>
+                </>
+              }
+            />,
+
+            /* MONEY */
+            <VisionCard
+              key="money"
+              icon="💸"
+              title="Financial Freedom Engine"
+              gradient="from-yellow-500/20 via-amber-500/20 to-orange-600/10"
+              border="border-yellow-500/40"
+              glow="shadow-[0_0_40px_rgba(250,204,21,0.4)]"
+              progress={moneyProgress}
+              phases={[
+                "Skill → Income",
+                "Stable Side Streams",
+                "Location Freedom",
+              ]}
+              metrics={[
+                "Target: 2 active income streams",
+                "Freelance / remote MERN work",
+                "Savings runway for NZ move",
+              ]}
+              description={
+                <>
+                  Use code, not luck, to buy freedom — in India first, then in
+                  NZ.
+                  <ul className="mt-6 space-y-3 text-sm">
+                    <li>• Build a portfolio that converts into clients</li>
+                    <li>• Offer MERN freelancing and dashboards / tools</li>
+                    <li>• Experiment with small SaaS (subscriptions in USD)</li>
+                    <li>• Maintain 6–12 month emergency fund</li>
+                    <li>
+                      • System for tracking expenses, savings, investments
+                    </li>
+                  </ul>
+                  <p className="mt-6 font-mono text-yellow-200">
+                    “Freedom is not a place. It’s a balance sheet plus skills.”
+                  </p>
+                </>
+              }
+            />,
           ]}
-          metrics={[
-            `Topics: ${stats.topicsDone}/${stats.topicsTotal || "?"}`,
-            "Target: 5 SaaS apps",
-            "Goal: 300–500 DSA problems",
-          ]}
-          description={
-            <>
-              Turn MERN + DSA into your default language. Build SaaS products
-              that can pay for visas, tickets, and your new life.
-              <ul className="mt-6 space-y-3 text-sm">
-                <li>
-                  • Master MongoDB: Schema design, aggregation, indexing,
-                  sharding
-                </li>
-                <li>
-                  • Express.js: REST + GraphQL APIs, JWT/OAuth, rate limiting,
-                  error handling
-                </li>
-                <li>
-                  • React: Hooks mastery, Redux Toolkit, React Query, Next.js
-                  14+, App Router
-                </li>
-                <li>
-                  • Node.js: Event loop deep dive, clustering, PM2,
-                  microservices
-                </li>
-                <li>
-                  • DSA: 300+ LeetCode (Medium/Hard), system design (HLD/LLD)
-                </li>
-                <li>
-                  • Build 5 production-grade apps: AI SaaS, fintech dashboard,
-                  real-time collab tool
-                </li>
-                <li>
-                  • Full CI/CD, Docker, AWS ECS/EC2, Terraform, monitoring
-                  (Datadog/Prometheus)
-                </li>
-              </ul>
-              <p className="mt-6 font-mono text-cyan-300">
-                “Code like a warrior: no bugs, no mercy. Every line is a step
-                toward financial independence.”
-              </p>
-            </>
-          }
         />
 
-        {/* NZ MIGRATION */}
-        <VisionCard
-          icon="🇳🇿"
-          title="New Zealand Migration Launch"
-          gradient="from-emerald-500/20 via-teal-600/20 to-cyan-600/10"
-          border="border-emerald-500/40"
-          glow="shadow-[0_0_40px_rgba(16,185,129,0.4)]"
-          progress={nzProgress}
-          phases={["Skill Alignment", "Offer & AEWV", "Relocation & PR Path"]}
-          metrics={[
-            "Target: Green List role",
-            "AEWV-ready CV & portfolio",
-            "Savings target: 15k NZD",
-          ]}
-          description={
-            <>
-              Relocate as a high-value developer. One consistent, engineered
-              path.
-              <ul className="mt-6 space-y-3 text-sm">
-                <li>
-                  • Green List roles: Software Developer, Full-Stack Engineer
-                  (Tier 1)
-                </li>
-                <li>
-                  • AEWV Visa: Accredited employer + ≥NZD 29.66/hr (2025 rate)
-                </li>
-                <li>• Target cities: Auckland, Wellington, Christchurch</li>
-                <li>
-                  • Job hunt: Seek.co.nz, LinkedIn (NZ filter), TradeMe Jobs
-                </li>
-                <li>
-                  • Timeline: 6–12 months skill → 3–6 months applications →
-                  Offer → Visa (4–8 weeks)
-                </li>
-                <li>
-                  • Post-arrival: Work-to-Residence → Straight-to-Residence → PR
-                  in 3–5 years
-                </li>
-                <li>
-                  • Savings goal: NZD 15,000+ buffer (visa + relocation + first
-                  months)
-                </li>
-              </ul>
-              <p className="mt-6 font-mono text-emerald-300">
-                “From Gujarat grids to Kiwi horizons. Build the rocket first.”
-              </p>
-            </>
-          }
-        />
-
-        {/* BODY TRANSFORMATION */}
-        <VisionCard
-          icon="⚡"
-          title="Body Transformation Protocol"
-          gradient="from-orange-500/20 via-red-600/20 to-rose-600/10"
-          border="border-orange-500/40"
-          glow="shadow-[0_0_40px_rgba(251,146,60,0.4)]"
-          progress={bodyProgress}
-          phases={[
-            "Cutting (Fat Loss)",
-            "Recomp (Lean Build)",
-            "Performance (Endurance)",
-          ]}
-          metrics={[
-            `Gym sessions logged: ${stats.gymDays}`,
-            "Target: -10 to -12 kg fat",
-            "10k steps + 2–3 HIIT/week",
-          ]}
-          description={
-            <>
-              Drop fat. Forge lean muscle. Run 12–14 hour focus days without
-              crashing.
-              <ul className="mt-6 space-y-3 text-sm">
-                <li>• Diet: 500–700 kcal deficit, 2g protein/kg, 16:8 IF</li>
-                <li>
-                  • Training: 4–5× compound lifts, progressive overload, PPL
-                  split
-                </li>
-                <li>• Cardio: 2× HIIT + 10k steps daily</li>
-                <li>
-                  • Supplements: Creatine 5g, whey, omega-3, caffeine
-                  (pre-workout)
-                </li>
-                <li>• Sleep: 7.5–8.5 hrs, consistent schedule</li>
-                <li>• Goal: 12–15% body fat, visible abs, 80+ kg lean mass</li>
-              </ul>
-              <p className="mt-6 font-mono text-orange-300">
-                “Pain now, power permanent.”
-              </p>
-            </>
-          }
-        />
-
-        {/* DISCIPLINE */}
-        <VisionCard
-          icon="🛡️"
-          title="Discipline Dominion"
-          gradient="from-purple-500/20 via-fuchsia-600/20 to-pink-600/10"
-          border="border-purple-500/40"
-          glow="shadow-[0_0_40px_rgba(168,85,247,0.4)]"
-          progress={disciplineProgress}
-          phases={["Routine Setup", "Consistency Lock", "Identity Shift"]}
-          metrics={[
-            `No-zero streak: ${stats.streak} days`,
-            "Daily journaling system",
-            "Screen time < 2hrs/day",
-          ]}
-          description={
-            <>
-              No zero days. Systems over feelings. You dictate reality.
-              <ul className="mt-6 space-y-3 text-sm">
-                <li>
-                  • Morning ritual: 5 AM wake → meditate → plan → deep work
-                </li>
-                <li>• Habit stacking + environment design</li>
-                <li>• Weekly review every Sunday night</li>
-                <li>• Public accountability (X, Discord, mentor)</li>
-                <li>• Mindset: Stoicism, Jocko, Goggins, extreme ownership</li>
-                <li>• Metric: 95%+ daily task completion</li>
-              </ul>
-              <p className="mt-6 font-mono text-purple-300">
-                “Discipline is the only real superpower.”
-              </p>
-            </>
-          }
-        />
-
-        {/* FINANCIAL FREEDOM ENGINE – 5TH CARD */}
-        <VisionCard
-          icon="💸"
-          title="Financial Freedom Engine"
-          gradient="from-yellow-500/20 via-amber-500/20 to-orange-600/10"
-          border="border-yellow-500/40"
-          glow="shadow-[0_0_40px_rgba(250,204,21,0.4)]"
-          progress={moneyProgress}
-          phases={["Skill → Income", "Stable Side Streams", "Location Freedom"]}
-          metrics={[
-            "Target: 2 active income streams",
-            "Freelance / remote MERN work",
-            "Savings runway for NZ move",
-          ]}
-          description={
-            <>
-              Use code, not luck, to buy freedom — in India first, then in NZ.
-              <ul className="mt-6 space-y-3 text-sm">
-                <li>• Build a portfolio that converts into clients</li>
-                <li>• Offer MERN freelancing and dashboards / tools</li>
-                <li>• Experiment with small SaaS (subscriptions in USD)</li>
-                <li>• Maintain 6–12 month emergency fund</li>
-                <li>• System for tracking expenses, savings, investments</li>
-              </ul>
-              <p className="mt-6 font-mono text-yellow-200">
-                “Freedom is not a place. It’s a balance sheet plus skills.”
-              </p>
-            </>
-          }
-        />
-
-        {/* NZ MIGRATION COMMAND BLOCK (DEEP DIVE) */}
+        {/* NZ MIGRATION COMMAND BLOCK (DEEP DIVE) – still here, full width */}
         <NZMigrationBlock />
       </section>
 
-      {/* NZ Migration Deep Dive + Data */}
+      {/* NZ Migration Deep Dive + Data (Directives) – unchanged */}
       <section className="w-full snap-y snap-mandatory px-6">
         <div className="w-full space-y-8">
-          {/* This unlocks width */}
           <div className="w-full">
             <DirectivesBlock />
           </div>
@@ -1665,10 +1461,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                    ? "Fat loss in progress ✅"
-                    : diff > 0
-                      ? "Weight increased ⚠️"
-                      : "Stable"
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
               }
             />
           </div>
