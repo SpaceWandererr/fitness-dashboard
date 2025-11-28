@@ -215,11 +215,18 @@ const DEFAULT_PLAN = {
   },
 };
 
-async function syncDashboardToBackend(currentLogs, currentDone) {
+async function syncDashboardToBackend(
+  currentLogs,
+  currentDone,
+  currentWeight,
+  currentDashboardState,
+) {
   try {
     const state = {
+      ...currentDashboardState, // ✅ now it exists
       wd_gym_logs: currentLogs,
       wd_done: currentDone,
+      wd_weight_current: currentWeight ?? null,
     };
 
     await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
@@ -228,7 +235,7 @@ async function syncDashboardToBackend(currentLogs, currentDone) {
       body: JSON.stringify(state),
     });
 
-    console.log("✅ Backend synced with live state");
+    console.log("✅ Safe backend sync done");
   } catch (err) {
     console.error("❌ Backend sync failed:", err);
   }
@@ -247,6 +254,35 @@ export default function GymSimplified({ dashboardState = {} }) {
 
   const [sundayQuote, setSundayQuote] = useState(
     "Fetching your motivational quote...",
+  );
+  const updateCurrentWeight = async () => {
+    if (!tempWeight || isNaN(tempWeight)) {
+      alert("Enter a valid weight first!");
+      return;
+    }
+
+    try {
+      const updatedState = {
+        ...dashboardState, // ✅ preserve full state
+        wd_weight_current: tempWeight,
+      };
+
+      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedState),
+      });
+
+      setCurrentWeight(tempWeight);
+
+      console.log("✅ Current Weight saved safely:", tempWeight);
+    } catch (err) {
+      console.error("❌ Weight update failed:", err);
+    }
+  };
+
+  const [tempWeight, setTempWeight] = useState(
+    dashboardState?.wd_weight_current ?? "",
   );
 
   /* plan */
@@ -294,6 +330,16 @@ export default function GymSimplified({ dashboardState = {} }) {
     setDoneState(doneData);
   }, [dashboardState]);
 
+  const [currentWeight, setCurrentWeight] = useState(
+    dashboardState?.wd_weight_current ?? null,
+  );
+  useEffect(() => {
+    if (dashboardState?.wd_weight_current !== undefined) {
+      setCurrentWeight(dashboardState.wd_weight_current);
+      setTempWeight(dashboardState.wd_weight_current);
+    }
+  }, [dashboardState]);
+
   /* live event for other components */
   useEffect(() => {
     window.dispatchEvent(new Event("lifeos:update"));
@@ -310,10 +356,6 @@ export default function GymSimplified({ dashboardState = {} }) {
 
   const [targetWeight, setTargetWeight] = useState(
     Number(dashboardState?.wd_goals?.targetWeight) || 70,
-  );
-
-  const [startWeight, setStartWeight] = useState(
-    dashboardState?.wd_start_weight ?? null,
   );
 
   /* Backend-only overrides */
@@ -367,7 +409,7 @@ export default function GymSimplified({ dashboardState = {} }) {
   function persistLogFor(dateIso, obj) {
     const next = { ...logs, [dateIso]: obj };
     setLogs(next);
-    syncDashboardToBackend(next, doneState);
+    syncDashboardToBackend(next, doneState, currentWeight, dashboardState);
   }
 
   /* checks initializer */
@@ -445,7 +487,18 @@ export default function GymSimplified({ dashboardState = {} }) {
     };
     next[section] = next[section] || [];
     next[section][idx] = !next[section][idx];
-    persistLogFor(dateKey, next);
+    // Force immediate UI reflect
+    setLogs((prev) => {
+      const updated = { ...prev, [dateKey]: next };
+      return updated;
+    });
+
+    syncDashboardToBackend(
+      { ...logs, [dateKey]: next },
+      doneState,
+      currentWeight,
+      dashboardState,
+    );
   };
 
   const canComplete =
@@ -513,13 +566,13 @@ export default function GymSimplified({ dashboardState = {} }) {
       return [...filtered, { date: dateKey, weight, bmi: newBmi }];
     });
 
-    // ✅ Set start weight only once
-    if (!startWeight && weight) {
-      setStartWeight(weight);
-    }
-
     // ✅ Sync to backend (THIS is now your only source of truth)
-    syncDashboardToBackend(updatedLogs, mergedDone);
+    syncDashboardToBackend(
+      updatedLogs,
+      mergedDone,
+      currentWeight,
+      dashboardState, // ✅ ADD
+    );
 
     // ✅ Fire event for other UI parts
     window.dispatchEvent(new Event("lifeos:update"));
@@ -552,7 +605,12 @@ export default function GymSimplified({ dashboardState = {} }) {
     setDoneState(merged);
 
     // ✅ Sync to backend
-    syncDashboardToBackend(updatedLogs, merged);
+    syncDashboardToBackend(
+      updatedLogs,
+      merged,
+      currentWeight,
+      dashboardState, // ✅ ADD
+    );
 
     // ✅ Notify other UI components
     window.dispatchEvent(new Event("lifeos:update"));
@@ -600,7 +658,7 @@ export default function GymSimplified({ dashboardState = {} }) {
   const latestWeight = latestDate ? weightHistory[latestDate] : null;
 
   const inferredStart =
-    startWeight ?? latestWeight ?? checks.weight ?? targetWeight;
+    currentWeight ?? latestWeight ?? checks.weight ?? targetWeight;
 
   const effectiveStart = inferredStart;
   const overrideWeight = weightOverrides[dateKey];
@@ -650,7 +708,7 @@ export default function GymSimplified({ dashboardState = {} }) {
     setDoneState({});
     setWeightOverrides({});
     setBmiLogs([]);
-    setStartWeight(null);
+    setCurrentWeight(null);
 
     // ✅ Notify other components
     window.dispatchEvent(new Event("lifeos:update"));
@@ -771,22 +829,32 @@ export default function GymSimplified({ dashboardState = {} }) {
 
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-emerald-100">
-              ⚖️ Start
+              ⚖ Curr Weight
             </span>
+
             <input
               type="number"
               step="0.1"
+              placeholder="Enter weight"
+              value={tempWeight ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") setTempWeight("");
+                else setTempWeight(Number(v));
+              }}
               className="w-24 px-2 py-1 rounded-md border
               border-gray-700 dark:border-emerald-800 bg-[#0c2624] 
               text-emerald-100 text-sm focus:outline-none 
               focus:ring-1 focus:ring-emerald-400"
-              value={startWeight ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "") setStartWeight(null);
-                else setStartWeight(Number(v));
-              }}
             />
+
+            <button
+              onClick={updateCurrentWeight}
+              className="px-2 py-1 rounded bg-emerald-600 text-sm hover:bg-emerald-700 transition"
+            >
+              Set
+            </button>
+
             <span className="text-sm text-gray-300">kg</span>
           </div>
 
