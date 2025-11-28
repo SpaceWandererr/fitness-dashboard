@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
-
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://fitness-backend-laoe.onrender.com/api/state";
@@ -26,12 +25,13 @@ import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
 
-import { load, save } from "./utils/localStorage.js";
+// import { load, save } from "./utils/localStorage.js";
 
 /* ======================= MAIN APP ======================= */
 
 export default function App() {
-  const [dark, setDark] = useState(() => load("wd_dark", true));
+  const [dark, setDark] = useState(false);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navRef = useRef(null);
@@ -46,45 +46,6 @@ export default function App() {
   useEffect(() => {
     let pressCount = 0;
     let timer;
-
-    async function syncToBackend() {
-      const state = {
-        wd_dark: localStorage.getItem("wd_dark"),
-        wd_weight_history: localStorage.getItem("wd_weight_history"),
-        wd_gym_logs: localStorage.getItem("wd_gym_logs"),
-        wd_goals: localStorage.getItem("wd_goals"),
-        wd_done: localStorage.getItem("wd_done"),
-        syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
-      };
-
-      try {
-        await fetch(API_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(state),
-        });
-        console.log("✅ State synced to backend");
-      } catch (err) {
-        console.error("❌ Sync failed:", err);
-      }
-    }
-
-    async function loadFromBackend() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-
-        setDashboardState(data);
-        console.log("✅ State pulled from backend");
-
-        Object.entries(data).forEach(([key, value]) => {
-          if (!value || value === "{}" || value === "[]") return;
-          localStorage.setItem(key, value);
-        });
-      } catch (err) {
-        console.error("❌ Load failed:", err);
-      }
-    }
 
     const secretListener = (e) => {
       // ✅ New secret combo: CTRL + SHIFT + K (twice)
@@ -316,7 +277,6 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
-    save("wd_dark", dark);
   }, [dark]);
 
   // Load stats + details from localStorage
@@ -327,44 +287,43 @@ export default function App() {
         const res = await fetch(API_URL);
         const cloudData = await res.json();
 
-        // Hydrate localStorage from backend (safe + filtered)
-        Object.entries(cloudData).forEach(([key, value]) => {
-          // Only allow your app keys
-          if (!key.startsWith("wd_") && key !== "syllabus_tree_v2") return;
+        // // Hydrate localStorage from backend (safe + filtered)
+        // Object.entries(cloudData).forEach(([key, value]) => {
+        //   // Only allow your app keys
+        //   if (!key.startsWith("wd_") && key !== "syllabus_tree_v2") return;
 
-          // Block null / undefined
-          if (value === null || typeof value === "undefined") return;
+        //   // Block null / undefined
+        //   if (value === null || typeof value === "undefined") return;
 
-          // Block useless empty strings/objects
-          if (
-            typeof value === "string" &&
-            (value === "{}" || value === "[]" || value.trim() === "")
-          )
-            return;
+        //   // Block useless empty strings/objects
+        //   if (
+        //     typeof value === "string" &&
+        //     (value === "{}" || value === "[]" || value.trim() === "")
+        //   )
+        //     return;
 
-          // Block corrupted backend array: ["{}"]
-          if (Array.isArray(value)) {
-            if (value.length === 1 && value[0] === "{}") return;
-          }
+        //   // Block corrupted backend array: ["{}"]
+        //   if (Array.isArray(value)) {
+        //     if (value.length === 1 && value[0] === "{}") return;
+        //   }
 
-          // Block empty pure object
-          if (
-            typeof value === "object" &&
-            !Array.isArray(value) &&
-            Object.keys(value).length === 0
-          )
-            return;
+        //   // Block empty pure object
+        //   if (
+        //     typeof value === "object" &&
+        //     !Array.isArray(value) &&
+        //     Object.keys(value).length === 0
+        //   )
+        //     return;
 
-          try {
-            localStorage.setItem(
-              key,
-              typeof value === "string" ? value : JSON.stringify(value)
-            );
-          } catch (err) {
-            console.warn("❌ Skipped corrupt backend value for:", key, err);
-          }
-        });
-
+        //   try {
+        //     localStorage.setItem(
+        //       key,
+        //       typeof value === "string" ? value : JSON.stringify(value)
+        //     );
+        //   } catch (err) {
+        //     console.warn("❌ Skipped corrupt backend value for:", key, err);
+        //   }
+        // });
         console.log("✅ State pulled from backend");
       } catch (err) {
         console.warn("⚠ Backend not reachable, using local data only", err);
@@ -372,10 +331,10 @@ export default function App() {
 
       // 2. Now run your ORIGINAL logic using localStorage
 
-      const gymLogs = load("wd_gym_logs", {});
-      const oldWeight = load("wd_weight_history", {});
-      const syllabus = load("syllabus_tree_v2", {});
-      const done = load("wd_done", {});
+      const gymLogs = dashboardState?.wd_gym_logs || {};
+      const oldWeight = dashboardState?.wd_weight_history || {};
+      const syllabus = dashboardState?.syllabus_tree_v2 || {};
+      const done = dashboardState?.wd_done || {};
 
       // weight history
       let wh = Object.entries(gymLogs)
@@ -422,7 +381,8 @@ export default function App() {
         return { total, done: doneCount };
       }
 
-      const syllabusData = load("syllabus_tree_v2", {});
+      const syllabusData = dashboardState?.syllabus_tree_v2 || {};
+
       const { total, done: doneTopics } = walk(syllabusData);
 
       // streak: based on wd_done
@@ -1038,7 +998,10 @@ function HomeDashboard({
                   {
                     panel: "weight",
                     icon: "Scale",
-                    value: `${stats.weight} kg`,
+                    value:
+                      typeof stats.weight === "number"
+                        ? `${stats.weight} kg`
+                        : "— kg",
                     sub: "Current Mass",
                     delay: 0.2,
                   },

@@ -2,40 +2,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import dayjs from "dayjs";
 
-/* ---------------------- Local Storage Utilities ---------------------- */
-function load(key, fallback = null) {
-  try {
-    const s = localStorage.getItem(key);
-    if (!s) return fallback;
-    return JSON.parse(s);
-  } catch {
-    console.warn("⚠ Corrupt value, resetting:", key);
-    localStorage.removeItem(key);
-    return fallback;
-  }
-}
-
-function save(key, val) {
-  try {
-    const data = JSON.stringify(val);
-
-    // 🛡 Prevent storage overflow
-    if (data.length > 2_000_000) {
-      console.warn("⚠ Value too large, skipping save:", key, data.length);
-      return;
-    }
-
-    localStorage.setItem(key, data);
-  } catch (e) {
-    if (e.name === "QuotaExceededError") {
-      console.warn("⚠ Storage full. Clearing:", key);
-      localStorage.removeItem(key);
-    } else {
-      console.warn("⚠ LocalStorage save failed:", key, e);
-    }
-  }
-}
-
 /* ---------------------- Constants ---------------------- */
 const WEEK = [
   "Monday",
@@ -93,7 +59,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       fn: async () => {
         const encoded = encodeURIComponent("https://zenquotes.io/api/random");
         const res = await fetch(
-          `https://api.codetabs.com/v1/proxy?quest=${encoded}`
+          `https://api.codetabs.com/v1/proxy?quest=${encoded}`,
         );
         if (!res.ok) throw res;
         const data = await res.json();
@@ -120,7 +86,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       try {
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), text: txt })
+          JSON.stringify({ ts: Date.now(), text: txt }),
         );
       } catch {}
       return txt;
@@ -145,7 +111,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   try {
     localStorage.setItem(
       cacheKey,
-      JSON.stringify({ ts: Date.now(), text: localPick })
+      JSON.stringify({ ts: Date.now(), text: localPick }),
     );
   } catch {}
   return localPick;
@@ -249,18 +215,11 @@ const DEFAULT_PLAN = {
   },
 };
 
-async function syncDashboardToBackend() {
+async function syncDashboardToBackend(currentLogs, currentDone) {
   try {
     const state = {
-      wd_done: load("wd_done", {}),
-      wd_gym_logs: load("wd_gym_logs", {}),
-      wd_weight_history: load("wd_weight_history", {}),
-      wd_weight_current: load("wd_weight_current", null),
-      wd_start_weight: load("wd_start_weight", null),
-      wd_goals: load("wd_goals", []),
-      wd_dark: load("wd_dark", false),
-      wd_mern_progress: load("wd_mern_progress", "0"),
-      syllabus_tree_v2: load("syllabus_tree_v2", {}),
+      wd_gym_logs: currentLogs,
+      wd_done: currentDone,
     };
 
     await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
@@ -269,7 +228,7 @@ async function syncDashboardToBackend() {
       body: JSON.stringify(state),
     });
 
-    console.log("✅ State synced to backend");
+    console.log("✅ Backend synced with live state");
   } catch (err) {
     console.error("❌ Backend sync failed:", err);
   }
@@ -287,11 +246,11 @@ export default function GymSimplified({ dashboardState = {} }) {
   const dateKey = fmtISO(date);
 
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   /* plan */
-  const [plan, setPlan] = useState(() => load("wd_gym_plan", DEFAULT_PLAN));
+  const [plan, setPlan] = useState(DEFAULT_PLAN);
 
   useEffect(() => {
     const wd = dayjs(date).format("dddd");
@@ -309,87 +268,61 @@ export default function GymSimplified({ dashboardState = {} }) {
     }
   }, [date]);
 
-  useEffect(() => save("wd_gym_plan", plan), [plan]);
+  /* logs & done state — BACKEND ONLY */
+  const [logs, setLogs] = useState(() => dashboardState?.wd_gym_logs || {});
 
-  useEffect(() => {
-    const updated = { ...DEFAULT_PLAN, ...plan };
-    setPlan(updated);
-    save("wd_gym_plan", updated);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /* logs & done state — BACKEND FIRST, local fallback */
-  const [logs, setLogs] = useState(
-    () => dashboardState?.wd_gym_logs || load("wd_gym_logs", {})
-  );
   const [doneState, setDoneState] = useState(
-    () => dashboardState?.wd_done || load("wd_done", {})
+    () => dashboardState?.wd_done || {},
   );
 
   useEffect(() => {
-    if (dashboardState?.wd_gym_logs) {
-      setLogs(dashboardState.wd_gym_logs);
+    // Fix gym logs shape
+    let logsData = dashboardState?.wd_gym_logs || {};
+
+    if (Array.isArray(logsData)) {
+      console.warn("Fixing backend logs array → object");
+      logsData = logsData.reduce((acc, item) => ({ ...acc, ...item }), {});
     }
-    if (dashboardState?.wd_done) {
-      setDoneState(dashboardState.wd_done);
+
+    let doneData = dashboardState?.wd_done || {};
+    if (Array.isArray(doneData)) {
+      console.warn("Fixing backend done array → object");
+      doneData = doneData.reduce((acc, item) => ({ ...acc, ...item }), {});
     }
+
+    setLogs(logsData);
+    setDoneState(doneData);
   }, [dashboardState]);
 
-  useEffect(() => {
-    const refreshDone = () => {
-      setDoneState(load("wd_done", {}));
-    };
-
-    window.addEventListener("lifeos:update", refreshDone);
-    window.addEventListener("storage", refreshDone);
-
-    return () => {
-      window.removeEventListener("lifeos:update", refreshDone);
-      window.removeEventListener("storage", refreshDone);
-    };
-  }, []);
-
+  /* live event for other components */
   useEffect(() => {
     window.dispatchEvent(new Event("lifeos:update"));
   }, [logs]);
 
+  /* Sunday quote */
   useEffect(() => {
     if (weekday === "Sunday") {
       fetchSundayQuote().then(setSundayQuote);
     }
   }, [weekday]);
 
-  useEffect(() => save("wd_gym_logs", logs), [logs]);
+  /* ---------------- BACKEND DRIVEN GOALS ---------------- */
 
-  /* goals / weight etc */
-  const [targetWeight, setTargetWeight] = useState(() => {
-    const rawGoals = load("wd_goals", {});
-    return Number(rawGoals?.targetWeight) || 70;
-  });
-
-  useEffect(() => {
-    save("wd_goals", { targetWeight });
-  }, [targetWeight]);
-
-  const [startWeight, setStartWeight] = useState(() =>
-    load("wd_start_weight", null)
-  );
-  useEffect(() => {
-    if (startWeight !== null && startWeight !== undefined) {
-      save("wd_start_weight", startWeight);
-    }
-  }, [startWeight]);
-
-  const [weightOverrides, setWeightOverrides] = useState(() =>
-    load("wd_weight_overrides", {})
-  );
-  useEffect(
-    () => save("wd_weight_overrides", weightOverrides),
-    [weightOverrides]
+  const [targetWeight, setTargetWeight] = useState(
+    Number(dashboardState?.wd_goals?.targetWeight) || 70,
   );
 
-  const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
-  useEffect(() => save("bmi_logs", bmiLogs), [bmiLogs]);
+  const [startWeight, setStartWeight] = useState(
+    dashboardState?.wd_start_weight ?? null,
+  );
+
+  /* Backend-only overrides */
+  const [weightOverrides, setWeightOverrides] = useState(
+    dashboardState?.wd_weight_overrides || {},
+  );
+
+  /* Backend-only BMI logs */
+  const [bmiLogs, setBmiLogs] = useState(dashboardState?.bmi_logs || []);
 
   /* modal and inputs */
   const [showModal, setShowModal] = useState(false);
@@ -434,7 +367,7 @@ export default function GymSimplified({ dashboardState = {} }) {
   function persistLogFor(dateIso, obj) {
     const next = { ...logs, [dateIso]: obj };
     setLogs(next);
-    save("wd_gym_logs", next);
+    syncDashboardToBackend(next, doneState);
   }
 
   /* checks initializer */
@@ -462,18 +395,18 @@ export default function GymSimplified({ dashboardState = {} }) {
       left: Array.isArray(prev.left)
         ? prev.left
         : Array.isArray(def.left)
-        ? def.left.map(() => false)
-        : [],
+          ? def.left.map(() => false)
+          : [],
       right: Array.isArray(prev.right)
         ? prev.right
         : Array.isArray(def.right)
-        ? def.right.map(() => false)
-        : [],
+          ? def.right.map(() => false)
+          : [],
       finisher: Array.isArray(prev.finisher)
         ? prev.finisher
         : Array.isArray(def.finisher)
-        ? def.finisher.map(() => false)
-        : [],
+          ? def.finisher.map(() => false)
+          : [],
       done: !!prev.done,
       calories: prev.calories,
       bmi: prev.bmi,
@@ -526,7 +459,7 @@ export default function GymSimplified({ dashboardState = {} }) {
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
-      ((checks.weight ?? overrideWeight ?? "") || "").toString()
+      ((checks.weight ?? overrideWeight ?? "") || "").toString(),
     );
     setShowModal(true);
   };
@@ -538,9 +471,10 @@ export default function GymSimplified({ dashboardState = {} }) {
 
     const weight = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : checks.weight ?? null;
+      : (checks.weight ?? null);
 
-    const savedHeight = Number(load("bmi_height", 176));
+    const savedHeight = 176; // or dashboardState?.bmi_height || 176
+
     const newBmi =
       weight && savedHeight
         ? Number((weight / Math.pow(savedHeight / 100, 2)).toFixed(1))
@@ -559,53 +493,38 @@ export default function GymSimplified({ dashboardState = {} }) {
       bmi: newBmi,
     };
 
-    persistLogFor(dateKey, next);
+    // ✅ Update logs state
+    const updatedLogs = { ...logs, [dateKey]: next };
+    setLogs(updatedLogs);
 
-    // ✅ no more merging with local: just update current doneState and local
+    // ✅ Update done state
     const mergedDone = { ...doneState, [dateKey]: true };
     setDoneState(mergedDone);
-    save("wd_done", mergedDone);
 
-    window.dispatchEvent(new Event("lifeos:update"));
-    syncDashboardToBackend();
+    // ✅ Update overrides
+    setWeightOverrides((prev) => ({
+      ...prev,
+      [dateKey]: weight,
+    }));
 
-    const overrides = { ...weightOverrides, [dateKey]: weight };
-    setWeightOverrides(overrides);
-    save("wd_weight_overrides", overrides);
+    // ✅ Update BMI logs state
+    setBmiLogs((prev) => {
+      const filtered = prev.filter((e) => e?.date !== dateKey);
+      return [...filtered, { date: dateKey, weight, bmi: newBmi }];
+    });
 
-    const disp = dateKey;
-    const arr = load("bmi_logs", []);
-    const idx = arr.findIndex((e) => e?.date === disp);
-    if (idx >= 0) {
-      arr[idx] = { ...arr[idx], weight, bmi: newBmi };
-    } else {
-      arr.push({ date: disp, weight, bmi: newBmi });
-    }
-    setBmiLogs(arr);
-    save("bmi_logs", arr);
-
-    if (weight) {
-      let weightHistory = load("wd_weight_history", {});
-
-      if (typeof weightHistory !== "object" || Array.isArray(weightHistory)) {
-        weightHistory = {};
-      }
-
-      weightHistory[dateKey] = weight;
-      save("wd_weight_history", weightHistory);
+    // ✅ Set start weight only once
+    if (!startWeight && weight) {
+      setStartWeight(weight);
     }
 
-    if (weight) {
-      const savedStart = load("wd_start_weight", null);
+    // ✅ Sync to backend (THIS is now your only source of truth)
+    syncDashboardToBackend(updatedLogs, mergedDone);
 
-      if (savedStart === null || savedStart === undefined) {
-        setStartWeight(weight);
-        save("wd_start_weight", weight);
-      }
-    }
-
+    // ✅ Fire event for other UI parts
     window.dispatchEvent(new Event("lifeos:update"));
 
+    // ✅ Close modal
     setShowModal(false);
   };
 
@@ -613,7 +532,7 @@ export default function GymSimplified({ dashboardState = {} }) {
     const prev = logs[dateKey] || {};
     setCaloriesInput((prev.calories ?? "").toString());
     setCurrentWeightInput(
-      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString()
+      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString(),
     );
     setShowModal(true);
   };
@@ -622,15 +541,21 @@ export default function GymSimplified({ dashboardState = {} }) {
     const prevLog = logs[dateKey] || { ...checks, weekday };
 
     const nextLog = { ...prevLog, calories: undefined, done: false };
-    persistLogFor(dateKey, nextLog);
 
+    // ✅ Update logs state
+    const updatedLogs = { ...logs, [dateKey]: nextLog };
+    setLogs(updatedLogs);
+
+    // ✅ Update done state
     const merged = { ...doneState };
     delete merged[dateKey];
     setDoneState(merged);
-    save("wd_done", merged);
 
+    // ✅ Sync to backend
+    syncDashboardToBackend(updatedLogs, merged);
+
+    // ✅ Notify other UI components
     window.dispatchEvent(new Event("lifeos:update"));
-    syncDashboardToBackend();
   };
 
   const toggleMarkAll = () => {
@@ -668,7 +593,7 @@ export default function GymSimplified({ dashboardState = {} }) {
   }, [doneState]);
 
   /* weight progress helpers */
-  const weightHistory = load("wd_weight_history", {});
+  const weightHistory = dashboardState?.wd_weight_history || {};
 
   const dates = Object.keys(weightHistory).sort();
   const latestDate = dates[dates.length - 1];
@@ -707,7 +632,7 @@ export default function GymSimplified({ dashboardState = {} }) {
 
   /* reset progress */
   const resetProgress = async () => {
-    const confirmReset = confirm("Reset ALL gym data (Mongo + Local)?");
+    const confirmReset = confirm("Reset ALL gym data from backend?");
     if (!confirmReset) return;
 
     try {
@@ -715,27 +640,26 @@ export default function GymSimplified({ dashboardState = {} }) {
         method: "POST",
       });
 
-      console.log("Mongo reset done ✅");
+      console.log("✅ Backend reset completed");
     } catch (err) {
-      console.error("Mongo reset failed:", err);
+      console.error("❌ Backend reset failed:", err);
     }
 
+    // ✅ Reset frontend state (no localStorage)
     setLogs({});
-    save("wd_gym_logs", {});
-    save("wd_done", {});
+    setDoneState({});
     setWeightOverrides({});
-    save("wd_weight_overrides", {});
     setBmiLogs([]);
-    save("bmi_logs", []);
-    save("wd_weight_history", {});
+    setStartWeight(null);
 
+    // ✅ Notify other components
     window.dispatchEvent(new Event("lifeos:update"));
 
     alert("FULL RESET DONE ✅");
   };
 
   const normalizedWeekday = WEEK.find(
-    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
+    (d) => d.toLowerCase() === (weekday || "").toLowerCase(),
   );
   const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
     DEFAULT_PLAN[normalizedWeekday] || {
@@ -915,7 +839,7 @@ export default function GymSimplified({ dashboardState = {} }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 15px)`,
             }}
           >
@@ -971,8 +895,8 @@ export default function GymSimplified({ dashboardState = {} }) {
                   sectionKey === "left"
                     ? "Left"
                     : sectionKey === "right"
-                    ? "Right"
-                    : dayPlan.finisherLabel || "Finisher";
+                      ? "Right"
+                      : dayPlan.finisherLabel || "Finisher";
 
                 const list = dayPlan[sectionKey] || [];
                 const state = checks[sectionKey] || [];
@@ -1102,7 +1026,12 @@ export default function GymSimplified({ dashboardState = {} }) {
           setDate={setDate}
           dashboardState={dashboardState}
         />
-        <DailySummary date={date} logs={logs} dateKey={dateKey} />
+        <DailySummary
+          date={date}
+          logs={logs}
+          dateKey={dateKey}
+          dashboardState={dashboardState}
+        />
       </section>
 
       {/* Modal */}
@@ -1169,9 +1098,9 @@ export default function GymSimplified({ dashboardState = {} }) {
 
 /* ---------------------- Subcomponents ---------------------- */
 
-function DailySummary({ date, logs, dateKey }) {
+function DailySummary({ date, logs, dateKey, dashboardState }) {
   const entry = logs[dateKey];
-  const bmiLogs = load("bmi_logs", {});
+  const bmiLogs = dashboardState?.wd_weight_history || {};
   const latestBmi = bmiLogs[dateKey] || null;
 
   return (
@@ -1205,14 +1134,15 @@ function DailySummary({ date, logs, dateKey }) {
           ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
         </div>
         <div>
-          📊 BMI: {entry?.bmi != null ? entry.bmi : latestBmi?.bmi ?? "—"}
+          📊 BMI: {entry?.bmi != null ? entry.bmi : (latestBmi?.bmi ?? "—")}
         </div>
         <div className="mt-2">
           <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>
           {entry ? (
             <ul className="list-disc list-inside text-sm text-emerald-100">
               {(() => {
-                const planStore = load("wd_gym_plan", {}) || {};
+                const planStore = dashboardState?.wd_gym_plan || DEFAULT_PLAN;
+
                 const wd = entry?.weekday || dayjs(date).format("dddd");
                 const todayPlan = planStore[wd] || {};
                 const allExercises = [

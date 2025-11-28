@@ -1,11 +1,9 @@
 import express from "express";
 import DashboardState from "../models/DashboardState.js";
-
+import StateSnapshot from "../models/StateSnapshot.js";
 
 console.log("🔥 USING DashboardState from:", import.meta.url);
 console.log("🔥 Schema paths:", DashboardState.schema.paths);
-
-import StateSnapshot from "../models/StateSnapshot.js";
 
 const router = express.Router();
 const USER_ID = "default";
@@ -26,10 +24,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-// SAVE STATE + SNAPSHOT
+// ✅ SAVE STATE + SNAPSHOT
 router.put("/", async (req, res) => {
   try {
-    const userId = "default";
+    const userId = USER_ID;
     let newState = req.body;
 
     // --- KEYS THAT MUST ALWAYS BE OBJECTS ---
@@ -50,7 +48,7 @@ router.put("/", async (req, res) => {
         return;
       }
 
-      // Convert stringified JSON to real object
+      // Convert stringified JSON
       if (typeof val === "string") {
         try {
           const parsed = JSON.parse(val);
@@ -60,23 +58,22 @@ router.put("/", async (req, res) => {
         }
       }
 
-      // Force object if wrong type
       if (typeof newState[key] !== "object") {
         newState[key] = {};
       }
     });
 
-    // --- STEP 2: FIX BAD ARRAY STRUCTURE (mobile issue) ---
+    // --- STEP 2: FIX BROKEN ARRAY STRUCTURE (MOBILE BUG FIX) ---
 
-    // Fix wd_gym_logs: flatten nested arrays into final object
+    // FIX wd_gym_logs
     if (Array.isArray(newState.wd_gym_logs)) {
       const flatLogs = {};
 
-      newState.wd_gym_logs.forEach((level1) => {
-        if (typeof level1 === "object") {
-          Object.values(level1).forEach((level2) => {
-            if (typeof level2 === "object") {
-              Object.entries(level2).forEach(([date, data]) => {
+      newState.wd_gym_logs.forEach((block) => {
+        if (typeof block === "object") {
+          Object.values(block).forEach((inner) => {
+            if (typeof inner === "object") {
+              Object.entries(inner).forEach(([date, data]) => {
                 flatLogs[date] = data;
               });
             }
@@ -87,15 +84,15 @@ router.put("/", async (req, res) => {
       newState.wd_gym_logs = flatLogs;
     }
 
-    // Fix wd_done: also flatten if corrupted
+    // FIX wd_done
     if (Array.isArray(newState.wd_done)) {
       const cleanDone = {};
 
-      newState.wd_done.forEach((level1) => {
-        if (typeof level1 === "object") {
-          Object.values(level1).forEach((level2) => {
-            if (typeof level2 === "object") {
-              Object.assign(cleanDone, level2);
+      newState.wd_done.forEach((block) => {
+        if (typeof block === "object") {
+          Object.values(block).forEach((inner) => {
+            if (typeof inner === "object") {
+              Object.assign(cleanDone, inner);
             }
           });
         }
@@ -104,8 +101,7 @@ router.put("/", async (req, res) => {
       newState.wd_done = cleanDone;
     }
 
-    // --- STEP 3: FIX wd_weight_history FORMAT ---
-    // ✅ Normalize weight history
+    // --- STEP 3: FIX WEIGHT HISTORY ---
     if (Array.isArray(newState.wd_weight_history)) {
       const cleanHistory = {};
 
@@ -118,7 +114,7 @@ router.put("/", async (req, res) => {
       newState.wd_weight_history = cleanHistory;
     }
 
-    // --- STEP 4: FIX CURRENT WEIGHT ---
+    // --- STEP 4: FIX CURRENT WEIGHT FORMAT ---
     if (
       newState.wd_weight_current === "null" ||
       newState.wd_weight_current === undefined ||
@@ -130,28 +126,31 @@ router.put("/", async (req, res) => {
       newState.wd_weight_current = isNaN(parsed) ? null : parsed;
     }
 
-    // --- STEP 5: CREATE SNAPSHOT ---
+    // --- STEP 5: FINAL SAFETY: ENSURE NO ARRAYS SLIP IN ---
+    if (Array.isArray(newState.wd_gym_logs)) newState.wd_gym_logs = {};
+    if (Array.isArray(newState.wd_done)) newState.wd_done = {};
+    if (Array.isArray(newState.wd_goals))
+      newState.wd_goals = newState.wd_goals[0] || {};
+
+    // --- STEP 6: CREATE SNAPSHOT ---
     await StateSnapshot.create({
       userId,
       state: newState,
     });
 
-    // --- STEP 6: UPDATE MAIN STATE ---
+    // --- STEP 7: UPDATE MAIN STATE ---
     const updated = await DashboardState.findOneAndUpdate(
       { userId },
       { $set: newState },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     res.json(updated);
   } catch (err) {
-    console.error("PUT ERROR:", err);
+    console.error("❌ PUT ERROR:", err);
     res.status(500).json({ message: "Error saving state" });
   }
 });
-
-
-
 
 // ✅ FULL RESET (Dashboard + Snapshots)
 router.post("/reset", async (req, res) => {
@@ -169,7 +168,7 @@ router.post("/reset", async (req, res) => {
   }
 });
 
-// ✅ Optional: export snapshot history
+// ✅ FETCH SNAPSHOT HISTORY
 router.get("/snapshots", async (req, res) => {
   try {
     const snaps = await StateSnapshot.find({ userId: USER_ID })
