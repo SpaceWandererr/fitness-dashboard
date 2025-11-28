@@ -506,10 +506,15 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Syllabus />
+                  {/* Pass Mongo-synced dashboard state into Syllabus */}
+                  <Syllabus
+                    dashboardState={dashboardState}
+                    setDashboardState={setDashboardState}
+                  />
                 </motion.div>
               }
             />
+
             <Route
               path="/gym"
               element={

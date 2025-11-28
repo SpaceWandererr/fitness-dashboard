@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { save } from "../utils/localStorage";
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4149,6 +4148,9 @@ const TREE = {
   },
 };
 
+// ✅ Prevent sections auto closing after updates
+// const stableMeta = useMemo(() => meta, [JSON.stringify(meta)]);
+
 /* =======https://fitness-backend-laoe.onrender.com/=============== KEYS ======================= */
 const K_TREE = "syllabus_tree_v2";
 const K_META = "syllabus_meta_v2";
@@ -4156,67 +4158,150 @@ const K_NOTES = "syllabus_notes_v2";
 const K_STREAK = "syllabus_streak_v2";
 
 /* ======================= UTIL ======================= */
+
+/**
+ * Check if value is an array
+ */
 const isArray = Array.isArray;
+
+/**
+ * Check if value is a plain object (not null, not array)
+ */
 const isObject = (o) => !!o && typeof o === "object" && !Array.isArray(o);
+
+/**
+ * Returns today's date in YYYY-MM-DD format
+ */
 const todayISO = () => new Date().toISOString().slice(0, 10);
+
+/**
+ * Safe deep clone using JSON method
+ * NOTE: Only use for pure JSON objects
+ */
 const deepClone = (o) => JSON.parse(JSON.stringify(o || {}));
+
+/**
+ * Converts path array to a readable string
+ * Example: ["JS", "Basics", "Scope"] → "JS > Basics > Scope"
+ */
 const pathKey = (path) => (path || []).join(" > ");
+
+/**
+ * Creates unique key for item lists based on path + index
+ */
 const itemKey = (path, idx) => `${pathKey(path)} ## ${idx}`;
 
+/**
+ * Format ISO date → DD-MM-YYYY
+ */
 function formatDateDDMMYYYY(iso) {
   if (!iso) return "";
+
   const d = new Date(iso);
   if (isNaN(d)) return iso;
+
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yyyy = String(d.getFullYear());
+
   return `${dd}-${mm}-${yyyy}`;
 }
+
+/**
+ * Returns number of days between two ISO dates
+ * Example: 2025-01-01 and 2025-01-05 → 4
+ */
 function daysDiff(aISO, bISO) {
   if (!aISO || !bISO) return null;
+
   const a = new Date(aISO);
   const b = new Date(bISO);
+
   if (isNaN(a) || isNaN(b)) return null;
+
   const ms = a.setHours(0, 0, 0, 0) - b.setHours(0, 0, 0, 0);
+
   return Math.round(ms / 86400000);
 }
+
+/**
+ * Safely get any nested node reference from tree using path array
+ * Example: ["JS", "Basics", "Scope"]
+ */
 function getRefAtPath(obj, path) {
   let ref = obj;
+
   for (const part of path) {
     if (!ref || typeof ref !== "object") return undefined;
     ref = ref[part];
   }
+
   return ref;
 }
+
+/**
+ * Calculates total items + done items from a section
+ * Works for both array nodes and recursive objects
+ */
 function totalsOf(node) {
+  // If it's a leaf array
   if (isArray(node)) {
     const total = node.length;
     const done = node.filter((i) => i.done).length;
-    return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+
+    return {
+      total,
+      done,
+      pct: total ? Math.round((done / total) * 100) : 0,
+    };
   }
-  let total = 0,
-    done = 0;
+
+  // If it's nested object
+  let total = 0;
+  let done = 0;
+
   for (const v of Object.values(node || {})) {
     const t = totalsOf(v);
     total += t.total;
     done += t.done;
   }
-  return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+
+  return {
+    total,
+    done,
+    pct: total ? Math.round((done / total) * 100) : 0,
+  };
 }
+
+/**
+ * Converts flat › format into nested object structure
+ * Example:
+ * "JS › Basics › Scope": [items]
+ * becomes:
+ * { JS: { Basics: { Scope: [...] } } }
+ */
 function normalizeSection(sectionObj) {
   const out = {};
+
   for (const [rawKey, value] of Object.entries(sectionObj || {})) {
+    // If it's already nested
     if (!rawKey.includes("›")) {
       out[rawKey] = isArray(value) ? deepClone(value) : normalizeSection(value);
       continue;
     }
+
+    // Convert "A › B › C" into ["A", "B", "C"]
     const parts = rawKey
       .split("›")
       .map((s) => s.trim())
       .filter(Boolean);
+
     let ref = out;
+
     for (let i = 0; i < parts.length; i++) {
       const p = parts[i];
+
+      // Last part → assign leaf
       if (i === parts.length - 1)
         ref[p] = isArray(value) ? deepClone(value) : normalizeSection(value);
       else {
@@ -4225,24 +4310,81 @@ function normalizeSection(sectionObj) {
       }
     }
   }
-  return out;
-}
-function normalizeWholeTree(src) {
-  const out = {};
-  for (const [k, v] of Object.entries(src || {})) out[k] = normalizeSection(v);
+
   return out;
 }
 
+/**
+ * Normalizes your entire syllabus TREE
+ * Converts all sections into nested structures
+ */
+function normalizeWholeTree(src) {
+  const out = {};
+
+  for (const [k, v] of Object.entries(src || {})) {
+    out[k] = normalizeSection(v);
+  }
+
+  return out;
+}
 /* ======================= MAIN ======================= */
-export default function Syllabus() {
-  const [lastStudied, setLastStudied] = useState(
-    localStorage.getItem("K_LAST_STUDIED") || ""
-  );
+export default function Syllabus({ dashboardState, setDashboardState }) {
+  // ---------------- MONGO CONFIG ----------------
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://fitness-backend-laoe.onrender.com/api/state";
+
+  // ⛑ Guard: prevent crash before state arrives
+  if (!dashboardState) {
+    return <div className="p-6 text-white">Loading syllabus from Mongo...</div>;
+  }
+
+  /* ======================= SYNCED STATE FROM MONGO ======================= */
+
+  const tree = dashboardState?.syllabus_tree_v2
+    ? normalizeWholeTree(dashboardState.syllabus_tree_v2)
+    : normalizeWholeTree(TREE);
+
+  const meta = dashboardState?.syllabus_meta || {};
+  const stableMeta = useMemo(() => meta, [JSON.stringify(meta)]);
+
+  const nr = dashboardState?.syllabus_notes || {};
+  const daySet = new Set(dashboardState?.syllabus_streak || []);
 
   const [showLastStudied, setShowLastStudied] = useState(true);
 
-  const LAST_STUDIED_HIDE_MINUTES = 10; // you can change this
+  const lastStudied = dashboardState?.syllabus_lastStudied || "";
+  const LAST_STUDIED_HIDE_MINUTES = 10;
 
+  const [query, setQuery] = useState("");
+  const [showTopBtn, setShowTopBtn] = useState(false);
+  const [milestone, setMilestone] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  /* ======================= AUTO SEED MONGO ======================= */
+  useEffect(() => {
+    if (!dashboardState.syllabus_tree_v2) {
+      console.log("🌱 Seeding initial syllabus tree into Mongo...");
+
+      const seeded = {
+        ...dashboardState,
+        syllabus_tree_v2: normalizeWholeTree(TREE),
+      };
+
+      // Update frontend
+      setDashboardState(seeded);
+
+      // Push to Mongo
+      fetch(API_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(seeded),
+      }).catch((err) => console.error("Mongo seed failed:", err));
+    }
+  }, []);
+
+  /* ======================= LAST STUDIED AUTO-HIDE ======================= */
   useEffect(() => {
     if (!lastStudied) return;
 
@@ -4255,384 +4397,282 @@ export default function Syllabus() {
     return () => clearTimeout(timer);
   }, [lastStudied]);
 
-  const [tree, setTree] = useState(() => {
-    try {
-      const s = localStorage.getItem(K_TREE);
-      if (s) return JSON.parse(s);
-    } catch {}
-    return normalizeWholeTree(TREE);
-  });
-  const [meta, setMeta] = useState(() => {
-    try {
-      const s = localStorage.getItem(K_META);
-      if (s) return JSON.parse(s);
-    } catch {}
-    const m = {};
-    for (const [secKey, secVal] of Object.entries(tree)) {
-      m[pathKey([secKey])] = { open: false, targetDate: "", targetPct: 100 };
-      seedChildMeta(m, [secKey], secVal);
-    }
-    return m;
-  });
-  const [nr, setNR] = useState(() => {
-    try {
-      const s = localStorage.getItem(K_NOTES);
-      if (s) return JSON.parse(s);
-    } catch {}
-    return {};
-  });
-  const [daySet, setDaySet] = useState(() => {
-    try {
-      const s = localStorage.getItem(K_STREAK);
-      if (s) return new Set(JSON.parse(s));
-    } catch {}
-    return new Set();
-  });
-
-  const [lastSaved, setLastSaved] = useState(() => {
-    const saved = localStorage.getItem("syllabus_last_saved_v2");
-    return saved ? new Date(saved) : null;
-  });
-
-  const [query, setQuery] = useState("");
-  const [showTopBtn, setShowTopBtn] = useState(false);
-  const [milestone, setMilestone] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-
+  /* ======================= STREAK ======================= */
   const streak = useMemo(() => {
     const has = (iso) => daySet.has(iso);
     let st = 0;
     const d = new Date();
-    for (;;) {
+    while (true) {
       const iso = d.toISOString().slice(0, 10);
       if (has(iso)) st++;
       else break;
       d.setDate(d.getDate() - 1);
     }
     return st;
-  }, [daySet]);
+  }, [dashboardState?.syllabus_streak]);
 
-  /* persist */
-  useEffect(() => {
-    try {
-      save("syllabus_tree_v2", tree);
-      const now = new Date();
-      localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
-      setLastSaved(now);
-
-      // 🔔 Trigger backend auto-sync
-      window.dispatchEvent(new Event("lifeos:update"));
-    } catch (e) {
-      console.warn("Syllabus save failed:", e);
-    }
-  }, [tree]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(K_META, JSON.stringify(meta));
-      updateLastSaved(); // ✅ record save time
-    } catch {}
-  }, [meta]);
-
-  const nrSaveRef = useRef(null);
-
-  useEffect(() => {
-    clearTimeout(nrSaveRef.current);
-    nrSaveRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem(K_NOTES, JSON.stringify(nr));
-        updateLastSaved(); // ✅ record save time
-      } catch {}
-    }, 200);
-    return () => clearTimeout(nrSaveRef.current);
-  }, [nr]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(K_STREAK, JSON.stringify(Array.from(daySet)));
-      updateLastSaved(); // ✅ record save time
-    } catch {}
-  }, [daySet]);
-
-  /* ui misc */
-  useEffect(() => {
-    const onScroll = () => setShowTopBtn(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
   const grand = useMemo(() => totalsOf(tree), [tree]);
 
-  function seedChildMeta(m, path, node) {
-    if (isArray(node)) {
-      const k = pathKey(path);
-      if (!m[k]) m[k] = { open: false, targetDate: "" };
-      return;
-    }
-    for (const [name, child] of Object.entries(node || {})) {
-      const k = pathKey([...path, name]);
-      if (!m[k]) m[k] = { open: false, targetDate: "" };
-      seedChildMeta(m, [...path, name], child);
-    }
-  }
-
-  function updateLastSaved() {
-    setSaving(true);
-    const now = new Date();
-    localStorage.setItem("syllabus_last_saved_v2", now.toISOString());
-    setLastSaved(now);
-    setTimeout(() => setSaving(false), 1000); // "Saving..." animation for 1 sec
-  }
-
-  /* actions */
-  const toggleOpen = (path) =>
-    setMeta((m) => {
-      const k = pathKey(path);
-      const nowOpen = !m[k]?.open;
-      const next = { ...m, [k]: { ...(m[k] || {}), open: nowOpen } };
-      if (!nowOpen) {
-        const node = getRefAtPath(tree, path);
-        (function closeAll(n, p) {
-          if (isArray(n)) return;
-          for (const [name, child] of Object.entries(n || {})) {
-            const ck = pathKey([...p, name]);
-            next[ck] = { ...(next[ck] || {}), open: false };
-            closeAll(child, [...p, name]);
-          }
-        })(node, path);
-      }
-      return next;
-    });
-  const onSectionHeaderClick = (path) => toggleOpen(path);
-  const setTargetDate = (path, date) =>
-    setMeta((m) => ({
-      ...m,
-      [pathKey(path)]: { ...(m[pathKey(path)] || {}), targetDate: date },
+  /* ======================= DASHBOARD UPDATE ======================= */
+  const updateDashboard = (updates) => {
+    setDashboardState((prev) => ({
+      ...prev,
+      ...updates,
     }));
-  const setSectionTargetPct = (secKey, pct) =>
-    setMeta((m) => ({
-      ...m,
-      [pathKey([secKey])]: {
-        ...(m[pathKey([secKey])] || {}),
-        targetPct: Number(pct || 0),
+
+    window.dispatchEvent(new Event("lifeos:update"));
+  };
+
+  /* ======================= ACTIONS ======================= */
+
+  // ✅ Stable Toggle (does not break after Mongo re-render)
+  const toggleOpen = (path) => {
+    const key = pathKey(path);
+
+    const current = dashboardState.syllabus_meta || {};
+    const prev = current[key]?.open || false;
+
+    const updatedMeta = {
+      ...current,
+      [key]: {
+        ...(current[key] || {}),
+        open: !prev,
       },
-    }));
+    };
+
+    updateDashboard({
+      syllabus_meta: updatedMeta,
+    });
+  };
+
+  // alias for Section header click
+  const onSectionHeaderClick = (path) => {
+    toggleOpen(path);
+  };
+
+  const setTargetDate = (path, date) => {
+    const key = pathKey(path);
+
+    updateDashboard({
+      syllabus_meta: {
+        ...meta,
+        [key]: { ...(meta[key] || {}), targetDate: date },
+      },
+    });
+  };
+
+  const setSectionTargetPct = (secKey, pct) => {
+    const key = pathKey([secKey]);
+
+    updateDashboard({
+      syllabus_meta: {
+        ...meta,
+        [key]: {
+          ...(meta[key] || {}),
+          targetPct: Number(pct || 0),
+        },
+      },
+    });
+  };
 
   const setAllAtPath = (path, val) => {
-    setTree((old) => {
-      const t = deepClone(old);
-      const node = getRefAtPath(t, path);
+    const newTree = deepClone(tree);
+    const node = getRefAtPath(newTree, path);
 
-      let lastItem = null; // 🔥 keep track of the last completed topic
+    let lastItem = null;
 
-      (function mark(n) {
-        if (isArray(n)) {
-          n.forEach((it) => {
-            it.done = val;
-            it.completedOn = val ? todayISO() : "";
-            if (val) lastItem = it; // 🔥 store the last item in this array
-          });
-          return;
-        }
-        for (const v of Object.values(n || {})) mark(v);
-      })(node);
-
-      // 🔥 Update LAST STUDIED only when marking ALL as done
-      if (val && lastItem) {
-        const timestamp = new Date().toLocaleString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
-
-        const stamp = `${lastItem.title} — ${timestamp}`;
-        setLastStudied(stamp);
-        localStorage.setItem("K_LAST_STUDIED", stamp);
-        setShowLastStudied(true);
-      }
-      return t;
-    });
-
-    if (val) setDaySet((s) => new Set(s).add(todayISO()));
-  };
-
-  const setTaskDeadline = (path, idx, date) => {
-    setTree((old) => {
-      const t = deepClone(old);
-      const parent = getRefAtPath(t, path.slice(0, -1));
-      const leafKey = path[path.length - 1];
-      parent[leafKey][idx].deadline = date;
-      return t;
-    });
-  };
-
-  const markTask = (path, idx, val) => {
-    setTree((old) => {
-      const t = deepClone(old);
-      const parent = getRefAtPath(t, path.slice(0, -1));
-      const leafKey = path[path.length - 1];
-      const item = parent[leafKey][idx];
-
-      item.done = val;
-      item.completedOn = val ? todayISO() : "";
-
-      if (val) {
-        const timestamp = new Date().toLocaleString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
-
-        const stamp = `${item.title} — ${timestamp}`;
-
-        setLastStudied(stamp);
-        localStorage.setItem("K_LAST_STUDIED", stamp);
-        setShowLastStudied(true);
-      }
-
-      return t;
-    });
-
-    if (val) setDaySet((prev) => new Set(prev).add(todayISO()));
-  };
-
-  /* search filter (structure-preserving) */
-  const filtered = useMemo(() => {
-    if (!query.trim()) return tree;
-    const q = query.toLowerCase();
-    function filterNode(node) {
-      if (isArray(node)) {
-        const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
-        );
-        return items.length ? items : null;
-      }
-      const out = {};
-      for (const [k, v] of Object.entries(node || {})) {
-        const matchKey = (k || "").toLowerCase().includes(q);
-        const fn = filterNode(v);
-        if (matchKey && !fn) out[k] = v;
-        else if (fn && (isArray(fn) ? fn.length : Object.keys(fn).length))
-          out[k] = fn;
-      }
-      return Object.keys(out).length ? out : null;
-    }
-    return filterNode(tree) || {};
-  }, [tree, query]);
-
-  const generateSmartPlan = (availableMins) => {
-    const leaves = [];
-    function walk(node, path) {
-      if (isArray(node)) {
-        node.forEach((it, idx) => {
-          if (!it.done)
-            leaves.push({
-              title: it.title,
-              deadline: it.deadline || "",
-              estimate: Math.max(
-                0.25,
-                Number(nr[itemKey(path, idx)]?.estimate || 0.5)
-              ),
-            });
+    (function mark(n) {
+      if (Array.isArray(n)) {
+        n.forEach((it) => {
+          it.done = val;
+          it.completedOn = val ? todayISO() : "";
+          if (val) lastItem = it;
         });
         return;
       }
-      for (const [k, v] of Object.entries(node || {})) walk(v, [...path, k]);
+      for (const v of Object.values(n || {})) mark(v);
+    })(node);
+
+    const updates = { syllabus_tree_v2: newTree };
+
+    if (val && lastItem) {
+      updates.syllabus_lastStudied = `${
+        lastItem.title
+      } — ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
-    walk(tree, []);
-    const scored = leaves
-      .map((l) => ({
-        ...l,
-        score:
-          (l.deadline ? Date.parse(l.deadline) : Number.POSITIVE_INFINITY) +
-          l.estimate * 1000,
-      }))
-      .sort((a, b) => a.score - b.score);
-    const plan = [];
-    let remaining = availableMins;
-    for (const t of scored) {
-      const mins = Math.round(t.estimate * 60);
-      if (mins <= remaining) {
-        plan.push(t);
-        remaining -= mins;
-      }
-      if (remaining < 15) break;
-    }
-    return { plan, remaining };
+
+    updateDashboard(updates);
   };
 
-  // ✅ Export all syllabus data
+  const markTask = (path, idx, val) => {
+    const newTree = deepClone(tree);
+
+    const parent = getRefAtPath(newTree, path.slice(0, -1));
+    const leafKey = path[path.length - 1];
+    const item = parent[leafKey][idx];
+
+    item.done = val;
+    item.completedOn = val ? todayISO() : "";
+
+    const updates = { syllabus_tree_v2: newTree };
+
+    if (val) {
+      updates.syllabus_lastStudied = `${
+        item.title
+      } — ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
+    }
+
+    updateDashboard(updates);
+  };
+  // ✅ Fix: Task deadline setter with Mongo sync
+  const setTaskDeadline = (path, idx, date) => {
+    const newTree = deepClone(tree);
+
+    const parent = getRefAtPath(newTree, path.slice(0, -1));
+    const leafKey = path[path.length - 1];
+
+    if (!parent || !parent[leafKey] || !parent[leafKey][idx]) return;
+
+    parent[leafKey][idx].deadline = date;
+
+    updateDashboard({
+      syllabus_tree_v2: newTree,
+    });
+  };
+
+  /* ======================= NOTES ======================= */
+  const setNR = (newNR) => {
+    updateDashboard({ syllabus_notes: newNR });
+  };
+
+  /* ======================= EXPORT ======================= */
   function exportProgress() {
-    const data = {
-      tree,
-      meta,
-      nr,
-      daySet: Array.from(daySet),
+    const payload = {
+      syllabus_tree_v2: tree,
+      syllabus_meta: meta,
+      syllabus_notes: nr,
+      syllabus_streak: Array.from(daySet),
+      syllabus_lastStudied: lastStudied,
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
     });
+
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "syllabus_backup.json";
     a.click();
   }
 
-  // ✅ Import syllabus data
+  /* ======================= IMPORT ======================= */
   function importProgress(e) {
     const file = e.target.files[0];
     if (!file) return;
+
     const reader = new FileReader();
+
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        if (!data.tree || !data.meta) {
-          alert("Invalid file — missing keys.");
-          return;
-        }
-        setTree(data.tree);
-        setMeta(data.meta);
-        setNR(data.nr || {});
-        setDaySet(new Set(data.daySet || []));
-        save(K_TREE, tree);
-        save(K_META, meta);
-        save(K_NOTES, data.nr || {});
-        save(K_STREAK, data.daySet || []);
-        alert("✅ Import successful! Refreshing...");
+
+        const updated = {
+          ...dashboardState,
+          ...data,
+        };
+
+        setDashboardState(updated);
+
+        fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated),
+        });
+
+        alert("✅ Syllabus imported successfully");
         window.location.reload();
-      } catch (err) {
-        console.error(err);
-        alert("❌ Failed to import. Make sure it's a valid backup file.");
+      } catch {
+        alert("❌ Import failed. Invalid file.");
       }
     };
+
     reader.readAsText(file);
   }
 
-  function getStudyHistory(tree) {
-    const history = {}; // { "2025-11-10": ["Topic 1", "Topic 2"], ... }
+  /* ======================= SCROLL ======================= */
+  useEffect(() => {
+    const onScroll = () => setShowTopBtn(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-    function walk(node, path) {
+  /* ======================= FILTERED ======================= */
+  const filtered = useMemo(() => {
+    if (!query.trim()) return tree;
+    const q = query.toLowerCase();
+
+    function filterNode(node) {
       if (Array.isArray(node)) {
-        node.forEach((item) => {
-          if (item.done && item.completedOn) {
-            const date = item.completedOn;
-            const title = item.title || path.join(" > ");
-            if (!history[date]) history[date] = [];
-            history[date].push(title);
+        const items = node.filter((it) =>
+          (it.title || "").toLowerCase().includes(q)
+        );
+        return items.length ? items : null;
+      }
+
+      const out = {};
+      for (const [k, v] of Object.entries(node || {})) {
+        const child = filterNode(v);
+        if (child) out[k] = child;
+      }
+      return Object.keys(out).length ? out : null;
+    }
+
+    return filterNode(tree) || {};
+  }, [tree, query]);
+
+  /* ======================= GENERATE SMART PLAN ======================= */
+  const generateSmartPlan = (availableMins) => {
+    const leaves = [];
+
+    function walk(node) {
+      if (Array.isArray(node)) {
+        node.forEach((it) => {
+          if (!it.done) {
+            leaves.push({
+              title: it.title,
+              deadline: it.deadline || "",
+              estimate: 0.5,
+            });
           }
         });
         return;
       }
-      for (const [k, v] of Object.entries(node || {})) walk(v, [...path, k]);
+      for (const v of Object.values(node || {})) walk(v);
     }
 
-    walk(tree, []);
-    return history;
-  }
+    walk(tree);
+
+    const sorted = leaves.sort((a, b) => {
+      const da = a.deadline ? Date.parse(a.deadline) : Infinity;
+      const db = b.deadline ? Date.parse(b.deadline) : Infinity;
+      return da - db;
+    });
+
+    const plan = [];
+    let remaining = availableMins;
+
+    for (const t of sorted) {
+      const mins = Math.round(t.estimate * 60);
+      if (remaining >= mins) {
+        plan.push(t);
+        remaining -= mins;
+      }
+    }
+
+    return { plan, remaining };
+  };
 
   /* ======================= RENDER ======================= */
   return (
@@ -4885,7 +4925,7 @@ export default function Syllabus() {
                 key={secKey}
                 secKey={secKey}
                 node={secVal}
-                meta={meta}
+                meta={stableMeta}
                 nr={nr}
                 setNR={setNR}
                 onSectionHeaderClick={onSectionHeaderClick}
@@ -5022,107 +5062,106 @@ function SectionCard({
   markTask,
   setTaskDeadline,
 }) {
+  /* ======================= SETUP ======================= */
+
   const sectionPath = [secKey];
+
+  // Section meta (collapse state + target date)
   const m = meta[pathKey(sectionPath)] || { open: false, targetDate: "" };
+
+  // Progress calculations
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
+
+  // Date input ref
   const sectionDateRef = useRef(null);
 
+  // Collapse animation height
   const wrapRef = useRef(null);
   const [maxH, setMaxH] = useState(0);
 
-  // measure content on open + whenever content changes
+  /* ======================= HEIGHT ANIMATION ======================= */
+
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
 
+    // Measure height based on open state
     const measure = () => setMaxH(m.open ? el.scrollHeight : 0);
     measure();
 
-    // keep height accurate while content changes
+    // Auto update when content size changes
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+
     return () => ro.disconnect();
   }, [m.open, node, meta, nr]);
 
   return (
     <section
-      className="rounded-xl
-     border border-[#1c5b44]/40
-     dark:border-[#00D1FF33]
-     backdrop-blur-md
-
-     bg-gradient-to-br 
-     from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
-     dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-     
-     shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
-     overflow-hidden"
+      className="
+        rounded-xl
+        border border-[#1c5b44]/40
+        dark:border-[#00D1FF33]
+        backdrop-blur-md
+        bg-gradient-to-br 
+        from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+        shadow-[0_0_20px_rgba(0,0,0,0.2)]
+        overflow-hidden
+      "
     >
-      {/* Header */}
+      {/* ======================= HEADER ======================= */}
       <div
         onClick={() => onSectionHeaderClick(sectionPath)}
-        className="relative p-3 cursor-pointer
-          border border-[#0B5134] rounded-t-l
-          bg-gradient-to-br 
-        from-[#183D3D] via-[#] to-[#B82132] 
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+        data-expanded={m.open}
+        data-done={allDone}
+        className="
+          relative cursor-pointer
+          border border-[#0B5134] 
+          bg-gradient-to-br from-[#183D3D] to-[#B82132]
+          dark:from-[#0F1622] dark:to-[#0A0F1C]
           text-[#CFE8E1]
           rounded-lg px-4 py-3
           transition-all duration-300
-
-          hover:bg-[#0F0F0F]
           hover:border-[#2F6B60]
           hover:shadow-[0_0_10px_rgba(47,107,96,0.4)]
-
-          data-[expanded=true]:bg-[#112924]
-          data-[expanded=true]:border-[#3FA796]
-          data-[expanded=true]:text-[#ECFFFA]
-
-          data-[done=true]:bg-[#081C18]
-          data-[done=true]:border-[#2ED3B6]
-          data-[done=true]:text-[#B2FFF0]
-
-         dark:bg-[#0F1622] dark:border-[#00D1FF33] dark:text-[#E6F1FF]  overflow-hidden"
+        "
       >
-        {/* ✅ Progress bar (thin + matches main green style) */}
-        {/* Animated Smart Progress Bar */}
-        <div className="relative absolute top-0 left-0 right-0 mx-1 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
-          {/* Glass overlay layer */}
+        {/* ======================= PROGRESS BAR ======================= */}
+        <div className="absolute top-0 left-0 right-0 mx-1 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
+          {/* Glass Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/0 pointer-events-none" />
 
-          {/* Main Progress Fill */}
+          {/* Progress Fill */}
           <div
             className={`
-                h-full rounded-full relative overflow-hidden
-                transition-all duration-700 ease-out
-                ${totals.pct >= 90 ? "animate-heartbeat" : ""}
-                ${
-                  totals.pct < 25
-                    ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
-                    : totals.pct < 50
-                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                      : totals.pct < 75
-                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
-                }
-                `}
+              h-full transition-all duration-700 ease-out
+              ${totals.pct >= 90 ? "animate-heartbeat" : ""}
+              ${
+                totals.pct < 25
+                  ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
+                  : totals.pct < 50
+                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                  : totals.pct < 75
+                  ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                  : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+              }
+            `}
             style={{
               width: `${totals.pct}%`,
               minWidth: totals.pct > 0 ? "6px" : "6px",
             }}
           >
-            {/* Moving Stripes */}
+            {/* Visual texture effects */}
             <div className="absolute inset-0 bg-stripes animate-stripes pointer-events-none" />
-
-            {/* Smooth Wave Effect */}
             <div className="absolute inset-0 bg-wave animate-wave pointer-events-none opacity-40" />
           </div>
         </div>
 
-        {/* ✅ Responsive layout container */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
-          {/* LEFT — arrow + title */}
+        {/* ======================= TITLE + CONTROLS ======================= */}
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-2">
+          {/* LEFT: Arrow + Section Name */}
           <div className="flex items-start gap-2 min-w-0">
             <span className="text-lg select-none shrink-0">
               {m.open ? "🔽" : "▶️"}
@@ -5132,29 +5171,34 @@ function SectionCard({
             </span>
           </div>
 
-          {/* RIGHT — stats + actions */}
+          {/* RIGHT: Stats + Actions */}
           <div
-            className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs"
+            className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="leading-tight shrink-0">
+            {/* Progress stats */}
+            <span className="shrink-0">
               {totals.done}/{totals.total} • {totals.pct}% • ~
               {totals.estimate || 0}h
             </span>
 
+            {/* Mark All Button */}
             <button
               onClick={() => setAllAtPath(sectionPath, !allDone)}
-              className="px-2 py-1 rounded-md border
-              border-[#00d1b2]/50
-              dark:border-[#00d1b2]/50 bg-[#051C14]
-              dark:bg-gray-800 hover:bg-[#051C14]
-              dark:hover:bg-gray-700 transition-colors text-xs font-medium shrink-0"
+              className="
+                px-2 py-1 rounded-md border
+                border-[#00d1b2]/50 bg-[#051C14]
+                text-xs font-medium
+                hover:bg-[#07261b]
+                transition-colors shrink-0
+              "
             >
               {allDone ? "Undo all" : "Mark all"}
             </button>
 
+            {/* Deadline Picker */}
             <div className="relative">
-              {/* hidden native date input */}
+              {/* hidden input */}
               <input
                 type="date"
                 ref={sectionDateRef}
@@ -5163,14 +5207,17 @@ function SectionCard({
                 className="absolute opacity-0 pointer-events-none w-0 h-0"
               />
 
-              {/* custom display button */}
+              {/* custom button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   sectionDateRef.current?.showPicker();
                 }}
-                className="px-2 py-1 border border-[#0B5134] dark:border-[#00d1b2]/50 rounded-md bg-[#051C14]
-               dark:bg-gray-800 text-xs"
+                className="
+                  px-2 py-1 border border-[#0B5134] rounded-md
+                  bg-[#051C14] text-xs
+                  hover:border-[#2F6B60] transition
+                "
               >
                 📅{" "}
                 {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
@@ -5180,9 +5227,12 @@ function SectionCard({
         </div>
       </div>
 
-      {/* Smooth expandable content */}
+      {/* ======================= EXPANDABLE CONTENT ======================= */}
       <div
-        style={{ maxHeight: `${maxH}px`, transition: "max-height 420ms ease" }}
+        style={{
+          maxHeight: `${maxH}px`,
+          transition: "max-height 420ms ease",
+        }}
         className="overflow-hidden"
       >
         <div ref={wrapRef} className="px-4 pb-4 pt-2 space-y-2">
@@ -5192,7 +5242,7 @@ function SectionCard({
               name={name}
               node={child}
               path={[secKey, name]}
-              meta={meta}
+              meta={stableMeta}
               nr={nr}
               setNR={setNR}
               toggleOpen={toggleOpen}
@@ -5208,31 +5258,36 @@ function SectionCard({
   );
 }
 
-/* ======================= Sub Section ======================= */
-
+/********************** Sub Section **********************/
 function SubNode({
   name,
   node,
   path,
   meta,
   nr,
-  setNR,
+  setNR, // now updates Mongo via dashboardState
   toggleOpen,
   setTargetDate,
   setAllAtPath,
   markTask,
   setTaskDeadline,
 }) {
+  /* ======================= META ======================= */
   const k = pathKey(path);
   const m = meta[k] || { open: false, targetDate: "" };
 
+  /* ======================= STATS ======================= */
+
+  // Calculate progress for this node
   const totals = useMemo(() => totalsOf(node), [node]);
   const allDone = totals.total > 0 && totals.done === totals.total;
+
+  /* ======================= COLLAPSE ANIMATION ======================= */
 
   const contentRef = useRef(null);
   const [height, setHeight] = useState("0px");
 
-  /* Smooth expand */
+  // Smooth expand / collapse logic
   useEffect(() => {
     if (m.open && contentRef.current) {
       setHeight(contentRef.current.scrollHeight + "px");
@@ -5241,13 +5296,15 @@ function SubNode({
     }
   }, [m.open, node]);
 
-  /* ✅ SAFE completedDate auto-save */
+  /* ======================= AUTO SAVE COMPLETION DATE ======================= */
+
   useEffect(() => {
     if (!Array.isArray(node)) return;
 
     node.forEach((it, idx) => {
       const key = itemKey(path, idx);
 
+      // If marked done but no completedDate → auto add it
       if (it.done && !nr[key]?.completedDate) {
         setNR((old) => ({
           ...old,
@@ -5260,14 +5317,18 @@ function SubNode({
     });
   }, [node, nr, path, setNR]);
 
+  /* ======================= HOUR ESTIMATION ======================= */
+
   const hoursRollup = useMemo(() => {
+    // Recursive calculation if node has children
     if (!Array.isArray(node)) {
       let est = 0;
+
       for (const [childKey, childVal] of Object.entries(node || {})) {
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5276,7 +5337,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5287,42 +5348,59 @@ function SubNode({
       return est;
     }
 
+    // If leaf node (array of topics)
     return node.reduce((s, _, idx) => {
       const e = Number(nr[itemKey(path, idx)]?.estimate || 0.5);
       return s + (isFinite(e) ? e : 0.5);
     }, 0);
   }, [node, nr, path]);
 
+  /* ======================= UI ======================= */
+
   return (
     <div
-      className="rounded-xl border border-[#0B5134]/35 dark:border-gray-800 
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
-      text-[#d9ebe5] shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+      className="
+        rounded-xl border border-[#0B5134]/35 dark:border-gray-800 
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+        text-[#d9ebe5] shadow-[0_0_15px_rgba(0,0,0,0.2)]
+      "
     >
-      {/* HEADER */}
+      {/* ======================= HEADER ======================= */}
       <div
         onClick={() => toggleOpen(path)}
-        className="p-2 cursor-pointer bg-[#134039] hover:bg-[#00d1b2]/10 border-l-4 border-[#D42916] rounded-xl"
+        className="
+          p-2 cursor-pointer bg-[#134039] 
+          hover:bg-[#00d1b2]/10 
+          border-l-4 border-[#D42916] 
+          rounded-xl
+        "
       >
         <div className="flex flex-wrap justify-between gap-2">
+          {/* LEFT: Arrow + Name */}
           <div className="flex gap-2">
             <span>{m.open ? "🔽" : "▶️"}</span>
             <span>{name}</span>
           </div>
 
+          {/* RIGHT: Stats + Actions */}
           <div
             onClick={(e) => e.stopPropagation()}
             className="flex gap-2 text-xs"
           >
+            {/* Stats */}
             <span>
               {totals.done}/{totals.total} • {totals.pct}% •{" "}
               {hoursRollup.toFixed(1)}h
             </span>
 
+            {/* Mark All Button */}
             <button
               onClick={() => setAllAtPath(path, !allDone)}
-              className="px-2 py-1 border border-[#00d1b2]/50 rounded"
+              className="
+                px-2 py-1 border border-[#00d1b2]/50 rounded
+                hover:bg-[#0B2F2A]/80 transition
+              "
             >
               {allDone ? "Undo all" : "Mark all"}
             </button>
@@ -5330,7 +5408,7 @@ function SubNode({
         </div>
       </div>
 
-      {/* CONTENT */}
+      {/* ======================= BODY / CONTENT ======================= */}
       <div
         ref={contentRef}
         style={{ maxHeight: height }}
@@ -5338,6 +5416,7 @@ function SubNode({
       >
         <div className="px-3 pb-3">
           {Array.isArray(node) ? (
+            /* ======================= LEAF TASK LIST ======================= */
             <ul className="space-y-2">
               {node.map((it, idx) => {
                 const key = itemKey(path, idx);
@@ -5350,43 +5429,53 @@ function SubNode({
                   <li
                     key={idx}
                     onClick={() => markTask(path, idx, !it.done)}
-                    className={`p-2 rounded-lg border border-[#00d1b2]/30 
-                        cursor-pointer ${it.done ? "opacity-80" : ""}`}
+                    className={`
+                      p-2 rounded-lg border border-[#00d1b2]/30 
+                      cursor-pointer transition
+                      ${it.done ? "opacity-80" : ""}
+                    `}
                   >
                     <div className="flex justify-between gap-2">
-                      {/* LEFT */}
+                      {/* LEFT SIDE */}
                       <div className="flex items-start gap-2">
+                        {/* Checkbox */}
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
                             const newState = !it.done;
                             markTask(path, idx, newState);
                           }}
-                          className={`w-5 h-5 border flex items-center justify-center cursor-pointer 
-                          ${it.done ? "bg-[#ED4135]/80" : "bg-[#0B2F2A]"}`}
+                          className={`
+                            w-5 h-5 border flex items-center justify-center cursor-pointer 
+                            ${it.done ? "bg-[#ED4135]/80" : "bg-[#0B2F2A]"}
+                          `}
                         >
                           {it.done && "✓"}
                         </div>
 
+                        {/* Title + Completion */}
                         <div>
-                          <div className={it.done ? "line-through" : ""}>
+                          <div
+                            className={it.done ? "line-through opacity-80" : ""}
+                          >
                             {it.title}
                           </div>
 
                           {completedDate && (
-                            <div className="text-xs opacity-80">
-                              Completed on{" "}
+                            <div className="text-xs opacity-70">
+                              Completed:{" "}
                               {new Date(completedDate).toLocaleDateString()}
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* RIGHT */}
+                      {/* RIGHT SIDE */}
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className="flex gap-2"
                       >
+                        {/* Estimated Time Input */}
                         <input
                           type="number"
                           min={0}
@@ -5401,9 +5490,14 @@ function SubNode({
                               },
                             }))
                           }
-                          className="w-16 text-xs rounded px-1 border border-[#00d1b2]/40"
+                          className="
+                            w-16 text-xs rounded px-1 
+                            border border-[#00d1b2]/40
+                            bg-black/40
+                          "
                         />
 
+                        {/* Hidden date input */}
                         <input
                           type="date"
                           ref={localDateRef}
@@ -5414,6 +5508,7 @@ function SubNode({
                           className="hidden"
                         />
 
+                        {/* Deadline Button */}
                         <button
                           onClick={() => localDateRef.current?.showPicker()}
                           className="text-xs border border-[#00d1b2]/40 px-2 rounded"
@@ -5427,6 +5522,7 @@ function SubNode({
               })}
             </ul>
           ) : (
+            /* ======================= NESTED SUBSECTIONS ======================= */
             <div className="space-y-2">
               {Object.entries(node).map(([childKey, childVal]) => (
                 <SubNode
@@ -5434,7 +5530,7 @@ function SubNode({
                   name={childKey}
                   node={childVal}
                   path={[...path, childKey]}
-                  meta={meta}
+                  meta={stableMeta}
                   nr={nr}
                   setNR={setNR}
                   toggleOpen={toggleOpen}
@@ -5452,43 +5548,86 @@ function SubNode({
   );
 }
 
-/* Daily Planner — excludes completed, shows only titles + deadlines */
+/******************** DAILY AUTO PLANNER ********************/
 function DailyPlanner({ tree }) {
+  /* ======================= COLLECT ALL PENDING TASKS ======================= */
+
   const items = [];
+
+  // Recursive scan through the syllabus tree
   (function walk(node, path) {
+    // If it's a task list (array)
     if (Array.isArray(node)) {
       node.forEach((it) => {
-        if (!it.done)
-          items.push({ title: it.title, deadline: it.deadline || "" });
+        if (!it.done) {
+          items.push({
+            title: it.title,
+            deadline: it.deadline || "",
+          });
+        }
       });
       return;
     }
-    for (const [k, v] of Object.entries(node || {})) walk(v, [...path, k]);
+
+    // If it's a nested section
+    for (const [k, v] of Object.entries(node || {})) {
+      walk(v, [...path, k]);
+    }
   })(tree, []);
+
+  /* ======================= SORT BY DEADLINE ======================= */
+
   const withDeadlines = items
     .map((i) => ({
       ...i,
+      // Convert deadline string → timestamp for sorting
       d: i.deadline ? Date.parse(i.deadline) : Number.POSITIVE_INFINITY,
     }))
-    .sort((a, b) => a.d - b.d)
-    .slice(0, 6);
+    .sort((a, b) => a.d - b.d) // Soonest deadline first
+    .slice(0, 6); // Show top 6 tasks
+
+  /* ======================= UI RENDER ======================= */
+
   return (
     <ul className="text-sm list-disc pl-5 space-y-1">
+      {withDeadlines.length === 0 && (
+        <li className="text-gray-400 italic text-xs">
+          🎉 All tasks completed or no deadlines set.
+        </li>
+      )}
+
       {withDeadlines.map((i, idx) => (
-        <li key={idx} className="flex items-center justify-between gap-2">
-          <span>{i.title}</span>
-          {i.deadline ? (
-            <span className="text-xs opacity-70">
+        <li
+          key={idx}
+          className="
+            flex items-start justify-between gap-2
+            bg-black/30 rounded-md px-2 py-1
+            border border-[#0B5134]/40
+          "
+        >
+          {/* LEFT: Task title */}
+          <span className="flex-1 text-[#d9ebe5] leading-snug">{i.title}</span>
+
+          {/* RIGHT: Deadline */}
+          {i.deadline && (
+            <span className="text-xs text-[#a7f3d0] whitespace-nowrap">
               ⏰ {formatDateDDMMYYYY(i.deadline)}
             </span>
-          ) : null}
+          )}
         </li>
       ))}
     </ul>
   );
 }
 
-/* Smart Suggest — hides completion info */
+/******************** SMART SUGGEST (AI STUDY PLANNER) ********************/
+/*
+  - Reads directly from live syllabus tree (Mongo-synced tree)
+  - Updates when tree changes
+  - Handles deadline urgency colors
+  - Shows estimate + remaining time
+  - Keeps your exact UI vibes, only fixed broken bits
+*/
 
 function SmartSuggest({ generateSmartPlan, tree }) {
   const [minutes, setMinutes] = useState(120);
@@ -5496,25 +5635,28 @@ function SmartSuggest({ generateSmartPlan, tree }) {
   const [remaining, setRemaining] = useState(0);
   const [summary, setSummary] = useState("");
 
+  /* ========== Keep plan updated when syllabus changes ========== */
   useEffect(() => {
-    // whenever syllabus updates, refresh visual state
     setPlan((prev) =>
       prev.map((p) => {
-        // try to find same topic in live tree
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      }),
+      })
     );
   }, [tree]);
 
+  /* ========== Main Suggest Button Logic ========== */
   const handleSuggest = () => {
     const { plan, remaining } = generateSmartPlan(minutes);
+
+    // Sort by closest deadlines first
     const sorted = [...plan].sort((a, b) => {
       const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
       const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
       return da - db;
     });
 
+    // Dynamic motivation summary
     let sum = "";
     if (sorted.length === 0) sum = "No urgent topics found for now! 🎉";
     else if (sorted.length <= 2)
@@ -5528,23 +5670,28 @@ function SmartSuggest({ generateSmartPlan, tree }) {
     setSummary(sum);
   };
 
+  /* ========== Deadline Text Helper ========== */
   function daysLeft(deadline) {
     if (!deadline) return "";
-    const d = new Date(deadline);
+
     const today = new Date();
+    const d = new Date(deadline);
+
     const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+
     if (diff > 0) return `Due in ${diff} day${diff > 1 ? "s" : ""}`;
     if (diff === 0) return "Due today!";
     return `Overdue by ${Math.abs(diff)} day${Math.abs(diff) > 1 ? "s" : ""}`;
   }
 
+  /* ========== Safely Find Task in Tree by Title ========== */
   function findInTree(node, title) {
     if (Array.isArray(node)) {
       for (const it of node) {
         if (it.title === title) return it;
       }
     } else {
-      for (const [k, v] of Object.entries(node || {})) {
+      for (const [, v] of Object.entries(node || {})) {
         const found = findInTree(v, title);
         if (found) return found;
       }
@@ -5552,14 +5699,19 @@ function SmartSuggest({ generateSmartPlan, tree }) {
     return null;
   }
 
+  /* ========== UI ========== */
   return (
     <div
-      className="rounded-2xl border border-[#0B5134]/40
-       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-       dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-#00D1FF33] p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-md hover:shadow-[0_0_20px_rgba(0,0,0,0.2)]-lg transition-all duration-300
-        "
+      className="
+      rounded-2xl border border-[#0B5134]/40
+      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+      dark:border-[#00D1FF33]
+      p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]
+      transition-all duration-300
+    "
     >
-      {/* Header */}
+      {/* ===== Header ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
         <h3 className="font-semibold flex items-center gap-2 text-base">
           🤖 Smart Suggest
@@ -5567,29 +5719,39 @@ function SmartSuggest({ generateSmartPlan, tree }) {
 
         <span
           className="
-        text-[11px] px-3 py-1 rounded-full
-        bg-[#FF8F8F] text-black font-semibold
-        dark:bg-[#451013] dark:text-[#FFD1D1]
-        border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
-        whitespace-nowrap sm:ml-auto
-        transition-all duration-200
-        hover:bg-[#ff6f6f] dark:hover:bg-[#5A1418]
-      "
+            text-[11px] px-3 py-1 rounded-full
+            bg-[#FF8F8F] text-black font-semibold
+            dark:bg-[#451013] dark:text-[#FFD1D1]
+            border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
+            whitespace-nowrap sm:ml-auto
+            transition-all duration-200
+            hover:bg-[#ff6f6f] dark:hover:bg-[#5A1418]
+          "
         >
           AI Study Planner
         </span>
       </div>
-      {/* Input */}
+
+      {/* ===== Time Input ===== */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <label className="text-xs font-medium whitespace-nowrap">
           Minutes:
         </label>
+
         <input
           type="number"
           value={minutes}
           onChange={(e) => setMinutes(Number(e.target.value))}
-          className="flex-1 px-2 py-1 text-sm rounded-md border bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-[#00D1FF33] min-w-[70px] border-[#0B5134] outline-none text-white"
+          className="
+            flex-1 px-2 py-1 text-sm rounded-md border 
+            bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+            dark:border-[#00D1FF33] 
+            border-[#0B5134] outline-none text-white
+            min-w-[70px]
+          "
         />
+
         <button
           onClick={handleSuggest}
           className="
@@ -5608,56 +5770,61 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         </button>
       </div>
 
-      {/* Summary */}
+      {/* ===== Motivation Summary ===== */}
       {summary && (
         <p className="text-xs italic mb-3 text-white/60 dark:text-gray-300">
           {summary}
         </p>
       )}
 
-      {/* Suggestions */}
+      {/* ===== Suggestions ===== */}
       <div className="space-y-2">
         {plan.length === 0 ? (
           <p className="text-xs opacity-70 italic">No topics suggested yet.</p>
         ) : (
           plan.map((item, i) => {
+            const now = new Date();
+
+            // Deadline urgency styling
             const urgency =
-              item.deadline && new Date(item.deadline) < new Date()
-                ? "bg-red-500/15 text-red-600 dark:text-red-400"
+              item.deadline && new Date(item.deadline) < now
+                ? "bg-red-500/15 text-red-400"
                 : item.deadline &&
-                    new Date(item.deadline) - new Date() < 86400000 * 2
-                  ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
-                  : "bg-green-500/10 text-green-700 dark:text-green-400";
+                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                ? "bg-yellow-500/10 text-yellow-300"
+                : "bg-green-500/10 text-green-400";
 
             const countdown = daysLeft(item.deadline);
 
             return (
               <div
                 key={i}
-                className={`rounded-lg border border-[#0B5134]                dark:border-gray-800 p-2 text-sm transition-all duration-300 hover:bg-[#FF8F8F]/5 ${
-                  item.done ? "opacity-60 line-through" : ""
-                }`}
+                className={`
+                  rounded-lg border border-[#0B5134] 
+                  dark:border-gray-800 p-2 text-sm transition-all duration-300 
+                  hover:bg-[#FF8F8F]/5
+                  ${item.done ? "opacity-60 line-through" : ""}
+                `}
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-                  <span
-                    className={`font-medium text-[#d9ebe5] dark:text-gray-100 ${
-                      item.done ? "line-through" : ""
-                    }`}
-                  >
+                  <span className="font-medium text-[#d9ebe5]">
                     • {item.title}
                   </span>
+
                   {countdown && (
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full ${urgency} text-center`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${urgency}`}
                     >
                       {countdown}
                     </span>
                   )}
                 </div>
+
+                {/* Time Estimate */}
                 <div
                   className={`text-xs mt-1 ${
-                    item.done ? "opacity-50" : "opacity-80"
-                  } transition-opacity`}
+                    item.done ? "opacity-40" : "opacity-80"
+                  }`}
                 >
                   ⏱ ~{Math.round(item.estimate * 60)} mins
                 </div>
@@ -5667,15 +5834,22 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 text-xs text-white/60 dark:text-gray-400 border-t border-[#0B5134] dark:border-gray-800 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+      {/* ===== Footer ===== */}
+      <div
+        className="
+        mt-4 text-xs text-white/60 dark:text-gray-400 
+        border-t border-[#0B5134] dark:border-gray-800 pt-2 
+        flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2
+      "
+      >
         <span>
           {plan.length > 0
             ? `Remaining buffer: ${remaining} mins`
             : "Enter available time to get a plan!"}
         </span>
+
         {plan.length > 0 && (
-          <button className="text-[#FF8F8F] font-medium hover:underline text-xs whitespace-nowrap self-end sm:self-auto">
+          <button className="text-[#FF8F8F] font-medium hover:underline text-xs whitespace-nowrap">
             Start Focus Mode 🚀
           </button>
         )}
