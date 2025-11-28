@@ -558,15 +558,11 @@ export default function GymSimplified({ dashboardState = {} }) {
     // Force immediate UI reflect
     setLogs((prev) => {
       const updated = { ...prev, [dateKey]: next };
+
+      syncDashboardToBackend(updated, doneState, currentWeight, dashboardState);
+
       return updated;
     });
-
-    syncDashboardToBackend(
-      { ...logs, [dateKey]: next },
-      doneState,
-      currentWeight,
-      dashboardState,
-    );
   };
 
   const canComplete =
