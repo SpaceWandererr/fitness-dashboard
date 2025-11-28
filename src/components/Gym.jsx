@@ -223,10 +223,12 @@ async function syncDashboardToBackend(
 ) {
   try {
     const state = {
-      ...currentDashboardState, // ✅ now it exists
-      wd_gym_logs: currentLogs,
-      wd_done: currentDone,
+      ...(currentDashboardState || {}),
+      wd_gym_logs: currentLogs ?? {},
+      wd_done: currentDone ?? {},
       wd_weight_current: currentWeight ?? null,
+      wd_goals: currentDashboardState?.wd_goals || {},
+      syllabus_tree_v2: currentDashboardState?.syllabus_tree_v2 || {},
     };
 
     await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
@@ -251,6 +253,7 @@ export default function GymSimplified({ dashboardState = {} }) {
   const [date, setDate] = useState(todayIso);
   const [weekday, setWeekday] = useState(defaultDay);
   const dateKey = fmtISO(date);
+  const isFuture = dayjs(dateKey).isAfter(dayjs(), "day");
 
   const [sundayQuote, setSundayQuote] = useState(
     "Fetching your motivational quote...",
@@ -400,25 +403,25 @@ export default function GymSimplified({ dashboardState = {} }) {
   );
 
   // add this:
-  useEffect(() => {
-    if (!dashboardState || !Number.isFinite(Number(targetWeight))) return;
+  // useEffect(() => {
+  //   if (!dashboardState || !Number.isFinite(Number(targetWeight))) return;
 
-    const fullState = {
-      ...dashboardState, // keep everything else
-      wd_goals: {
-        ...(dashboardState.wd_goals || {}),
-        targetWeight: Number(targetWeight),
-      },
-    };
+  //   const fullState = {
+  //     ...dashboardState, // keep everything else
+  //     wd_goals: {
+  //       ...(dashboardState.wd_goals || {}),
+  //       targetWeight: Number(targetWeight),
+  //     },
+  //   };
 
-    fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(fullState),
-    })
-      .then(() => console.log("✅ Goals synced:", fullState.wd_goals))
-      .catch((err) => console.error("❌ Goal sync failed:", err));
-  }, [targetWeight, dashboardState]);
+  //   fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+  //     method: "PUT",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(fullState),
+  //   })
+  //     .then(() => console.log("✅ Goals synced:", fullState.wd_goals))
+  //     .catch((err) => console.error("❌ Goal sync failed:", err));
+  // }, [targetWeight, dashboardState]);
 
   /* Backend-only overrides */
   const [weightOverrides, setWeightOverrides] = useState(
@@ -442,8 +445,6 @@ export default function GymSimplified({ dashboardState = {} }) {
       }, 10);
     }
   }, [showModal]);
-
-  const [saving, setSaving] = useState(false);
 
   /* sync date -> weekday */
   const userChangedWeekday = useRef(false);
@@ -534,6 +535,11 @@ export default function GymSimplified({ dashboardState = {} }) {
 
   /* toggles */
   const toggle = (section, idx) => {
+    if (isFuture) {
+      alert("🚫 You can't log future workouts");
+      return;
+    }
+
     const prev = logs[dateKey] || { ...checks, weekday };
     const next = {
       ...prev,
@@ -570,6 +576,11 @@ export default function GymSimplified({ dashboardState = {} }) {
     false;
 
   const openCaloriesModal = () => {
+    if (isFuture) {
+      alert("🚫 Can't complete future workouts");
+      return;
+    }
+
     if (!canComplete) return;
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
@@ -679,6 +690,11 @@ export default function GymSimplified({ dashboardState = {} }) {
   };
 
   const toggleMarkAll = () => {
+    if (isFuture) {
+      alert("🚫 Future workouts can't be marked");
+      return;
+    }
+
     const prev = logs[dateKey] || { ...checks, weekday };
     const def = plan[weekday] || { left: [], right: [], finisher: [] };
     const allDone =
@@ -707,17 +723,10 @@ export default function GymSimplified({ dashboardState = {} }) {
     return s;
   }, [doneState]);
 
-  const totalWorkouts = useMemo(() => {
-    const doneMap = doneState;
-    return Object.values(doneMap).filter(Boolean).length;
-  }, [doneState]);
-
-  /* weight progress helpers */
-  const weightHistory = dashboardState?.wd_weight_history || {};
-
-  const dates = Object.keys(weightHistory).sort();
+  const logsObj = dashboardState?.wd_gym_logs || {};
+  const dates = Object.keys(logsObj).sort();
   const latestDate = dates[dates.length - 1];
-  const latestWeight = latestDate ? weightHistory[latestDate] : null;
+  const latestWeight = latestDate ? logsObj[latestDate]?.weight : null;
 
   const inferredStart =
     currentWeight ?? latestWeight ?? checks.weight ?? targetWeight;
