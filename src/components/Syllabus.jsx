@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4193,7 +4193,18 @@ const deepClone = (o) => JSON.parse(JSON.stringify(o || {}));
  * Converts path array to a readable string
  * Example: ["JS", "Basics", "Scope"] → "JS > Basics > Scope"
  */
-const pathKey = (path) => (path || []).join(" > ");
+const pathKey = (pathArr) => {
+  return pathArr
+    .map(
+      (p) =>
+        String(p)
+          .trim() // remove leading/trailing spaces
+          .replace(/\s+/g, "_") // convert spaces to _
+          .replace(/[^\w_]/g, "") // remove invalid chars like > - :
+          .toLowerCase() // normalize casing
+    )
+    .join("__"); // consistent and clean
+};
 
 /**
  * Creates unique key for item lists based on path + index
@@ -4327,15 +4338,9 @@ function normalizeSection(sectionObj) {
  * Normalizes your entire syllabus TREE
  * Converts all sections into nested structures
  */
-function normalizeWholeTree(src) {
-  const out = {};
+// keep for compatibility but delegate to normalized version
+const normalizeWholeTree = (src) => normalizeTree(src);
 
-  for (const [k, v] of Object.entries(src || {})) {
-    out[k] = normalizeSection(v);
-  }
-
-  return out;
-}
 /* ======================= MAIN ======================= */
 export default function Syllabus({ dashboardState, setDashboardState }) {
   // ---------------- MONGO CONFIG ----------------
@@ -4349,11 +4354,21 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   }
 
   /* ======================= SYNCED STATE FROM MONGO ======================= */
+  const normalizeTree = useCallback((src) => {
+    const out = {};
+    for (const [k, v] of Object.entries(src || {})) {
+      out[k] = normalizeSection(v);
+    }
+    return out;
+  }, []);
 
   // 1️⃣ BUILD TREE FIRST
-  const tree = dashboardState?.syllabus_tree_v2
-    ? normalizeWholeTree(dashboardState.syllabus_tree_v2)
-    : normalizeWholeTree(TREE);
+  const tree = useMemo(() => {
+    if (dashboardState?.syllabus_tree_v2) {
+      return normalizeTree(dashboardState.syllabus_tree_v2);
+    }
+    return normalizeTree(TREE);
+  }, [dashboardState?.syllabus_tree_v2, normalizeTree]);
 
   // 2️⃣ RAW META SECOND
   const meta = dashboardState?.syllabus_meta || {};
@@ -4383,7 +4398,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
       const seeded = {
         ...dashboardState,
-        syllabus_tree_v2: normalizeWholeTree(TREE),
+        syllabus_tree_v2: normalizeTree(TREE),
       };
 
       // Update frontend
@@ -4404,12 +4419,9 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(
-      () => {
-        setShowLastStudied(false);
-      },
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
-    );
+    const timer = setTimeout(() => {
+      setShowLastStudied(false);
+    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4633,7 +4645,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q),
+          (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
@@ -4735,15 +4747,15 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 🔥 Streak: <b>{Array.from(daySet).length}</b> days
               </span>
-
               {/* Expand */}
               <button
                 onClick={() => {
-                  setMeta((m) => {
-                    const c = { ...m };
-                    Object.keys(c).forEach((k) => (c[k].open = true));
-                    return c;
+                  const curr = dashboardState.syllabus_meta || {};
+                  const updated = { ...curr };
+                  Object.keys(updated).forEach((k) => {
+                    updated[k] = { ...(updated[k] || {}), open: true };
                   });
+                  updateDashboard({ syllabus_meta: updated });
                 }}
                 className="px-3 py-1.5 rounded-xl text-sm 
           bg-[#113f30]/80 text-[#d9ebe5]
@@ -4752,15 +4764,15 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 Expand
               </button>
-
-              {/* Collapse */}
+              ;{/* Collapse */}
               <button
                 onClick={() => {
-                  setMeta((m) => {
-                    const c = { ...m };
-                    Object.keys(c).forEach((k) => (c[k].open = false));
-                    return c;
+                  const curr = dashboardState.syllabus_meta || {};
+                  const updated = { ...curr };
+                  Object.keys(updated).forEach((k) => {
+                    updated[k] = { ...(updated[k] || {}), open: false };
                   });
+                  updateDashboard({ syllabus_meta: updated });
                 }}
                 className="px-3 py-1.5 rounded-xl text-sm 
           bg-[#113f30]/80 text-[#d9ebe5]
@@ -4769,40 +4781,29 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 Collapse
               </button>
-
-              {/* Reset */}
+              ;{/* Reset */}
               <button
                 onClick={() => {
                   if (!confirm("Reset ALL syllabus progress?")) return;
-                  setTree((old) => {
-                    const t = structuredClone(old);
-                    (function reset(n) {
-                      if (Array.isArray(n)) {
-                        n.forEach((it) => {
-                          it.done = false;
-                          it.completedOn = "";
-                          it.deadline = "";
-                        });
-                        return;
-                      }
-                      for (const v of Object.values(n || {})) reset(v);
-                    })(t);
-                    return t;
-                  });
 
-                  setMeta({});
-                  setNR({});
-                  setDaySet(new Set());
+                  const resetTree = normalizeTree(TREE);
 
-                  // clear storage
+                  const updates = {
+                    syllabus_tree_v2: resetTree,
+                    syllabus_meta: {},
+                    syllabus_notes: {},
+                    syllabus_streak: [],
+                    syllabus_lastStudied: "",
+                  };
+
+                  updateDashboard(updates);
+
+                  // Optional: clear old local storage keys
+                  localStorage.removeItem(K_TREE);
+                  localStorage.removeItem(K_META);
+                  localStorage.removeItem(K_NOTES);
+                  localStorage.removeItem(K_STREAK);
                   localStorage.removeItem("K_LAST_STUDIED");
-                  localStorage.removeItem("K_TREE");
-                  localStorage.removeItem("K_META");
-                  localStorage.removeItem("K_NOTES");
-                  localStorage.removeItem("K_STREAK");
-
-                  setLastStudied("");
-                  setShowLastStudied(false);
 
                   window.location.reload();
                 }}
@@ -4814,8 +4815,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 Reset
               </button>
-
-              {/* Export */}
+              ; ; ; ; ; ; ; ; ;{/* Export */}
               <button
                 onClick={exportProgress}
                 className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
@@ -4824,7 +4824,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 📤 Export
               </button>
-
               {/* Import */}
               <label
                 className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
@@ -4879,10 +4878,10 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               grand.pct < 25
                 ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
                 : grand.pct < 50
-                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                  : grand.pct < 75
-                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                : grand.pct < 75
+                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
             }
           `}
                 style={{
@@ -4942,13 +4941,12 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
                 key={secKey}
                 secKey={secKey}
                 node={secVal}
-                meta={stableMeta}
+                stableMeta={stableMeta}
                 nr={nr}
                 setNR={setNR}
-                onSectionHeaderClick={onSectionHeaderClick}
                 setSectionTargetPct={setSectionTargetPct}
                 setTargetDate={setTargetDate}
-                toggleOpen={toggleOpen}
+                toggleOpen={toggleOpen} // ✅ USE ONLY THIS
                 setAllAtPath={setAllAtPath}
                 markTask={markTask}
                 setTaskDeadline={setTaskDeadline}
@@ -5154,7 +5152,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
 function SectionCard({
   secKey,
   node,
-  meta,
+  stableMeta,
   nr,
   setNR,
   onSectionHeaderClick,
@@ -5169,8 +5167,7 @@ function SectionCard({
   const sectionPath = [secKey];
 
   // Section meta (collapse state + target date)
-  const m = meta[pathKey(sectionPath)] || { open: false, targetDate: "" };
-
+  const m = stableMeta[pathKey(sectionPath)] || { open: false, targetDate: "" };
   // Progress calculations
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
@@ -5197,7 +5194,7 @@ function SectionCard({
     ro.observe(el);
 
     return () => ro.disconnect();
-  }, [m.open, node, meta, nr]);
+  }, [m.open, node, stableMeta, nr]);
 
   return (
     <section
@@ -5215,7 +5212,7 @@ function SectionCard({
     >
       {/* ======================= HEADER ======================= */}
       <div
-        onClick={() => onSectionHeaderClick(sectionPath)}
+        onClick={() => toggleOpen(sectionPath)}
         data-expanded={m.open}
         data-done={allDone}
         className="
@@ -5244,10 +5241,10 @@ function SectionCard({
                 totals.pct < 25
                   ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                   : totals.pct < 50
-                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                    : totals.pct < 75
-                      ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                      : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                  : totals.pct < 75
+                  ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                  : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
               }
             `}
             style={{
@@ -5344,7 +5341,7 @@ function SectionCard({
               name={name}
               node={child}
               path={[secKey, name]}
-              meta={meta}
+              stableMeta={stableMeta}
               nr={nr}
               setNR={setNR}
               toggleOpen={toggleOpen}
@@ -5366,7 +5363,7 @@ function SubNode({
   name,
   node,
   path,
-  meta,
+  stableMeta,
   nr,
   setNR,
   toggleOpen,
@@ -5377,7 +5374,7 @@ function SubNode({
 }) {
   /* ======================= META ======================= */
   const k = pathKey(path);
-  const m = meta[k] || { open: false, targetDate: "" };
+  const m = stableMeta[k] || { open: false, targetDate: "" };
 
   /* ======================= STATS ======================= */
   const totals = useMemo(() => totalsOf(node), [node]);
@@ -5422,7 +5419,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5431,7 +5428,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5517,24 +5514,27 @@ function SubNode({
               ))}
             </ul>
           ) : (
-            /* SUB SECTIONS */
+            /* SUB SECTIONS (FIXED) */
             <div className="space-y-2">
-              {Object.entries(node).map(([childKey, childVal]) => (
-                <SubNode
-                  key={childKey}
-                  name={childKey}
-                  node={childVal}
-                  path={[...path, childKey]}
-                  meta={meta}
-                  nr={nr}
-                  setNR={setNR}
-                  toggleOpen={toggleOpen}
-                  setTargetDate={setTargetDate}
-                  setAllAtPath={setAllAtPath}
-                  markTask={markTask}
-                  setTaskDeadline={setTaskDeadline}
-                />
-              ))}
+              {node &&
+                typeof node === "object" &&
+                !Array.isArray(node) &&
+                Object.entries(node).map(([childKey, childVal]) => (
+                  <SubNode
+                    key={childKey}
+                    name={childKey}
+                    node={childVal}
+                    path={[...path, childKey]}
+                    stableMeta={stableMeta}
+                    nr={nr}
+                    setNR={setNR}
+                    toggleOpen={toggleOpen}
+                    setTargetDate={setTargetDate}
+                    setAllAtPath={setAllAtPath}
+                    markTask={markTask}
+                    setTaskDeadline={setTaskDeadline}
+                  />
+                ))}
             </div>
           )}
         </div>
@@ -5544,6 +5544,7 @@ function SubNode({
 }
 
 /******************** DAILY AUTO PLANNER ********************/
+
 function DailyPlanner({ tree }) {
   /* ======================= COLLECT ALL PENDING TASKS ======================= */
 
@@ -5636,7 +5637,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      }),
+      })
     );
   }, [tree]);
 
@@ -5785,9 +5786,9 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               item.deadline && new Date(item.deadline) < now
                 ? "bg-red-500/15 text-red-400"
                 : item.deadline &&
-                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                  ? "bg-yellow-500/10 text-yellow-300"
-                  : "bg-green-500/10 text-green-400";
+                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                ? "bg-yellow-500/10 text-yellow-300"
+                : "bg-green-500/10 text-green-400";
 
             const countdown = daysLeft(item.deadline);
 

@@ -30,7 +30,9 @@ router.put("/", async (req, res) => {
     const userId = USER_ID;
     let newState = req.body;
 
-    // --- KEYS THAT MUST ALWAYS BE OBJECTS ---
+    /* =========================
+       1) FIX OBJECT-TYPE KEYS
+       ========================= */
     const mustBeObject = [
       "wd_done",
       "wd_gym_logs",
@@ -39,7 +41,6 @@ router.put("/", async (req, res) => {
       "wd_goals",
     ];
 
-    // --- STEP 1: FIX STRINGIFIED + NULL VALUES ---
     mustBeObject.forEach((key) => {
       const val = newState[key];
 
@@ -47,28 +48,57 @@ router.put("/", async (req, res) => {
         newState[key] = {};
         return;
       }
-
-      // Convert stringified JSON
       if (typeof val === "string") {
         try {
           const parsed = JSON.parse(val);
-          newState[key] = typeof parsed === "object" ? parsed : {};
+          newState[key] =
+            typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
         } catch {
           newState[key] = {};
         }
       }
-
-      if (typeof newState[key] !== "object") {
+      if (typeof newState[key] !== "object" || Array.isArray(newState[key])) {
         newState[key] = {};
       }
     });
 
-    // --- STEP 2: FIX BROKEN ARRAY STRUCTURE (MOBILE BUG FIX) ---
+    /* =========================
+       2) FIX SPECIAL SYLLABUS KEYS
+       ========================= */
 
-    // FIX wd_gym_logs
+    // syllabus_meta → MUST remain object as React sends it
+    if (
+      typeof newState.syllabus_meta !== "object" ||
+      Array.isArray(newState.syllabus_meta)
+    ) {
+      newState.syllabus_meta = {};
+    }
+
+    // syllabus_notes → MUST remain object
+    if (
+      typeof newState.syllabus_notes !== "object" ||
+      Array.isArray(newState.syllabus_notes)
+    ) {
+      newState.syllabus_notes = {};
+    }
+
+    // syllabus_streak → MUST be a REAL array
+    if (!Array.isArray(newState.syllabus_streak)) {
+      newState.syllabus_streak = [];
+    }
+
+    // syllabus_lastStudied → string
+    if (newState.syllabus_lastStudied == null) {
+      newState.syllabus_lastStudied = "";
+    } else {
+      newState.syllabus_lastStudied = String(newState.syllabus_lastStudied);
+    }
+
+    /* =========================
+       3) FIX BROKEN WD_GYM_LOGS
+       ========================= */
     if (Array.isArray(newState.wd_gym_logs)) {
       const flatLogs = {};
-
       newState.wd_gym_logs.forEach((block) => {
         if (typeof block === "object") {
           Object.values(block).forEach((inner) => {
@@ -80,14 +110,14 @@ router.put("/", async (req, res) => {
           });
         }
       });
-
       newState.wd_gym_logs = flatLogs;
     }
 
-    // FIX wd_done
+    /* =========================
+       4) FIX WD_DONE
+       ========================= */
     if (Array.isArray(newState.wd_done)) {
       const cleanDone = {};
-
       newState.wd_done.forEach((block) => {
         if (typeof block === "object") {
           Object.values(block).forEach((inner) => {
@@ -97,24 +127,25 @@ router.put("/", async (req, res) => {
           });
         }
       });
-
       newState.wd_done = cleanDone;
     }
 
-    // --- STEP 3: FIX WEIGHT HISTORY ---
+    /* =========================
+       5) FIX WEIGHT HISTORY
+       ========================= */
     if (Array.isArray(newState.wd_weight_history)) {
       const cleanHistory = {};
-
       newState.wd_weight_history.forEach((entry) => {
         if (entry?.date && entry?.weight) {
           cleanHistory[entry.date] = entry.weight;
         }
       });
-
       newState.wd_weight_history = cleanHistory;
     }
 
-    // --- STEP 4: FIX CURRENT WEIGHT FORMAT ---
+    /* =========================
+       6) FIX CURRENT WEIGHT
+       ========================= */
     if (
       newState.wd_weight_current === "null" ||
       newState.wd_weight_current === undefined ||
@@ -126,23 +157,28 @@ router.put("/", async (req, res) => {
       newState.wd_weight_current = isNaN(parsed) ? null : parsed;
     }
 
-    // --- STEP 5: FINAL SAFETY: ENSURE NO ARRAYS SLIP IN ---
-    if (Array.isArray(newState.wd_gym_logs)) newState.wd_gym_logs = {};
-    if (Array.isArray(newState.wd_done)) newState.wd_done = {};
-    if (Array.isArray(newState.wd_goals))
+    /* =========================
+       7) SAFETY CLEANUP
+       ========================= */
+    if (Array.isArray(newState.wd_goals)) {
       newState.wd_goals = newState.wd_goals[0] || {};
+    }
 
-    // --- STEP 6: CREATE SNAPSHOT ---
+    /* =========================
+       8) CREATE SNAPSHOT
+       ========================= */
     await StateSnapshot.create({
       userId,
       state: newState,
     });
 
-    // --- STEP 7: UPDATE MAIN STATE ---
+    /* =========================
+       9) UPDATE MAIN STATE
+       ========================= */
     const updated = await DashboardState.findOneAndUpdate(
       { userId },
       { $set: newState },
-      { new: true, upsert: true },
+      { new: true, upsert: true }
     );
 
     res.json(updated);
@@ -151,6 +187,8 @@ router.put("/", async (req, res) => {
     res.status(500).json({ message: "Error saving state" });
   }
 });
+
+
 
 // ✅ FULL RESET (Dashboard + Snapshots)
 router.post("/reset", async (req, res) => {
