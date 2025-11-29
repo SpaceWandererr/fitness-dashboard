@@ -4148,6 +4148,15 @@ const TREE = {
   },
 };
 
+// Stabilize meta reference to prevent re-renders
+function useStable(obj) {
+  const ref = useRef(obj);
+  useEffect(() => {
+    ref.current = obj;
+  }, [obj]);
+  return ref.current;
+}
+
 // ✅ Prevent sections auto closing after updates
 // const stableMeta = useMemo(() => meta, [JSON.stringify(meta)]);
 
@@ -4341,13 +4350,18 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   /* ======================= SYNCED STATE FROM MONGO ======================= */
 
+  // 1️⃣ BUILD TREE FIRST
   const tree = dashboardState?.syllabus_tree_v2
     ? normalizeWholeTree(dashboardState.syllabus_tree_v2)
     : normalizeWholeTree(TREE);
 
+  // 2️⃣ RAW META SECOND
   const meta = dashboardState?.syllabus_meta || {};
-  const stableMeta = useMemo(() => meta, [JSON.stringify(meta)]);
 
+  // 3️⃣ STABLE META THIRD
+  const stableMeta = useStable(meta);
+
+  // 4️⃣ NOTES / REMINDERS
   const nr = dashboardState?.syllabus_notes || {};
   const daySet = new Set(dashboardState?.syllabus_streak || []);
 
@@ -4390,9 +4404,12 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
+    const timer = setTimeout(
+      () => {
+        setShowLastStudied(false);
+      },
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
+    );
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4616,7 +4633,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -4862,10 +4879,10 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               grand.pct < 25
                 ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
                 : grand.pct < 50
-                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                : grand.pct < 75
-                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                  : grand.pct < 75
+                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
             }
           `}
                 style={{
@@ -5049,6 +5066,91 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 </style>;
 
 /* ======================= Main Section ======================= */
+// ------------------ TASK ITEM (must be top-level) ------------------
+function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
+  const key = itemKey(path, idx);
+  const localDateRef = useRef(null);
+
+  const completedDate = nr[key]?.completedDate;
+
+  return (
+    <li
+      key={idx}
+      onClick={() => markTask(path, idx, !it.done)}
+      className={`
+        p-2 rounded-lg border border-[#00d1b2]/30 
+        cursor-pointer transition
+        ${it.done ? "opacity-80" : ""}
+      `}
+    >
+      <div className="flex justify-between gap-2">
+        {/* LEFT */}
+        <div className="flex items-start gap-2">
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              markTask(path, idx, !it.done);
+            }}
+            className={`
+              w-5 h-5 border flex items-center justify-center cursor-pointer 
+              ${it.done ? "bg-[#ED4135]/80" : "bg-[#0B2F2A]"}
+            `}
+          >
+            {it.done && "✓"}
+          </div>
+
+          <div>
+            <div className={it.done ? "line-through opacity-80" : ""}>
+              {it.title}
+            </div>
+
+            {completedDate && (
+              <div className="text-xs opacity-70">
+                Completed: {new Date(completedDate).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT */}
+        <div onClick={(e) => e.stopPropagation()} className="flex gap-2">
+          <input
+            type="number"
+            min={0}
+            step="0.25"
+            value={nr[key]?.estimate !== undefined ? nr[key].estimate : 0.5}
+            onChange={(e) =>
+              setNR((old) => ({
+                ...old,
+                [key]: {
+                  ...(old[key] || {}),
+                  estimate: Number(e.target.value),
+                },
+              }))
+            }
+            className="w-16 text-xs rounded px-1 border border-[#00d1b2]/40 bg-black/40"
+          />
+
+          <input
+            type="date"
+            ref={localDateRef}
+            value={it.deadline ?? ""}
+            onChange={(e) => setTaskDeadline(path, idx, e.target.value)}
+            className="hidden"
+          />
+
+          <button
+            onClick={() => localDateRef.current?.showPicker()}
+            className="text-xs border border-[#00d1b2]/40 px-2 rounded"
+          >
+            📅 Deadline
+          </button>
+        </div>
+      </div>
+    </li>
+  );
+}
+
 function SectionCard({
   secKey,
   node,
@@ -5142,10 +5244,10 @@ function SectionCard({
                 totals.pct < 25
                   ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                   : totals.pct < 50
-                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                  : totals.pct < 75
-                  ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                  : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
+                      ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                      : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
               }
             `}
             style={{
@@ -5202,7 +5304,7 @@ function SectionCard({
               <input
                 type="date"
                 ref={sectionDateRef}
-                value={m.targetDate}
+                value={m.targetDate ?? ""}
                 onChange={(e) => setTargetDate(sectionPath, e.target.value)}
                 className="absolute opacity-0 pointer-events-none w-0 h-0"
               />
@@ -5242,7 +5344,7 @@ function SectionCard({
               name={name}
               node={child}
               path={[secKey, name]}
-              meta={stableMeta}
+              meta={meta}
               nr={nr}
               setNR={setNR}
               toggleOpen={toggleOpen}
@@ -5259,13 +5361,14 @@ function SectionCard({
 }
 
 /********************** Sub Section **********************/
+
 function SubNode({
   name,
   node,
   path,
   meta,
   nr,
-  setNR, // now updates Mongo via dashboardState
+  setNR,
   toggleOpen,
   setTargetDate,
   setAllAtPath,
@@ -5277,17 +5380,13 @@ function SubNode({
   const m = meta[k] || { open: false, targetDate: "" };
 
   /* ======================= STATS ======================= */
-
-  // Calculate progress for this node
   const totals = useMemo(() => totalsOf(node), [node]);
   const allDone = totals.total > 0 && totals.done === totals.total;
 
   /* ======================= COLLAPSE ANIMATION ======================= */
-
   const contentRef = useRef(null);
   const [height, setHeight] = useState("0px");
 
-  // Smooth expand / collapse logic
   useEffect(() => {
     if (m.open && contentRef.current) {
       setHeight(contentRef.current.scrollHeight + "px");
@@ -5296,15 +5395,13 @@ function SubNode({
     }
   }, [m.open, node]);
 
-  /* ======================= AUTO SAVE COMPLETION DATE ======================= */
-
+  /* ======================= AUTO-SAVE completedDate ======================= */
   useEffect(() => {
     if (!Array.isArray(node)) return;
 
     node.forEach((it, idx) => {
       const key = itemKey(path, idx);
 
-      // If marked done but no completedDate → auto add it
       if (it.done && !nr[key]?.completedDate) {
         setNR((old) => ({
           ...old,
@@ -5317,18 +5414,15 @@ function SubNode({
     });
   }, [node, nr, path, setNR]);
 
-  /* ======================= HOUR ESTIMATION ======================= */
-
+  /* ======================= HOUR ROLLUP ======================= */
   const hoursRollup = useMemo(() => {
-    // Recursive calculation if node has children
     if (!Array.isArray(node)) {
       let est = 0;
-
       for (const [childKey, childVal] of Object.entries(node || {})) {
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5337,7 +5431,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5348,7 +5442,6 @@ function SubNode({
       return est;
     }
 
-    // If leaf node (array of topics)
     return node.reduce((s, _, idx) => {
       const e = Number(nr[itemKey(path, idx)]?.estimate || 0.5);
       return s + (isFinite(e) ? e : 0.5);
@@ -5356,51 +5449,43 @@ function SubNode({
   }, [node, nr, path]);
 
   /* ======================= UI ======================= */
-
   return (
     <div
       className="
-        rounded-xl border border-[#0B5134]/35 dark:border-gray-800 
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+        rounded-xl border border-[#0B5134]/35 dark:border-gray-800
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
         text-[#d9ebe5] shadow-[0_0_15px_rgba(0,0,0,0.2)]
       "
     >
-      {/* ======================= HEADER ======================= */}
+      {/* HEADER */}
       <div
         onClick={() => toggleOpen(path)}
         className="
-          p-2 cursor-pointer bg-[#134039] 
-          hover:bg-[#00d1b2]/10 
-          border-l-4 border-[#D42916] 
+          p-2 cursor-pointer bg-[#134039]
+          hover:bg-[#00d1b2]/10
+          border-l-4 border-[#D42916]
           rounded-xl
         "
       >
-        <div className="flex flex-wrap justify-between gap-2">
-          {/* LEFT: Arrow + Name */}
+        <div className="flex justify-between gap-2 flex-wrap">
           <div className="flex gap-2">
             <span>{m.open ? "🔽" : "▶️"}</span>
             <span>{name}</span>
           </div>
 
-          {/* RIGHT: Stats + Actions */}
           <div
             onClick={(e) => e.stopPropagation()}
             className="flex gap-2 text-xs"
           >
-            {/* Stats */}
             <span>
               {totals.done}/{totals.total} • {totals.pct}% •{" "}
               {hoursRollup.toFixed(1)}h
             </span>
 
-            {/* Mark All Button */}
             <button
               onClick={() => setAllAtPath(path, !allDone)}
-              className="
-                px-2 py-1 border border-[#00d1b2]/50 rounded
-                hover:bg-[#0B2F2A]/80 transition
-              "
+              className="px-2 py-1 border border-[#00d1b2]/50 rounded hover:bg-[#0B2F2A]/80 transition"
             >
               {allDone ? "Undo all" : "Mark all"}
             </button>
@@ -5408,121 +5493,31 @@ function SubNode({
         </div>
       </div>
 
-      {/* ======================= BODY / CONTENT ======================= */}
+      {/* BODY */}
       <div
         ref={contentRef}
         style={{ maxHeight: height }}
         className="transition-all overflow-hidden"
       >
         <div className="px-3 pb-3">
+          {/* LEAF TASKS */}
           {Array.isArray(node) ? (
-            /* ======================= LEAF TASK LIST ======================= */
             <ul className="space-y-2">
-              {node.map((it, idx) => {
-                const key = itemKey(path, idx);
-                const localDateRef = useRef(null);
-
-                const completedDate = nr[key]?.completedDate;
-                const diff = daysDiff(completedDate, it.deadline);
-
-                return (
-                  <li
-                    key={idx}
-                    onClick={() => markTask(path, idx, !it.done)}
-                    className={`
-                      p-2 rounded-lg border border-[#00d1b2]/30 
-                      cursor-pointer transition
-                      ${it.done ? "opacity-80" : ""}
-                    `}
-                  >
-                    <div className="flex justify-between gap-2">
-                      {/* LEFT SIDE */}
-                      <div className="flex items-start gap-2">
-                        {/* Checkbox */}
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const newState = !it.done;
-                            markTask(path, idx, newState);
-                          }}
-                          className={`
-                            w-5 h-5 border flex items-center justify-center cursor-pointer 
-                            ${it.done ? "bg-[#ED4135]/80" : "bg-[#0B2F2A]"}
-                          `}
-                        >
-                          {it.done && "✓"}
-                        </div>
-
-                        {/* Title + Completion */}
-                        <div>
-                          <div
-                            className={it.done ? "line-through opacity-80" : ""}
-                          >
-                            {it.title}
-                          </div>
-
-                          {completedDate && (
-                            <div className="text-xs opacity-70">
-                              Completed:{" "}
-                              {new Date(completedDate).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* RIGHT SIDE */}
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex gap-2"
-                      >
-                        {/* Estimated Time Input */}
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.25"
-                          value={nr[key]?.estimate ?? 0.5}
-                          onChange={(e) =>
-                            setNR((old) => ({
-                              ...old,
-                              [key]: {
-                                ...(old[key] || {}),
-                                estimate: Number(e.target.value),
-                              },
-                            }))
-                          }
-                          className="
-                            w-16 text-xs rounded px-1 
-                            border border-[#00d1b2]/40
-                            bg-black/40
-                          "
-                        />
-
-                        {/* Hidden date input */}
-                        <input
-                          type="date"
-                          ref={localDateRef}
-                          value={it.deadline || ""}
-                          onChange={(e) =>
-                            setTaskDeadline(path, idx, e.target.value)
-                          }
-                          className="hidden"
-                        />
-
-                        {/* Deadline Button */}
-                        <button
-                          onClick={() => localDateRef.current?.showPicker()}
-                          className="text-xs border border-[#00d1b2]/40 px-2 rounded"
-                        >
-                          📅 Deadline
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
+              {node.map((it, idx) => (
+                <TaskItem
+                  key={idx}
+                  it={it}
+                  idx={idx}
+                  path={path}
+                  nr={nr}
+                  setNR={setNR}
+                  markTask={markTask}
+                  setTaskDeadline={setTaskDeadline}
+                />
+              ))}
             </ul>
           ) : (
-            /* ======================= NESTED SUBSECTIONS ======================= */
+            /* SUB SECTIONS */
             <div className="space-y-2">
               {Object.entries(node).map(([childKey, childVal]) => (
                 <SubNode
@@ -5530,7 +5525,7 @@ function SubNode({
                   name={childKey}
                   node={childVal}
                   path={[...path, childKey]}
-                  meta={stableMeta}
+                  meta={meta}
                   nr={nr}
                   setNR={setNR}
                   toggleOpen={toggleOpen}
@@ -5641,7 +5636,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      })
+      }),
     );
   }, [tree]);
 
@@ -5790,9 +5785,9 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               item.deadline && new Date(item.deadline) < now
                 ? "bg-red-500/15 text-red-400"
                 : item.deadline &&
-                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                ? "bg-yellow-500/10 text-yellow-300"
-                : "bg-green-500/10 text-green-400";
+                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                  ? "bg-yellow-500/10 text-yellow-300"
+                  : "bg-green-500/10 text-green-400";
 
             const countdown = daysLeft(item.deadline);
 
