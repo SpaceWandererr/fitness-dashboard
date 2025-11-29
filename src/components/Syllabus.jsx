@@ -4340,6 +4340,9 @@ function normalizeSection(sectionObj) {
 // keep for compatibility but delegate to normalized version
 const normalizeWholeTree = (src) => normalizeTree(src);
 
+// Add this somewhere near the top (replace old todayISO if exists)
+const nowISO = () => new Date().toISOString(); // e.g. "2025-11-30T13:45:22.123Z"
+
 /* ======================= MAIN ======================= */
 export default function Syllabus({ dashboardState, setDashboardState }) {
   // ---------------- MONGO CONFIG ----------------
@@ -4401,26 +4404,39 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   }, []);
 
   /* ======================= AUTO SEED MONGO ======================= */
+  /* ======================= INITIAL LOAD & SEEDING (FIXED!) ======================= */
   useEffect(() => {
-    if (!dashboardState.syllabus_tree_v2) {
-      console.log("🌱 Seeding initial syllabus tree into Mongo...");
-
-      const seeded = {
-        ...dashboardState,
-        syllabus_tree_v2: normalizeTree(TREE),
-      };
-
-      // Update frontend
-      setDashboardState(seeded);
-
-      // Push to Mongo
-      fetch(API_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(seeded),
-      }).catch((err) => console.error("Mongo seed failed:", err));
+    // Only seed if syllabus_tree_v2 is completely missing (first-time user)
+    if (dashboardState?.syllabus_tree_v2) {
+      console.log("Syllabus already exists in Mongo. Skipping seed.");
+      return;
     }
-  }, []);
+
+    console.log("First time setup: Seeding fresh syllabus into Mongo...");
+
+    const freshTree = normalizeTree(TREE);
+
+    const seeded = {
+      ...dashboardState,
+      syllabus_tree_v2: freshTree,
+      syllabus_meta: {},
+      syllabus_notes: {},
+      syllabus_streak: [],
+      syllabus_lastStudied: "",
+      // Optional: add a flag so we know it's been initialized
+      syllabus_initialized: true,
+    };
+
+    setDashboardState(seeded);
+
+    fetch(API_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(seeded),
+    })
+      .then(() => console.log("Fresh syllabus seeded successfully"))
+      .catch((err) => console.error("Seed failed:", err));
+  }, [dashboardState?.syllabus_tree_v2]); // Only depend on whether tree exists
 
   /* ======================= LAST STUDIED AUTO-HIDE ======================= */
   useEffect(() => {
@@ -4586,57 +4602,114 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     });
   };
 
-  const setAllAtPath = (path, val) => {
-    const newTree = deepClone(tree);
-    const node = getRefAtPath(newTree, path);
+  // 1. Keep your full timestamp
+  const nowISO = () => new Date().toISOString();
 
-    let lastItem = null;
+  // 2. setAllAtPath — YOUR ORIGINAL LOGIC (CORRECT!) + proper unmark fix
+  const setAllAtPath = useCallback(
+    (path, val) => {
+      setDashboardState((prev) => {
+        const newTree = deepClone(prev.syllabus_tree_v2 || tree);
+        const node = getRefAtPath(newTree, path);
 
-    (function mark(n) {
-      if (Array.isArray(n)) {
-        n.forEach((it) => {
-          it.done = val;
-          it.completedOn = val ? todayISO() : "";
-          if (val) lastItem = it;
+        let lastItem = null;
+
+        const markRecursively = (n) => {
+          if (Array.isArray(n)) {
+            n.forEach((it) => {
+              it.done = val;
+              it.completedOn = val ? nowISO() : "";
+              if (val) lastItem = it; // ← This is CORRECT — captures the LAST item!
+            });
+            return;
+          }
+          for (const v of Object.values(n || {})) markRecursively(v);
+        };
+
+        markRecursively(node);
+
+        // Only update lastStudied when MARKING (your desired behavior)
+        const updates = { syllabus_tree_v2: newTree };
+
+        if (val && lastItem) {
+          updates.syllabus_lastStudied = `${
+            lastItem.title
+          } — ${new Date().toLocaleString("en-IN")}`;
+          const streak = new Set(prev.syllabus_streak || []);
+          streak.add(nowISO().slice(0, 10));
+          updates.syllabus_streak = Array.from(streak);
+        }
+
+        // When UNMARKING → recalculate from remaining done tasks
+        if (!val) {
+          updates.syllabus_lastStudied = findLastStudied(newTree);
+        }
+
+        return { ...prev, ...updates };
+      });
+    },
+    [tree]
+  );
+
+  // 3. markTask — single task (uses timestamp order)
+  const markTask = useCallback(
+    (path, idx, val) => {
+      setDashboardState((prev) => {
+        const newTree = deepClone(prev.syllabus_tree_v2 || tree);
+        const parent = getRefAtPath(newTree, path.slice(0, -1));
+        const leafKey = path[path.length - 1];
+        const item = parent[leafKey][idx];
+
+        item.done = val;
+        item.completedOn = val ? nowISO() : "";
+
+        const updates = { syllabus_tree_v2: newTree };
+
+        if (val) {
+          updates.syllabus_lastStudied = `${
+            item.title
+          } — ${new Date().toLocaleString("en-IN")}`;
+          const streak = new Set(prev.syllabus_streak || []);
+          streak.add(nowISO().slice(0, 10));
+          updates.syllabus_streak = Array.from(streak);
+        } else {
+          // When unmarking a single task → recalculate from remaining
+          updates.syllabus_lastStudied = findLastStudied(newTree);
+        }
+
+        return { ...prev, ...updates };
+      });
+    },
+    [tree]
+  );
+
+  // 4. Keep this helper (for unmarking)
+  const findLastStudied = useCallback((treeRoot) => {
+    let latestTitle = "";
+    let latestTime = 0;
+
+    const walk = (node) => {
+      if (Array.isArray(node)) {
+        node.forEach((task) => {
+          if (task.done && task.completedOn) {
+            const t = new Date(task.completedOn).getTime();
+            if (t > latestTime) {
+              latestTime = t;
+              latestTitle = task.title;
+            }
+          }
         });
-        return;
+      } else {
+        Object.values(node || {}).forEach(walk);
       }
-      for (const v of Object.values(n || {})) mark(v);
-    })(node);
+    };
 
-    const updates = { syllabus_tree_v2: newTree };
+    walk(treeRoot);
+    if (!latestTitle) return "";
+    const d = new Date(latestTime);
+    return `${latestTitle} — ${d.toLocaleString("en-IN")}`;
+  }, []);
 
-    if (val && lastItem) {
-      updates.syllabus_lastStudied = `${
-        lastItem.title
-      } — ${new Date().toLocaleString("en-IN")}`;
-      updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
-    }
-
-    updateDashboard(updates);
-  };
-
-  const markTask = (path, idx, val) => {
-    const newTree = deepClone(tree);
-
-    const parent = getRefAtPath(newTree, path.slice(0, -1));
-    const leafKey = path[path.length - 1];
-    const item = parent[leafKey][idx];
-
-    item.done = val;
-    item.completedOn = val ? todayISO() : "";
-
-    const updates = { syllabus_tree_v2: newTree };
-
-    if (val) {
-      updates.syllabus_lastStudied = `${
-        item.title
-      } — ${new Date().toLocaleString("en-IN")}`;
-      updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
-    }
-
-    updateDashboard(updates);
-  };
   // ✅ Fix: Task deadline setter with Mongo sync
   const setTaskDeadline = (path, idx, date) => {
     const newTree = deepClone(tree);
@@ -4825,181 +4898,184 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   dark:border-[#00D1FF33]
 "
     >
-      <header
-        className="
-    sticky top-0 z-40 rounded-xl
-    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
-    dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
-    backdrop-blur-xl
-    border border-[#0B5134]/60
-    shadow-[0_0_15px_rgba(0,0,0,0.35)]
+      <header className="sticky top-0 z-40 rounded-xl mb-6 animate-fadeIn">
+        <div
+          className="
+    relative overflow-hidden
+    bg-gradient-to-br from-[#0F0F0F]/95 via-[#183D3D]/90 to-[#B82132]/85
+    dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
+    backdrop-blur-2xl border border-[#00D1FF]/30
+    shadow-[0_0_30px_rgba(0,209,255,0.15)]
     dark:border-[#00D1FF33]
-    text-[#E6F1FF]
   "
-      >
-        <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
-          {/* 🔹 Top Row */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            {/* LEFT — Title */}
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
-              Syllabus Jay's Web Dev-2026
-            </h1>
+        >
+          {/* Animated Background Layers */}
+          <div className="absolute inset-0 bg-stripes animate-stripes opacity-30" />
+          <div className="absolute inset-0 bg-wave animate-wave opacity-20" />
 
-            {/* RIGHT — Buttons */}
-            <div className="flex flex-wrap justify-end gap-2">
-              {/* 🔥 Streak */}
-              <span
-                className="
-          px-3 py-1.5 rounded-xl
-          bg-gradient-to-r from-[#0ca56d] to-[#18c481]
-          border border-[#0B5134]/60
-          text-[14px] font-semibold text-black
-        "
-              >
-                🔥 Streak: <b>{Array.from(daySet).length}</b> days
-              </span>
-              {/* Expand */}
-              <button
-                onClick={() => {
-                  const curr = dashboardState.syllabus_meta || {};
-                  const updated = { ...curr };
-                  Object.keys(updated).forEach((k) => {
-                    updated[k] = { ...(updated[k] || {}), open: true };
-                  });
-                  updateDashboard({ syllabus_meta: updated });
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 text-[#d9ebe5]
-          border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-              >
-                Expand
-              </button>
-              ;{/* Collapse */}
-              <button
-                onClick={() => {
-                  const curr = dashboardState.syllabus_meta || {};
-                  const updated = { ...curr };
-                  Object.keys(updated).forEach((k) => {
-                    updated[k] = { ...(updated[k] || {}), open: false };
-                  });
-                  updateDashboard({ syllabus_meta: updated });
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 text-[#d9ebe5]
-          border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-              >
-                Collapse
-              </button>
-              ;{/* Reset */}
-              <button
-                onClick={() => {
-                  if (!confirm("Reset ALL syllabus progress?")) return;
+          <div className="relative max-w-7xl mx-auto px-4 py-5 space-y-5">
+            {/* Top Row: Title + Buttons */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Title */}
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#FF8F8F] to-[#B82132] shadow-lg shadow-[#FF8F8F]/60 animate-shimmer">
+                  <span className="text-2xl font-black text-black">Code</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#a7f3d0] via-[#00D1FF] to-[#E6F1FF] animate-shimmer bg-shimmer">
+                    Jay's Web Dev-2026
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[#a7f3d0]/80 font-medium">
+                    Master Full-Stack in 365 Days
+                  </p>
+                </div>
+              </div>
 
-                  const resetTree = normalizeTree(TREE);
+              {/* Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Streak */}
+                <div
+                  className={`
+            px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0ca56d] to-[#18c481] 
+            text-black font-bold text-sm shadow-lg shadow-[#18c481]/50
+            flex items-center gap-2 animate-shimmer
+            ${grand.pct >= 90 ? "animate-heartbeat" : ""}
+          `}
+                >
+                  Streak: <b>{Array.from(daySet).length}</b>
+                </div>
 
-                  const updates = {
-                    syllabus_tree_v2: resetTree,
-                    syllabus_meta: {},
-                    syllabus_notes: {},
-                    syllabus_streak: [],
-                    syllabus_lastStudied: "",
-                  };
+                {/* Expand All */}
+                <button
+                  onClick={() => {
+                    const updated = { ...dashboardState.syllabus_meta };
+                    Object.keys(TREE).forEach((ep) => {
+                      const key = pathKey([ep]);
+                      updated[key] = { ...(updated[key] || {}), open: true };
+                    });
+                    updateDashboard({ syllabus_meta: updated });
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
+                >
+                  Expand
+                </button>
 
-                  updateDashboard(updates);
+                {/* Collapse All */}
+                <button
+                  onClick={() => {
+                    const updated = { ...dashboardState.syllabus_meta };
+                    Object.keys(updated).forEach((k) => {
+                      updated[k] = { ...updated[k], open: false };
+                    });
+                    updateDashboard({ syllabus_meta: updated });
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
+                >
+                  Collapse
+                </button>
 
-                  // Optional: clear old local storage keys
-                  localStorage.removeItem(K_TREE);
-                  localStorage.removeItem(K_META);
-                  localStorage.removeItem(K_NOTES);
-                  localStorage.removeItem(K_STREAK);
-                  localStorage.removeItem("K_LAST_STUDIED");
+                {/* Reset */}
+                <button
+                  onClick={() => {
+                    if (!confirm("Reset ALL progress? This cannot be undone!"))
+                      return;
+                    const resetTree = normalizeTree(TREE);
+                    const resetState = {
+                      syllabus_tree_v2: resetTree,
+                      syllabus_meta: {},
+                      syllabus_notes: {},
+                      syllabus_streak: [],
+                      syllabus_lastStudied: "",
+                      syllabus_initialized: true,
+                    };
+                    setDashboardState(resetState);
+                    fetch(API_URL, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(resetState),
+                    })
+                      .then(() => {
+                        alert("All progress reset!");
+                        window.location.reload();
+                      })
+                      .catch(() => alert("Reset failed!"));
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#B82132] text-white hover:bg-[#a51b2a] shadow-lg transition-all duration-300"
+                >
+                  Reset
+                </button>
 
-                  window.location.reload();
-                }}
-                className="
-            px-3 py-1.5 rounded-xl text-sm
-            bg-[#B82132] text-white
-            shadow-md hover:bg-[#a51b2a] transition
-          "
-              >
-                Reset
-              </button>
-              ; ; ; ; ; ; ; ; ;{/* Export */}
-              <button
-                onClick={exportProgress}
-                className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
-          bg-[#113f30]/80 border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-              >
-                📤 Export
-              </button>
-              {/* Import */}
-              <label
-                className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
-          bg-[#113f30]/80 border border-[#1f6a50]/40 text-[#d9ebe5]
-          hover:bg-[#0F3A2B] transition"
-              >
-                📥 Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importProgress}
-                  className="hidden"
-                />
-              </label>
+                {/* Export */}
+                <button
+                  onClick={exportProgress}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
+                >
+                  Export
+                </button>
+
+                {/* Import */}
+                <label className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300 cursor-pointer">
+                  Import
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={importProgress}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
-          </div>
 
-          {/* 🔹 Progress Section */}
-          <div className="pt-2">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between text-xs text-[#d9ebe5] gap-1">
-              <span className="font-medium">
-                Progress: {grand.done}/{grand.total}
-              </span>
+            {/* Progress Section */}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#d9ebe5]">
+                <span className="font-medium">
+                  Progress: {grand.done} / {grand.total} topics
+                </span>
 
-              {showLastStudied &&
-                (lastStudied ? (
-                  <div className="text-green-300/90 flex items-center gap-1">
-                    📘 <span>Last studied:</span>
-                    <span className="font-medium text-green-200">
-                      {lastStudied}
-                    </span>
+                {showLastStudied && lastStudied ? (
+                  <div className="flex items-center gap-2 text-green-300/90 font-medium animate-fadeIn">
+                    Last studied:{" "}
+                    <span className="text-green-200">{lastStudied}</span>
+                  </div>
+                ) : lastStudied ? (
+                  <div className="text-[#a7f3d0]/60 text-sm italic">
+                    Keep going!
                   </div>
                 ) : (
-                  <div className="text-gray-400">
-                    📭 No topics completed yet.
+                  <div className="text-[#a7f3d0]/60 text-sm italic">
+                    No topics completed yet
                   </div>
-                ))}
+                )}
 
-              <span className="font-semibold text-[#a7f3d0]">{grand.pct}%</span>
-            </div>
+                <span className="font-bold text-[#a7f3d0] text-lg">
+                  {grand.pct}%
+                </span>
+              </div>
 
-            {/* ✅ Improved Progress Bar */}
-            <div className="relative mt-2 h-2.5 rounded-full bg-[#102720] overflow-hidden">
-              {/* Background glow layer */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+              {/* Progress Bar */}
+              <div className="relative h-3 rounded-full bg-[#102720]/90 overflow-hidden border border-[#0B5134]/60">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer" />
 
-              {/* Progress Fill */}
-              <div
-                className={`
-            h-full rounded-full transition-all duration-700 ease-out
-            ${
-              grand.pct < 25
-                ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
-                : grand.pct < 50
-                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                : grand.pct < 75
-                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
-            }
-          `}
-                style={{
-                  width: `${grand.pct}%`,
-                  minWidth: grand.pct > 0 ? "6px" : "6px",
-                }}
-              />
+                <div
+                  className={`
+              absolute inset-0 transition-all duration-1200 ease-out
+              ${grand.pct >= 90 ? "animate-heartbeat" : ""}
+              ${
+                grand.pct < 25
+                  ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e]"
+                  : grand.pct < 50
+                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80]"
+                  : grand.pct < 75
+                  ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0]"
+                  : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_20px_#ef444450]"
+              }
+            `}
+                  style={{ width: `${Math.max(grand.pct, 2)}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/30 animate-shimmer" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -5135,6 +5211,25 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
 <style>
   {`
+
+  @keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite;
+}
+
   /* Custom scrollbar for better aesthetics */
   ::-webkit-scrollbar {
     width: 8px;
@@ -5219,6 +5314,23 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   animation: shimmer 3s linear infinite;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite;
+}
 
     `}
 </style>;
@@ -5319,7 +5431,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                   localDateRef.current.showPicker();
                 }
               }}
-              className="text-xs border border-[#00d1b2]/40 px-2 rounded hover:bg-[#00d1b2]/10 transition"
+              className="text-xs border border-[#00d1b2]/40 px-2 py-2 flex wrap-nowrap rounded hover:bg-[#00d1b2]/10 transition"
               title={
                 it.deadline
                   ? `Deadline: ${formatDateDDMMYYYY(it.deadline)}`
@@ -5597,7 +5709,7 @@ function SubNode({
 
     node.forEach((it, idx) => {
       const key = itemKey(path, idx);
-      const cacheKey = `${key}_${it.done}`;
+      const cacheKey = key; // FIX: Remove _${it.done} — cache only tracks the task, not state
 
       if (it.done) {
         // Item is done: set completedDate if not already set
@@ -5614,12 +5726,10 @@ function SubNode({
         if (nr[key]?.completedDate) {
           const { completedDate, ...rest } = nr[key];
           updates[key] = rest;
-          completedRef.current.delete(cacheKey);
           hasChanges = true;
-        } else {
-          // Remove from cache if item is undone (even if no completedDate)
-          completedRef.current.delete(cacheKey);
         }
+        // FIX: Always clear cache on unmark to allow re-set on next mark
+        completedRef.current.delete(cacheKey);
       }
     });
 
