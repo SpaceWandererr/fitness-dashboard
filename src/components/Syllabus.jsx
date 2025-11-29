@@ -4149,16 +4149,15 @@ const TREE = {
 };
 
 // Stabilize meta reference to prevent re-renders
+// Fixed: Always return the latest value, not stale ref.current
 function useStable(obj) {
   const ref = useRef(obj);
-  useEffect(() => {
+  // Update ref synchronously to avoid stale reads
+  if (ref.current !== obj) {
     ref.current = obj;
-  }, [obj]);
+  }
   return ref.current;
 }
-
-// ✅ Prevent sections auto closing after updates
-// const stableMeta = useMemo(() => meta, [JSON.stringify(meta)]);
 
 /* =======https://fitness-backend-laoe.onrender.com/=============== KEYS ======================= */
 const K_TREE = "syllabus_tree_v2";
@@ -4373,8 +4372,8 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   // 2️⃣ RAW META SECOND
   const meta = dashboardState?.syllabus_meta || {};
 
-  // 3️⃣ STABLE META THIRD
-  const stableMeta = useStable(meta);
+  // 3️⃣ STABLE META THIRD - Use useMemo to ensure updates properly
+  const stableMeta = useMemo(() => meta, [meta]);
 
   // 4️⃣ NOTES / REMINDERS
   const nr = dashboardState?.syllabus_notes || {};
@@ -4390,6 +4389,16 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   const [milestone, setMilestone] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const saveTimeoutRef = useRef(null);
+
+  /* ======================= CLEANUP TIMEOUT ======================= */
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   /* ======================= AUTO SEED MONGO ======================= */
   useEffect(() => {
@@ -4443,36 +4452,73 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   const grand = useMemo(() => totalsOf(tree), [tree]);
 
   /* ======================= DASHBOARD UPDATE ======================= */
-  const updateDashboard = (updates) => {
-    setDashboardState((prev) => ({
-      ...prev,
-      ...updates,
-    }));
+  const updateDashboard = useCallback(
+    (updates) => {
+      // Update local state first
+      setDashboardState((prev) => {
+        const newState = {
+          ...prev,
+          ...updates,
+        };
 
-    window.dispatchEvent(new Event("lifeos:update"));
-  };
+        // Save to MongoDB asynchronously AFTER state update (debounced)
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+        saveTimeoutRef.current = setTimeout(() => {
+          fetch(API_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newState),
+          }).catch((err) => console.error("Mongo save failed:", err));
+        }, 500); // Debounce saves by 500ms
+
+        return newState;
+      });
+    },
+    [API_URL]
+  );
 
   /* ======================= ACTIONS ======================= */
 
   // ✅ Stable Toggle (does not break after Mongo re-render)
-  const toggleOpen = (path) => {
-    const key = pathKey(path);
+  const toggleOpen = useCallback(
+    (path) => {
+      const key = pathKey(path);
 
-    const current = dashboardState.syllabus_meta || {};
-    const prev = current[key]?.open || false;
+      // Use functional update to read latest state
+      setDashboardState((prev) => {
+        const current = prev?.syllabus_meta || {};
+        const prevOpen = current[key]?.open || false;
 
-    const updatedMeta = {
-      ...current,
-      [key]: {
-        ...(current[key] || {}),
-        open: !prev,
-      },
-    };
+        const newState = {
+          ...prev,
+          syllabus_meta: {
+            ...current,
+            [key]: {
+              ...(current[key] || {}),
+              open: !prevOpen,
+            },
+          },
+        };
 
-    updateDashboard({
-      syllabus_meta: updatedMeta,
-    });
-  };
+        // Save to MongoDB asynchronously AFTER state update (debounced, no event)
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+        saveTimeoutRef.current = setTimeout(() => {
+          fetch(API_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newState),
+          }).catch((err) => console.error("Mongo save failed:", err));
+        }, 500); // Debounce saves by 500ms
+
+        return newState;
+      });
+    },
+    [API_URL]
+  );
 
   // alias for Section header click
   const onSectionHeaderClick = (path) => {
@@ -4481,12 +4527,48 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   const setTargetDate = (path, date) => {
     const key = pathKey(path);
+    const newTree = deepClone(tree);
+    const node = getRefAtPath(newTree, path);
+    const updatedMeta = {
+      ...meta,
+      [key]: { ...(meta[key] || {}), targetDate: date },
+    };
+
+    // Cascade deadline to all nested subsections and topics
+    function cascadeDeadline(node, deadline, currentPath, metaObj) {
+      if (Array.isArray(node)) {
+        // It's a task list - set deadline for all tasks
+        node.forEach((item) => {
+          if (!item.deadline) {
+            item.deadline = deadline;
+          }
+        });
+      } else if (isObject(node)) {
+        // It's a nested object - recurse into children
+        for (const [childKey, childVal] of Object.entries(node || {})) {
+          const childPath = [...currentPath, childKey];
+          const childKeyStr = pathKey(childPath);
+
+          // Set targetDate in meta for subsection
+          if (!metaObj[childKeyStr]) {
+            metaObj[childKeyStr] = {};
+          }
+          metaObj[childKeyStr].targetDate = deadline;
+
+          // Recurse into children
+          cascadeDeadline(childVal, deadline, childPath, metaObj);
+        }
+      }
+    }
+
+    // Only cascade if a date is provided (not when clearing)
+    if (node && date) {
+      cascadeDeadline(node, date, path, updatedMeta);
+    }
 
     updateDashboard({
-      syllabus_meta: {
-        ...meta,
-        [key]: { ...(meta[key] || {}), targetDate: date },
-      },
+      syllabus_meta: updatedMeta,
+      syllabus_tree_v2: newTree,
     });
   };
 
@@ -4572,9 +4654,38 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   };
 
   /* ======================= NOTES ======================= */
-  const setNR = (newNR) => {
-    updateDashboard({ syllabus_notes: newNR });
-  };
+  const setNR = useCallback(
+    (newNR) => {
+      // Handle functional updates like setState
+      if (typeof newNR === "function") {
+        setDashboardState((prev) => {
+          const currentNotes = prev?.syllabus_notes || {};
+          const updatedNotes = newNR(currentNotes);
+          const newState = {
+            ...prev,
+            syllabus_notes: updatedNotes,
+          };
+
+          // Save to MongoDB
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+          }
+          saveTimeoutRef.current = setTimeout(() => {
+            fetch(API_URL, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newState),
+            }).catch((err) => console.error("Mongo save failed:", err));
+          }, 500);
+
+          return newState;
+        });
+      } else {
+        updateDashboard({ syllabus_notes: newNR });
+      }
+    },
+    [updateDashboard, API_URL]
+  );
 
   /* ======================= EXPORT ======================= */
   function exportProgress() {
@@ -4894,8 +5005,62 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         </div>
       </header>
 
+      {/* === Search Bar === */}
+      <div className="w-full px-3 mt-4 mb-2">
+        <div className="max-w-6xl mx-auto">
+          <div className="relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="🔍 Search syllabus topics..."
+              className="
+                w-full px-4 py-3 pl-12 rounded-xl
+                bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
+                dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+                border border-[#0B5134]/60 dark:border-[#00D1FF33]
+                text-[#d9ebe5] dark:text-[#E6F1FF]
+                placeholder:text-[#a7f3d0]/50 dark:placeholder:text-gray-500
+                focus:outline-none focus:ring-2 focus:ring-[#00d1b2]/50
+                focus:border-[#00d1b2]/70
+                shadow-[0_0_15px_rgba(0,0,0,0.2)]
+                transition-all duration-200
+              "
+            />
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a7f3d0]/70 dark:text-gray-400 pointer-events-none">
+              🔍
+            </div>
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="
+                  absolute right-3 top-1/2 -translate-y-1/2
+                  px-2 py-1 rounded-md
+                  text-[#d9ebe5] dark:text-gray-300
+                  hover:bg-[#0B5134]/40 dark:hover:bg-gray-700/30
+                  transition-colors
+                  text-sm
+                "
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {query && (
+            <div className="mt-2 text-xs text-[#a7f3d0]/70 dark:text-gray-400">
+              {Object.keys(filtered).length > 0 ? (
+                <span>Found {Object.keys(filtered).length} section(s)</span>
+              ) : (
+                <span>No matches found</span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* === Combined Layout (Planner + Topics) === */}
-      <div className="w-full px-3 mt-6 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
+      <div className="w-full px-3 mt-2 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
           {/* 🗓️ Daily Planner */}
@@ -4931,11 +5096,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         {/* LEFT SIDE — All Topics */}
         <div className="order-2 lg:order-1 lg:col-span-6 space-y-4 ">
           <main className="w-full px-0 md:px-1 space-y-4">
-            {Object.keys(filtered).length === 0 && (
-              <div className="text-sm text-[#d9ebe5] dark:text-gray-300">
-                No matches for “{query}”.
-              </div>
-            )}
             {Object.entries(filtered).map(([secKey, secVal]) => (
               <SectionCard
                 key={secKey}
@@ -5102,9 +5262,17 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               {it.title}
             </div>
 
-            {completedDate && (
+            {/* Show deadline if set */}
+            {it.deadline && (
+              <div className="text-xs opacity-70 text-[#a7f3d0]">
+                ⏰ Deadline: {formatDateDDMMYYYY(it.deadline)}
+              </div>
+            )}
+
+            {/* Show completed date if done */}
+            {it.done && completedDate && (
               <div className="text-xs opacity-70">
-                Completed: {new Date(completedDate).toLocaleDateString()}
+                ✅ Completed: {new Date(completedDate).toLocaleDateString()}
               </div>
             )}
           </div>
@@ -5129,20 +5297,38 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
             className="w-16 text-xs rounded px-1 border border-[#00d1b2]/40 bg-black/40"
           />
 
-          <input
-            type="date"
-            ref={localDateRef}
-            value={it.deadline ?? ""}
-            onChange={(e) => setTaskDeadline(path, idx, e.target.value)}
-            className="hidden"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              ref={localDateRef}
+              value={it.deadline ?? ""}
+              onChange={(e) => setTaskDeadline(path, idx, e.target.value)}
+              className="absolute opacity-0 pointer-events-none w-0 h-0"
+            />
 
-          <button
-            onClick={() => localDateRef.current?.showPicker()}
-            className="text-xs border border-[#00d1b2]/40 px-2 rounded"
-          >
-            📅 Deadline
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Position the input near the button before showing picker
+                if (localDateRef.current) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  localDateRef.current.style.position = "fixed";
+                  localDateRef.current.style.left = `${rect.left}px`;
+                  localDateRef.current.style.top = `${rect.bottom + 5}px`;
+                  localDateRef.current.style.zIndex = "9999";
+                  localDateRef.current.showPicker();
+                }
+              }}
+              className="text-xs border border-[#00d1b2]/40 px-2 rounded hover:bg-[#00d1b2]/10 transition"
+              title={
+                it.deadline
+                  ? `Deadline: ${formatDateDDMMYYYY(it.deadline)}`
+                  : "Set deadline"
+              }
+            >
+              📅 {it.deadline ? formatDateDDMMYYYY(it.deadline) : "Deadline"}
+            </button>
+          </div>
         </div>
       </div>
     </li>
@@ -5310,7 +5496,14 @@ function SectionCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  sectionDateRef.current?.showPicker();
+                  if (sectionDateRef.current) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    sectionDateRef.current.style.position = "fixed";
+                    sectionDateRef.current.style.left = `${rect.left}px`;
+                    sectionDateRef.current.style.top = `${rect.bottom + 5}px`;
+                    sectionDateRef.current.style.zIndex = "9999";
+                    sectionDateRef.current.showPicker();
+                  }
                 }}
                 className="
                   px-2 py-1 border border-[#0B5134] rounded-md
@@ -5382,6 +5575,7 @@ function SubNode({
 
   /* ======================= COLLAPSE ANIMATION ======================= */
   const contentRef = useRef(null);
+  const subsectionDateRef = useRef(null);
   const [height, setHeight] = useState("0px");
 
   useEffect(() => {
@@ -5393,23 +5587,50 @@ function SubNode({
   }, [m.open, node]);
 
   /* ======================= AUTO-SAVE completedDate ======================= */
+  const completedRef = useRef(new Set());
+
   useEffect(() => {
     if (!Array.isArray(node)) return;
 
+    const updates = {};
+    let hasChanges = false;
+
     node.forEach((it, idx) => {
       const key = itemKey(path, idx);
+      const cacheKey = `${key}_${it.done}`;
 
-      if (it.done && !nr[key]?.completedDate) {
-        setNR((old) => ({
-          ...old,
-          [key]: {
-            ...(old[key] || {}),
+      if (it.done) {
+        // Item is done: set completedDate if not already set
+        if (!completedRef.current.has(cacheKey) && !nr[key]?.completedDate) {
+          updates[key] = {
+            ...(nr[key] || {}),
             completedDate: new Date().toISOString(),
-          },
-        }));
+          };
+          completedRef.current.add(cacheKey);
+          hasChanges = true;
+        }
+      } else {
+        // Item is undone: clear completedDate if it exists
+        if (nr[key]?.completedDate) {
+          const { completedDate, ...rest } = nr[key];
+          updates[key] = rest;
+          completedRef.current.delete(cacheKey);
+          hasChanges = true;
+        } else {
+          // Remove from cache if item is undone (even if no completedDate)
+          completedRef.current.delete(cacheKey);
+        }
       }
     });
-  }, [node, nr, path, setNR]);
+
+    // Only update if there are actual changes to prevent loops
+    if (hasChanges) {
+      setNR((old) => ({
+        ...old,
+        ...updates,
+      }));
+    }
+  }, [node, path, setNR]); // Removed 'nr' from deps to prevent loop
 
   /* ======================= HOUR ROLLUP ======================= */
   const hoursRollup = useMemo(() => {
@@ -5486,6 +5707,41 @@ function SubNode({
             >
               {allDone ? "Undo all" : "Mark all"}
             </button>
+
+            {/* Deadline Picker for Subsection */}
+            <div className="relative">
+              <input
+                type="date"
+                ref={subsectionDateRef}
+                value={m.targetDate ?? ""}
+                onChange={(e) => setTargetDate(path, e.target.value)}
+                className="absolute opacity-0 pointer-events-none w-0 h-0"
+              />
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (subsectionDateRef.current) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    subsectionDateRef.current.style.position = "fixed";
+                    subsectionDateRef.current.style.left = `${rect.left}px`;
+                    subsectionDateRef.current.style.top = `${
+                      rect.bottom + 5
+                    }px`;
+                    subsectionDateRef.current.style.zIndex = "9999";
+                    subsectionDateRef.current.showPicker();
+                  }
+                }}
+                className="
+                  px-2 py-1 border border-[#0B5134] rounded-md
+                  bg-[#051C14] text-xs
+                  hover:border-[#2F6B60] transition
+                "
+              >
+                📅{" "}
+                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
