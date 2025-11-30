@@ -10,72 +10,66 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+// Backend API base
+const API = "https://your-backend-url.com/api/dashboard"; // change this
+
 
 // Updated Calendar — with: selected glow (neon blue), today highlight,
 // compact "no exercises" handling, light-theme color fixes, monthly stats,
 // hover popup, smooth animations, and Quote replaced with Today's Stats.
 
-// LocalStorage helpers
-function load(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("load error", key, e);
-    return fallback;
-  }
-}
-function save(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    console.error("save error", key, e);
-  }
-}
 
 function todayISO() {
   return dayjs().format("YYYY-MM-DD");
 }
 
-// Combined extractor (same robust version as before)
-function combinedExercisesForDate(iso) {
-  const gymLogs = load("wd_gym_logs", {}) || {};
-  const g = gymLogs[iso] || {};
-  if (g.cleanedExercises && Array.isArray(g.cleanedExercises))
+// Combined extractor (backend-only, no localStorage)
+function combinedExercisesForDate(iso, gymLogsState) {
+  const g = gymLogsState?.[iso] || {};
+
+  if (g.cleanedExercises && Array.isArray(g.cleanedExercises)) {
     return g.cleanedExercises;
+  }
+
   const parts = [];
+
   const pushIf = (v) => {
     if (!v && v !== 0) return;
+
     if (Array.isArray(v)) {
       v.forEach((it) => pushIf(it));
       return;
     }
+
     if (typeof v === "string") {
       if (v.trim()) parts.push(v.trim());
       return;
     }
+
     if (typeof v === "number") {
       parts.push(String(v));
       return;
     }
+
     if (typeof v === "object" && v !== null) {
-      if (v.name && typeof v.name === "string") return pushIf(v.name);
-      if (v.title && typeof v.title === "string") return pushIf(v.title);
-      if (v.exercise && typeof v.exercise === "string")
-        return pushIf(v.exercise);
+      if (v.name) return pushIf(v.name);
+      if (v.title) return pushIf(v.title);
+      if (v.exercise) return pushIf(v.exercise);
+
       const keys = Object.keys(v);
-      const isMapOfTrues =
+
+      const isMap =
         keys.length &&
         keys.every(
           (k) =>
             v[k] === true ||
             v[k] === false ||
             typeof v[k] === "string" ||
-            typeof v[k] === "number",
+            typeof v[k] === "number"
         );
-      if (isMapOfTrues) {
-        const ignoreKeys = [
+
+      if (isMap) {
+        const ignore = [
           "done",
           "weight",
           "calories",
@@ -86,22 +80,25 @@ function combinedExercisesForDate(iso) {
           "cleanedExercises",
           "workout",
         ];
+
         keys.forEach((k) => {
           const val = v[k];
-          if (ignoreKeys.includes(k)) return;
+          if (ignore.includes(k)) return;
           if (val === true) {
-            const pretty = k
+            const formatted = k
               .replace(/_/g, " ")
               .replace(/\b\w/g, (c) => c.toUpperCase());
-            parts.push(pretty);
+            parts.push(formatted);
           } else if (typeof val === "string" && val.trim()) {
             parts.push(val.trim());
           }
         });
         return;
       }
+
       for (const k of keys) {
         const val = v[k];
+
         if (
           typeof val === "string" &&
           val.trim() &&
@@ -121,56 +118,38 @@ function combinedExercisesForDate(iso) {
           parts.push(String(val));
         }
       }
+
       keys.forEach((k) => {
         if (v[k] === true) parts.push(k);
       });
+
       return;
     }
+
     parts.push(String(v));
   };
 
+  // Extract known blocks
   ["left", "right", "finisher", "exercises", "sets"].forEach((blk) => {
     if (g[blk]) pushIf(g[blk]);
   });
 
-  if (Array.isArray(g)) pushIf(g);
-  else if (typeof g === "object" && g !== null) {
+  // Manual booleans in simple maps
+  if (!Array.isArray(g) && typeof g === "object" && g !== null) {
     if (g.exercises) pushIf(g.exercises);
     else if (g.workout) pushIf(g.workout);
     else {
-      Object.keys(g || {}).forEach((k) => {
-        const v = g[k];
-        if (v === true) parts.push(k);
+      Object.keys(g).forEach((k) => {
+        if (g[k] === true) parts.push(k);
       });
     }
   }
 
-  if (
-    Array.isArray(g.left) ||
-    Array.isArray(g.right) ||
-    Array.isArray(g.finisher)
-  ) {
-    const plan = JSON.parse(localStorage.getItem("wd_gym_plan") || "{}");
-    const weekday = g.weekday || dayjs(iso).format("dddd");
-    const todayPlan = plan[weekday] || {};
-    const allExercises = [
-      ...(todayPlan.left || []),
-      ...(todayPlan.right || []),
-      ...(todayPlan.finisher || []),
-    ];
-    const bools = [
-      ...(g.left || []),
-      ...(g.right || []),
-      ...(g.finisher || []),
-    ];
-    bools.forEach((b, i) => {
-      if (b && allExercises[i]) parts.push(allExercises[i]);
-    });
-  }
-
+  // Remove duplicates
   const cleaned = parts
     .map((s) => (typeof s === "string" ? s.trim() : String(s)))
     .filter(Boolean);
+
   const seen = new Set();
   const out = [];
   cleaned.forEach((x) => {
@@ -179,31 +158,34 @@ function combinedExercisesForDate(iso) {
       out.push(x);
     }
   });
+
   return out;
 }
 
-function renderExercises(iso) {
-  const logs = load("wd_gym_logs", {}) || {};
-  const entry = logs[iso];
-  if (!entry) return null; // compact: show nothing if no gym entry
-  const planStore = load("wd_gym_plan", {}) || {};
-  const weekday = entry.weekday || dayjs(iso).format("dddd");
-  const todayPlan = planStore[weekday] || {};
-  const allExercises = [
-    ...(todayPlan.left || []),
-    ...(todayPlan.right || []),
-    ...(todayPlan.finisher || []),
-  ];
-  const bools = [
-    ...(entry.left || []),
-    ...(entry.right || []),
-    ...(entry.finisher || []),
-  ];
-  const doneExercises = allExercises.filter((ex, i) => bools[i]);
-  if (!doneExercises.length) return null; // compact
+function renderExercises(iso, gymLogsState) {
+  const entry = gymLogsState?.[iso];
+  if (!entry) return null;
+
+  // If backend already stores exercises in cleanedExercises
+  if (Array.isArray(entry.cleanedExercises)) {
+    if (!entry.cleanedExercises.length) return null;
+
+    return (
+      <ul className="list-disc list-inside text-sm space-y-1">
+        {entry.cleanedExercises.map((e, i) => (
+          <li key={i}>{e}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  // If not, fallback to basic combined extraction
+  const extracted = combinedExercisesForDate(iso, gymLogsState);
+  if (!extracted.length) return null;
+
   return (
     <ul className="list-disc list-inside text-sm space-y-1">
-      {doneExercises.map((e, i) => (
+      {extracted.map((e, i) => (
         <li key={i}>{e}</li>
       ))}
     </ul>
@@ -213,11 +195,13 @@ function renderExercises(iso) {
 export default function CalendarFullDarkUpdated() {
   const [month, setMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState(todayISO());
-  const [syllabus, setSyllabus] = useState(() => load("syllabus_tree_v2", {}));
-  const [gymLogs, setGymLogs] = useState(() => load("wd_gym_logs", {}));
-  const [doneMap, setDoneMap] = useState(() => load("wd_done", {}));
-  const [notesMap, setNotesMap] = useState(() => load("wd_notes_v1", {}));
-  const [bmiLogs, setBmiLogs] = useState(() => load("bmi_logs", []));
+  const [syllabus, setSyllabus] = useState({});
+  const [gymLogs, setGymLogs] = useState({});
+  const [doneMap, setDoneMap] = useState({});
+  const [notesMap, setNotesMap] = useState({});
+  const [bmiLogs, setBmiLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [view, setView] = useState("calendar");
   const [compareDates, setCompareDates] = useState([null, null]);
   const [hoveredDate, setHoveredDate] = useState(null);
@@ -225,12 +209,26 @@ export default function CalendarFullDarkUpdated() {
   const hoverRef = useRef(null);
 
   useEffect(() => {
-    setSyllabus(load("syllabus_tree_v2", {}));
-    setGymLogs(load("wd_gym_logs", {}));
-    setDoneMap(load("wd_done", {}));
-    setNotesMap(load("wd_notes_v1", {}));
-    setBmiLogs(load("bmi_logs", []));
-    setSelectedDate(todayISO());
+    async function fetchState() {
+      try {
+        const res = await fetch(`${API}`);
+        const data = await res.json();
+
+        setSyllabus(data.syllabus_tree_v2 || {});
+        setGymLogs(data.wd_gym_logs || {});
+        setDoneMap(data.wd_done || {});
+        setNotesMap(data.wd_notes_v1 || {});
+        setBmiLogs(data.bmi_logs || []);
+
+        setSelectedDate(todayISO());
+      } catch (err) {
+        console.error("Failed to load dashboard", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchState();
   }, []);
 
   const studyMap = useMemo(() => {
@@ -271,24 +269,35 @@ export default function CalendarFullDarkUpdated() {
   }
 
   const streakInfo = useMemo(() => {
-    const done = load("wd_done", {});
+    const done = doneMap || {};
     const today = dayjs();
-    let cur = 0;
+
+    // Current streak (count backwards from today)
+    let current = 0;
     for (let i = 0; i < 365; i++) {
-      const k = today.subtract(i, "day").format("YYYY-MM-DD");
-      if (done[k]) cur++;
+      const key = today.subtract(i, "day").format("YYYY-MM-DD");
+      if (done[key]) current++;
       else break;
     }
+
+    // Longest streak (scan entire history)
     let longest = 0;
     let running = 0;
-    const keys = Object.keys(done).sort();
+
+    const keys = Object.keys(done).sort(); // chronological order
+
     for (const k of keys) {
-      if (done[k]) running++;
-      else running = 0;
-      if (running > longest) longest = running;
+      if (done[k]) {
+        running++;
+        longest = Math.max(longest, running);
+      } else {
+        running = 0;
+      }
     }
-    const percent = longest ? Math.round((cur / longest) * 100) : 0;
-    return { current: cur, longest, percent };
+
+    const percent = longest ? Math.round((current / longest) * 100) : 0;
+
+    return { current, longest, percent };
   }, [doneMap]);
 
   const weeklyData = useMemo(() => {
@@ -307,7 +316,7 @@ export default function CalendarFullDarkUpdated() {
   }, [studyMap, gymLogs]);
 
   function combinedExercisesForDateWrapper(iso) {
-    return combinedExercisesForDate(iso);
+    return combinedExercisesForDate(iso, gymLogs);
   }
 
   function setCompareSlot(idx, date) {
@@ -321,118 +330,144 @@ export default function CalendarFullDarkUpdated() {
   function saveNoteForDate(date, text) {
     const next = { ...notesMap, [date]: text };
     setNotesMap(next);
-    save("wd_notes_v1", next);
+    syncToBackend("wd_notes_v1", next);
   }
 
   function exportAll() {
     const payload = {
-      syllabus: load("syllabus_tree_v2", {}),
-      gymLogs: load("wd_gym_logs", {}),
-      doneMap: load("wd_done", {}),
-      bmiLogs: load("bmi_logs", []),
-      notes: load("wd_notes_v1", {}),
+      syllabus: syllabus || {},
+      gymLogs: gymLogs || {},
+      doneMap: doneMap || {},
+      bmiLogs: bmiLogs || [],
+      notes: notesMap || {},
     };
+
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
     });
+
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `dashboard-backup-${dayjs().format("YYYYMMDD")}.json`;
     a.click();
   }
 
-  function importAll(file) {
+  async function importAll(file) {
     if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = (e) => {
+
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (data.syllabus) {
-          save("syllabus_tree_v2", data.syllabus);
-          setSyllabus(data.syllabus);
-        }
-        if (data.gymLogs) {
-          save("wd_gym_logs", data.gymLogs);
-          setGymLogs(data.gymLogs);
-        }
-        if (data.doneMap) {
-          save("wd_done", data.doneMap);
-          setDoneMap(data.doneMap);
-        }
-        if (data.bmiLogs) {
-          save("bmi_logs", data.bmiLogs);
-          setBmiLogs(data.bmiLogs);
-        }
-        if (data.notes) {
-          save("wd_notes_v1", data.notes);
-          setNotesMap(data.notes);
-        }
+
+        const payload = {
+          syllabus_tree_v2: data.syllabus || {},
+          wd_gym_logs: data.gymLogs || {},
+          wd_done: data.doneMap || {},
+          bmi_logs: data.bmiLogs || [],
+          wd_notes_v1: data.notes || {},
+        };
+
+        // Push to backend
+        await fetch(`${API}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        // Update UI state
+        setSyllabus(payload.syllabus_tree_v2);
+        setGymLogs(payload.wd_gym_logs);
+        setDoneMap(payload.wd_done);
+        setBmiLogs(payload.bmi_logs);
+        setNotesMap(payload.wd_notes_v1);
+
         alert("Import successful!");
       } catch (err) {
         console.error(err);
         alert("Import failed.");
       }
     };
+
     reader.readAsText(file);
   }
 
-  function resetGymProgress() {
+  async function resetGymProgress() {
     if (
       !confirm(
-        "Reset all gym logs and wd_done calendar marks? This cannot be undone.",
+        "Reset all gym logs and wd_done calendar marks? This cannot be undone."
       )
     )
       return;
-    save("wd_gym_logs", {});
-    save("wd_done", {});
-    save("wd_weight_overrides", {});
-    setGymLogs({});
-    setDoneMap({});
-    alert("Gym progress reset.");
+
+    const payload = {
+      wd_gym_logs: {},
+      wd_done: {},
+      wd_weight_overrides: {},
+    };
+
+    try {
+      // Push reset state to backend
+      await fetch(`${API}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Update UI state
+      setGymLogs({});
+      setDoneMap({});
+
+      alert("Gym progress reset.");
+    } catch (err) {
+      console.error("Reset failed", err);
+      alert("Failed to reset.");
+    }
   }
 
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (!e.key) return;
-      if (e.key === "syllabus_tree_v2")
-        setSyllabus(load("syllabus_tree_v2", {}));
-      if (e.key === "wd_gym_logs") setGymLogs(load("wd_gym_logs", {}));
-      if (e.key === "wd_done") setDoneMap(load("wd_done", {}));
-      if (e.key === "wd_notes_v1") setNotesMap(load("wd_notes_v1", {}));
-      if (e.key === "bmi_logs") setBmiLogs(load("bmi_logs", []));
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  useEffect(() => save("wd_done", doneMap), [doneMap]);
-  useEffect(() => save("wd_gym_logs", gymLogs), [gymLogs]);
-  useEffect(() => save("wd_notes_v1", notesMap), [notesMap]);
+  async function syncToBackend(newState) {
+    try {
+      await fetch(`${API}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newState),
+      });
+    } catch (e) {
+      console.error("Sync to backend failed:", e);
+    }
+  }
 
   // Monthly stats
   const monthlyStats = useMemo(() => {
     const start = month.startOf("month");
     const end = month.endOf("month");
+
     let topics = 0;
     let exercises = 0;
+
     for (
       let d = start;
       d.isBefore(end) || d.isSame(end, "day");
       d = d.add(1, "day")
     ) {
       const iso = d.format("YYYY-MM-DD");
+
       topics += (studyMap[iso] || []).length;
-      exercises += combinedExercisesForDateWrapper(iso).length;
+      exercises += combinedExercisesForDate(iso, gymLogs).length;
     }
+
     return { topics, exercises };
   }, [month, studyMap, gymLogs]);
 
-  // Today's stats card (replaces quote)
   const todayStats = useMemo(() => {
     const iso = todayISO();
+
     const topics = (studyMap[iso] || []).length;
-    const exercises = combinedExercisesForDateWrapper(iso).length;
-    const g = gymLogs[iso] || {};
+    const exercises = combinedExercisesForDate(iso, gymLogs).length;
+
+    const g = gymLogs?.[iso] || {};
+
     return {
       topics,
       exercises,
@@ -836,10 +871,10 @@ export default function CalendarFullDarkUpdated() {
               status === "both"
                 ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
                 : status === "study"
-                  ? "bg-[#0A2B22] text-[#9FF2E8]"
-                  : status === "gym"
-                    ? "bg-[#071A2F] text-[#9FCAFF]"
-                    : "bg-[#081C18] text-[#B6E5DC]";
+                ? "bg-[#0A2B22] text-[#9FF2E8]"
+                : status === "gym"
+                ? "bg-[#071A2F] text-[#9FCAFF]"
+                : "bg-[#081C18] text-[#B6E5DC]";
 
             const selectedClass = isSelected
               ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105"
@@ -856,10 +891,10 @@ export default function CalendarFullDarkUpdated() {
                   status === "both"
                     ? "Study + Gym"
                     : status === "study"
-                      ? "Study"
-                      : status === "gym"
-                        ? "Gym"
-                        : "No activity"
+                    ? "Study"
+                    : status === "gym"
+                    ? "Gym"
+                    : "No activity"
                 }`}
               >
                 {/* Today glow ring */}
@@ -951,7 +986,9 @@ export default function CalendarFullDarkUpdated() {
                       ? {
                           studyCount: (studyMap[iso] || []).length,
                           gymDone: !!gymLogs[iso],
-                          exercises: combinedExercisesForDateWrapper(iso),
+                          exercises: combinedExercisesForDateWrapper(
+                            iso                
+                          ),
                           notes: notesMap[iso] || "",
                         }
                       : null;
@@ -1005,7 +1042,7 @@ export default function CalendarFullDarkUpdated() {
             </div>
             <div>
               <p className="text-[#22c55e] font-semibold">
-                {combinedExercisesForDateWrapper(selectedDate).length}
+                {combinedExercisesForDateWrapper(selectedDate, gymLogs).length}
               </p>
               <p className="text-xs opacity-70">Exercises</p>
             </div>
@@ -1059,7 +1096,7 @@ export default function CalendarFullDarkUpdated() {
             <div className="mt-2">
               <b>Exercises:</b>
               <div className="mt-1">
-                {renderExercises(selectedDate) || (
+                {renderExercises(selectedDate, gymLogs) || (
                   <div className="text-sm opacity-60">—</div>
                 )}
               </div>

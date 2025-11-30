@@ -138,13 +138,35 @@ export default function App() {
     async function loadState() {
       try {
         const res = await fetch(API_URL);
+
         if (!res.ok) {
           console.error("Failed to load dashboard state", res.status);
           return;
         }
+
         const data = await res.json();
+
         // backend may send { state: {...} } or the state directly
-        const state = data.state || data.dashboardState || data || {};
+        let state = data.state || data.dashboardState || data || {};
+
+        // ---------------------------------------------------
+        // ⭐ FIX: Ensure syllabus_tree_v2 is ALWAYS available
+        // ---------------------------------------------------
+        const hasBackendSyllabus =
+          state.syllabus_tree_v2 &&
+          state.syllabus_tree_v2.sub &&
+          state.syllabus_tree_v2.sub.length > 0;
+
+        // If backend sent empty syllabus → use TREE from Syllabus.jsx
+        if (!hasBackendSyllabus) {
+          if (window?.TREE) {
+            console.warn("Using TREE fallback for syllabus_tree_v2");
+            state.syllabus_tree_v2 = window.TREE;
+          } else {
+            console.warn("No syllabus found and TREE not available yet");
+          }
+        }
+        // ---------------------------------------------------
 
         if (!cancelled) {
           setDashboardState(state);
@@ -191,23 +213,33 @@ export default function App() {
 
     function walk(node) {
       let total = 0;
-      let doneCount = 0;
+      let done = 0;
 
-      if (typeof node === "object" && node !== null) {
-        Object.values(node).forEach((child) => {
-          const res = walk(child);
-          total += res.total;
-          doneCount += res.done;
+      if (Array.isArray(node)) {
+        node.forEach((item) => {
+          const r = walk(item);
+          total += r.total;
+          done += r.done;
         });
-      } else if (node === true) {
-        total++;
-        doneCount++;
+      } else if (typeof node === "object" && node !== null) {
+        // leaf topic (your real schema)
+        if (node.title) {
+          total++;
+          if (node.done) done++;
+        }
+
+        // nested objects (Episode → Section → Topic arrays)
+        Object.values(node).forEach((child) => {
+          const r = walk(child);
+          total += r.total;
+          done += r.done;
+        });
       }
 
-      return { total, done: doneCount };
+      return { total, done };
     }
 
-    const { total, done: doneTopics } = walk(syllabus);
+    const { total, done: doneTopics } = walk(syllabus, done);
 
     let streak = 0;
     const today = dayjs();

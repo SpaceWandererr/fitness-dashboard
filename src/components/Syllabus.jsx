@@ -4148,6 +4148,12 @@ const TREE = {
   },
 };
 
+// ... bunch of code ... syllabus component ... etc ...
+
+// Make TREE available globally so App.jsx can use syllabus data
+window.TREE = TREE;
+
+
 // Stabilize meta reference to prevent re-renders
 // Fixed: Always return the latest value, not stale ref.current
 function useStable(obj) {
@@ -4900,7 +4906,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     >
       <header className="sticky top-0 z-40 rounded-xl mb-6 animate-fadeIn">
         <div
-          className="
+          className=" rounded-xl
     relative overflow-hidden
     bg-gradient-to-br from-[#0F0F0F]/95 via-[#183D3D]/90 to-[#B82132]/85
     dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
@@ -5071,7 +5077,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
                   : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_20px_#ef444450]"
               }
             `}
-                  style={{ width: `${Math.max(grand.pct, 2)}%` }}
+                  style={{ width: `${Math.max(grand.pct, 0.5)}%` }}
                 >
                   <div className="absolute inset-0 bg-white/30 animate-shimmer" />
                 </div>
@@ -5089,7 +5095,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="🔍 Search syllabus topics..."
+              placeholder="Search syllabus topics..."
               className="
                 w-full px-4 py-3 pl-12 rounded-xl
                 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
@@ -5497,7 +5503,7 @@ function SectionCard({
   return (
     <section
       className="
-        rounded-xl
+        rounded-md
         border border-[#1c5b44]/40
         dark:border-[#00D1FF33]
         backdrop-blur-md
@@ -5519,14 +5525,14 @@ function SectionCard({
           bg-gradient-to-br from-[#183D3D] to-[#B82132]
           dark:from-[#0F1622] dark:to-[#0A0F1C]
           text-[#CFE8E1]
-          rounded-lg px-4 py-3
+          rounded-md px-2 py-1.5 
           transition-all duration-300
           hover:border-[#2F6B60]
           hover:shadow-[0_0_10px_rgba(47,107,96,0.4)]
         "
       >
         {/* ======================= PROGRESS BAR ======================= */}
-        <div className="absolute top-0 left-0 right-0 mx-1 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 mx-1 h-2  rounded-full bg-[#0E1F19] overflow-hidden">
           {/* Glass Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/0 pointer-events-none" />
 
