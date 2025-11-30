@@ -251,6 +251,8 @@ export default function GymSimplified({ dashboardState = {} }) {
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
   const defaultDay = WEEK.includes(todayName) ? todayName : "Monday";
+  const [markPressed, setMarkPressed] = useState(false);
+  const [markAllPressed, setMarkAllPressed] = useState(false);
 
   const [date, setDate] = useState(todayIso);
   const [weekday, setWeekday] = useState(defaultDay);
@@ -523,19 +525,34 @@ export default function GymSimplified({ dashboardState = {} }) {
   }
 
   /* checks initializer */
-  const checks = useMemo(() => {
-    const planForDay = plan?.[weekday] ?? {
+  // helper: normalize backend logs (supports old boolean arrays OR objects {name,done})
+  function normalizeLogArray(arr = [], planArr = []) {
+    // produce boolean array aligned with plan length
+    return planArr.map((_, idx) => {
+      const val = arr?.[idx];
+      if (typeof val === "boolean") return val;
+      if (typeof val === "object" && val !== null) return !!val.done;
+      return false;
+    });
+  }
+
+  // derive initial checks for a date (used for initial state)
+  function deriveChecksFromLogs(
+    dateKeyLocal,
+    logsLocal,
+    planLocal,
+    weekdayLocal
+  ) {
+    const planForDay = planLocal?.[weekdayLocal] ?? {
       left: [],
       right: [],
       finisher: [],
     };
+    const prev = logsLocal?.[dateKeyLocal] || null;
 
-    const prev = logs?.[dateKey];
-
-    // If no previous log → generate brand new booleans based on plan
     if (!prev || typeof prev !== "object") {
       return {
-        weekday,
+        weekday: weekdayLocal,
         left: planForDay.left.map(() => false),
         right: planForDay.right.map(() => false),
         finisher: planForDay.finisher.map(() => false),
@@ -546,28 +563,35 @@ export default function GymSimplified({ dashboardState = {} }) {
       };
     }
 
-    // Convert backend saved objects OR booleans → UI booleans
-    const normalize = (arr = [], planArr = []) => {
-      // arr may contain booleans OR objects { name, done }
-      return planArr.map((_, idx) => {
-        const val = arr[idx];
-        if (typeof val === "boolean") return val;
-        if (typeof val === "object" && val !== null) return !!val.done;
-        return false;
-      });
-    };
-
     return {
-      weekday,
-      left: normalize(prev.left, planForDay.left),
-      right: normalize(prev.right, planForDay.right),
-      finisher: normalize(prev.finisher, planForDay.finisher),
+      weekday: weekdayLocal,
+      left: normalizeLogArray(prev.left, planForDay.left),
+      right: normalizeLogArray(prev.right, planForDay.right),
+      finisher: normalizeLogArray(prev.finisher, planForDay.finisher),
       done: !!prev.done,
       calories: prev.calories,
       weight: prev.weight,
       bmi: prev.bmi,
     };
-  }, [logs, dateKey, plan, weekday]);
+  }
+
+  // ----------------------------
+  // UI-first checks state (stable while user interacts)
+  const [checksState, setChecksState] = useState(() =>
+    deriveChecksFromLogs(dateKey, logs, plan, weekday)
+  );
+
+  // keep a flag to avoid overriding UI while user is clicking
+  const isUserInteractingRef = useRef(false);
+
+  // sync checksState when date or logs change, but don't stomp while user is interacting
+  useEffect(() => {
+    // ⛔ If user is clicking, DO NOT sync from logs
+    if (isUserInteractingRef.current) return;
+
+    // ⛔ Only sync when date or plan changes
+    setChecksState(deriveChecksFromLogs(dateKey, logs, plan, weekday));
+  }, [dateKey, plan]); // ❗ remove logs from dependency array
 
   const totalExercises =
     (plan[weekday]?.left?.length || 0) +
@@ -575,9 +599,9 @@ export default function GymSimplified({ dashboardState = {} }) {
     (plan[weekday]?.finisher?.length || 0);
 
   const completedExercises =
-    (checks.left?.filter(Boolean).length || 0) +
-    (checks.right?.filter(Boolean).length || 0) +
-    (checks.finisher?.filter(Boolean).length || 0);
+    (checksState.left?.filter(Boolean).length || 0) +
+    (checksState.right?.filter(Boolean).length || 0) +
+    (checksState.finisher?.filter(Boolean).length || 0);
 
   const completionPct = totalExercises
     ? Math.round((completedExercises / totalExercises) * 100)
@@ -590,24 +614,53 @@ export default function GymSimplified({ dashboardState = {} }) {
       return;
     }
 
-    const prev = logs[dateKey] || { ...checks, weekday };
+    isUserInteractingRef.current = true;
+    clearTimeout(isUserInteractingRef.currentTimer);
 
-    const next = {
-      ...prev,
-      left: [...checks.left],
-      right: [...checks.right],
-      finisher: [...checks.finisher],
-    };
+    // 1️⃣ Update UI version first
+    setChecksState((prev) => {
+      const updated = {
+        ...prev,
+        [section]: prev[section].map((v, i) => (i === idx ? !v : v)),
+      };
 
-    next[section][idx] = !next[section][idx];
+      // 2️⃣ Directly persist *the updated version* into logs
+      setLogs((prevLogs) => {
+        const prevLog =
+          prevLogs[dateKey] ||
+          deriveChecksFromLogs(dateKey, prevLogs, plan, weekday);
 
-    setLogs((prev) => ({ ...prev, [dateKey]: next }));
+        const updatedLog = {
+          ...prevLog,
+          weekday,
+          left: (prevLog.left || []).map((_, i) =>
+            section === "left" && i === idx ? !prev.left[i] : prev.left[i]
+          ),
+          right: (prevLog.right || []).map((_, i) =>
+            section === "right" && i === idx ? !prev.right[i] : prev.right[i]
+          ),
+          finisher: (prevLog.finisher || []).map((_, i) =>
+            section === "finisher" && i === idx
+              ? !prev.finisher[i]
+              : prev.finisher[i]
+          ),
+        };
+
+        return { ...prevLogs, [dateKey]: updatedLog };
+      });
+
+      return updated;
+    });
+
+    isUserInteractingRef.currentTimer = setTimeout(() => {
+      isUserInteractingRef.current = false;
+    }, 350);
   };
 
   const canComplete =
-    checks.left?.some(Boolean) ||
-    checks.right?.some(Boolean) ||
-    checks.finisher?.some(Boolean) ||
+    checksState.left?.some(Boolean) ||
+    checksState.right?.some(Boolean) ||
+    checksState.finisher?.some(Boolean) ||
     false;
 
   const openCaloriesModal = () => {
@@ -623,10 +676,10 @@ export default function GymSimplified({ dashboardState = {} }) {
       return;
     }
 
-    setCaloriesInput((checks.calories ?? "").toString());
+    setCaloriesInput((checksState.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
-      ((checks.weight ?? overrideWeight ?? "") || "").toString()
+      ((checksState.weight ?? overrideWeight ?? "") || "").toString()
     );
     setShowModal(true);
   };
@@ -638,32 +691,31 @@ export default function GymSimplified({ dashboardState = {} }) {
 
     const weight = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : checks.weight ?? null;
+      : checksState.weight ?? null;
 
     const savedHeight = 176; // or dashboardState?.bmi_height || 176
 
     const newBmi =
       weight && savedHeight
         ? Number((weight / Math.pow(savedHeight / 100, 2)).toFixed(1))
-        : checks.bmi;
+        : checksState.bmi;
 
-    const prevLog = logs[dateKey] || { ...checks, weekday };
+    const prevLog = logs[dateKey] || { ...checksState, weekday };
 
     const next = {
       ...prevLog,
+      // inside saveCaloriesAndComplete, replace left/right/finisher creation with:
       left: (dayPlan.left || []).map((name, i) => ({
         name,
-        done: checks.left?.[i] || false,
+        done: !!checksState.left?.[i],
       })),
-
       right: (dayPlan.right || []).map((name, i) => ({
         name,
-        done: checks.right?.[i] || false,
+        done: !!checksState.right?.[i],
       })),
-
       finisher: (dayPlan.finisher || []).map((name, i) => ({
         name,
-        done: checks.finisher?.[i] || false,
+        done: !!checksState.finisher?.[i],
       })),
 
       done: true,
@@ -709,7 +761,7 @@ export default function GymSimplified({ dashboardState = {} }) {
   };
 
   const deleteCaloriesAndUnmark = () => {
-    const prevLog = logs[dateKey] || { ...checks, weekday };
+    const prevLog = logs[dateKey] || { ...checksState, weekday };
 
     const nextLog = { ...prevLog, calories: undefined, done: false };
 
@@ -729,24 +781,44 @@ export default function GymSimplified({ dashboardState = {} }) {
   const toggleMarkAll = () => {
     if (isFuture) return;
 
+    // compute current allDone from checksState
     const allDone =
-      checks.left.every(Boolean) &&
-      checks.right.every(Boolean) &&
-      checks.finisher.every(Boolean);
+      (checksState.left || []).every(Boolean) &&
+      (checksState.right || []).every(Boolean) &&
+      (checksState.finisher || []).every(Boolean);
 
-    const nextLeft = checks.left.map(() => !allDone);
-    const nextRight = checks.right.map(() => !allDone);
-    const nextFinisher = checks.finisher.map(() => !allDone);
+    const nextLeft = (checksState.left || []).map(() => !allDone);
+    const nextRight = (checksState.right || []).map(() => !allDone);
+    const nextFinisher = (checksState.finisher || []).map(() => !allDone);
 
-    const updated = {
-      ...logs[dateKey],
-      weekday,
+    // update UI state
+    setChecksState((prev) => ({
+      ...prev,
       left: nextLeft,
       right: nextRight,
       finisher: nextFinisher,
-    };
+    }));
 
-    setLogs((prev) => ({ ...prev, [dateKey]: updated }));
+    // update logs (boolean arrays) to persist the UI
+    setLogs((prev) => {
+      const prevLog =
+        prev[dateKey] || deriveChecksFromLogs(dateKey, prev, plan, weekday);
+      const updated = {
+        ...prevLog,
+        weekday,
+        left: nextLeft,
+        right: nextRight,
+        finisher: nextFinisher,
+      };
+      return { ...prev, [dateKey]: updated };
+    });
+
+    // end interaction flag shortly after
+    isUserInteractingRef.current = true;
+    clearTimeout(isUserInteractingRef.currentTimer);
+    isUserInteractingRef.currentTimer = setTimeout(() => {
+      isUserInteractingRef.current = false;
+    }, 350);
   };
 
   /* streak + totals */
@@ -767,13 +839,13 @@ export default function GymSimplified({ dashboardState = {} }) {
   const latestWeight = latestDate ? logsObj[latestDate]?.weight : null;
 
   const inferredStart =
-    currWeight ?? latestWeight ?? checks.weight ?? targetWeight;
+    currWeight ?? latestWeight ?? checksState.weight ?? targetWeight;
 
   const effectiveStart = inferredStart;
   const overrideWeight = weightOverrides[dateKey];
 
   let curWeight =
-    overrideWeight ?? latestWeight ?? checks.weight ?? effectiveStart;
+    overrideWeight ?? latestWeight ?? checksState.weight ?? effectiveStart;
 
   const tw = Number(targetWeight);
 
@@ -1099,7 +1171,7 @@ export default function GymSimplified({ dashboardState = {} }) {
                     : dayPlan.finisherLabel || "Finisher";
 
                 const list = dayPlan[sectionKey] || [];
-                const state = checks[sectionKey] || [];
+                const state = checksState[sectionKey] || [];
 
                 return (
                   <div
@@ -1153,27 +1225,41 @@ export default function GymSimplified({ dashboardState = {} }) {
 
             <div className="flex flex-wrap gap-3 mt-6 items-center transition-all duration-200">
               <button
+                onMouseDown={() => setMarkAllPressed(true)}
+                onMouseUp={() => setMarkAllPressed(false)}
+                onMouseLeave={() => setMarkAllPressed(false)}
                 onClick={toggleMarkAll}
-                className="px-4 py-2 rounded border
-                border-gray-700 dark:border-emerald-800 text-emerald-100 
-                hover:bg-emerald-700/10 transition-all duration-200"
+                className={`px-4 py-2 rounded border border-gray-700 dark:border-emerald-800 text-emerald-100 
+    hover:bg-emerald-700/10 transition-all duration-150
+    ${
+      markAllPressed ? "scale-95 transform translate-y-[1px] shadow-inner" : ""
+    }`}
               >
-                {checks.left.every(Boolean) &&
-                checks.right.every(Boolean) &&
-                (checks.finisher?.every?.(Boolean) ?? true)
+                {checksState.left.every(Boolean) &&
+                checksState.right.every(Boolean) &&
+                (checksState.finisher?.every?.(Boolean) ?? true)
                   ? "❌ Unmark All"
                   : "✔ Mark All"}
               </button>
 
-              {!checks.done ? (
+              {!checksState.done ? (
                 <button
+                  onMouseDown={() => setMarkPressed(true)}
+                  onMouseUp={() => setMarkPressed(false)}
+                  onMouseLeave={() => setMarkPressed(false)}
                   onClick={openCaloriesModal}
                   disabled={isFuture}
-                  className={`px-4 py-2 rounded active:scale-95 transition-all duration-150 ${
-                    canComplete
-                      ? "bg-emerald-600 text-white hover:bg-emerald-500"
-                      : "bg-gray-600/30 text-gray-400 cursor-not-allowed"
-                  }`}
+                  className={`px-4 py-2 active:scale-95 rounded transition-all duration-150
+    ${
+      canComplete
+        ? "bg-emerald-600 text-white hover:bg-emerald-500"
+        : "bg-gray-600/30 text-gray-400 cursor-not-allowed"
+    }
+    ${
+      markPressed
+        ? "scale-95 transform translate-y-[1px] shadow-inner"
+        : "active:scale-95"
+    }`}
                 >
                   ✅ Mark Workout Done ({fmtDisp(date)})
                 </button>
@@ -1186,7 +1272,7 @@ export default function GymSimplified({ dashboardState = {} }) {
                 </button>
               )}
 
-              {checks.done && (
+              {checksState.done && (
                 <button
                   onClick={editCalories}
                   className="px-3 py-2 border rounded hover:bg-white/5
