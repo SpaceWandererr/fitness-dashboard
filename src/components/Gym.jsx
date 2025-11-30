@@ -524,47 +524,50 @@ export default function GymSimplified({ dashboardState = {} }) {
 
   /* checks initializer */
   const checks = useMemo(() => {
-    const def = plan?.[weekday] ?? { left: [], right: [], finisher: [] };
+    const planForDay = plan?.[weekday] ?? {
+      left: [],
+      right: [],
+      finisher: [],
+    };
+
     const prev = logs?.[dateKey];
 
+    // If no previous log → generate brand new booleans based on plan
     if (!prev || typeof prev !== "object") {
       return {
-        weekday: weekday || "",
-        left: Array.isArray(def.left) ? def.left.map(() => false) : [],
-        right: Array.isArray(def.right) ? def.right.map(() => false) : [],
-        finisher: Array.isArray(def.finisher)
-          ? def.finisher.map(() => false)
-          : [],
+        weekday,
+        left: planForDay.left.map(() => false),
+        right: planForDay.right.map(() => false),
+        finisher: planForDay.finisher.map(() => false),
         done: false,
         calories: undefined,
-        bmi: undefined,
         weight: undefined,
+        bmi: undefined,
       };
     }
 
+    // Convert backend saved objects OR booleans → UI booleans
+    const normalize = (arr = [], planArr = []) => {
+      // arr may contain booleans OR objects { name, done }
+      return planArr.map((_, idx) => {
+        const val = arr[idx];
+        if (typeof val === "boolean") return val;
+        if (typeof val === "object" && val !== null) return !!val.done;
+        return false;
+      });
+    };
+
     return {
-      weekday: weekday || "",
-      left: Array.isArray(prev.left)
-        ? prev.left
-        : Array.isArray(def.left)
-        ? def.left.map(() => false)
-        : [],
-      right: Array.isArray(prev.right)
-        ? prev.right
-        : Array.isArray(def.right)
-        ? def.right.map(() => false)
-        : [],
-      finisher: Array.isArray(prev.finisher)
-        ? prev.finisher
-        : Array.isArray(def.finisher)
-        ? def.finisher.map(() => false)
-        : [],
+      weekday,
+      left: normalize(prev.left, planForDay.left),
+      right: normalize(prev.right, planForDay.right),
+      finisher: normalize(prev.finisher, planForDay.finisher),
       done: !!prev.done,
       calories: prev.calories,
-      bmi: prev.bmi,
       weight: prev.weight,
+      bmi: prev.bmi,
     };
-  }, [logs, dateKey, weekday, plan]);
+  }, [logs, dateKey, plan, weekday]);
 
   const totalExercises =
     (plan[weekday]?.left?.length || 0) +
@@ -588,26 +591,17 @@ export default function GymSimplified({ dashboardState = {} }) {
     }
 
     const prev = logs[dateKey] || { ...checks, weekday };
+
     const next = {
       ...prev,
-      left: prev.left
-        ? [...prev.left]
-        : Array(plan[weekday].left.length).fill(false),
-      right: prev.right
-        ? [...prev.right]
-        : Array(plan[weekday].right.length).fill(false),
-      finisher: prev.finisher
-        ? [...prev.finisher]
-        : Array(plan[weekday].finisher.length).fill(false),
+      left: [...checks.left],
+      right: [...checks.right],
+      finisher: [...checks.finisher],
     };
-    next[section] = next[section] || [];
-    next[section][idx] = !next[section][idx];
-    // Force immediate UI reflect
-    setLogs((prev) => {
-      const updated = { ...prev, [dateKey]: next };
 
-      return updated;
-    });
+    next[section][idx] = !next[section][idx];
+
+    setLogs((prev) => ({ ...prev, [dateKey]: next }));
   };
 
   const canComplete =
@@ -622,7 +616,13 @@ export default function GymSimplified({ dashboardState = {} }) {
       return;
     }
 
-    if (!canComplete) return;
+    // Allow saving for yesterday even if no toggles yet
+    if (!canComplete && !dayjs(dateKey).isSame(dayjs(), "day")) {
+      // allow modal for past dates
+    } else if (!canComplete) {
+      return;
+    }
+
     setCaloriesInput((checks.calories ?? "").toString());
     const overrideWeight = weightOverrides[dateKey];
     setCurrentWeightInput(
@@ -651,9 +651,21 @@ export default function GymSimplified({ dashboardState = {} }) {
 
     const next = {
       ...prevLog,
-      left: prevLog.left || checks.left,
-      right: prevLog.right || checks.right,
-      finisher: prevLog.finisher || checks.finisher,
+      left: (dayPlan.left || []).map((name, i) => ({
+        name,
+        done: checks.left?.[i] || false,
+      })),
+
+      right: (dayPlan.right || []).map((name, i) => ({
+        name,
+        done: checks.right?.[i] || false,
+      })),
+
+      finisher: (dayPlan.finisher || []).map((name, i) => ({
+        name,
+        done: checks.finisher?.[i] || false,
+      })),
+
       done: true,
       calories,
       weight,
@@ -715,25 +727,26 @@ export default function GymSimplified({ dashboardState = {} }) {
   };
 
   const toggleMarkAll = () => {
-    if (isFuture) {
-      alert("🚫 Future workouts can't be marked");
-      return;
-    }
+    if (isFuture) return;
 
-    const prev = logs[dateKey] || { ...checks, weekday };
-    const def = plan[weekday] || { left: [], right: [], finisher: [] };
     const allDone =
-      (prev.left || []).every(Boolean) &&
-      (prev.right || []).every(Boolean) &&
-      (prev.finisher || []).every(Boolean);
-    const next = {
-      ...prev,
-      left: Array(def.left?.length || 0).fill(!allDone),
-      right: Array(def.right?.length || 0).fill(!allDone),
-      finisher: Array(def.finisher?.length || 0).fill(!allDone),
-      done: prev.done,
+      checks.left.every(Boolean) &&
+      checks.right.every(Boolean) &&
+      checks.finisher.every(Boolean);
+
+    const nextLeft = checks.left.map(() => !allDone);
+    const nextRight = checks.right.map(() => !allDone);
+    const nextFinisher = checks.finisher.map(() => !allDone);
+
+    const updated = {
+      ...logs[dateKey],
+      weekday,
+      left: nextLeft,
+      right: nextRight,
+      finisher: nextFinisher,
     };
-    persistLogFor(dateKey, next);
+
+    setLogs((prev) => ({ ...prev, [dateKey]: updated }));
   };
 
   /* streak + totals */
@@ -1155,12 +1168,12 @@ export default function GymSimplified({ dashboardState = {} }) {
               {!checks.done ? (
                 <button
                   onClick={openCaloriesModal}
-                  disabled={!canComplete}
-                  className={`px-4 py-2 rounded ${
+                  disabled={isFuture}
+                  className={`px-4 py-2 rounded active:scale-95 transition-all duration-150 ${
                     canComplete
                       ? "bg-emerald-600 text-white hover:bg-emerald-500"
                       : "bg-gray-600/30 text-gray-400 cursor-not-allowed"
-                  } transition-all duration-200`}
+                  }`}
                 >
                   ✅ Mark Workout Done ({fmtDisp(date)})
                 </button>

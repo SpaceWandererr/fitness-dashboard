@@ -26,142 +26,16 @@ function todayISO() {
 
 // Combined extractor (backend-only, no localStorage)
 function combinedExercisesForDate(iso, gymLogsState) {
-  const g = gymLogsState?.[iso] || {};
+  const g = gymLogsState?.[iso];
+  if (!g) return [];
 
-  if (g.cleanedExercises && Array.isArray(g.cleanedExercises)) {
-    return g.cleanedExercises;
-  }
+  const extract = (arr) =>
+    (arr || []).filter((ex) => ex && ex.done).map((ex) => ex.name);
 
-  const parts = [];
-
-  const pushIf = (v) => {
-    if (!v && v !== 0) return;
-
-    if (Array.isArray(v)) {
-      v.forEach((it) => pushIf(it));
-      return;
-    }
-
-    if (typeof v === "string") {
-      if (v.trim()) parts.push(v.trim());
-      return;
-    }
-
-    if (typeof v === "number") {
-      parts.push(String(v));
-      return;
-    }
-
-    if (typeof v === "object" && v !== null) {
-      if (v.name) return pushIf(v.name);
-      if (v.title) return pushIf(v.title);
-      if (v.exercise) return pushIf(v.exercise);
-
-      const keys = Object.keys(v);
-
-      const isMap =
-        keys.length &&
-        keys.every(
-          (k) =>
-            v[k] === true ||
-            v[k] === false ||
-            typeof v[k] === "string" ||
-            typeof v[k] === "number"
-        );
-
-      if (isMap) {
-        const ignore = [
-          "done",
-          "weight",
-          "calories",
-          "bmi",
-          "notes",
-          "date",
-          "weekday",
-          "cleanedExercises",
-          "workout",
-        ];
-
-        keys.forEach((k) => {
-          const val = v[k];
-          if (ignore.includes(k)) return;
-          if (val === true) {
-            const formatted = k
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (c) => c.toUpperCase());
-            parts.push(formatted);
-          } else if (typeof val === "string" && val.trim()) {
-            parts.push(val.trim());
-          }
-        });
-        return;
-      }
-
-      for (const k of keys) {
-        const val = v[k];
-
-        if (
-          typeof val === "string" &&
-          val.trim() &&
-          (k === "name" || k === "title" || k === "exercise")
-        ) {
-          parts.push(val.trim());
-        } else if (typeof val === "object") {
-          pushIf(val);
-        } else if (
-          (val === true ||
-            typeof val === "string" ||
-            typeof val === "number") &&
-          (k.toLowerCase().includes("exercise") ||
-            k.toLowerCase().includes("name") ||
-            k.toLowerCase().includes("title"))
-        ) {
-          parts.push(String(val));
-        }
-      }
-
-      keys.forEach((k) => {
-        if (v[k] === true) parts.push(k);
-      });
-
-      return;
-    }
-
-    parts.push(String(v));
-  };
-
-  // Extract known blocks
-  ["left", "right", "finisher", "exercises", "sets"].forEach((blk) => {
-    if (g[blk]) pushIf(g[blk]);
-  });
-
-  // Manual booleans in simple maps
-  if (!Array.isArray(g) && typeof g === "object" && g !== null) {
-    if (g.exercises) pushIf(g.exercises);
-    else if (g.workout) pushIf(g.workout);
-    else {
-      Object.keys(g).forEach((k) => {
-        if (g[k] === true) parts.push(k);
-      });
-    }
-  }
-
-  // Remove duplicates
-  const cleaned = parts
-    .map((s) => (typeof s === "string" ? s.trim() : String(s)))
-    .filter(Boolean);
-
-  const seen = new Set();
-  const out = [];
-  cleaned.forEach((x) => {
-    if (!seen.has(x)) {
-      seen.add(x);
-      out.push(x);
-    }
-  });
-
-  return out;
+  return [...extract(g.left), ...extract(g.right), ...extract(g.finisher)];
 }
+
+
 
 function renderExercises(iso, gymLogsState) {
   const entry = gymLogsState?.[iso];
