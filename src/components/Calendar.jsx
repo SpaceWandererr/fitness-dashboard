@@ -11,7 +11,8 @@ import {
   Legend,
 } from "recharts";
 // Backend API base
-const API = "https://your-backend-url.com/api/dashboard"; // change this
+const API = "https://fitness-backend-laoe.onrender.com/api/state";
+ // change this
 
 
 // Updated Calendar — with: selected glow (neon blue), today highlight,
