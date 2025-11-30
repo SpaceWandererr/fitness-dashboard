@@ -1,0 +1,12 @@
+{
+  "enabledModels": [
+    {
+      "name": "Claude Haiku 4.5",
+      "id": "claude-haiku-4.5",
+      "enabled": true,
+      "scope": "all"
+    }
+  ],
+  "defaultModel": "claude-haiku-4.5",
+  "notes": "Enable Claude Haiku 4.5 for all clients. Services should read this file at startup or on reload to apply toggles."
+}

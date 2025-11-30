@@ -55,4 +55,14 @@ It helps you track your **workouts, BMI, weight progress, calories burned, strea
 | LocalStorage | Saving progress, weight, calories, BMI |
 | Recharts     | Weight & BMI graphs |
 | Day.js       | Date formatting & handling |
+ 
+---
+
+## Model configuration
+
+- **Config file**: `config/models.json` — contains model toggles and the default model.
+- **Enabled**: `Claude Haiku 4.5` (`claude-haiku-4.5`) is set to enabled for all clients in `config/models.json`.
+- **How to apply**: Services must read `config/models.json` at startup or on reload to pick up changes.
+
+Note: This repository change only adds a configuration artifact. Enabling models in external provider consoles (for example, Anthropic) is separate and requires the provider account or deployment configuration.
 
