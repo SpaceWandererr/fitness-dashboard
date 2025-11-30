@@ -1,5 +1,4 @@
-// GymSimplified.jsx (full feature version, backend-first, no local-merge hacks)
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 
 /* ---------------------- Constants ---------------------- */
@@ -12,11 +11,10 @@ const WEEK = [
   "Saturday",
   "Sunday",
 ];
-
 const fmtISO = (d) => dayjs(d).format("YYYY-MM-DD");
 const fmtDisp = (d) => dayjs(d).format("DD-MM-YYYY");
 
-// 🔹 Sunday Quote Fetcher
+// Sunday Quote Fetcher
 async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   const LOCAL_FALLBACK = [
     "Discipline is doing what needs to be done even when you don’t feel like doing it. — Unknown",
@@ -25,7 +23,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
     "Rest is not idleness. Sometimes, rest is the most productive thing you can do. — Unknown",
     "Small consistent steps every day lead to massive results over time. — Unknown",
   ];
-
   const now = Date.now();
   const cacheKey = "wd_sunday_quote_cache";
   const cache = (() => {
@@ -35,7 +32,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       return null;
     }
   })();
-
   if (
     cache &&
     cache.ts &&
@@ -43,7 +39,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   ) {
     return cache.text;
   }
-
   const sources = [
     {
       id: "zenquotes-direct",
@@ -81,7 +76,6 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
         ),
     },
   ];
-
   for (const src of sources) {
     try {
       const txt = await src.fn();
@@ -105,9 +99,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       continue;
     }
   }
-
   if (cache && cache.text) return cache.text;
-
   const localPick =
     LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)];
   try {
@@ -119,7 +111,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   return localPick;
 }
 
-/* ---------------------- Full 6-day Workout Plan (your original) ---------------------- */
+/* ---------------------- Full 6-day Workout Plan ---------------------- */
 const DEFAULT_PLAN = {
   Monday: {
     title: "Chest + Core",
@@ -133,7 +125,6 @@ const DEFAULT_PLAN = {
     finisherLabel: "Core Finisher",
     finisher: ["Decline Bench Crunch – 3×15", "Cable Crunch – 3×15"],
   },
-
   Tuesday: {
     title: "Back + Biceps",
     left: [
@@ -149,7 +140,6 @@ const DEFAULT_PLAN = {
     finisherLabel: null,
     finisher: [],
   },
-
   Wednesday: {
     title: "Legs (Quads + Glutes + Calves)",
     left: [
@@ -161,7 +151,6 @@ const DEFAULT_PLAN = {
     finisherLabel: null,
     finisher: [],
   },
-
   Thursday: {
     title: "Shoulders + Abs",
     left: [
@@ -177,7 +166,6 @@ const DEFAULT_PLAN = {
       "Bicycle Crunch – 3×20",
     ],
   },
-
   Friday: {
     title: "Chest + Arms (Hypertrophy Focus)",
     left: ["Incline Barbell Press – 4×10", "Close-Grip Bench Press – 3×10"],
@@ -189,7 +177,6 @@ const DEFAULT_PLAN = {
     finisherLabel: "Core (optional)",
     finisher: ["Decline Bench Crunch – 3×15"],
   },
-
   Saturday: {
     title: "Legs + Core + Cardio",
     left: [
@@ -217,345 +204,96 @@ const DEFAULT_PLAN = {
   },
 };
 
-async function syncDashboardToBackend(
-  currentLogs,
-  currentDone,
-  currentWeight,
-  currentDashboardState
-) {
-  try {
-    const state = {
-      ...(currentDashboardState || {}),
-      wd_gym_logs: currentLogs ?? {},
-      wd_done: currentDone ?? {},
-      wd_weight_current: currentWeight ?? null,
-      wd_goals: currentDashboardState?.wd_goals || {},
-      syllabus_tree_v2: currentDashboardState?.syllabus_tree_v2 || {},
-    };
-
-    await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(state),
-    });
-
-    console.log("✅ Safe backend sync done");
-  } catch (err) {
-    console.error("❌ Backend sync failed:", err);
-  }
-}
-
-/* ---------------------- Main Component ---------------------- */
-export default function GymSimplified({ dashboardState = {} }) {
+export default function Gym() {
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
   const defaultDay = WEEK.includes(todayName) ? todayName : "Monday";
-  const [markPressed, setMarkPressed] = useState(false);
-  const [markAllPressed, setMarkAllPressed] = useState(false);
 
+  // Date and weekday state
   const [date, setDate] = useState(todayIso);
   const [weekday, setWeekday] = useState(defaultDay);
-  const dateKey = fmtISO(date);
-  const isFuture = dayjs(dateKey).isAfter(dayjs(), "day");
+  const userChangedWeekday = useRef(false);
 
+  // State for logs, done state, weights, goals
+  const [logs, setLogs] = useState({});
+  const [doneState, setDoneState] = useState({});
+  const [currWeight, setCurrWeight] = useState("");
+  const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
     "Fetching your motivational quote..."
   );
 
-  const updateCurrentWeight = async () => {
-    const raw = currWeightInput;
+  // Modal inputs
+  const [showModal, setShowModal] = useState(false);
+  const [caloriesInput, setCaloriesInput] = useState("");
+  const [weightInput, setWeightInput] = useState("");
+  const weightInputRef = useRef(null);
 
-    if (!raw || isNaN(raw)) {
-      alert("Enter a valid weight!");
-      return;
-    }
+  // Fetch initial state from backend on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(
+          "https://fitness-backend-laoe.onrender.com/api/state"
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setLogs(data.wd_gym_logs || {});
+          setDoneState(data.wd_done || {});
+          setCurrWeight(
+            data.wd_weight_current != null ? data.wd_weight_current : ""
+          );
+          setTargetWeight(
+            data.wd_goals?.targetWeight != null
+              ? data.wd_goals.targetWeight
+              : ""
+          );
+        } else {
+          console.error("Failed to fetch state:", res.status);
+        }
+      } catch (err) {
+        console.error("Error fetching state:", err);
+      }
+    })();
+  }, []);
 
-    const newWeight = Number(raw);
-
-    try {
-      // Update UI immediately
-      setCurrWeight(newWeight);
-      setCurrWeightInput(String(newWeight));
-
-      // Build safe outgoing state
-      const safeState = {
-        ...dashboardState,
-        wd_weight_current: newWeight,
-      };
-
-      // Save to backend
-      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(safeState),
-      });
-
-      console.log("✅ Weight updated:", newWeight);
-
-      // Stop edit mode
-      isEditingCurrWeightRef.current = false;
-    } catch (err) {
-      console.error("❌ Weight update failed", err);
-      alert("Failed to save weight — check console.");
-    }
-  };
-
-  // const [tempWeight, setTempWeight] = useState(
-  //   dashboardState?.wd_weight_current ?? ""
-  // );
-
-  /* plan */
-  const [plan, setPlan] = useState(DEFAULT_PLAN);
-
+  // Sync date -> weekday
   useEffect(() => {
     const wd = dayjs(date).format("dddd");
-    if (wd === "Sunday") {
-      fetchSundayQuote().then((quote) => {
-        setPlan((prev) => {
-          const safePrev = prev || {};
-          const sun = safePrev.Sunday || DEFAULT_PLAN.Sunday;
-          return {
-            ...safePrev,
-            Sunday: { ...sun, finisher: [quote] },
-          };
-        });
-      });
-    }
+    setWeekday(wd);
   }, [date]);
 
-  /* logs & done state — BACKEND ONLY */
-  const [logs, setLogs] = useState(() => dashboardState?.wd_gym_logs || {});
-
-  const [doneState, setDoneState] = useState(
-    () => dashboardState?.wd_done || {}
-  );
-
+  // Sync weekday change -> date (current week)
   useEffect(() => {
-    // Fix gym logs shape
-    let logsData = dashboardState?.wd_gym_logs || {};
+    if (!userChangedWeekday.current) return;
+    const currentDate = dayjs();
+    const startOfWeek = currentDate.startOf("week").add(1, "day"); // Monday
+    const newDate = startOfWeek
+      .add(WEEK.indexOf(weekday), "day")
+      .format("YYYY-MM-DD");
+    setDate(newDate);
+    userChangedWeekday.current = false;
+  }, [weekday]);
 
-    if (Array.isArray(logsData)) {
-      console.warn("Fixing backend logs array → object");
-      logsData = logsData.reduce((acc, item) => ({ ...acc, ...item }), {});
-    }
-
-    let doneData = dashboardState?.wd_done || {};
-    if (Array.isArray(doneData)) {
-      console.warn("Fixing backend done array → object");
-      doneData = doneData.reduce((acc, item) => ({ ...acc, ...item }), {});
-    }
-
-    setLogs(logsData);
-    setDoneState(doneData);
-  }, [dashboardState]);
-
-  const [currWeight, setCurrWeight] = useState(
-    dashboardState?.wd_weight_current ?? ""
-  );
-
-  const [currWeightInput, setCurrWeightInput] = useState(
-    dashboardState?.wd_weight_current ?? ""
-  );
-
-  const isEditingCurrWeightRef = useRef(false);
-
-  useEffect(() => {
-    // Don’t override user typing
-    if (isEditingWeightRef.current) return;
-
-    const backendValue = dashboardState?.wd_weight_current;
-
-    // Only sync if backend actually changed
-    if (backendValue !== undefined && backendValue !== currWeight) {
-      setCurrWeight(backendValue);
-      setCurrWeightInput(String(backendValue));
-    }
-  }, [dashboardState]);
-
-  useEffect(() => {
-    if (isEditingCurrWeightRef.current) return;
-
-    const backendValue = dashboardState?.wd_weight_current;
-    if (backendValue !== undefined) {
-      setCurrWeight(backendValue);
-      setCurrWeightInput(String(backendValue));
-    }
-  }, [dashboardState]);
-
-  useEffect(() => {
-    if (isEditingTargetRef.current) return;
-
-    const backendVal = dashboardState?.wd_goals?.targetWeight;
-
-    if (backendVal !== undefined && String(backendVal) !== tempTargetWeight) {
-      setTargetWeight(backendVal);
-      setTempTargetWeight(String(backendVal));
-    }
-  }, [dashboardState]);
-
-  /* live event for other components */
-  useEffect(() => {
-    window.dispatchEvent(new Event("lifeos:update"));
-  }, [logs]);
-
-  /* Sunday quote */
+  // Sunday quote fetch on Sunday
   useEffect(() => {
     if (weekday === "Sunday") {
       fetchSundayQuote().then(setSundayQuote);
     }
   }, [weekday]);
 
-  /* ---------------- BACKEND DRIVEN GOALS ---------------- */
+  // Helper: get current log entry or default for this date
+  const getEntry = (dKey) => {
+    const prev = logs[dKey];
 
-  const saveTargetWeight = async () => {
-    const raw = tempTargetWeight;
-    if (!raw || isNaN(raw)) {
-      alert("Enter a valid target weight!");
-      return;
-    }
-
-    const newWeight = Number(raw);
-
-    // Update UI immediately
-    setTargetWeight(newWeight);
-    setTempTargetWeight(String(newWeight));
-    isEditingTargetRef.current = false;
-
-    // Build state correctly
-    const safeState = {
-      ...dashboardState,
-      wd_goals: {
-        ...(dashboardState.wd_goals || {}),
-        targetWeight: newWeight, // ✅ Save inside wd_goals
-      },
-    };
-
-    // Save to backend
-    await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(safeState),
-    });
-
-    console.log("🎯 Target weight saved in Mongo:", newWeight);
-  };
-
-  const [targetWeight, setTargetWeight] = useState(
-    dashboardState?.wd_goals?.targetWeight ?? ""
-  );
-
-  const [tempTargetWeight, setTempTargetWeight] = useState(
-    dashboardState?.wd_goals?.targetWeight ?? ""
-  );
-
-  // add this:
-  // useEffect(() => {
-  //   if (!dashboardState || !Number.isFinite(Number(targetWeight))) return;
-
-  //   const fullState = {
-  //     ...dashboardState, // keep everything else
-  //     wd_goals: {
-  //       ...(dashboardState.wd_goals || {}),
-  //       targetWeight: Number(targetWeight),
-  //     },
-  //   };
-
-  //   fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-  //     method: "PUT",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify(fullState),
-  //   })
-  //     .then(() => console.log("✅ Goals synced:", fullState.wd_goals))
-  //     .catch((err) => console.error("❌ Goal sync failed:", err));
-  // }, [targetWeight, dashboardState]);
-
-  /* Backend-only overrides */
-  const [weightOverrides, setWeightOverrides] = useState(
-    dashboardState?.wd_weight_overrides || {}
-  );
-
-  /* Backend-only BMI logs */
-  const [bmiLogs, setBmiLogs] = useState(dashboardState?.bmi_logs || []);
-
-  /* modal and inputs */
-  const [showModal, setShowModal] = useState(false);
-  const [caloriesInput, setCaloriesInput] = useState("");
-  const [currentWeightInput, setCurrentWeightInput] = useState("");
-  const weightInputRef = useRef(null);
-  const isEditingWeightRef = useRef(false);
-  const targetInputRef = useRef(null);
-  const isEditingTargetRef = useRef(false);
-
-  useEffect(() => {
-    if (showModal && weightInputRef.current) {
-      setTimeout(() => {
-        weightInputRef.current?.focus();
-        weightInputRef.current?.select();
-      }, 10);
-    }
-  }, [showModal]);
-
-  /* sync date -> weekday */
-  const userChangedWeekday = useRef(false);
-
-  useEffect(() => {
-    const name = dayjs(date).format("dddd");
-    setWeekday(name);
-  }, [date]);
-
-  useEffect(() => {
-    if (!userChangedWeekday.current) return;
-
-    const currentDate = dayjs();
-    const startOfWeek = currentDate.startOf("week").add(1, "day");
-
-    const newDate = startOfWeek
-      .add(WEEK.indexOf(weekday), "day")
-      .format("YYYY-MM-DD");
-
-    setDate(newDate);
-
-    userChangedWeekday.current = false;
-  }, [weekday]);
-
-  function persistLogFor(dateIso, obj) {
-    const next = { ...logs, [dateIso]: obj };
-    setLogs(next);
-  }
-
-  /* checks initializer */
-  // helper: normalize backend logs (supports old boolean arrays OR objects {name,done})
-  function normalizeLogArray(arr = [], planArr = []) {
-    // produce boolean array aligned with plan length
-    return planArr.map((_, idx) => {
-      const val = arr?.[idx];
-      if (typeof val === "boolean") return val;
-      if (typeof val === "object" && val !== null) return !!val.done;
-      return false;
-    });
-  }
-
-  // derive initial checks for a date (used for initial state)
-  function deriveChecksFromLogs(
-    dateKeyLocal,
-    logsLocal,
-    planLocal,
-    weekdayLocal
-  ) {
-    const planForDay = planLocal?.[weekdayLocal] ?? {
-      left: [],
-      right: [],
-      finisher: [],
-    };
-    const prev = logsLocal?.[dateKeyLocal] || null;
-
-    if (!prev || typeof prev !== "object") {
+    if (!prev) {
+      const planDay = DEFAULT_PLAN[weekday] || {};
       return {
-        weekday: weekdayLocal,
-        left: planForDay.left.map(() => false),
-        right: planForDay.right.map(() => false),
-        finisher: planForDay.finisher.map(() => false),
+        weekday,
+        left: (planDay.left || []).map(() => false),
+        right: (planDay.right || []).map(() => false),
+        finisher: (planDay.finisher || []).map(() => false),
         done: false,
         calories: undefined,
         weight: undefined,
@@ -563,370 +301,323 @@ export default function GymSimplified({ dashboardState = {} }) {
       };
     }
 
+    // DO NOT OVERRIDE weekday from UI
+    const planDay = DEFAULT_PLAN[prev.weekday] || {};
+
     return {
-      weekday: weekdayLocal,
-      left: normalizeLogArray(prev.left, planForDay.left),
-      right: normalizeLogArray(prev.right, planForDay.right),
-      finisher: normalizeLogArray(prev.finisher, planForDay.finisher),
-      done: !!prev.done,
+      weekday: prev.weekday, // <-- correct weekday preserved
+      left: prev.left ?? planDay.left.map(() => false),
+      right: prev.right ?? planDay.right.map(() => false),
+      finisher: prev.finisher ?? planDay.finisher.map(() => false),
+      done: prev.done ?? false,
       calories: prev.calories,
       weight: prev.weight,
       bmi: prev.bmi,
     };
-  }
+  };
 
-  // ----------------------------
-  // UI-first checks state (stable while user interacts)
-  const [checksState, setChecksState] = useState(() =>
-    deriveChecksFromLogs(dateKey, logs, plan, weekday)
-  );
-
-  // keep a flag to avoid overriding UI while user is clicking
-  const isUserInteractingRef = useRef(false);
-
-  // sync checksState when date or logs change, but don't stomp while user is interacting
-  useEffect(() => {
-    // ⛔ If user is clicking, DO NOT sync from logs
-    if (isUserInteractingRef.current) return;
-
-    // ⛔ Only sync when date or plan changes
-    setChecksState(deriveChecksFromLogs(dateKey, logs, plan, weekday));
-  }, [dateKey, plan]); // ❗ remove logs from dependency array
-
-  const totalExercises =
-    (plan[weekday]?.left?.length || 0) +
-    (plan[weekday]?.right?.length || 0) +
-    (plan[weekday]?.finisher?.length || 0);
-
-  const completedExercises =
-    (checksState.left?.filter(Boolean).length || 0) +
-    (checksState.right?.filter(Boolean).length || 0) +
-    (checksState.finisher?.filter(Boolean).length || 0);
-
-  const completionPct = totalExercises
-    ? Math.round((completedExercises / totalExercises) * 100)
-    : 0;
-
-  /* toggles */
+  // Toggle a single exercise
   const toggle = (section, idx) => {
-    if (isFuture) {
+    if (dayjs(date).isAfter(dayjs(), "day")) {
       alert("🚫 You can't log future workouts");
       return;
     }
-
-    isUserInteractingRef.current = true;
-    clearTimeout(isUserInteractingRef.currentTimer);
-
-    // 1️⃣ Update UI version first
-    setChecksState((prev) => {
-      const updated = {
-        ...prev,
-        [section]: prev[section].map((v, i) => (i === idx ? !v : v)),
-      };
-
-      // 2️⃣ Directly persist *the updated version* into logs
-      setLogs((prevLogs) => {
-        const prevLog =
-          prevLogs[dateKey] ||
-          deriveChecksFromLogs(dateKey, prevLogs, plan, weekday);
-
-        const updatedLog = {
-          ...prevLog,
-          weekday,
-          left: (prevLog.left || []).map((_, i) =>
-            section === "left" && i === idx ? !prev.left[i] : prev.left[i]
-          ),
-          right: (prevLog.right || []).map((_, i) =>
-            section === "right" && i === idx ? !prev.right[i] : prev.right[i]
-          ),
-          finisher: (prevLog.finisher || []).map((_, i) =>
-            section === "finisher" && i === idx
-              ? !prev.finisher[i]
-              : prev.finisher[i]
-          ),
-        };
-
-        return { ...prevLogs, [dateKey]: updatedLog };
-      });
-
-      return updated;
-    });
-
-    isUserInteractingRef.currentTimer = setTimeout(() => {
-      isUserInteractingRef.current = false;
-    }, 350);
-  };
-
-  const canComplete =
-    checksState.left?.some(Boolean) ||
-    checksState.right?.some(Boolean) ||
-    checksState.finisher?.some(Boolean) ||
-    false;
-
-  const openCaloriesModal = () => {
-    if (isFuture) {
-      alert("🚫 Can't complete future workouts");
-      return;
-    }
-
-    // Allow saving for yesterday even if no toggles yet
-    if (!canComplete && !dayjs(dateKey).isSame(dayjs(), "day")) {
-      // allow modal for past dates
-    } else if (!canComplete) {
-      return;
-    }
-
-    setCaloriesInput((checksState.calories ?? "").toString());
-    const overrideWeight = weightOverrides[dateKey];
-    setCurrentWeightInput(
-      ((checksState.weight ?? overrideWeight ?? "") || "").toString()
-    );
-    setShowModal(true);
-  };
-
-  const saveCaloriesAndComplete = () => {
-    const calories = Number(caloriesInput) || 0;
-    const parsedWeight =
-      currentWeightInput === "" ? null : Number(currentWeightInput);
-
-    const weight = Number.isFinite(parsedWeight)
-      ? parsedWeight
-      : checksState.weight ?? null;
-
-    const savedHeight = 176; // or dashboardState?.bmi_height || 176
-
-    const newBmi =
-      weight && savedHeight
-        ? Number((weight / Math.pow(savedHeight / 100, 2)).toFixed(1))
-        : checksState.bmi;
-
-    const prevLog = logs[dateKey] || { ...checksState, weekday };
-
-    const next = {
-      ...prevLog,
-      // inside saveCaloriesAndComplete, replace left/right/finisher creation with:
-      left: (dayPlan.left || []).map((name, i) => ({
-        name,
-        done: !!checksState.left?.[i],
-      })),
-      right: (dayPlan.right || []).map((name, i) => ({
-        name,
-        done: !!checksState.right?.[i],
-      })),
-      finisher: (dayPlan.finisher || []).map((name, i) => ({
-        name,
-        done: !!checksState.finisher?.[i],
-      })),
-
-      done: true,
-      calories,
-      weight,
-      bmi: newBmi,
-    };
-
-    // ✅ Update logs state
-    const updatedLogs = { ...logs, [dateKey]: next };
-    setLogs(updatedLogs);
-
-    // ✅ Update done state
-    const mergedDone = { ...doneState, [dateKey]: true };
-    setDoneState(mergedDone);
-
-    // ✅ Update overrides
-    setWeightOverrides((prev) => ({
-      ...prev,
-      [dateKey]: weight,
-    }));
-
-    // ✅ Update BMI logs state
-    setBmiLogs((prev) => {
-      const filtered = prev.filter((e) => e?.date !== dateKey);
-      return [...filtered, { date: dateKey, weight, bmi: newBmi }];
-    });
-
-    // ✅ Fire event for other UI parts
-    window.dispatchEvent(new Event("lifeos:update"));
-
-    // ✅ Close modal
-    setShowModal(false);
-  };
-
-  const editCalories = () => {
-    const prev = logs[dateKey] || {};
-    setCaloriesInput((prev.calories ?? "").toString());
-    setCurrentWeightInput(
-      ((prev.weight ?? weightOverrides[dateKey] ?? "") || "").toString()
-    );
-    setShowModal(true);
-  };
-
-  const deleteCaloriesAndUnmark = () => {
-    const prevLog = logs[dateKey] || { ...checksState, weekday };
-
-    const nextLog = { ...prevLog, calories: undefined, done: false };
-
-    // ✅ Update logs state
-    const updatedLogs = { ...logs, [dateKey]: nextLog };
-    setLogs(updatedLogs);
-
-    // ✅ Update done state
-    const merged = { ...doneState };
-    delete merged[dateKey];
-    setDoneState(merged);
-
-    // ✅ Notify other UI components
-    window.dispatchEvent(new Event("lifeos:update"));
-  };
-
-  const toggleMarkAll = () => {
-    if (isFuture) return;
-
-    // compute current allDone from checksState
-    const allDone =
-      (checksState.left || []).every(Boolean) &&
-      (checksState.right || []).every(Boolean) &&
-      (checksState.finisher || []).every(Boolean);
-
-    const nextLeft = (checksState.left || []).map(() => !allDone);
-    const nextRight = (checksState.right || []).map(() => !allDone);
-    const nextFinisher = (checksState.finisher || []).map(() => !allDone);
-
-    // update UI state
-    setChecksState((prev) => ({
-      ...prev,
-      left: nextLeft,
-      right: nextRight,
-      finisher: nextFinisher,
-    }));
-
-    // update logs (boolean arrays) to persist the UI
-    setLogs((prev) => {
-      const prevLog =
-        prev[dateKey] || deriveChecksFromLogs(dateKey, prev, plan, weekday);
-      const updated = {
-        ...prevLog,
-        weekday,
-        left: nextLeft,
-        right: nextRight,
-        finisher: nextFinisher,
-      };
-      return { ...prev, [dateKey]: updated };
-    });
-
-    // end interaction flag shortly after
-    isUserInteractingRef.current = true;
-    clearTimeout(isUserInteractingRef.currentTimer);
-    isUserInteractingRef.currentTimer = setTimeout(() => {
-      isUserInteractingRef.current = false;
-    }, 350);
-  };
-
-  /* streak + totals */
-  const streak = useMemo(() => {
-    const doneMap = doneState;
-    let s = 0;
-    for (let i = 0; i < 365; i++) {
-      const k = dayjs().subtract(i, "day").format("YYYY-MM-DD");
-      if (doneMap[k]) s++;
-      else break;
-    }
-    return s;
-  }, [doneState]);
-
-  const logsObj = dashboardState?.wd_gym_logs || {};
-  const dates = Object.keys(logsObj).sort();
-  const latestDate = dates[dates.length - 1];
-  const latestWeight = latestDate ? logsObj[latestDate]?.weight : null;
-
-  const inferredStart =
-    currWeight ?? latestWeight ?? checksState.weight ?? targetWeight;
-
-  const effectiveStart = inferredStart;
-  const overrideWeight = weightOverrides[dateKey];
-
-  let curWeight =
-    overrideWeight ?? latestWeight ?? checksState.weight ?? effectiveStart;
-
-  const tw = Number(targetWeight);
-
-  const pctToGoal = (() => {
-    const start = Number(effectiveStart);
-    const target = Number(tw);
-    const current = Number(curWeight);
-
-    if (!isFinite(start) || !isFinite(target) || !isFinite(current)) return 0;
-
-    const span = start - target;
-    if (span === 0) return 0;
-
-    const progress = ((start - current) / span) * 100;
-
-    if (progress > 120) return 120;
-    if (progress < -120) return -120;
-    return progress;
-  })();
-
-  const diffToGoal =
-    isFinite(curWeight) && isFinite(tw) ? (curWeight - tw).toFixed(1) : null;
-
-  /* reset progress */
-  const resetProgress = async () => {
-    const confirmReset = confirm("Reset ALL gym data from backend?");
-    if (!confirmReset) return;
-
-    try {
-      await fetch("https://fitness-backend-laoe.onrender.com/api/state/reset", {
-        method: "POST",
-      });
-
-      console.log("✅ Backend reset completed");
-    } catch (err) {
-      console.error("❌ Backend reset failed:", err);
-    }
-
-    // ✅ Reset frontend state (no localStorage)
-    setLogs({});
-    setDoneState({});
-    setWeightOverrides({});
-    setBmiLogs([]);
-    setCurrentWeight(null);
-
-    // ✅ Notify other components
-    window.dispatchEvent(new Event("lifeos:update"));
-
-    alert("FULL RESET DONE ✅");
-  };
-
-  const normalizedWeekday = WEEK.find(
-    (d) => d.toLowerCase() === (weekday || "").toLowerCase()
-  );
-  const dayPlan = (normalizedWeekday && plan?.[normalizedWeekday]) ||
-    DEFAULT_PLAN[normalizedWeekday] || {
-      title: `${weekday || "Unknown"} — No Plan`,
+    const dateKey = fmtISO(date);
+    const planDay = DEFAULT_PLAN[weekday] || {
       left: [],
       right: [],
       finisher: [],
     };
+    const old = logs[dateKey] || getEntry(dateKey);
+    const updatedEntry = { ...old };
+    if (section === "left") {
+      updatedEntry.left = old.left.map((v, i) => (i === idx ? !v : v));
+    }
+    if (section === "right") {
+      updatedEntry.right = old.right.map((v, i) => (i === idx ? !v : v));
+    }
+    if (section === "finisher") {
+      updatedEntry.finisher = old.finisher.map((v, i) => (i === idx ? !v : v));
+    }
+    // Persist toggles (done remains as was)
+    setLogs((prev) => ({ ...prev, [dateKey]: updatedEntry }));
+  };
 
-  if (!plan || typeof plan !== "object") {
-    return (
-      <div className="p-4 text-red-400">
-        ⚠ Error: Workout plan is missing or corrupted.
-      </div>
-    );
+  // Toggle all exercises for today
+  const toggleMarkAll = () => {
+    if (dayjs(date).isAfter(dayjs(), "day")) {
+      return;
+    }
+    const dateKey = fmtISO(date);
+    const entry = logs[dateKey] || getEntry(dateKey);
+    const allDone =
+      (entry.left || []).every(Boolean) &&
+      (entry.right || []).every(Boolean) &&
+      (entry.finisher || []).every(Boolean);
+    const nextVal = !allDone;
+    const updatedEntry = {
+      weekday, // <-- IMPORTANT
+      left: (entry.left || []).map(() => nextVal),
+      right: (entry.right || []).map(() => nextVal),
+      finisher: (entry.finisher || []).map(() => nextVal),
+      done: entry.done || false,
+      calories: entry.calories,
+      weight: entry.weight,
+      bmi: entry.bmi,
+    };
+
+    setLogs((prev) => ({ ...prev, [dateKey]: updatedEntry }));
+  };
+
+  // Open modal to mark workout done (or edit)
+  const openModal = () => {
+    if (dayjs(date).isAfter(dayjs(), "day")) {
+      alert("🚫 Can't complete future workouts");
+      return;
+    }
+    const dateKey = fmtISO(date);
+    const entry = logs[dateKey] || getEntry(dateKey);
+    setCaloriesInput(entry.calories != null ? String(entry.calories) : "");
+    setWeightInput(entry.weight != null ? String(entry.weight) : "");
+    setShowModal(true);
+  };
+
+  // Save workout (calories, weight) and mark done
+  const saveWorkout = () => {
+    const dateKey = fmtISO(date);
+    const rawCalories = Number(caloriesInput) || 0;
+    const parsedWeight = weightInput === "" ? null : Number(weightInput);
+
+    const weightVal = Number.isFinite(parsedWeight)
+      ? parsedWeight
+      : getEntry(dateKey).weight || null;
+
+    const savedHeight = 176;
+    const newBmi = weightVal
+      ? Number((weightVal / Math.pow(savedHeight / 100, 2)).toFixed(1))
+      : getEntry(dateKey).bmi;
+
+    const entry = logs[dateKey] || getEntry(dateKey);
+    const updatedEntry = {
+      weekday, // ALWAYS attach weekday
+      left: entry.left || [],
+      right: entry.right || [],
+      finisher: entry.finisher || [],
+      done: true,
+      calories: rawCalories,
+      weight: weightVal,
+      bmi: newBmi,
+    };
+
+    setLogs((prev) => ({ ...prev, [dateKey]: updatedEntry }));
+    setDoneState((prev) => ({ ...prev, [dateKey]: true }));
+    setShowModal(false);
+
+    // SAVE TO BACKEND
+    fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wd_gym_logs: { ...logs, [dateKey]: updatedEntry },
+        wd_done: { ...doneState, [dateKey]: true },
+        wd_weight_current: weightVal, // <---- NEW
+        wd_goals: { targetWeight },
+      }),
+    });
+  };
+
+  // Edit existing workout (open modal with existing values)
+  const editWorkout = () => {
+    openModal();
+  };
+
+  // Unmark workout and clear calories (and weight)
+  const deleteWorkout = () => {
+    const dateKey = fmtISO(date);
+    const entry = logs[dateKey] || getEntry(dateKey);
+    const updatedEntry = {
+      weekday, // <--- IMPORTANT
+      left: entry.left || [],
+      right: entry.right || [],
+      finisher: entry.finisher || [],
+      calories: undefined,
+      weight: undefined,
+      bmi: undefined,
+      done: false,
+    };
+
+    setLogs((prev) => ({ ...prev, [dateKey]: updatedEntry }));
+    setDoneState((prev) => {
+      const newDone = { ...prev };
+      delete newDone[dateKey];
+      return newDone;
+    });
+    // Notify others if needed
+    window.dispatchEvent(new Event("lifeos:update"));
+    // Save to backend
+    const outgoing = {
+      wd_gym_logs: { ...logs, [dateKey]: updatedEntry },
+      wd_done: (() => {
+        const nd = { ...doneState };
+        delete nd[dateKey];
+        return nd;
+      })(),
+      wd_weight_current: currWeight,
+      wd_goals: { targetWeight: targetWeight },
+    };
+    fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(outgoing),
+    }).catch((err) => console.error("❌ Backend Save FAILED:", err));
+  };
+
+  // Update target weight and save to backend
+  const saveTargetWeight = async () => {
+    const raw = targetWeight;
+    if (!raw || isNaN(raw)) {
+      alert("Enter a valid target weight!");
+      return;
+    }
+    const newWeight = Number(raw);
+    setTargetWeight(newWeight);
+    // Save to backend
+    const outgoing = {
+      wd_goals: { targetWeight: newWeight },
+      wd_weight_current: currWeight,
+      wd_gym_logs: logs,
+      wd_done: doneState,
+    };
+    try {
+      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(outgoing),
+      });
+      console.log("Target weight saved:", newWeight);
+    } catch (err) {
+      console.error("❌ Failed to save target weight", err);
+      alert("Failed to save target weight.");
+    }
+  };
+
+  // Update current weight and save to backend
+  const updateCurrentWeight = async () => {
+    const raw = currWeight;
+    if (raw === "" || isNaN(raw)) {
+      alert("Enter a valid weight!");
+      return;
+    }
+    const newWeight = Number(raw);
+    setCurrWeight(newWeight);
+    // Save to backend
+    const outgoing = {
+      wd_weight_current: newWeight,
+      wd_goals: { targetWeight: targetWeight },
+      wd_gym_logs: logs,
+      wd_done: doneState,
+    };
+    try {
+      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(outgoing),
+      });
+      console.log("Current weight updated:", newWeight);
+    } catch (err) {
+      console.error("❌ Failed to update current weight", err);
+      alert("Failed to save current weight.");
+    }
+  };
+
+  // Reset all progress both backend and local
+  const resetProgress = async () => {
+    const confirmReset = window.confirm("Reset ALL gym data from backend?");
+    if (!confirmReset) return;
+    try {
+      await fetch("https://fitness-backend-laoe.onrender.com/api/state/reset", {
+        method: "POST",
+      });
+      console.log("✅ Backend reset completed");
+    } catch (err) {
+      console.error("❌ Backend reset failed:", err);
+    }
+    // Clear local state
+    setLogs({});
+    setDoneState({});
+    setCurrWeight("");
+    setTargetWeight("");
+    setSundayQuote("Fetching your motivational quote...");
+    // Notify others
+    window.dispatchEvent(new Event("lifeos:update"));
+    alert("FULL RESET DONE ✅");
+  };
+
+  // Derived entry and plan for rendering
+  const dateKey = fmtISO(date);
+  const entry = logs[dateKey] || getEntry(dateKey);
+  const dayPlan = DEFAULT_PLAN[weekday] || {
+    title: `${weekday || "Unknown"} — No Plan`,
+    left: [],
+    right: [],
+    finisher: [],
+  };
+
+  // Calculate completion and allowing save
+  const totalExercises =
+    (dayPlan.left?.length || 0) +
+    (dayPlan.right?.length || 0) +
+    (dayPlan.finisher?.length || 0);
+  const completedExercises =
+    (entry.left?.filter(Boolean).length || 0) +
+    (entry.right?.filter(Boolean).length || 0) +
+    (entry.finisher?.filter(Boolean).length || 0);
+  let canComplete = totalExercises > 0 && completedExercises > 0;
+  // If past date, allow even if no toggles
+  if (!canComplete && !dayjs(date).isSame(dayjs(), "day")) {
+    canComplete = true;
   }
 
+  // Compute progress towards goal
+  // Baseline is current weight or first logged weight or target
+  let baseline;
+  if (currWeight !== "" && !isNaN(currWeight)) {
+    baseline = Number(currWeight);
+  } else {
+    const datedKeys = Object.keys(logs)
+      .filter((k) => logs[k]?.weight != null)
+      .sort();
+    if (datedKeys.length > 0) {
+      baseline = logs[datedKeys[0]].weight;
+    } else {
+      baseline = targetWeight !== "" ? Number(targetWeight) : null;
+    }
+  }
+  const current = entry.weight != null ? entry.weight : baseline;
+  const tw = targetWeight !== "" ? Number(targetWeight) : null;
+  let pctToGoal = 0;
+  if (
+    baseline != null &&
+    isFinite(baseline) &&
+    tw != null &&
+    isFinite(tw) &&
+    isFinite(current)
+  ) {
+    const span = baseline - tw;
+    if (span !== 0) {
+      const progress = ((baseline - current) / span) * 100;
+      if (progress > 120) pctToGoal = 120;
+      else if (progress < -120) pctToGoal = -120;
+      else pctToGoal = progress;
+    }
+  }
+  const diffToGoal =
+    isFinite(current) && isFinite(tw) ? (current - tw).toFixed(1) : null;
+
   return (
-    <div
-      className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500 
-      bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
-      border-gray-800 text-emerald-100 font-medium"
-    >
+    <div className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500 bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E] border-gray-800 text-emerald-100 font-medium">
       {/* Header */}
-      <header
-        className="flex flex-col md:flex-row items-start
-        md:items-center justify-between gap-4 mb-4"
-      >
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-wide text-emerald-200">
             Gym
@@ -935,7 +626,6 @@ export default function GymSimplified({ dashboardState = {} }) {
             Log workouts, calories, weight — stable, dark-mode ready.
           </p>
         </div>
-
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <select
             value={weekday}
@@ -943,10 +633,7 @@ export default function GymSimplified({ dashboardState = {} }) {
               userChangedWeekday.current = true;
               setWeekday(e.target.value);
             }}
-            className="px-3 py-2 rounded-md border
-            bg-[#07201f] text-[#FAFAF9] border-emerald-800
-            text-sm focus:outline-none focus:ring-1
-            focus:ring-emerald-400 transition"
+            className="px-3 py-2 rounded-md border bg-[#07201f] text-[#FAFAF9] border-emerald-800 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 transition"
           >
             {WEEK.map((d) => (
               <option
@@ -958,118 +645,89 @@ export default function GymSimplified({ dashboardState = {} }) {
               </option>
             ))}
           </select>
-
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-md border
-            bg-[#07201f]  border-emerald-800
-            text-[#FAFAF9]
-            text-sm focus:outline-none focus:ring-1 
-            focus:ring-emerald-400 transition"
+            className="px-3 py-2 rounded-md border bg-[#07201f] border-emerald-800 text-[#FAFAF9] text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 transition"
           />
-
           <button
             onClick={resetProgress}
-            className="ml-auto
-            bg-gradient-to-r from-red-700 via-red-600 to-red-500
-            hover:from-red-600 hover:to-red-400
-            text-white px-4 py-2 rounded-md text-sm font-semibold 
-            shadow-md transition-all duration-200"
+            className="ml-auto bg-gradient-to-r from-red-700 via-red-600 to-red-500 hover:from-red-600 hover:to-red-400 text-white px-4 py-2 rounded-md text-sm font-semibold shadow-md transition-all duration-200"
           >
             Reset Progress
           </button>
         </div>
       </header>
-      {/* Progress / weight */}
-      <section
-        className="mb-4 border rounded-2xl
-        p-4 space-y-3 border-gray-700 dark:border-emerald-800
-        bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E]
-        backdrop-blur-md min-h-[120px]"
-      >
+
+      {/* Progress / Weight Section */}
+      <section className="mb-4 border rounded-2xl p-4 space-y-3 border-gray-700 bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E] backdrop-blur-md min-h-[120px]">
         <div className="flex items-center justify-between flex-wrap gap-3">
+          {/* Target Weight */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-emerald-100">
               🎯 Target
             </span>
-
             <input
-              ref={targetInputRef}
               type="number"
               step="0.1"
               placeholder="Target weight"
-              value={tempTargetWeight}
-              onFocus={() => (isEditingTargetRef.current = true)}
-              onBlur={() =>
-                setTimeout(() => (isEditingTargetRef.current = false), 100)
-              }
-              onChange={(e) => setTempTargetWeight(e.target.value)}
+              value={targetWeight}
+              onChange={(e) => setTargetWeight(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   saveTargetWeight();
-                  targetInputRef.current?.blur(); // ⭐ BLUR on Enter
+                  e.target.blur();
                 }
               }}
-              className="w-24 px-2 py-1 rounded-md border
-    border-gray-700 dark:border-emerald-800 bg-[#0c2624] 
-    text-emerald-100 text-sm focus:outline-none 
-    focus:ring-1 focus:ring-emerald-400"
+              className="w-24 px-2 py-1 rounded-md border border-gray-700 bg-[#0c2624] text-emerald-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
             />
-
             <button
               onClick={saveTargetWeight}
               className="px-2 py-1 rounded bg-cyan-600 text-sm hover:bg-cyan-700 transition"
             >
               Set
             </button>
-
             <span className="text-sm text-gray-300">kg</span>
           </div>
-
+          ;{/* Current Weight */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-emerald-100">
               ⚖ Curr Weight
             </span>
-
             <input
               type="number"
               step="0.1"
-              value={currWeightInput}
-              onFocus={() => (isEditingCurrWeightRef.current = true)}
-              onBlur={() =>
-                setTimeout(() => (isEditingCurrWeightRef.current = false), 100)
-              }
-              onChange={(e) => setCurrWeightInput(e.target.value)}
+              value={currWeight}
+              onChange={(e) => setCurrWeight(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  updateCurrentWeight(); // ✅ FIXED
-                  setTimeout(() => e.target.blur(), 30);
+                  updateCurrentWeight();
+                  e.target.blur();
                 }
               }}
-              className="w-24 px-2 py-1 rounded-md border
-      border-gray-700 dark:border-emerald-800 bg-[#0c2624]
-      text-emerald-100 text-sm focus:ring-1 focus:ring-emerald-400"
+              className="w-24 px-2 py-1 rounded-md border border-gray-700 bg-[#0c2624] text-emerald-100 text-sm focus:ring-1 focus:ring-emerald-400"
             />
-
             <button
-              onClick={updateCurrentWeight} // ✅ FIXED
+              onClick={updateCurrentWeight}
               className="px-2 py-1 rounded bg-emerald-600 text-sm hover:bg-emerald-700 transition"
             >
               Set
             </button>
-
             <span className="text-sm text-gray-300">kg</span>
           </div>
-
+          ; ;{/* Display current weight */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-300">Now:</span>
             <span className="text-emerald-300 font-semibold">
-              {Number.isFinite(currWeight) ? `${currWeight} kg` : "— kg"}
+              {entry?.weight != null
+                ? `${entry.weight} kg`
+                : currWeight !== ""
+                ? `${currWeight} kg`
+                : "— kg"}
             </span>
           </div>
-
+          {/* Progress text */}
           <div className="text-sm text-gray-300">
             {pctToGoal < 0 ? (
               <>
@@ -1090,10 +748,9 @@ export default function GymSimplified({ dashboardState = {} }) {
           </div>
         </div>
 
-        {/* progress bar */}
+        {/* Progress bar */}
         <div className="relative mt-1">
           <div className="h-3 rounded-full bg-[#123232]/50 overflow-hidden" />
-
           <div
             className="absolute top-0 h-3 rounded-full transition-all duration-700"
             style={{
@@ -1106,7 +763,6 @@ export default function GymSimplified({ dashboardState = {} }) {
                   : "linear-gradient(270deg, rgba(79,209,197,1), rgba(34,197,94,1))",
             }}
           />
-
           <div
             className="absolute -top-5 mt-1 transition-all duration-700 z-20"
             style={{
@@ -1126,170 +782,132 @@ export default function GymSimplified({ dashboardState = {} }) {
           </div>
         </div>
       </section>
+
       {/* Workout Section */}
-      <section
-        className="mb-4 border rounded-2xl p-4 
-        bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F0F0F] text-[#FAFAFA]
-        bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
-        backdrop-blur-md min-h-[300px] 
-        transition-all duration-500"
-      >
+      <section className="mb-4 border rounded-2xl p-4 bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E] text-[#FAFAFA] backdrop-blur-md min-h-[300px] transition-all duration-500">
         <div className="flex items-start justify-between gap-4 mb-3">
-          <div>
-            <h2 className="text-lg font-semibold text-emerald-200">
-              {weekday} • {dayPlan.title || "No Plan Found"}
-            </h2>
-            <div className="text-sm text-gray-300 mt-1">
-              Date: {fmtDisp(date)}
-            </div>
-            <div className="mt-2 text-sm text-gray-300">
-              Completion: {completedExercises}/{totalExercises} (
-              {completionPct || 0}%)
-            </div>
-          </div>
-
-          <div className="flex flex-col items-end gap-2">
-            <div className="text-sm px-3 py-1 rounded bg-emerald-600/90 text-white shadow">
-              🔥 Streak: {streak || 0} days
-            </div>
-          </div>
+          <h2 className="text-lg font-semibold text-emerald-200">
+            {weekday} • {dayPlan.title || "No Plan Found"}
+          </h2>
         </div>
-
         {weekday !== "Sunday" ? (
           <>
-            <div
-              className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4
-              transition-all duration-300 ease-in-out"
-              style={{ minHeight: "340px" }}
-            >
-              {["left", "right", "finisher"].map((sectionKey) => {
-                const label =
-                  sectionKey === "left"
-                    ? "Left"
-                    : sectionKey === "right"
-                    ? "Right"
-                    : dayPlan.finisherLabel || "Finisher";
-
-                const list = dayPlan[sectionKey] || [];
-                const state = checksState[sectionKey] || [];
-
-                return (
-                  <div
-                    key={sectionKey}
-                    className="rounded-xl bg-white/5
-                    bg-gradient-to-br from-[#582717] via-[#183D3D] to-[#0F766E] text-[#FAFAFA]
-                    bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
-                    p-4 shadow-sm border border-emerald-800/40 
-                    backdrop-blur-md transition-transform duration-300
-                    hover:scale-[1.01]"
+            {/* Exercises Lists */}
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              {/* Left Column */}
+              <ul className="list-inside list-decimal space-y-1">
+                {dayPlan.left.map((exercise, i) => (
+                  <li
+                    key={i}
+                    className={`cursor-pointer ${
+                      entry.left[i] ? "text-emerald-100" : "text-gray-300"
+                    }`}
+                    onClick={() => toggle("left", i)}
                   >
-                    <h3 className="text-emerald-300 text-lg font-semibold mb-3">
-                      {label}
-                    </h3>
-
-                    <div className="transition-opacity duration-500 ease-in-out opacity-100 will-change-[opacity,transform]">
-                      <div
-                        className="flex flex-col gap-2"
-                        style={{ minHeight: "150px" }}
-                      >
-                        {list.length > 0 ? (
-                          list.map((item, i) => (
-                            <button
-                              key={i}
-                              onClick={() => toggle(sectionKey, i)}
-                              className={`flex items-center justify-between text-left w-full px-3 py-2 rounded-md border border-emerald-800/20 ${
-                                state[i]
-                                  ? "bg-emerald-600/40 text-emerald-50"
-                                  : "bg-transparent hover:bg-emerald-700/10 text-emerald-200"
-                              } transition-all duration-200`}
-                            >
-                              <span>{item}</span>
-                              {state[i] && (
-                                <span className="text-emerald-400 text-lg font-bold">
-                                  ✔
-                                </span>
-                              )}
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-gray-400 italic text-sm text-center mt-4">
-                            No exercises
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    <span className="inline-block w-5">
+                      {entry.left[i] ? "✔️" : "⭕"}
+                    </span>
+                    {exercise}
+                  </li>
+                ))}
+              </ul>
+              {/* Right Column */}
+              <ul className="list-inside list-decimal space-y-1">
+                {dayPlan.right.map((exercise, i) => (
+                  <li
+                    key={i}
+                    className={`cursor-pointer ${
+                      entry.right[i] ? "text-emerald-100" : "text-gray-300"
+                    }`}
+                    onClick={() => toggle("right", i)}
+                  >
+                    <span className="inline-block w-5">
+                      {entry.right[i] ? "✔️" : "⭕"}
+                    </span>
+                    {exercise}
+                  </li>
+                ))}
+              </ul>
             </div>
-
-            <div className="flex flex-wrap gap-3 mt-6 items-center transition-all duration-200">
+            {/* Finisher */}
+            {dayPlan.finisher.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-md font-medium text-emerald-200">
+                  {dayPlan.finisherLabel || "Finisher"}
+                </h3>
+                <ul className="list-inside list-decimal space-y-1 mt-1 text-sm">
+                  {dayPlan.finisher.map((exercise, i) => (
+                    <li
+                      key={i}
+                      className={`cursor-pointer ${
+                        entry.finisher[i] ? "text-emerald-100" : "text-gray-300"
+                      }`}
+                      onClick={() => toggle("finisher", i)}
+                    >
+                      <span className="inline-block w-5">
+                        {entry.finisher[i] ? "✔️" : "⭕"}
+                      </span>
+                      {exercise}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {/* Controls */}
+            <div className="mt-4 flex flex-wrap gap-2 items-center">
               <button
-                onMouseDown={() => setMarkAllPressed(true)}
-                onMouseUp={() => setMarkAllPressed(false)}
-                onMouseLeave={() => setMarkAllPressed(false)}
                 onClick={toggleMarkAll}
-                className={`px-4 py-2 rounded border border-gray-700 dark:border-emerald-800 text-emerald-100 
-    hover:bg-emerald-700/10 transition-all duration-150
-    ${
-      markAllPressed ? "scale-95 transform translate-y-[1px] shadow-inner" : ""
-    }`}
+                className={`px-4 py-2 rounded ${
+                  entry.left.every(Boolean) &&
+                  entry.right.every(Boolean) &&
+                  entry.finisher.every(Boolean)
+                    ? "bg-yellow-600 text-white hover:bg-yellow-500"
+                    : "bg-blue-600 text-white hover:bg-blue-500"
+                } transition-all duration-150`}
               >
-                {checksState.left.every(Boolean) &&
-                checksState.right.every(Boolean) &&
-                (checksState.finisher?.every?.(Boolean) ?? true)
+                {entry.left.every(Boolean) &&
+                entry.right.every(Boolean) &&
+                entry.finisher.every(Boolean)
                   ? "❌ Unmark All"
-                  : "✔ Mark All"}
+                  : "✔️ Mark All"}
               </button>
-
-              {!checksState.done ? (
+              {!doneState[dateKey] ? (
                 <button
-                  onMouseDown={() => setMarkPressed(true)}
-                  onMouseUp={() => setMarkPressed(false)}
-                  onMouseLeave={() => setMarkPressed(false)}
-                  onClick={openCaloriesModal}
-                  disabled={isFuture}
-                  className={`px-4 py-2 active:scale-95 rounded transition-all duration-150
-    ${
-      canComplete
-        ? "bg-emerald-600 text-white hover:bg-emerald-500"
-        : "bg-gray-600/30 text-gray-400 cursor-not-allowed"
-    }
-    ${
-      markPressed
-        ? "scale-95 transform translate-y-[1px] shadow-inner"
-        : "active:scale-95"
-    }`}
+                  onClick={openModal}
+                  disabled={!canComplete}
+                  className={`px-4 py-2 rounded transition-all duration-150 ${
+                    canComplete
+                      ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                      : "bg-gray-600/30 text-gray-400 cursor-not-allowed"
+                  }`}
                 >
                   ✅ Mark Workout Done ({fmtDisp(date)})
                 </button>
               ) : (
                 <button
-                  onClick={deleteCaloriesAndUnmark}
-                  className="bg-red-600/90 hover:bg-red-600 text-white px-4 py-2 rounded transition-all duration-200"
+                  onClick={deleteWorkout}
+                  className="px-4 py-2 rounded bg-red-600/90 hover:bg-red-600 text-white transition-all duration-200"
                 >
                   ❌ Unmark & Clear
                 </button>
               )}
-
-              {checksState.done && (
+              {doneState[dateKey] && (
                 <button
-                  onClick={editCalories}
-                  className="px-3 py-2 border rounded hover:bg-white/5
-                  transition-all duration-200
-                  border-gray-700 dark:border-emerald-800"
+                  onClick={editWorkout}
+                  className="px-3 py-2 border rounded hover:bg-white/5 transition-all duration-200 border-gray-700"
                 >
-                  ✏ Edit
+                  ✏️ Edit
                 </button>
               )}
             </div>
           </>
         ) : (
+          // Sunday Mode
           <div className="flex flex-col items-center justify-center text-center mt-8">
             <h2 className="text-2xl font-semibold text-emerald-300 mb-3">
               🌤 Sunday Recharge Mode
             </h2>
-            <p className="text-emerald-100 italic text-lg mb-4 fade-in">
+            <p className="text-emerald-100 italic text-lg mb-4">
               {sundayQuote}
             </p>
             <button
@@ -1304,21 +922,14 @@ export default function GymSimplified({ dashboardState = {} }) {
           </div>
         )}
       </section>
-      ;{/* Calendar + Daily Summary */}
+
+      {/* Calendar + Daily Summary */}
       <section className="grid md:grid-cols-2 gap-4 mb-2">
-        <MiniCalendar
-          date={date}
-          setDate={setDate}
-          dashboardState={dashboardState}
-        />
-        <DailySummary
-          date={date}
-          logs={logs}
-          dateKey={dateKey}
-          dashboardState={dashboardState}
-        />
+        <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
+        <DailySummary key={date} date={date} logs={logs} />
       </section>
-      ;{/* Modal */}
+
+      {/* Modal for saving workout */}
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <div className="space-y-4">
@@ -1332,20 +943,14 @@ export default function GymSimplified({ dashboardState = {} }) {
               </label>
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 bg-white/90 dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full border rounded px-3 py-2 bg-white/90 text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                 value={caloriesInput}
                 onChange={(e) => setCaloriesInput(e.target.value)}
                 placeholder="e.g. 350"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    saveCaloriesAndComplete();
+                    saveWorkout();
                     setShowModal(false);
-                    // ⭐ give Modal time to re-render first
-                    setTimeout(() => {
-                      requestAnimationFrame(() => {
-                        weightInputRef.current?.blur();
-                      });
-                    }, 20);
                   }
                 }}
               />
@@ -1358,14 +963,14 @@ export default function GymSimplified({ dashboardState = {} }) {
               <input
                 ref={weightInputRef}
                 type="number"
-                className="w-full border rounded px-3 py-2 bg-white/90 dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-emerald-400"
-                value={currentWeightInput}
-                onChange={(e) => setCurrentWeightInput(e.target.value)}
+                className="w-full border rounded px-3 py-2 bg-white/90 text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
                 placeholder="e.g. 75"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    saveCaloriesAndComplete();
-                    setTimeout(() => weightInputRef.current?.blur(), 30); // ⭐ FIXED BLUR
+                    saveWorkout();
+                    setTimeout(() => weightInputRef.current?.blur(), 30);
                   }
                 }}
               />
@@ -1379,7 +984,9 @@ export default function GymSimplified({ dashboardState = {} }) {
                 Cancel
               </button>
               <button
-                onClick={saveCaloriesAndComplete}
+                onClick={() => {
+                  saveWorkout();
+                }}
                 className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded"
               >
                 Save
@@ -1393,19 +1000,12 @@ export default function GymSimplified({ dashboardState = {} }) {
 }
 
 /* ---------------------- Subcomponents ---------------------- */
-
-function DailySummary({ date, logs, dateKey, dashboardState }) {
+function DailySummary({ date, logs }) {
+  const dateKey = fmtISO(date);
   const entry = logs[dateKey];
-  const bmiLogs = dashboardState?.wd_weight_history || {};
-  const latestBmi = bmiLogs[dateKey] || null;
 
   return (
-    <div
-      className="border rounded-2xl p-4 h-full
-      bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
-      bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
-      backdrop-blur-md"
-    >
+    <div className="border rounded-2xl p-4 h-full bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA] backdrop-blur-md">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-emerald-200">Daily Summary</h3>
         <span
@@ -1429,18 +1029,14 @@ function DailySummary({ date, logs, dateKey, dashboardState }) {
         <div>
           ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
         </div>
-        <div>
-          📊 BMI: {entry?.bmi != null ? entry.bmi : (latestBmi?.bmi ?? "—")}
-        </div>
+        <div>📊 BMI: {entry?.bmi != null ? entry.bmi : "—"}</div>
         <div className="mt-2">
           <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>
           {entry ? (
-            <ul className="list-disc list-inside text-sm text-emerald-100">
+            <ul className="list-disc list-inside text-sm">
               {(() => {
-                const planStore = dashboardState?.wd_gym_plan || DEFAULT_PLAN;
-
-                const wd = entry?.weekday || dayjs(date).format("dddd");
-                const todayPlan = planStore[wd] || {};
+                const wd = entry.weekday || dayjs(date).format("dddd");
+                const todayPlan = DEFAULT_PLAN[wd] || {};
                 const allExercises = [
                   ...(todayPlan.left || []),
                   ...(todayPlan.right || []),
@@ -1472,7 +1068,7 @@ function DailySummary({ date, logs, dateKey, dashboardState }) {
   );
 }
 
-function MiniCalendar({ date, setDate, dashboardState = {} }) {
+function MiniCalendar({ date, setDate, doneState }) {
   const [viewMonth, setViewMonth] = useState(dayjs(date));
   const today = dayjs();
 
@@ -1481,19 +1077,13 @@ function MiniCalendar({ date, setDate, dashboardState = {} }) {
   }, [date]);
 
   const monthStart = viewMonth.startOf("month");
-  const weekdayIndex = (monthStart.day() + 6) % 7;
+  const weekdayIndex = (monthStart.day() + 6) % 7; // Monday=0...Sunday=6
   const start = monthStart.subtract(weekdayIndex, "day");
   const cells = Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
-
-  const doneMap = dashboardState?.wd_done || {};
+  const doneMap = doneState || {};
 
   return (
-    <section
-      className="border rounded-2xl p-4
-      bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA]
-      dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000]
-      backdrop-blur-md"
-    >
+    <section className="border rounded-2xl p-4 bg-gradient-to-br from-[#0F766E] via-[#183D3D] to-[#0F0F0F] text-[#FAFAFA] backdrop-blur-md">
       <div className="flex items-center justify-between mb-2">
         <button
           onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
@@ -1501,11 +1091,9 @@ function MiniCalendar({ date, setDate, dashboardState = {} }) {
         >
           〈
         </button>
-
         <div className="font-bold text-sm text-emerald-200">
           {viewMonth.format("MMMM YYYY")}
         </div>
-
         <button
           onClick={() => setViewMonth(viewMonth.add(1, "month"))}
           className="px-2 py-1 rounded hover:bg-white/5"
@@ -1526,7 +1114,7 @@ function MiniCalendar({ date, setDate, dashboardState = {} }) {
         {cells.map((d) => {
           const key = d.format("YYYY-MM-DD");
           const isCurMonth = d.month() === viewMonth.month();
-          const isSelected = key === dayjs(date).format("YYYY-MM-DD");
+          const isSelected = key === fmtISO(date);
           const isToday = d.isSame(today, "day");
 
           return (
@@ -1562,18 +1150,11 @@ function Modal({ children, onClose }) {
         onClick={onClose}
       />
       <div className="absolute inset-0 flex items-start justify-center pt-[15vh] p-4">
-        <div
-          className="
-  w-full max-w-lg rounded-2xl border border-white/10 bg-[#0F1E1E] text-emerald-100 p-4 shadow-2xl
-  [&_input]:bg-[#0F1E1E] [&_textarea]:bg-[#0F1E1E] [&_select]:bg-[#0F1E1E]
-  [&_input]:text-emerald-100 [&_textarea]:text-emerald-100 [&_select]:text-emerald-100
-  [&_input]:border-white/10 [&_textarea]:border-white/10 [&_select]:border-white/10
-  [&_input]:border [&_textarea]:border [&_select]:border
-"
-        >
+        <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0F1E1E] text-emerald-100 p-4 shadow-2xl">
           {children}
         </div>
       </div>
     </div>
   );
 }
+/* ---------------------- Main Component ---------------------- */

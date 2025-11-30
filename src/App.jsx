@@ -582,7 +582,7 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Calendar />
+                  <Calendar dashboardState={dashboardState} />
                 </motion.div>
               }
             />
