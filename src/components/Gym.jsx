@@ -445,54 +445,55 @@ export default function Gym() {
 
   // Unmark workout and fully reset the day
   const deleteWorkout = (dateKey) => {
-    // Always rebuild the entry from backend logs or default plan
-    const base = logs[dateKey] || getEntry(dateKey);
-
-    // Reset done = false but keep correct exercise names
-    const updatedEntry = {
-      weekday: base.weekday,
-      left: (base.left || []).map((ex) => ({ name: ex.name, done: false })),
-      right: (base.right || []).map((ex) => ({ name: ex.name, done: false })),
-      finisher: (base.finisher || []).map((ex) => ({
-        name: ex.name,
-        done: false,
-      })),
-      calories: undefined,
-      weight: undefined,
-      bmi: undefined,
-      done: false,
-    };
-
+    // Update local state - REMOVE the entry completely
     setLogs((prev) => {
-      const next = { ...prev, [dateKey]: updatedEntry };
+      const updated = { ...prev };
+      delete updated[dateKey]; // Completely remove the date entry
+      return updated;
+    });
 
-      // Sync backend with fresh entry
+    // Remove from doneState
+    setDoneState((prev) => {
+      const updated = { ...prev };
+      delete updated[dateKey];
+      return updated;
+    });
+
+    // Sync to backend with the updated state
+    setTimeout(() => {
+      const updatedLogs = { ...logs };
+      delete updatedLogs[dateKey];
+
+      const updatedDone = { ...doneState };
+      delete updatedDone[dateKey];
+
       fetch("https://fitness-backend-laoe.onrender.com/api/state", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          wd_gym_logs: next,
-          wd_done: (() => {
-            const nd = { ...doneState };
-            delete nd[dateKey];
-            return nd;
-          })(),
+          wd_gym_logs: updatedLogs,
+          wd_done: updatedDone,
           wd_goals: {
             targetWeight,
             currentWeight: currWeight,
           },
         }),
-      });
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Successfully deleted workout", data);
+        })
+        .catch((err) => {
+          console.error("Failed to sync deleted workout", err);
+        });
+    }, 100);
 
-      return next;
-    });
-
-    setDoneState((prev) => {
-      const nd = { ...prev };
-      delete nd[dateKey];
-      return nd;
-    });
-
+    // Trigger UI updates across app
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
@@ -667,6 +668,7 @@ export default function Gym() {
   function ExerciseColumn({
     title,
     items = [],
+    dayPlanItems = [],
     planLength = 0,
     color = "emerald", // "emerald" or "cyan"
     section, // "left" | "right" | "finisher"
@@ -674,8 +676,16 @@ export default function Gym() {
     doneState = {},
     dateKey,
   }) {
+    // Detect if items is boolean array or object array
+    const isBooleanArray =
+      Array.isArray(items) && items.every((item) => typeof item === "boolean");
+
     // Column color theme
-    const titleColor = color === "cyan" ? "text-cyan-300" : "text-emerald-300";
+    const titleColor =
+      color === "cyan"
+        ? "text-cyan-300 dark:text-cyan-400"
+        : "text-emerald-300 dark:text-emerald-400";
+
     const tagBg =
       color === "cyan"
         ? "bg-cyan-500/20 text-cyan-200"
@@ -683,22 +693,23 @@ export default function Gym() {
 
     const doneBg =
       color === "cyan"
-        ? "bg-cyan-500/10 hover:bg-cyan-500/20"
-        : "bg-emerald-500/10 hover:bg-emerald-500/20";
+        ? "bg-cyan-500/10 hover:bg-cyan-500/20 dark:bg-cyan-500/5 dark:hover:bg-cyan-500/10"
+        : "bg-emerald-500/10 hover:bg-emerald-500/20 dark:bg-emerald-500/5 dark:hover:bg-emerald-500/10";
 
-    // DONE text color
-    const doneText = color === "cyan" ? "text-cyan-200" : "text-emerald-200";
+    const doneText =
+      color === "cyan"
+        ? "text-cyan-200 dark:text-cyan-300"
+        : "text-emerald-200 dark:text-emerald-300";
 
-    // Border hover color (static for tailwind safety)
     const hoverBorder =
       color === "cyan"
-        ? "hover:border-cyan-400/30"
-        : "hover:border-emerald-400/30";
+        ? "hover:border-cyan-400/30 dark:hover:border-cyan-400/25"
+        : "hover:border-emerald-400/30 dark:hover:border-emerald-400/25";
 
     return (
       <div
         className={`
-        group rounded-2xl p-5 border border-white/10 transition-all
+        group rounded-2xl p-5 border border-white/10 dark:border-white/5 transition-all
         bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]/80
         dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
         ${hoverBorder}
@@ -707,34 +718,55 @@ export default function Gym() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className={`font-bold ${titleColor} text-lg`}>{title}</h3>
-          <span className={`text-xs ${tagBg} px-2 py-1 rounded-full`}>
-            {items.filter((e) => e.done).length}/{planLength}
+          <span
+            className={`text-xs ${tagBg} px-2 py-1 rounded-full font-medium`}
+          >
+            {isBooleanArray
+              ? items.filter(Boolean).length
+              : items.filter((e) => e?.done).length}
+            /{planLength}
           </span>
         </div>
 
         {/* Exercise List */}
         <ul className="space-y-3">
-          {(items || []).map((item, i) => (
-            <li
-              key={i}
-              onClick={() => !doneState[dateKey] && toggle(section, i, dateKey)}
-              className={`
-              cursor-pointer flex items-center gap-3 p-2 rounded-lg transition
-              ${item.done ? doneBg : "hover:bg-white/5"}
-              ${doneState[dateKey] ? "opacity-40 cursor-not-allowed" : ""}
-            `}
-            >
-              <span className="text-xl">{item.done ? "✅" : "⭕"}</span>
+          {dayPlanItems.map((exercise, i) => {
+            const isDone = isBooleanArray ? items[i] : items[i]?.done;
+            const exerciseName =
+              typeof exercise === "string" ? exercise : exercise?.name || "";
 
-              <span
-                className={`text-sm ${
-                  item.done ? `${doneText} font-medium` : "text-gray-300"
-                }`}
+            return (
+              <li
+                key={i}
+                onClick={() =>
+                  !doneState[dateKey] && toggle(section, i, dateKey)
+                }
+                className={`
+                cursor-pointer flex items-center gap-3 p-2 rounded-lg transition-all duration-200
+                ${
+                  isDone
+                    ? doneBg
+                    : "hover:bg-white/5 dark:hover:bg-white/[0.03]"
+                }
+                ${doneState[dateKey] ? "opacity-40 cursor-not-allowed" : ""}
+              `}
               >
-                {item.name}
-              </span>
-            </li>
-          ))}
+                <span className="text-xl shrink-0 transition-transform group-hover:scale-110">
+                  {isDone ? "✅" : "⭕"}
+                </span>
+
+                <span
+                  className={`text-sm ${
+                    isDone
+                      ? `${doneText} font-medium`
+                      : "text-gray-300 dark:text-gray-400"
+                  }`}
+                >
+                  {exerciseName}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </div>
     );
@@ -985,9 +1017,20 @@ export default function Gym() {
                       Done
                     </p>
                     <p className="text-xl font-bold text-teal-100">
-                      {entry.left.filter((e) => e.done).length +
-                        entry.right.filter((e) => e.done).length +
-                        entry.finisher.filter((e) => e.done).length}
+                      {(Array.isArray(entry.left) &&
+                      entry.left.every((item) => typeof item === "boolean")
+                        ? entry.left.filter(Boolean).length
+                        : entry.left.filter((e) => e?.done).length) +
+                        (Array.isArray(entry.right) &&
+                        entry.right.every((item) => typeof item === "boolean")
+                          ? entry.right.filter(Boolean).length
+                          : entry.right.filter((e) => e?.done).length) +
+                        (Array.isArray(entry.finisher) &&
+                        entry.finisher.every(
+                          (item) => typeof item === "boolean"
+                        )
+                          ? entry.finisher.filter(Boolean).length
+                          : entry.finisher.filter((e) => e?.done).length)}
                     </p>
                   </div>
 
@@ -997,9 +1040,20 @@ export default function Gym() {
                     </p>
                     <p className="text-xl font-bold text-cyan-100">
                       {Math.round(
-                        ((entry.left.filter((e) => e.done).length +
-                          entry.right.filter((e) => e.done).length +
-                          entry.finisher.filter((e) => e.done).length) /
+                        (((Array.isArray(entry.left) &&
+                        entry.left.every((item) => typeof item === "boolean")
+                          ? entry.left.filter(Boolean).length
+                          : entry.left.filter((e) => e?.done).length) +
+                          (Array.isArray(entry.right) &&
+                          entry.right.every((item) => typeof item === "boolean")
+                            ? entry.right.filter(Boolean).length
+                            : entry.right.filter((e) => e?.done).length) +
+                          (Array.isArray(entry.finisher) &&
+                          entry.finisher.every(
+                            (item) => typeof item === "boolean"
+                          )
+                            ? entry.finisher.filter(Boolean).length
+                            : entry.finisher.filter((e) => e?.done).length)) /
                           (dayPlan.left.length +
                             dayPlan.right.length +
                             dayPlan.finisher.length)) *
@@ -1017,9 +1071,20 @@ export default function Gym() {
                   className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-700 ease-out"
                   style={{
                     width: `${
-                      ((entry.left.filter((e) => e.done).length +
-                        entry.right.filter((e) => e.done).length +
-                        entry.finisher.filter((e) => e.done).length) /
+                      (((Array.isArray(entry.left) &&
+                      entry.left.every((item) => typeof item === "boolean")
+                        ? entry.left.filter(Boolean).length
+                        : entry.left.filter((e) => e?.done).length) +
+                        (Array.isArray(entry.right) &&
+                        entry.right.every((item) => typeof item === "boolean")
+                          ? entry.right.filter(Boolean).length
+                          : entry.right.filter((e) => e?.done).length) +
+                        (Array.isArray(entry.finisher) &&
+                        entry.finisher.every(
+                          (item) => typeof item === "boolean"
+                        )
+                          ? entry.finisher.filter(Boolean).length
+                          : entry.finisher.filter((e) => e?.done).length)) /
                         (dayPlan.left.length +
                           dayPlan.right.length +
                           dayPlan.finisher.length)) *
@@ -1036,6 +1101,7 @@ export default function Gym() {
               <ExerciseColumn
                 title="Left"
                 items={entry.left}
+                dayPlanItems={dayPlan.left}
                 planLength={dayPlan.left.length}
                 color="emerald"
                 section="left"
@@ -1048,6 +1114,7 @@ export default function Gym() {
               <ExerciseColumn
                 title="Right"
                 items={entry.right}
+                dayPlanItems={dayPlan.right}
                 planLength={dayPlan.right.length}
                 color="emerald"
                 section="right"
@@ -1060,6 +1127,7 @@ export default function Gym() {
               <ExerciseColumn
                 title={dayPlan.finisherLabel || "Finisher"}
                 items={entry.finisher}
+                dayPlanItems={dayPlan.finisher}
                 planLength={dayPlan.finisher.length}
                 color="cyan"
                 section="finisher"
@@ -1079,17 +1147,35 @@ export default function Gym() {
             ${
               doneState[dateKey]
                 ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
-                : entry.left.every((e) => e.done) &&
-                  entry.right.every((e) => e.done) &&
-                  entry.finisher.every((e) => e.done)
+                : (Array.isArray(entry.left) &&
+                  entry.left.every((item) => typeof item === "boolean")
+                    ? entry.left.every(Boolean)
+                    : entry.left.every((e) => e?.done)) &&
+                  (Array.isArray(entry.right) &&
+                  entry.right.every((item) => typeof item === "boolean")
+                    ? entry.right.every(Boolean)
+                    : entry.right.every((e) => e?.done)) &&
+                  (Array.isArray(entry.finisher) &&
+                  entry.finisher.every((item) => typeof item === "boolean")
+                    ? entry.finisher.every(Boolean)
+                    : entry.finisher.every((e) => e?.done))
                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05]"
                 : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05]"
             }
           `}
               >
-                {entry.left.every((e) => e.done) &&
-                entry.right.every((e) => e.done) &&
-                entry.finisher.every((e) => e.done)
+                {(Array.isArray(entry.left) &&
+                entry.left.every((item) => typeof item === "boolean")
+                  ? entry.left.every(Boolean)
+                  : entry.left.every((e) => e?.done)) &&
+                (Array.isArray(entry.right) &&
+                entry.right.every((item) => typeof item === "boolean")
+                  ? entry.right.every(Boolean)
+                  : entry.right.every((e) => e?.done)) &&
+                (Array.isArray(entry.finisher) &&
+                entry.finisher.every((item) => typeof item === "boolean")
+                  ? entry.finisher.every(Boolean)
+                  : entry.finisher.every((e) => e?.done))
                   ? "❌ Unmark All"
                   : "✔️ Mark All"}
               </button>
@@ -1376,17 +1462,28 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           // SAFELY resolve entry
           const entry = logs?.[key];
 
-          // SAFE checks
+          // Primary check: doneState (most reliable)
           const doneByState = doneState?.[key] === true;
 
-          const doneByExercises =
-            entry &&
-            (entry.left?.some((e) => e.done) ||
-              false ||
-              entry.right?.some((e) => e.done) ||
-              false ||
-              entry.finisher?.some((e) => e.done) ||
-              false);
+          // Secondary check: check if ANY exercise is completed
+          let doneByExercises = false;
+          if (entry) {
+            // Handle both boolean arrays and object arrays
+            const checkArray = (arr) => {
+              if (!Array.isArray(arr)) return false;
+              // If it's a boolean array
+              if (arr.every((item) => typeof item === "boolean")) {
+                return arr.some(Boolean);
+              }
+              // If it's an object array
+              return arr.some((e) => e?.done === true);
+            };
+
+            doneByExercises =
+              checkArray(entry.left) ||
+              checkArray(entry.right) ||
+              checkArray(entry.finisher);
+          }
 
           const isDone = doneByState || doneByExercises;
 
@@ -1414,6 +1511,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
     </section>
   );
 }
+
 
 function Modal({ children, onClose, onEnter }) {
   // 🔥 Handle ESC + ENTER keys
