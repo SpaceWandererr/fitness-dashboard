@@ -1139,30 +1139,30 @@ export default function Gym() {
 
             {/* FOOTER BUTTONS */}
             <div className="flex flex-wrap gap-3 pt-4 border-t border-emerald-500/20">
-              {/* MARK ALL */}
+              {/* MARK ALL / UNMARK ALL */}
               <button
                 onClick={() => !doneState[dateKey] && toggleMarkAll(dateKey)}
                 disabled={doneState[dateKey]}
                 className={`group relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300
-            ${
-              doneState[dateKey]
-                ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
-                : (Array.isArray(entry.left) &&
-                  entry.left.every((item) => typeof item === "boolean")
-                    ? entry.left.every(Boolean)
-                    : entry.left.every((e) => e?.done)) &&
-                  (Array.isArray(entry.right) &&
-                  entry.right.every((item) => typeof item === "boolean")
-                    ? entry.right.every(Boolean)
-                    : entry.right.every((e) => e?.done)) &&
-                  (Array.isArray(entry.finisher) &&
-                  entry.finisher.every((item) => typeof item === "boolean")
-                    ? entry.finisher.every(Boolean)
-                    : entry.finisher.every((e) => e?.done))
-                ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05]"
-                : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05]"
-            }
-          `}
+      ${
+        doneState[dateKey]
+          ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
+          : (Array.isArray(entry.left) &&
+            entry.left.every((item) => typeof item === "boolean")
+              ? entry.left.every(Boolean)
+              : entry.left.every((e) => e?.done)) &&
+            (Array.isArray(entry.right) &&
+            entry.right.every((item) => typeof item === "boolean")
+              ? entry.right.every(Boolean)
+              : entry.right.every((e) => e?.done)) &&
+            (Array.isArray(entry.finisher) &&
+            entry.finisher.every((item) => typeof item === "boolean")
+              ? entry.finisher.every(Boolean)
+              : entry.finisher.every((e) => e?.done))
+          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
+          : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
+      }
+    `}
               >
                 {(Array.isArray(entry.left) &&
                 entry.left.every((item) => typeof item === "boolean")
@@ -1184,14 +1184,40 @@ export default function Gym() {
               {!doneState[dateKey] ? (
                 <button
                   onClick={openModal}
-                  disabled={!canComplete}
+                  disabled={
+                    !(
+                      (Array.isArray(entry.left) &&
+                      entry.left.every((item) => typeof item === "boolean")
+                        ? entry.left.some(Boolean)
+                        : entry.left.some((e) => e?.done)) ||
+                      (Array.isArray(entry.right) &&
+                      entry.right.every((item) => typeof item === "boolean")
+                        ? entry.right.some(Boolean)
+                        : entry.right.some((e) => e?.done)) ||
+                      (Array.isArray(entry.finisher) &&
+                      entry.finisher.every((item) => typeof item === "boolean")
+                        ? entry.finisher.some(Boolean)
+                        : entry.finisher.some((e) => e?.done))
+                    )
+                  }
                   className={`group relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300
-              ${
-                canComplete
-                  ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.05]"
-                  : "bg-slate-700/40 text-slate-500 cursor-not-allowed opacity-60"
-              }
-            `}
+        ${
+          (Array.isArray(entry.left) &&
+          entry.left.every((item) => typeof item === "boolean")
+            ? entry.left.some(Boolean)
+            : entry.left.some((e) => e?.done)) ||
+          (Array.isArray(entry.right) &&
+          entry.right.every((item) => typeof item === "boolean")
+            ? entry.right.some(Boolean)
+            : entry.right.some((e) => e?.done)) ||
+          (Array.isArray(entry.finisher) &&
+          entry.finisher.every((item) => typeof item === "boolean")
+            ? entry.finisher.some(Boolean)
+            : entry.finisher.some((e) => e?.done))
+            ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.05] shadow-lg shadow-emerald-500/30"
+            : "bg-slate-700/40 text-slate-500 cursor-not-allowed opacity-60"
+        }
+      `}
                 >
                   ✅ Mark Workout Done
                 </button>
@@ -1199,14 +1225,14 @@ export default function Gym() {
                 <>
                   <button
                     onClick={() => deleteWorkout(dateKey)}
-                    className="group relative px-6 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.05]"
+                    className="group relative px-6 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.05] shadow-lg shadow-red-500/30 transition-all duration-300"
                   >
                     ❌ Unmark & Clear
                   </button>
 
                   <button
                     onClick={editWorkout}
-                    className="group relative px-6 py-3 rounded-xl font-semibold text-sm bg-white/10 text-emerald-100 border border-emerald-400/30 hover:scale-[1.05]"
+                    className="group relative px-6 py-3 rounded-xl font-semibold text-sm bg-white/10 text-emerald-100 border border-emerald-400/30 hover:border-emerald-400/50 hover:scale-[1.05] transition-all duration-300"
                   >
                     ✏️ Edit
                   </button>
