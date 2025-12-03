@@ -1,6 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 
+/* ---------------------- Write Queue (Paste Here!) ---------------------- */
+let writeQueue = null;
+let writeTimer = null;
+
+function pushUpdate(data) {
+  writeQueue = { ...writeQueue, ...data };
+
+  clearTimeout(writeTimer);
+  writeTimer = setTimeout(flushUpdate, 3000);
+}
+
+async function flushUpdate() {
+  if (!writeQueue) return;
+
+  try {
+    await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(writeQueue),
+    });
+  } catch (err) {
+    console.error("BATCH SAVE FAILED", err);
+  }
+
+  writeQueue = null;
+}
+
 /* ---------------------- Constants ---------------------- */
 const WEEK = [
   "Monday",
@@ -72,7 +99,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       id: "local-fallback",
       fn: () =>
         Promise.resolve(
-          LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)]
+          LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)],
         ),
     },
   ];
@@ -82,7 +109,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
       try {
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), text: txt })
+          JSON.stringify({ ts: Date.now(), text: txt }),
         );
       } catch {}
       return txt;
@@ -105,7 +132,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   try {
     localStorage.setItem(
       cacheKey,
-      JSON.stringify({ ts: Date.now(), text: localPick })
+      JSON.stringify({ ts: Date.now(), text: localPick }),
     );
   } catch {}
   return localPick;
@@ -204,6 +231,288 @@ const DEFAULT_PLAN = {
   },
 };
 
+/* -------------------- MERGED DAILY SUMMARY ------------------- */
+function DailySummaryMerged({ date, logs, mode }) {
+  const dateKey = fmtISO(date);
+  const entry = logs[dateKey];
+
+  const wd = entry?.weekday || dayjs(date).format("dddd");
+  const plan = DEFAULT_PLAN[wd] || {};
+
+  const planExercises = [
+    ...(plan.left || []),
+    ...(plan.right || []),
+    ...(plan.finisher || []),
+  ];
+
+  const performed = [
+    ...(entry?.left || []),
+    ...(entry?.right || []),
+    ...(entry?.finisher || []),
+  ];
+
+  /* ---------- NEW CARD METRICS ---------- */
+
+  const parseSets = (ex) => {
+    const m = ex.match(/(\d+)×(\d+)/);
+    return m ? Number(m[1]) : 0;
+  };
+
+  const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
+  const doneSets = performed.reduce(
+    (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
+    0,
+  );
+
+  const MUSCLES = {
+    Chest: ["Press", "Fly", "Pullover"],
+    Back: ["Row", "Pull", "Lat", "Dead"],
+    Biceps: ["Curl"],
+    Triceps: ["Tricep", "Push-down"],
+    Legs: ["Squat", "Leg", "Lunges", "Calf"],
+    Shoulders: ["Overhead", "Lateral", "Shrug", "Front Raise"],
+    Core: ["Crunch", "Plank", "Russian", "Abs"],
+  };
+
+  const musclesWorked = [];
+  for (const ex of planExercises) {
+    for (const m in MUSCLES) {
+      if (MUSCLES[m].some((k) => ex.includes(k))) {
+        if (!musclesWorked.includes(m)) musclesWorked.push(m);
+      }
+    }
+  }
+
+  const duration = entry?.duration || "Not logged";
+  const mood = entry?.mood || "🙂";
+
+  const pctDone =
+    planExercises.length > 0
+      ? performed.filter((e) => e?.done).length / planExercises.length
+      : 0;
+
+  let perfScore =
+    pctDone * 50 +
+    (entry?.calories || 0) / 20 +
+    (doneSets / (totalSets || 1)) * 30;
+
+  perfScore = Math.min(100, Math.round(perfScore));
+
+  const CAL_GOAL = 500;
+  const calDiff = entry?.calories != null ? entry.calories - CAL_GOAL : null;
+
+  const yesterdayKey = dayjs(date).subtract(1, "day").format("YYYY-MM-DD");
+  const yesterdayWeight = logs[yesterdayKey]?.weight ?? null;
+  const weightTrend =
+    entry?.weight != null && yesterdayWeight != null
+      ? entry.weight - yesterdayWeight
+      : null;
+
+  const message =
+    pctDone === 1
+      ? "🔥 Perfect workout!"
+      : pctDone > 0.5
+        ? "Great job! Keep pushing! 💪"
+        : "You showed up. That's what matters. 🚀";
+
+  /* ---------- SHARED GLASS CARD ---------- */
+  const cardClass =
+    "rounded-2xl p-4 h-full bg-white/10 backdrop-blur-xl border border-emerald-500/20 shadow-lg shadow-black/40 text-[#E8FFFA] flex flex-col justify-between";
+
+  return (
+    <div className={cardClass}>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-emerald-200 text-lg">
+            {mode === "old" ? "Daily Summary" : "Enhanced Summary"}
+          </h3>
+          <span
+            className={`text-xs px-2 py-1 rounded ${
+              entry?.done
+                ? "bg-emerald-600 text-white"
+                : "bg-gray-300/20 text-emerald-100"
+            }`}
+          >
+            {entry?.done ? "Done" : "Not Done"}
+          </span>
+        </div>
+
+        <div className="text-sm text-gray-300 mb-3">📅 {fmtDisp(date)}</div>
+
+        {/* -------- OLD CARD -------- */}
+        {mode === "old" && (
+          <div className="space-y-2 text-sm text-emerald-100">
+            <div>🔥 Calories: {entry?.calories ?? "—"} kcal</div>
+            <div>⚖️ Weight: {entry?.weight ?? "—"} kg</div>
+            <div>📊 BMI: {entry?.bmi ?? "—"}</div>
+
+            {/* Only show exercises if logged */}
+            <div className="mt-2">
+              <h4 className="font-medium text-emerald-200 mb-1">Exercises</h4>
+
+              {performed.some((p) => p?.done) ? (
+                <ul className="list-disc list-inside">
+                  {planExercises.map((ex, i) =>
+                    performed[i]?.done ? (
+                      <li key={i} className="text-emerald-100">
+                        {ex}
+                      </li>
+                    ) : null,
+                  )}
+                </ul>
+              ) : (
+                <div className="opacity-70 text-emerald-100">
+                  No exercises logged for this day.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* -------- NEW MODERN CARD -------- */}
+        {mode === "new" && (
+          <div className="grid grid-cols-2 gap-3">
+            {/* WIDGET TILE */}
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Sets</div>
+              <div className="text-lg font-bold">
+                {doneSets}/{totalSets}
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Muscles</div>
+              <div className="text-sm">{musclesWorked.join(", ") || "—"}</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Duration</div>
+              <div className="text-lg font-bold">{duration}</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Mood</div>
+              <div className="text-lg font-bold">{mood}</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Score</div>
+              <div className="text-lg font-bold">{perfScore}/100</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Cal Goal</div>
+              <div className="text-lg font-bold">
+                {calDiff != null
+                  ? calDiff >= 0
+                    ? `+${calDiff}`
+                    : calDiff
+                  : "—"}
+              </div>
+            </div>
+
+            <div className="col-span-2 bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
+              <div className="text-xs text-emerald-200">Trend</div>
+              <div className="text-lg font-bold">
+                {weightTrend != null
+                  ? weightTrend > 0
+                    ? `↗️ +${weightTrend}kg`
+                    : `↘️ ${weightTrend}kg`
+                  : "—"}
+              </div>
+            </div>
+
+            <div className="col-span-2 text-emerald-200 italic text-center mt-1">
+              {message}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- DAILY SUMMARY CAROUSEL ------------------- */
+function DailySummaryCarousel({ date, logs }) {
+  const modes = ["old", "new"];
+  const [index, setIndex] = useState(0);
+  const containerRef = useRef(null);
+
+  /* ---------- Auto Swipe ---------- */
+  useEffect(() => {
+    const t = setInterval(() => {
+      setIndex((i) => (i + 1) % modes.length);
+    }, 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  /* ---------- Swipe Logic ---------- */
+  const startX = useRef(0);
+  const handleStart = (e) => (startX.current = e.touches[0].clientX);
+  const handleEnd = (e) => {
+    const diff = e.changedTouches[0].clientX - startX.current;
+    if (Math.abs(diff) > 60) {
+      setIndex((i) =>
+        diff < 0
+          ? (i + 1) % modes.length
+          : (i - 1 + modes.length) % modes.length,
+      );
+    }
+  };
+
+  return (
+    <div className="relative" ref={containerRef}>
+      {/* Left Arrow */}
+      <button
+        onClick={() => setIndex((i) => (i - 1 + modes.length) % modes.length)}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 
+        bg-white/10 backdrop-blur-xl border border-emerald-500/20 
+        px-2 py-2 rounded-r-xl text-emerald-200 shadow"
+      >
+        ‹
+      </button>
+
+      {/* Right Arrow */}
+      <button
+        onClick={() => setIndex((i) => (i + 1) % modes.length)}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 
+        bg-white/10 backdrop-blur-xl border border-emerald-500/20 
+        px-2 py-2 rounded-l-xl text-emerald-200 shadow"
+      >
+        ›
+      </button>
+
+      <div
+        className="overflow-hidden"
+        onTouchStart={handleStart}
+        onTouchEnd={handleEnd}
+      >
+        <div
+          className="flex transition-transform duration-500"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {modes.map((mode, idx) => (
+            <div key={idx} className="w-full flex-shrink-0">
+              <DailySummaryMerged mode={mode} date={date} logs={logs} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-2">
+        {modes.map((_, i) => (
+          <div
+            key={i}
+            className={`w-2 h-2 rounded-full ${
+              index === i ? "bg-emerald-400" : "bg-emerald-400/30"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ---------------------- Main Component ---------------------- */
 export default function Gym() {
@@ -223,7 +532,7 @@ export default function Gym() {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   // Modal inputs
@@ -237,7 +546,7 @@ export default function Gym() {
     (async () => {
       try {
         const res = await fetch(
-          "https://fitness-backend-laoe.onrender.com/api/state"
+          "https://fitness-backend-laoe.onrender.com/api/state",
         );
         if (res.ok) {
           const data = await res.json();
@@ -246,12 +555,12 @@ export default function Gym() {
           setCurrWeight(
             data.wd_goals?.currentWeight != null
               ? data.wd_goals.currentWeight
-              : ""
+              : "",
           );
           setTargetWeight(
             data.wd_goals?.targetWeight != null
               ? data.wd_goals.targetWeight
-              : ""
+              : "",
           );
         } else {
           console.error("Failed to fetch state:", res.status);
@@ -336,7 +645,7 @@ export default function Gym() {
     const updated = {
       ...entry,
       [section]: entry[section].map((item, i) =>
-        i === idx ? { ...item, done: !item.done } : item
+        i === idx ? { ...item, done: !item.done } : item,
       ),
     };
 
@@ -402,7 +711,7 @@ export default function Gym() {
     // 🆕 BUILD UPDATED ENTRY (always keeps name + done objects)
     const updatedEntry = {
       weekday: entry.weekday || weekday,
-      left: entry.left.map((x) => ({ ...x })), // preserve objects
+      left: entry.left.map((x) => ({ ...x })),
       right: entry.right.map((x) => ({ ...x })),
       finisher: entry.finisher.map((x) => ({ ...x })),
       calories: caloriesVal,
@@ -416,7 +725,7 @@ export default function Gym() {
     setDoneState((prev) => ({ ...prev, [dateKey]: true }));
     setShowModal(false);
 
-    // 🌐 BACKEND SAVE — CLEAN MODEL
+    // 🌐 BACKEND SAVE — BATCHED (NO DIRECT FETCH)
     const outgoing = {
       wd_gym_logs: {
         ...logs,
@@ -427,138 +736,103 @@ export default function Gym() {
         [dateKey]: true,
       },
       wd_goals: {
-        targetWeight, // keep target
-        currentWeight: weightVal, // <-- single source of truth
+        targetWeight,
+        currentWeight: weightVal,
       },
     };
 
-    fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(outgoing),
-    }).catch((err) => console.error("SAVE FAILED ❌", err));
+    // 🔥 Replace fetch() with queueing the write
+    pushUpdate(outgoing);
   };
+
   // Edit existing workout (open modal with existing values)
+
   const editWorkout = () => {
     openModal();
   };
 
   // Unmark workout and fully reset the day
   const deleteWorkout = (dateKey) => {
-    // Update local state - REMOVE the entry completely
+    // Update UI state instantly
     setLogs((prev) => {
       const updated = { ...prev };
-      delete updated[dateKey]; // Completely remove the date entry
+      delete updated[dateKey];
       return updated;
     });
 
-    // Remove from doneState
     setDoneState((prev) => {
       const updated = { ...prev };
       delete updated[dateKey];
       return updated;
     });
 
-    // Sync to backend with the updated state
-    setTimeout(() => {
-      const updatedLogs = { ...logs };
-      delete updatedLogs[dateKey];
+    // Build outgoing payload (batched)
+    const updatedLogs = { ...logs };
+    delete updatedLogs[dateKey];
 
-      const updatedDone = { ...doneState };
-      delete updatedDone[dateKey];
+    const updatedDone = { ...doneState };
+    delete updatedDone[dateKey];
 
-      fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wd_gym_logs: updatedLogs,
-          wd_done: updatedDone,
-          wd_goals: {
-            targetWeight,
-            currentWeight: currWeight,
-          },
-        }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          console.log("Successfully deleted workout", data);
-        })
-        .catch((err) => {
-          console.error("Failed to sync deleted workout", err);
-        });
-    }, 100);
+    // 🔥 Batch backend update (NO fetch)
+    pushUpdate({
+      wd_gym_logs: updatedLogs,
+      wd_done: updatedDone,
+      wd_goals: {
+        targetWeight,
+        currentWeight: currWeight,
+      },
+    });
 
-    // Trigger UI updates across app
+    // Notify other pages
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
   // Update target weight and save to backend
-  const saveTargetWeight = async () => {
+  const saveTargetWeight = () => {
     const raw = targetWeight;
     if (!raw || isNaN(raw)) {
       alert("Enter a valid target weight!");
       return;
     }
+
     const newWeight = Number(raw);
     setTargetWeight(newWeight);
-    // Save to backend
-    const outgoing = {
+
+    // 🔥 Batched backend save
+    pushUpdate({
       wd_goals: {
         targetWeight: newWeight,
         currentWeight: currWeight,
       },
       wd_gym_logs: logs,
       wd_done: doneState,
-    };
+    });
 
-    try {
-      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(outgoing),
-      });
-      console.log("Target weight saved:", newWeight);
-    } catch (err) {
-      console.error("❌ Failed to save target weight", err);
-      alert("Failed to save target weight.");
-    }
+    console.log("Target weight saved:", newWeight);
   };
 
   // Update current weight and save to backend
-  const updateCurrentWeight = async () => {
+  const updateCurrentWeight = () => {
     const raw = currWeight;
     if (raw === "" || isNaN(raw)) {
       alert("Enter a valid weight!");
       return;
     }
+
     const newWeight = Number(raw);
     setCurrWeight(newWeight);
-    // Save to backend
-    const outgoing = {
+
+    // 🔥 Batched backend save
+    pushUpdate({
       wd_goals: {
         targetWeight,
         currentWeight: newWeight,
       },
       wd_gym_logs: logs,
       wd_done: doneState,
-    };
+    });
 
-    try {
-      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(outgoing),
-      });
-      console.log("Current weight updated:", newWeight);
-    } catch (err) {
-      console.error("❌ Failed to update current weight", err);
-      alert("Failed to save current weight.");
-    }
+    console.log("Current weight updated:", newWeight);
   };
 
   // Reset all progress both backend and local
@@ -665,7 +939,7 @@ export default function Gym() {
   // ============================================
   // Clean, Safe, Tailwind-Compatible Column Component
   // ============================================
-  
+
   function ExerciseColumn({
     title,
     items = [],
@@ -954,7 +1228,7 @@ export default function Gym() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 15px)`,
             }}
           >
@@ -972,7 +1246,7 @@ export default function Gym() {
       {/* Calendar + Daily Summary */}
       <section className="grid md:grid-cols-2 gap-4 mb-2">
         <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
-        <DailySummary key={date} date={date} logs={logs} />
+        <DailySummaryCarousel date={date} logs={logs} />
       </section>
 
       {/* Workout Section */}
@@ -1028,7 +1302,7 @@ export default function Gym() {
                           : entry.right.filter((e) => e?.done).length) +
                         (Array.isArray(entry.finisher) &&
                         entry.finisher.every(
-                          (item) => typeof item === "boolean"
+                          (item) => typeof item === "boolean",
                         )
                           ? entry.finisher.filter(Boolean).length
                           : entry.finisher.filter((e) => e?.done).length)}
@@ -1051,14 +1325,14 @@ export default function Gym() {
                             : entry.right.filter((e) => e?.done).length) +
                           (Array.isArray(entry.finisher) &&
                           entry.finisher.every(
-                            (item) => typeof item === "boolean"
+                            (item) => typeof item === "boolean",
                           )
                             ? entry.finisher.filter(Boolean).length
                             : entry.finisher.filter((e) => e?.done).length)) /
                           (dayPlan.left.length +
                             dayPlan.right.length +
                             dayPlan.finisher.length)) *
-                          100
+                          100,
                       )}
                       %
                     </p>
@@ -1082,7 +1356,7 @@ export default function Gym() {
                           : entry.right.filter((e) => e?.done).length) +
                         (Array.isArray(entry.finisher) &&
                         entry.finisher.every(
-                          (item) => typeof item === "boolean"
+                          (item) => typeof item === "boolean",
                         )
                           ? entry.finisher.filter(Boolean).length
                           : entry.finisher.filter((e) => e?.done).length)) /
@@ -1149,19 +1423,19 @@ export default function Gym() {
         doneState[dateKey]
           ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
           : (Array.isArray(entry.left) &&
-            entry.left.every((item) => typeof item === "boolean")
-              ? entry.left.every(Boolean)
-              : entry.left.every((e) => e?.done)) &&
-            (Array.isArray(entry.right) &&
-            entry.right.every((item) => typeof item === "boolean")
-              ? entry.right.every(Boolean)
-              : entry.right.every((e) => e?.done)) &&
-            (Array.isArray(entry.finisher) &&
-            entry.finisher.every((item) => typeof item === "boolean")
-              ? entry.finisher.every(Boolean)
-              : entry.finisher.every((e) => e?.done))
-          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
-          : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
+              entry.left.every((item) => typeof item === "boolean")
+                ? entry.left.every(Boolean)
+                : entry.left.every((e) => e?.done)) &&
+              (Array.isArray(entry.right) &&
+              entry.right.every((item) => typeof item === "boolean")
+                ? entry.right.every(Boolean)
+                : entry.right.every((e) => e?.done)) &&
+              (Array.isArray(entry.finisher) &&
+              entry.finisher.every((item) => typeof item === "boolean")
+                ? entry.finisher.every(Boolean)
+                : entry.finisher.every((e) => e?.done))
+            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
+            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
       }
     `}
               >
@@ -1354,80 +1628,7 @@ export default function Gym() {
 }
 
 /* ---------------------- Subcomponents ---------------------- */
-function DailySummary({ date, logs }) {
-  const dateKey = fmtISO(date);
-  const entry = logs[dateKey];
-
-  return (
-    <div
-      className="border rounded-2xl p-4 h-full
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
-      [#0A0F1C]
-     text-[#FAFAFA] backdrop-blur-md"
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-emerald-200">Daily Summary</h3>
-        <span
-          className={`text-xs px-2 py-1 rounded ${
-            entry?.done
-              ? "bg-emerald-600 text-white"
-              : "bg-gray-300/20 text-emerald-100"
-          }`}
-        >
-          {entry?.done ? "✅ Done" : "❌ Not Done"}
-        </span>
-      </div>
-
-      <div className="text-sm text-gray-300 mt-1">📅 {fmtDisp(date)}</div>
-
-      <div className="mt-3 space-y-2 text-sm text-emerald-100">
-        <div>
-          🔥 Calories:{" "}
-          {entry?.calories != null ? `${entry.calories} kcal` : "—"}
-        </div>
-        <div>
-          ⚖️ Weight: {entry?.weight != null ? `${entry.weight} kg` : "—"}
-        </div>
-        <div>📊 BMI: {entry?.bmi != null ? entry.bmi : "—"}</div>
-        <div className="mt-2">
-          <h4 className="font-medium mb-1 text-emerald-200">Exercises</h4>
-          {entry ? (
-            <ul className="list-disc list-inside text-sm">
-              {(() => {
-                const wd = entry.weekday || dayjs(date).format("dddd");
-                const todayPlan = DEFAULT_PLAN[wd] || {};
-                const allExercises = [
-                  ...(todayPlan.left || []),
-                  ...(todayPlan.right || []),
-                  ...(todayPlan.finisher || []),
-                ];
-                const bools = [
-                  ...(entry.left || []),
-                  ...(entry.right || []),
-                  ...(entry.finisher || []),
-                ];
-                return allExercises.map((ex, i) => (
-                  <li
-                    key={i}
-                    className={bools[i] ? "text-emerald-100" : "opacity-60"}
-                  >
-                    {ex}
-                  </li>
-                ));
-              })()}
-            </ul>
-          ) : (
-            <div className="opacity-70 text-emerald-100">
-              No exercises logged for this day.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
+/* -------------------- Mini Calendar ------------------- */
 function MiniCalendar({ date, setDate, doneState, logs }) {
   const [viewMonth, setViewMonth] = useState(dayjs(date));
   const today = dayjs();
@@ -1539,7 +1740,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
   );
 }
 
-
+/* -------------------- Modal ------------------- */
 function Modal({ children, onClose, onEnter }) {
   // 🔥 Handle ESC + ENTER keys
   useEffect(() => {
@@ -1579,7 +1780,3 @@ function Modal({ children, onClose, onEnter }) {
     </div>
   );
 }
-
-
-
-
