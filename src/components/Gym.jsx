@@ -665,6 +665,7 @@ export default function Gym() {
   // ============================================
   // Clean, Safe, Tailwind-Compatible Column Component
   // ============================================
+  
   function ExerciseColumn({
     title,
     items = [],

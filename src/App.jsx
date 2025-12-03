@@ -12,10 +12,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Pause,
-  Play,
 } from "lucide-react";
-import { useMotionValue, animate } from "framer-motion";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
