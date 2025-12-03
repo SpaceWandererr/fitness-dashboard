@@ -261,7 +261,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0,
+    0
   );
 
   const MUSCLES = {
@@ -316,178 +316,373 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-        ? "Great job! Keep pushing! 💪"
-        : "You showed up. That's what matters. 🚀";
+      ? "Great job! Keep pushing! 💪"
+      : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
-    "rounded-2xl p-4 h-full bg-white/10 backdrop-blur-xl border border-emerald-500/20 shadow-lg shadow-black/40 text-[#E8FFFA] flex flex-col justify-between";
+    "rounded-2xl p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
 
   return (
-    <div className={cardClass}>
+    <div className={`${cardClass} `}>
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-bold text-emerald-200 text-lg">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-emerald-500/20">
+          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-xl">
             {mode === "old" ? "Daily Summary" : "Enhanced Summary"}
           </h3>
           <span
-            className={`text-xs px-2 py-1 rounded ${
+            className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all ${
               entry?.done
-                ? "bg-emerald-600 text-white"
-                : "bg-gray-300/20 text-emerald-100"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
+                : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 border border-gray-600/40"
             }`}
           >
-            {entry?.done ? "Done" : "Not Done"}
+            {entry?.done ? "✅ Done" : "⭕ Not Done"}
           </span>
         </div>
 
-        <div className="text-sm text-gray-300 mb-3">📅 {fmtDisp(date)}</div>
-
         {/* -------- OLD CARD -------- */}
         {mode === "old" && (
-          <div className="space-y-2 text-sm text-emerald-100">
-            <div>🔥 Calories: {entry?.calories ?? "—"} kcal</div>
-            <div>⚖️ Weight: {entry?.weight ?? "—"} kg</div>
-            <div>📊 BMI: {entry?.bmi ?? "—"}</div>
-
-            {/* Only show exercises if logged */}
-            <div className="mt-2">
-              <h4 className="font-medium text-emerald-200 mb-1">Exercises</h4>
-
-              {performed.some((p) => p?.done) ? (
-                <ul className="list-disc list-inside">
-                  {planExercises.map((ex, i) =>
-                    performed[i]?.done ? (
-                      <li key={i} className="text-emerald-100">
-                        {ex}
-                      </li>
-                    ) : null,
-                  )}
-                </ul>
-              ) : (
-                <div className="opacity-70 text-emerald-100">
-                  No exercises logged for this day.
+          <div className="space-y-2">
+            {/* DATE & MUSCLES */}
+            <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
+              {/* Header Row */}
+              <div className="flex items-center justify-between px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+                <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
+                  📅 {fmtDisp(date)}
                 </div>
-              )}
+              </div>
+
+              {/* Muscles Tags */}
+              <div className="px-3 py-2 flex justify-between items-center">
+                <div className="text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold border-r border-emerald-400/40 pr-3 mr-3">
+                  MUSCLES
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {musclesWorked?.length > 0 ? (
+                    musclesWorked.map((muscle, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-emerald-200 font-medium"
+                      >
+                        {muscle}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">None</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* CALORIES */}
+              <div
+                className="bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 
+    dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 
+    p-3 rounded-xl border border-orange-500/30 dark:border-orange-400/20
+    hover:border-orange-400/50 transition-all"
+              >
+                <div className="text-[9px] uppercase tracking-wider text-orange-300/70 dark:text-orange-200/60 font-semibold mb-1 flex items-center gap-1">
+                  <span>🔥</span>
+                  <span>Calories</span>
+                </div>
+                <div className="text-xl font-bold text-orange-100 dark:text-orange-200 flex items-baseline gap-1">
+                  {entry?.calories ?? "—"}
+                  {entry?.calories && (
+                    <span className="text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal">
+                      kcal
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* WEIGHT */}
+              <div
+                className="bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 
+    dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 
+    p-3 rounded-xl border border-cyan-500/30 dark:border-cyan-400/20
+    hover:border-cyan-400/50 transition-all"
+              >
+                <div className="text-[9px] uppercase tracking-wider text-cyan-300/70 dark:text-cyan-200/60 font-semibold mb-1 flex items-center gap-1">
+                  <span>⚖️</span>
+                  <span>Weight</span>
+                </div>
+                <div className="text-xl font-bold text-cyan-100 dark:text-cyan-200 flex items-baseline gap-1">
+                  {entry?.weight ?? "—"}
+                  {entry?.weight && (
+                    <span className="text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal">
+                      kg
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* BMI */}
+              <div
+                className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 
+    dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60 
+    p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20
+    hover:border-purple-400/50 transition-all"
+              >
+                <div className="text-[9px] uppercase tracking-wider text-purple-300/70 dark:text-purple-200/60 font-semibold mb-1 flex items-center gap-1">
+                  <span>📊</span>
+                  <span>BMI</span>
+                </div>
+                <div className="text-xl font-bold text-purple-100 dark:text-purple-200">
+                  {entry?.bmi ?? "—"}
+                </div>
+              </div>
+            </div>
+
+            {/* Exercises Card */}
+            <div className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
+              {/* Header */}
+              <div className="px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+                <div className="text-[9px] uppercase tracking-wider text-emerald-200/80 font-semibold">
+                  EXERCISES COMPLETED
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="px-3 py-2">
+                {performed.some((p) => p?.done) ? (
+                  <div className="space-y-1.5">
+                    {planExercises.map((ex, i) =>
+                      performed[i]?.done ? (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 text-xs text-emerald-200"
+                        >
+                          <span className="text-emerald-400">✓</span>
+                          <span>{ex}</span>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-400 italic py-1">
+                    No exercises logged for this day
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Shows next scheduled workout */}
+            <div className="mt-4 pt-4 border-t border-emerald-500/20">
+              <div className="text-[10px] text-emerald-200/70 uppercase tracking-wide font-semibold mb-2">
+                Next Workout
+              </div>
+              <div className="bg-white/5 rounded-lg p-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-emerald-200">
+                      Tomorrow
+                    </div>
+                    <div className="text-[10px] text-gray-400">
+                      Chest + Triceps
+                    </div>
+                  </div>
+                  <div className="text-2xl">💪</div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* -------- NEW MODERN CARD -------- */}
         {mode === "new" && (
-          <div className="grid grid-cols-2 gap-3">
-            {/* SETS */}
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Sets</div>
-              <div className="text-lg font-bold">
-                {doneSets}/{totalSets}
+          <div className="space-y-2">
+            {/* DATE & MUSCLES */}
+            <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
+              {/* Header Row */}
+              <div className="flex items-center justify-between px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+                <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
+                  📅 {fmtDisp(date)}
+                </div>
+              </div>
+
+              {/* Muscles Tags */}
+              <div className="px-3 py-2 flex justify-between items-center">
+                <div className="text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold border-r border-emerald-400/40 pr-3 mr-3">
+                  MUSCLES
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {musclesWorked?.length > 0 ? (
+                    musclesWorked.map((muscle, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-emerald-200 font-medium"
+                      >
+                        {muscle}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">None</span>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* MUSCLES */}
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Muscles</div>
-              <div className="text-sm">
-                {musclesWorked?.length > 0 ? musclesWorked.join(", ") : "—"}
+            {/* KEY METRICS - 2x2 Grid - ALL EMERALD/TEAL */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* SETS */}
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+                  Sets
+                </div>
+                <div className="text-lg font-bold text-emerald-100">
+                  {doneSets}
+                  <span className="text-sm text-emerald-300/60">
+                    /{totalSets}
+                  </span>
+                </div>
+              </div>
+
+              {/* DURATION */}
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-teal-400/30">
+                <div className="text-[9px] uppercase tracking-wider text-teal-200/70 font-semibold">
+                  Duration
+                </div>
+                <div className="text-lg font-bold text-teal-100">
+                  {entry?.duration
+                    ? `${entry.duration.hours}h ${entry.duration.minutes}m`
+                    : "—"}
+                </div>
+              </div>
+
+              {/* SCORE */}
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-cyan-400/30">
+                <div className="text-[9px] uppercase tracking-wider text-cyan-200/70 font-semibold">
+                  Score
+                </div>
+                <div className="text-lg font-bold text-cyan-100">
+                  {perfScore}
+                  <span className="text-sm text-cyan-300/60">/100</span>
+                </div>
+              </div>
+
+              {/* MOOD */}
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+                  Mood
+                </div>
+                <div className="text-lg font-bold text-emerald-100">
+                  {entry?.mood ?? "—"}
+                </div>
               </div>
             </div>
 
-            {/* DURATION */}
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Duration</div>
-              <div className="text-lg font-bold">
-                {entry?.duration
-                  ? `${entry.duration.hours}h ${entry.duration.minutes}m`
-                  : "—"}
+            {/* CALORIE STATS */}
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-orange-400/30">
+              <div className="text-[9px] uppercase tracking-wider text-orange-200/80 font-semibold mb-1.5 flex items-center gap-1">
+                🔥 Calories
               </div>
-            </div>
 
-            {/* MOOD */}
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Mood</div>
-              <div className="text-lg font-bold">{entry?.mood ?? "—"}</div>
-            </div>
-
-            {/* SCORE */}
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Score</div>
-              <div className="text-lg font-bold">{perfScore}/100</div>
-            </div>
-
-            {/* -------------------- CALORIE STATS -------------------- */}
-            <div className="col-span-2">
-              <div
-                className="grid grid-cols-3 gap-3 
-                bg-white/10 backdrop-blur-xl 
-                p-3 rounded-2xl border border-emerald-400/20 shadow-inner"
-              >
+              <div className="grid grid-cols-3 gap-2 mb-2">
                 {/* TARGET */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs uppercase tracking-wide text-emerald-200">
+                <div className="text-center">
+                  <div className="text-[9px] text-orange-200/70 mb-0.5">
                     Target
-                  </span>
-                  <span className="text-lg font-bold text-emerald-300">
-                    500
-                  </span>
+                  </div>
+                  <div className="text-base font-bold text-orange-100">500</div>
                 </div>
 
                 {/* BURNED */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs uppercase tracking-wide text-emerald-200">
+                <div className="text-center">
+                  <div className="text-[9px] text-emerald-200/70 mb-0.5">
                     Burned
-                  </span>
-                  <span className="text-lg font-bold text-teal-300">
-                    {entry?.calories != null ? entry.calories : "—"}
-                  </span>
+                  </div>
+                  <div className="text-base font-bold text-emerald-100">
+                    {entry?.calories ?? "—"}
+                  </div>
                 </div>
 
                 {/* DIFF */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs uppercase tracking-wide text-emerald-200">
-                    + / -
-                  </span>
-
+                <div className="text-center">
+                  <div className="text-[9px] text-gray-300/70 mb-0.5">Diff</div>
                   {(() => {
                     const burned = entry?.calories ?? null;
                     if (burned == null)
                       return (
-                        <span className="text-lg font-bold text-gray-300">
+                        <div className="text-base font-bold text-gray-400">
                           —
-                        </span>
+                        </div>
                       );
-
                     const diff = burned - 500;
-
                     return (
-                      <span
-                        className={`text-lg font-bold ${
+                      <div
+                        className={`text-base font-bold ${
                           diff >= 0 ? "text-emerald-300" : "text-red-300"
                         }`}
                       >
                         {diff >= 0 ? `+${diff}` : diff}
-                      </span>
+                      </div>
                     );
                   })()}
                 </div>
               </div>
+
+              {/* Progress Bar */}
+              {entry?.calories != null && (
+                <div className="h-1.5 rounded-full bg-black/30 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400 transition-all duration-700"
+                    style={{
+                      width: `${Math.min(100, (entry.calories / 500) * 100)}%`,
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* WEIGHT TREND */}
-            <div className="col-span-2 bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Trend</div>
-              <div className="text-lg font-bold">
-                {weightTrend != null
-                  ? weightTrend > 0
-                    ? `↗️ +${weightTrend}kg`
-                    : `↘️ ${weightTrend}kg`
-                  : "—"}
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+                    Weight Trend
+                  </div>
+                  <div className="text-lg font-bold text-emerald-100">
+                    {weightTrend != null
+                      ? weightTrend > 0
+                        ? `↗️ +${weightTrend}kg`
+                        : weightTrend < 0
+                        ? `↘️ ${weightTrend}kg`
+                        : "→ 0kg"
+                      : "—"}
+                  </div>
+                </div>
+                {weightTrend != null && (
+                  <div
+                    className={`text-2xl ${
+                      weightTrend > 0
+                        ? "text-red-300"
+                        : weightTrend < 0
+                        ? "text-emerald-300"
+                        : "text-gray-300"
+                    }`}
+                  >
+                    {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* MESSAGE */}
-            <div className="col-span-2 text-emerald-200 italic text-center mt-1">
-              {message}
-            </div>
+            {message && (
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">💪</span>
+                  <p className="text-emerald-100 italic text-xs leading-snug flex-1">
+                    {message}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -505,7 +700,7 @@ function DailySummaryCarousel({ date, logs }) {
   useEffect(() => {
     const t = setInterval(() => {
       setIndex((i) => (i + 1) % modes.length);
-    }, 60000);
+    }, 300000);
     return () => clearInterval(t);
   }, []);
 
@@ -518,35 +713,44 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length,
+          : (i - 1 + modes.length) % modes.length
       );
     }
   };
 
   return (
     <div className="relative" ref={containerRef}>
-      {/* Left Arrow */}
+      {/* LEFT BUTTON */}
       <button
         onClick={() => setIndex((i) => (i - 1 + modes.length) % modes.length)}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 
-        bg-white/10 backdrop-blur-xl border border-emerald-500/20 
-        px-2 py-2 rounded-r-xl text-emerald-200 shadow"
+        className="absolute left-0 rounded-r top-1/2 -translate-y-1/2 z-20
+    bg-gradient-to-r from-transparent to-[#0F766E]/60 
+    border-r border-emerald-400/40 
+    px-2 py-1.5 text-emerald-300 
+    hover:to-emerald-500/80 hover:text-emerald-200
+    transition-all duration-200 hover:px-3
+    text-sm font-medium"
       >
         ‹
       </button>
 
-      {/* Right Arrow */}
+      {/* RIGHT BUTTON */}
       <button
         onClick={() => setIndex((i) => (i + 1) % modes.length)}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 
-        bg-white/10 backdrop-blur-xl border border-emerald-500/20 
-        px-2 py-2 rounded-l-xl text-emerald-200 shadow"
+        className="absolute right-0 rounded-l top-1/2 -translate-y-1/2 z-20
+    bg-gradient-to-l from-transparent to-[#0F766E]/60 
+    border-l border-emerald-400/40 
+    px-2 py-1.5 text-emerald-300 
+    hover:to-emerald-500/80 hover:text-emerald-200
+    transition-all duration-200 hover:px-3
+    text-sm font-medium"
       >
         ›
       </button>
 
+      {/* Carousel Slides */}
       <div
-        className="overflow-hidden"
+        className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
         onTouchStart={handleStart}
         onTouchEnd={handleEnd}
       >
@@ -560,18 +764,18 @@ function DailySummaryCarousel({ date, logs }) {
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Dots */}
-      <div className="flex justify-center gap-2 mt-2">
-        {modes.map((_, i) => (
-          <div
-            key={i}
-            className={`w-2 h-2 rounded-full ${
-              index === i ? "bg-emerald-400" : "bg-emerald-400/30"
-            }`}
-          />
-        ))}
+        {/* Dots */}
+        <div className="flex justify-center gap-2 pb-2">
+          {modes.map((_, i) => (
+            <div
+              key={i}
+              className={`w-2 h-2 rounded-full ${
+                index === i ? "bg-emerald-400" : "bg-emerald-400/30"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -631,7 +835,7 @@ export default function Gym() {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   // Modal inputs + editing states
@@ -655,7 +859,7 @@ export default function Gym() {
     (async () => {
       try {
         const res = await fetch(
-          "https://fitness-backend-laoe.onrender.com/api/state",
+          "https://fitness-backend-laoe.onrender.com/api/state"
         );
         if (res.ok) {
           const data = await res.json();
@@ -664,12 +868,12 @@ export default function Gym() {
           setCurrWeight(
             data.wd_goals?.currentWeight != null
               ? data.wd_goals.currentWeight
-              : "",
+              : ""
           );
           setTargetWeight(
             data.wd_goals?.targetWeight != null
               ? data.wd_goals.targetWeight
-              : "",
+              : ""
           );
         } else {
           console.error("Failed to fetch state:", res.status);
@@ -752,7 +956,7 @@ export default function Gym() {
     const updated = {
       ...entry,
       [section]: entry[section].map((item, i) =>
-        i === idx ? { ...item, done: !item.done } : item,
+        i === idx ? { ...item, done: !item.done } : item
       ),
     };
 
@@ -813,11 +1017,11 @@ export default function Gym() {
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : (existing.weight ?? null);
+      : existing.weight ?? null;
 
     const newBmi = weightVal
       ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-      : (existing.bmi ?? null);
+      : existing.bmi ?? null;
 
     const updatedEntry = {
       weekday: existing.weekday || weekday,
@@ -852,7 +1056,7 @@ export default function Gym() {
       },
       wd_goals: {
         targetWeight,
-        currentWeight: weightVal,
+        currentWeight: currWeight,
       },
     };
 
@@ -1164,6 +1368,9 @@ export default function Gym() {
     );
   }
 
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [isEditingCurrent, setIsEditingCurrent] = useState(false);
+
   return (
     <div
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500
@@ -1215,18 +1422,24 @@ export default function Gym() {
           </button>
         </div>
       </header>
+
       {/* Progress / Weight Section */}
-      <section className="mb-4 border rounded-2xl p-4 space-y-3 border-gray-700 bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E] backdrop-blur-md min-h-[120px]">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      <section
+        className="mb-4 border border-emerald-500/30 rounded-3xl p-5 space-y-4 
+  bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+  dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+  shadow-xl shadow-black/40 backdrop-blur-md"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-4">
           {/* Target Weight */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-emerald-100">
-              🎯 Target
+          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2 border border-emerald-500/20">
+            <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
+              🎯 <span>Target</span>
             </span>
             <input
               type="number"
               step="0.1"
-              placeholder="Target weight"
+              placeholder="75"
               value={targetWeight}
               onChange={(e) => setTargetWeight(e.target.value)}
               onKeyDown={(e) => {
@@ -1235,24 +1448,47 @@ export default function Gym() {
                   e.target.blur();
                 }
               }}
-              className="w-24 px-2 py-1 rounded-md border border-gray-700 bg-[#0c2624] text-emerald-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              disabled={targetWeight && !isEditingTarget}
+              className={`w-16 px-2 py-1 rounded-lg border text-sm font-semibold text-center
+          focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent
+          placeholder:text-emerald-300/30 transition-all
+          ${
+            targetWeight && !isEditingTarget
+              ? "border-emerald-500/50 bg-emerald-900/20 text-emerald-200 cursor-not-allowed opacity-70"
+              : "border-emerald-500/30 bg-black/30 text-emerald-100"
+          }`}
             />
             <button
-              onClick={saveTargetWeight}
-              className="px-2 py-1 rounded bg-cyan-600 text-sm hover:bg-cyan-700 transition"
+              onClick={() => {
+                if (targetWeight && !isEditingTarget) {
+                  setIsEditingTarget(true);
+                } else {
+                  saveTargetWeight();
+                  setIsEditingTarget(false);
+                }
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold text-white 
+          transition-all duration-200 hover:scale-105 shadow-sm
+          ${
+            targetWeight && !isEditingTarget
+              ? "bg-orange-600/80 hover:bg-orange-500"
+              : "bg-cyan-600/80 hover:bg-cyan-500"
+          }`}
             >
-              Set
+              {targetWeight && !isEditingTarget ? "Edit" : "Set"}
             </button>
-            <span className="text-sm text-gray-300">kg</span>
+            <span className="text-xs text-emerald-300/70">kg</span>
           </div>
+
           {/* Current Weight */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-emerald-100">
-              ⚖ Curr Weight
+          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2 border border-cyan-500/20">
+            <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1">
+              ⚖️ <span>Curr Weight</span>
             </span>
             <input
               type="number"
               step="0.1"
+              placeholder="85"
               value={currWeight}
               onChange={(e) => setCurrWeight(e.target.value)}
               onKeyDown={(e) => {
@@ -1261,20 +1497,42 @@ export default function Gym() {
                   e.target.blur();
                 }
               }}
-              className="w-24 px-2 py-1 rounded-md border border-gray-700 bg-[#0c2624] text-emerald-100 text-sm focus:ring-1 focus:ring-emerald-400"
+              disabled={currWeight && !isEditingCurrent}
+              className={`w-16 px-2 py-1 rounded-lg border text-sm font-semibold text-center
+          focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent
+          placeholder:text-cyan-300/30 transition-all
+          ${
+            currWeight && !isEditingCurrent
+              ? "border-cyan-500/50 bg-cyan-900/20 text-cyan-200 cursor-not-allowed opacity-70"
+              : "border-cyan-500/30 bg-black/30 text-cyan-100"
+          }`}
             />
             <button
-              onClick={updateCurrentWeight}
-              className="px-2 py-1 rounded bg-emerald-600 text-sm hover:bg-emerald-700 transition"
+              onClick={() => {
+                if (currWeight && !isEditingCurrent) {
+                  setIsEditingCurrent(true);
+                } else {
+                  updateCurrentWeight();
+                  setIsEditingCurrent(false);
+                }
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold text-white 
+          transition-all duration-200 hover:scale-105 shadow-sm
+          ${
+            currWeight && !isEditingCurrent
+              ? "bg-orange-600/80 hover:bg-orange-500"
+              : "bg-emerald-600/80 hover:bg-emerald-500"
+          }`}
             >
-              Set
+              {currWeight && !isEditingCurrent ? "Edit" : "Set"}
             </button>
-            <span className="text-sm text-gray-300">kg</span>
+            <span className="text-xs text-cyan-300/70">kg</span>
           </div>
-          {/* Display Current/Todays weight */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-300">Now:</span>
-            <span className="text-emerald-300 font-semibold">
+
+          {/* Display Current/Today's weight */}
+          <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2 border border-teal-500/20">
+            <span className="text-xs text-gray-400">Now:</span>
+            <span className="text-teal-300 font-bold text-sm">
               {(() => {
                 // 1. If TODAY has logged weight → show it
                 if (entry?.weight != null) return `${entry.weight} kg`;
@@ -1303,54 +1561,61 @@ export default function Gym() {
               })()}
             </span>
           </div>
+
           {/* Progress text */}
-          <div className="text-sm text-gray-300">
+          <div className="text-xs font-semibold bg-white/5 rounded-xl px-3 py-2 border border-white/10">
             {pctToGoal < 0 ? (
-              <>
-                ⚠️ Regression{" "}
-                <span className="text-red-400 font-semibold">
+              <span className="flex items-center gap-1.5">
+                <span>⚠️</span>
+                <span className="text-gray-300">Regression</span>
+                <span className="text-red-400 font-bold">
                   {Math.abs(pctToGoal).toFixed(0)}%
-                </span>{" "}
-                <span className="text-xs opacity-80">
+                </span>
+                <span className="text-gray-500 text-[10px]">
                   (Δ +{Math.abs(diffToGoal)} kg)
                 </span>
-              </>
+              </span>
             ) : (
-              <>
-                {Math.min(100, pctToGoal).toFixed(0)}% to goal{" "}
-                <span className="text-xs opacity-80">(Δ {diffToGoal} kg)</span>
-              </>
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-300 font-bold">
+                  {Math.min(100, pctToGoal).toFixed(0)}%
+                </span>
+                <span className="text-gray-300">to goal</span>
+                <span className="text-gray-500 text-[10px]">
+                  (Δ {diffToGoal} kg)
+                </span>
+              </span>
             )}
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="relative mt-1">
-          <div className="h-3 rounded-full bg-[#123232]/50 overflow-hidden" />
+        <div className="relative mt-2">
+          <div className="h-4 rounded-full bg-black/40 overflow-hidden border border-white/10" />
           <div
-            className="absolute top-0 h-3 rounded-full transition-all duration-700"
+            className="absolute top-0 h-4 rounded-full transition-all duration-700 shadow-lg"
             style={{
               left: pctToGoal < 0 ? "0" : "auto",
               right: pctToGoal >= 0 ? "0" : "auto",
               width: `${Math.min(100, Math.abs(pctToGoal))}%`,
               background:
                 pctToGoal < 0
-                  ? "linear-gradient(90deg, rgba(255,85,85,1), rgba(255,150,150,1))"
-                  : "linear-gradient(270deg, rgba(79,209,197,1), rgba(34,197,94,1))",
+                  ? "linear-gradient(90deg, rgba(239,68,68,1), rgba(252,165,165,1))"
+                  : "linear-gradient(270deg, rgba(20,184,166,1), rgba(16,185,129,1))",
             }}
           />
           <div
-            className="absolute -top-5 mt-1 transition-all duration-700 z-20"
+            className="absolute -top-5 transition-all duration-700 z-20"
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
-              )}% - 15px)`,
+                Math.abs(pctToGoal)
+              )}% - 16px)`,
             }}
           >
             <span
-              className={`text-2xl drop-shadow-[0_0_6px_rgba(79,209,197,0.6)] ${
-                pctToGoal < 0 ? "rotate-180" : ""
+              className={`text-3xl drop-shadow-[0_0_8px_rgba(20,184,166,0.8)] transition-transform ${
+                pctToGoal < 0 ? "scale-x-[-1]" : ""
               }`}
             >
               🏃
@@ -1358,11 +1623,13 @@ export default function Gym() {
           </div>
         </div>
       </section>
+
       {/* Calendar + Daily Summary */}
       <section className="grid md:grid-cols-2 gap-4 mb-2">
         <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
         <DailySummaryCarousel date={date} logs={logs} />
       </section>
+
       {/* Workout Section */}
       <section className="mb-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
@@ -1416,7 +1683,7 @@ export default function Gym() {
                           : entry.right.filter((e) => e?.done).length) +
                         (Array.isArray(entry.finisher) &&
                         entry.finisher.every(
-                          (item) => typeof item === "boolean",
+                          (item) => typeof item === "boolean"
                         )
                           ? entry.finisher.filter(Boolean).length
                           : entry.finisher.filter((e) => e?.done).length)}
@@ -1439,14 +1706,14 @@ export default function Gym() {
                             : entry.right.filter((e) => e?.done).length) +
                           (Array.isArray(entry.finisher) &&
                           entry.finisher.every(
-                            (item) => typeof item === "boolean",
+                            (item) => typeof item === "boolean"
                           )
                             ? entry.finisher.filter(Boolean).length
                             : entry.finisher.filter((e) => e?.done).length)) /
                           (dayPlan.left.length +
                             dayPlan.right.length +
                             dayPlan.finisher.length)) *
-                          100,
+                          100
                       )}
                       %
                     </p>
@@ -1470,7 +1737,7 @@ export default function Gym() {
                           : entry.right.filter((e) => e?.done).length) +
                         (Array.isArray(entry.finisher) &&
                         entry.finisher.every(
-                          (item) => typeof item === "boolean",
+                          (item) => typeof item === "boolean"
                         )
                           ? entry.finisher.filter(Boolean).length
                           : entry.finisher.filter((e) => e?.done).length)) /
@@ -1537,19 +1804,19 @@ export default function Gym() {
         doneState[dateKey]
           ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
           : (Array.isArray(entry.left) &&
-              entry.left.every((item) => typeof item === "boolean")
-                ? entry.left.every(Boolean)
-                : entry.left.every((e) => e?.done)) &&
-              (Array.isArray(entry.right) &&
-              entry.right.every((item) => typeof item === "boolean")
-                ? entry.right.every(Boolean)
-                : entry.right.every((e) => e?.done)) &&
-              (Array.isArray(entry.finisher) &&
-              entry.finisher.every((item) => typeof item === "boolean")
-                ? entry.finisher.every(Boolean)
-                : entry.finisher.every((e) => e?.done))
-            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
-            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
+            entry.left.every((item) => typeof item === "boolean")
+              ? entry.left.every(Boolean)
+              : entry.left.every((e) => e?.done)) &&
+            (Array.isArray(entry.right) &&
+            entry.right.every((item) => typeof item === "boolean")
+              ? entry.right.every(Boolean)
+              : entry.right.every((e) => e?.done)) &&
+            (Array.isArray(entry.finisher) &&
+            entry.finisher.every((item) => typeof item === "boolean")
+              ? entry.finisher.every(Boolean)
+              : entry.finisher.every((e) => e?.done))
+          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
+          : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
       }
     `}
               >
@@ -1851,8 +2118,9 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
   const today = dayjs();
 
   useEffect(() => {
-    setViewMonth(dayjs(date));
-  }, [date]);
+    // Auto-update viewMonth to today when the actual day changes
+    setViewMonth(dayjs());
+  }, [dayjs().format("YYYY-MM-DD")]);
 
   const monthStart = viewMonth.startOf("month");
   const weekdayIndex = (monthStart.day() + 6) % 7; // Monday=0
@@ -1861,97 +2129,300 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
 
   return (
     <section
-      className="border rounded-2xl p-4
-     bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-      text-[#FAFAFA] backdrop-blur-md"
+      className="border border-emerald-500/30 rounded-3xl px-5 py-2
+    bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+    dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+    text-[#FAFAFA] shadow-xl shadow-black/40"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <button
-          onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
-          className="px-2 py-1 rounded hover:bg-white/5"
-        >
-          〈
-        </button>
+      {/* Header - Dynamic Date Range with Month Navigation */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <button
+            onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
+            className="w-8 h-8 rounded-full flex items-center justify-center
+        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/30
+        transition-all duration-200 hover:scale-110"
+          >
+            ‹
+          </button>
 
-        <div className="font-bold text-sm text-emerald-200">
-          {viewMonth.format("MMMM YYYY")}
-        </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-emerald-100">
+              {viewMonth.subtract(17, "day").format("MMM D")} -{" "}
+              {viewMonth.add(17, "day").format("MMM D, YYYY")}
+            </div>
 
-        <button
-          onClick={() => setViewMonth(viewMonth.add(1, "month"))}
-          className="px-2 py-1 rounded hover:bg-white/5"
-        >
-          〉
-        </button>
-      </div>
+            <div className="flex justify-between items-center gap-2">
+              {/* Selected Date Display */}
+              <div className="flex-1">
+                <div className="text-xs font-semibold text-emerald-200">
+                  {dayjs(date).format("dddd")}
+                </div>
+                <div className="text-[10px] text-emerald-300/60">
+                  {dayjs(date).format("MMMM DD, YYYY")}
+                </div>
+              </div>
 
-      {/* Weekday Names */}
-      <div className="grid grid-cols-7 gap-1 text-[10px] sm:text-xs text-center mb-1 text-gray-400">
-        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-          <div key={d} className="opacity-80">
-            {d}
+              {/* Quick Jump to Today Button */}
+              <button
+                onClick={() => {
+                  setViewMonth(today);
+                  setDate(today.format("YYYY-MM-DD"));
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+      bg-cyan-500/10 hover:bg-cyan-500/20 
+      border border-cyan-400/30 hover:border-cyan-400/50
+      text-[10px] font-semibold text-cyan-300 hover:text-cyan-200
+      uppercase tracking-wider transition-all duration-200
+      hover:scale-105 shadow-sm"
+              >
+                <span>📍</span>
+                <span>Today</span>
+              </button>
+            </div>
           </div>
-        ))}
+
+          <button
+            onClick={() => setViewMonth(viewMonth.add(1, "month"))}
+            className="w-8 h-8 rounded-full flex items-center justify-center
+        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/30
+        transition-all duration-200 hover:scale-110"
+          >
+            ›
+          </button>
+        </div>
       </div>
+      {/* Weekday Headers - Dynamic based on today's position */}
+      <div className="grid grid-cols-7 gap-1.5 mb-2">
+        {(() => {
+          // Calculate which day is 3 days before today (left edge)
+          const startDay = today.subtract(3, "day");
+          const weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+          const headers = [];
 
-      {/* Calendar cells */}
-      <div className="grid grid-cols-7 gap-1">
-        {cells.map((d) => {
-          const key = d.format("YYYY-MM-DD");
-          const isCurMonth = d.month() === viewMonth.month();
-          const isSelected = key === date;
-          const isToday = d.isSame(today, "day");
+          for (let i = 0; i < 7; i++) {
+            const d = startDay.add(i, "day");
+            const dayIndex = (d.day() + 6) % 7; // Convert Sunday=0 to Monday=0
+            const isToday = i === 3; // Middle column
 
-          // SAFELY resolve entry
-          const entry = logs?.[key];
-
-          // Primary check: doneState (most reliable)
-          const doneByState = doneState?.[key] === true;
-
-          // Secondary check: check if ANY exercise is completed
-          let doneByExercises = false;
-          if (entry) {
-            // Handle both boolean arrays and object arrays
-            const checkArray = (arr) => {
-              if (!Array.isArray(arr)) return false;
-              // If it's a boolean array
-              if (arr.every((item) => typeof item === "boolean")) {
-                return arr.some(Boolean);
-              }
-              // If it's an object array
-              return arr.some((e) => e?.done === true);
-            };
-
-            doneByExercises =
-              checkArray(entry.left) ||
-              checkArray(entry.right) ||
-              checkArray(entry.finisher);
+            headers.push(
+              <div
+                key={i}
+                className={`text-[10px] text-center font-semibold uppercase ${
+                  isToday ? "text-yellow-300" : "text-emerald-300/60"
+                }`}
+              >
+                {weekdays[dayIndex]}
+              </div>
+            );
           }
 
-          const isDone = doneByState || doneByExercises;
+          return headers;
+        })()}
+      </div>
+      {/* 5 Rows × 7 Columns - Based on viewMonth */}
+      <div className="grid grid-cols-7 gap-1.5 mb-4">
+        {(() => {
+          const cells = [];
 
-          return (
-            <button
-              key={key}
-              onClick={() => setDate(key)}
-              title={d.format("DD-MM-YYYY")}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full text-[11px] flex items-center justify-center border transition
-                ${!isCurMonth ? "opacity-30" : ""}
-                ${
-                  isDone
-                    ? "bg-emerald-600 text-white"
-                    : "bg-gray-700 text-gray-200"
+          // IMPORTANT: Use viewMonth as the center date, not today
+          const centerDate = viewMonth;
+
+          // Start 17 days before viewMonth (3 left + 14 for 2 rows)
+          const startDate = centerDate.subtract(17, "day");
+
+          // Generate 5 rows × 7 days = 35 days
+          for (let i = 0; i < 35; i++) {
+            const d = startDate.add(i, "day");
+            const key = d.format("YYYY-MM-DD");
+            const isToday = d.isSame(today, "day"); // Highlight actual today
+            const isSelected = key === date;
+
+            const row = Math.floor(i / 7);
+            const col = i % 7;
+            const isCurrentWeek = row === 2; // Middle row
+
+            // Opacity calculation
+            let opacity = 1;
+            if (!isCurrentWeek) {
+              if (row < 2) {
+                const baseOpacity = row === 0 ? 0.1 : 0.3;
+                const fadeStep = 0.05;
+                opacity = baseOpacity + col * fadeStep;
+              } else {
+                const baseOpacity = row === 3 ? 0.6 : 0.4;
+                const fadeStep = -0.05;
+                opacity = baseOpacity + col * fadeStep;
+              }
+            }
+
+            const entry = logs?.[key];
+            const doneByState = doneState?.[key] === true;
+
+            let doneByExercises = false;
+            if (entry) {
+              const checkArray = (arr) => {
+                if (!Array.isArray(arr)) return false;
+                if (arr.every((item) => typeof item === "boolean")) {
+                  return arr.some(Boolean);
                 }
-                ${isSelected ? "ring-2 ring-emerald-400" : ""}
-                ${isToday ? "border-cyan-400 font-bold" : "border-white/10"}
-                hover:scale-[1.03] hover:shadow`}
-            >
-              {d.date()}
-            </button>
-          );
-        })}
+                return arr.some((e) => e?.done === true);
+              };
+
+              doneByExercises =
+                checkArray(entry.left) ||
+                checkArray(entry.right) ||
+                checkArray(entry.finisher);
+            }
+
+            const isDone = doneByState || doneByExercises;
+            const hasCalories = entry?.calories != null;
+            const hasWeight = entry?.weight != null;
+
+            cells.push(
+              <div
+                key={key}
+                className="relative group flex flex-col items-center"
+                style={{ opacity }}
+              >
+                <button
+                  onClick={() => setDate(key)}
+                  // title={d.format("DD-MM-YYYY")}
+                  className={`
+              w-9 h-9 sm:w-10 sm:h-10 rounded-full text-xs font-medium
+              flex items-center justify-center border
+              transition-all duration-200
+              cursor-pointer hover:scale-105
+              ${
+                isDone
+                  ? "bg-emerald-600 text-white border-emerald-400/50 shadow-md shadow-emerald-500/30"
+                  : "bg-gray-700/80 text-gray-200 border-white/10 hover:bg-gray-600/80"
+              }
+              ${isSelected ? "ring-2 ring-cyan-400 scale-[1.08] shadow-lg" : ""}
+              ${
+                isToday
+                  ? "border-cyan-400 ring-2 ring-cyan-400/60 font-bold scale-110 shadow-lg shadow-cyan-400/30"
+                  : ""
+              }
+            `}
+                >
+                  {d.date()}
+                </button>
+
+                {hasCalories && isCurrentWeek && (
+                  <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" />
+                )}
+
+                <div className="pointer-events-none absolute top-11 z-30 rounded-lg bg-black/90 px-2.5 py-1.5 text-[10px] text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-emerald-500/20 shadow-xl">
+                  {d.format("MMM D")} • {isDone ? "✅ Done" : "No workout"}
+                  {hasCalories && ` • ${entry.calories} kcal`}
+                  {hasWeight && ` • ${entry.weight} kg`}
+                </div>
+              </div>
+            );
+          }
+
+          return cells;
+        })()}
+      </div>
+      {/* Current Week Highlight */}
+      <div className="pt-3 border-t border-cyan-500/30 bg-cyan-500/5 -mx-5 px-5 py-3 rounded-b-3xl">
+        <div className="text-[10px] text-cyan-300 uppercase tracking-wide font-semibold mb-2 text-center">
+          📍 Current Week (Row 3)
+        </div>
+        <div className="flex justify-between gap-1.5">
+          {(() => {
+            const startOfWeek = today.startOf("week").add(1, "day");
+            return ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day, i) => {
+              const currentDay = startOfWeek.add(i, "day");
+              const dayKey = currentDay.format("YYYY-MM-DD");
+              const dayDone = doneState?.[dayKey] === true;
+              const isCurrentDay = currentDay.isSame(today, "day");
+
+              return (
+                <div key={day} className="flex-1 text-center">
+                  <div
+                    className={`text-[9px] mb-1 ${
+                      isCurrentDay
+                        ? "text-yellow-300 font-bold"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {day}
+                  </div>
+                  <div
+                    className={`w-full h-2 rounded-full transition-all ${
+                      dayDone
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                        : isCurrentDay
+                        ? "bg-yellow-500/60"
+                        : "bg-gray-700"
+                    }`}
+                  />
+                </div>
+              );
+            });
+          })()}
+        </div>
+      </div>
+      {/* Monthly Stats */}
+      <div className="mt-6 pt-4 border-t border-emerald-500/20">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {/* This Month */}
+          <div className="bg-white/5 rounded-xl p-2">
+            <div className="text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
+              This Month
+            </div>
+            <div className="text-xl font-bold text-emerald-300">
+              {
+                Object.keys(doneState || {}).filter((k) =>
+                  k.startsWith(today.format("YYYY-MM"))
+                ).length
+              }
+              <span className="text-sm text-emerald-300/60">
+                /{today.daysInMonth()}
+              </span>
+            </div>
+            <div className="text-[9px] text-emerald-300/60">workouts</div>
+          </div>
+
+          {/* Streak */}
+          <div className="bg-white/5 rounded-xl p-2">
+            <div className="text-[9px] text-cyan-200/60 uppercase tracking-wide font-semibold mb-0.5">
+              Streak
+            </div>
+            <div className="text-xl font-bold text-cyan-300">
+              {(() => {
+                let streak = 0;
+                let currentDate = dayjs(today);
+                while (doneState?.[currentDate.format("YYYY-MM-DD")]) {
+                  streak++;
+                  currentDate = currentDate.subtract(1, "day");
+                }
+                return streak;
+              })()}
+            </div>
+            <div className="text-[9px] text-cyan-300/60">days</div>
+          </div>
+
+          {/* Monthly Goal */}
+          <div className="bg-white/5 rounded-xl p-2">
+            <div className="text-[9px] text-teal-200/60 uppercase tracking-wide font-semibold mb-0.5">
+              Monthly Goal
+            </div>
+            <div className="text-xl font-bold text-teal-300">
+              {(() => {
+                const totalDays = today.daysInMonth();
+                const done = Object.keys(doneState || {}).filter((k) =>
+                  k.startsWith(today.format("YYYY-MM"))
+                ).length;
+                return Math.round((done / totalDays) * 100);
+              })()}
+              %
+            </div>
+            <div className="text-[9px] text-teal-300/60">completed</div>
+          </div>
+        </div>
       </div>
     </section>
   );
