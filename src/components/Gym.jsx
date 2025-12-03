@@ -387,7 +387,11 @@ function DailySummaryMerged({ date, logs, mode }) {
 
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Duration</div>
-              <div className="text-lg font-bold">{duration}</div>
+              <div className="text-lg font-bold">
+                {entry?.duration
+                  ? `${entry.duration.hours}h ${entry.duration.minutes}m`
+                  : "—"}
+              </div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
@@ -514,19 +518,55 @@ function DailySummaryCarousel({ date, logs }) {
   );
 }
 
+/* -------------------- Modern Glass Modal -------------------- */
+function Modal({ children, onClose, onEnter }) {
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Enter" && onEnter) onEnter();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose, onEnter]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+      <div
+        className="relative w-full max-w-lg rounded-2xl p-6
+        bg-white/10 backdrop-blur-2xl 
+        border border-emerald-400/30 
+        shadow-xl shadow-black/50
+        text-[#E8FFFA]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------- Main Component ---------------------- */
+
+const HEIGHT_CM = 176; // used to compute BMI
+
+/* -------------------- Exported Gym component STARTS below -------------------- */
 export default function Gym() {
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
   const defaultDay = WEEK.includes(todayName) ? todayName : "Monday";
 
-  // Date and weekday state
+  // Date + weekday
   const [date, setDate] = useState(todayIso);
   const [weekday, setWeekday] = useState(defaultDay);
   const userChangedWeekday = useRef(false);
 
-  // State for logs, done state, weights, goals
+  // Primary app state
   const [logs, setLogs] = useState({});
   const [doneState, setDoneState] = useState({});
   const [currWeight, setCurrWeight] = useState("");
@@ -535,13 +575,23 @@ export default function Gym() {
     "Fetching your motivational quote...",
   );
 
-  // Modal inputs
+  // Modal inputs + editing states
   const [showModal, setShowModal] = useState(false);
   const [caloriesInput, setCaloriesInput] = useState("");
   const [weightInput, setWeightInput] = useState("");
   const weightInputRef = useRef(null);
 
-  // Fetch initial state from backend on mount
+  // Duration stored as numeric hours + minutes
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(0);
+
+  // mood and edit arrays for exercises
+  const [moodInput, setMoodInput] = useState("🙂");
+  const [editLeft, setEditLeft] = useState([]);
+  const [editRight, setEditRight] = useState([]);
+  const [editFinisher, setEditFinisher] = useState([]);
+
+  // fetch initial state from backend on mount
   useEffect(() => {
     (async () => {
       try {
@@ -571,17 +621,17 @@ export default function Gym() {
     })();
   }, []);
 
-  // Sync date -> weekday
+  // sync date -> weekday
   useEffect(() => {
     const wd = dayjs(date).format("dddd");
     setWeekday(wd);
   }, [date]);
 
-  // Sync weekday change -> date (current week)
+  // sync weekday -> date when user changes weekday select
   useEffect(() => {
     if (!userChangedWeekday.current) return;
     const currentDate = dayjs();
-    const startOfWeek = currentDate.startOf("week").add(1, "day"); // Monday
+    const startOfWeek = currentDate.startOf("week").add(1, "day"); // Monday as start
     const newDate = startOfWeek
       .add(WEEK.indexOf(weekday), "day")
       .format("YYYY-MM-DD");
@@ -589,59 +639,57 @@ export default function Gym() {
     userChangedWeekday.current = false;
   }, [weekday]);
 
-  // Sunday quote fetch on Sunday
+  // sunday quote
   useEffect(() => {
     if (weekday === "Sunday") {
-      fetchSundayQuote().then(setSundayQuote);
+      fetchSundayQuote()
+        .then(setSundayQuote)
+        .catch((e) => {
+          console.warn("Sunday quote fetch failed", e);
+        });
     }
   }, [weekday]);
 
-  // Helper: get current log entry or default for this date
+  /* -------------------- Helper: normalizer / getEntry -------------------- */
   const getEntry = (dateKey) => {
-    const plan = DEFAULT_PLAN[weekday]; // today's expected exercises
-    const existing = logs[dateKey] || {}; // backend or local saved entry
+    const plan = DEFAULT_PLAN[weekday] || { left: [], right: [], finisher: [] };
+    const existing = logs[dateKey] || {};
 
-    // helper normalizer
-    const normalize = (planList, savedList) => {
+    const normalize = (planList = [], savedList = []) => {
       return planList.map((name, i) => {
         const saved = savedList?.[i];
 
-        // Case 1 — already correct format: { name, done }
+        // already object {name, done}
         if (saved && typeof saved === "object") return saved;
 
-        // Case 2 — old format boolean: true / false
+        // boolean true/false old format
         if (typeof saved === "boolean") return { name, done: saved };
 
-        // Case 3 — no data → create default object
+        // nothing saved => default object
         return { name, done: false };
       });
     };
 
     return {
       weekday: existing.weekday || weekday,
-
-      // Always normalized
       left: normalize(plan.left, existing.left),
       right: normalize(plan.right, existing.right),
       finisher: normalize(plan.finisher, existing.finisher),
-
-      // Persist extra workout info if exists
       calories: existing.calories,
       weight: existing.weight,
       bmi: existing.bmi,
-
-      // Marked done?
       done: existing.done || false,
+      duration: existing.duration || null,
+      mood: existing.mood || null,
     };
   };
 
-  // Toggle a single exercise
+  /* -------------------- Toggle single exercise (click in UI) -------------------- */
   const toggle = (section, idx, dateKey) => {
+    // don't toggle if already marked done (finalized)
     if (doneState[dateKey]) return;
 
-    const dayPlan = DEFAULT_PLAN[weekday];
     const entry = logs[dateKey] || getEntry(dateKey);
-
     const updated = {
       ...entry,
       [section]: entry[section].map((item, i) =>
@@ -652,14 +700,14 @@ export default function Gym() {
     setLogs((prev) => ({ ...prev, [dateKey]: updated }));
   };
 
-  // Toggle all exercises for today
+  /* -------------------- Toggle mark all / unmark all -------------------- */
   const toggleMarkAll = (dateKey) => {
     const entry = logs[dateKey] || getEntry(dateKey);
 
     const allDone =
-      entry.left.every((e) => e.done) &&
-      entry.right.every((e) => e.done) &&
-      entry.finisher.every((e) => e.done);
+      entry.left.every((e) => e?.done) &&
+      entry.right.every((e) => e?.done) &&
+      entry.finisher.every((e) => e?.done);
 
     const val = !allDone;
 
@@ -673,7 +721,7 @@ export default function Gym() {
     setLogs((prev) => ({ ...prev, [dateKey]: updated }));
   };
 
-  // Open modal to mark workout done (or edit)
+  /* -------------------- Modal open (preload modal inputs) -------------------- */
   const openModal = () => {
     if (dayjs(date).isAfter(dayjs(), "day")) {
       alert("🚫 Can't complete future workouts");
@@ -681,51 +729,59 @@ export default function Gym() {
     }
     const dateKey = fmtISO(date);
     const entry = logs[dateKey] || getEntry(dateKey);
+
+    // load inputs (strings for inputs)
     setCaloriesInput(entry.calories != null ? String(entry.calories) : "");
     setWeightInput(entry.weight != null ? String(entry.weight) : "");
+    setDurationHours(entry?.duration?.hours ?? 0);
+    setDurationMinutes(entry?.duration?.minutes ?? 0);
+    setMoodInput(entry?.mood ?? "🙂");
+
+    // load edit arrays (cloned so editing in modal doesn't mutate UI until save)
+    setEditLeft((entry.left || []).map((it) => ({ ...it })));
+    setEditRight((entry.right || []).map((it) => ({ ...it })));
+    setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
+
     setShowModal(true);
   };
 
-  // Save workout (calories, weight) and mark done
+  /* -------------------- Save workout (from modal) -------------------- */
   const saveWorkout = () => {
     const dateKey = fmtISO(date);
+    const existing = logs[dateKey] || getEntry(dateKey);
 
-    // Normalize the entry FIRST — ensures objects always have {name, done}
-    const entry = logs[dateKey] || getEntry(dateKey);
-
-    // 🔥 CALORIES
     const caloriesVal = Number(caloriesInput) || 0;
-
-    // ⚖ WEIGHT
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : entry.weight || null;
+      : (existing.weight ?? null);
 
-    // 📊 BMI
-    const HEIGHT_CM = 176;
     const newBmi = weightVal
       ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-      : entry.bmi || null;
+      : (existing.bmi ?? null);
 
-    // 🆕 BUILD UPDATED ENTRY (always keeps name + done objects)
     const updatedEntry = {
-      weekday: entry.weekday || weekday,
-      left: entry.left.map((x) => ({ ...x })),
-      right: entry.right.map((x) => ({ ...x })),
-      finisher: entry.finisher.map((x) => ({ ...x })),
+      weekday: existing.weekday || weekday,
+      left: editLeft.length ? editLeft : existing.left,
+      right: editRight.length ? editRight : existing.right,
+      finisher: editFinisher.length ? editFinisher : existing.finisher,
       calories: caloriesVal,
       weight: weightVal,
       bmi: newBmi,
       done: true,
+      duration: {
+        hours: Number(durationHours) || 0,
+        minutes: Number(durationMinutes) || 0,
+      },
+      mood: moodInput,
     };
 
-    // ⬆ Update UI state
+    // update UI
     setLogs((prev) => ({ ...prev, [dateKey]: updatedEntry }));
     setDoneState((prev) => ({ ...prev, [dateKey]: true }));
     setShowModal(false);
 
-    // 🌐 BACKEND SAVE — BATCHED (NO DIRECT FETCH)
+    // queue/batch update to backend
     const outgoing = {
       wd_gym_logs: {
         ...logs,
@@ -741,19 +797,32 @@ export default function Gym() {
       },
     };
 
-    // 🔥 Replace fetch() with queueing the write
     pushUpdate(outgoing);
   };
 
-  // Edit existing workout (open modal with existing values)
-
+  /* -------------------- Edit existing workout (open modal with values) -------------------- */
   const editWorkout = () => {
+    const dateKey = fmtISO(date);
+    const entry = logs[dateKey];
+
+    if (entry) {
+      setEditLeft((entry.left || []).map((it) => ({ ...it })));
+      setEditRight((entry.right || []).map((it) => ({ ...it })));
+      setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
+
+      setCaloriesInput(entry.calories ?? "");
+      setWeightInput(entry.weight ?? "");
+      setDurationHours(entry?.duration?.hours ?? 0);
+      setDurationMinutes(entry?.duration?.minutes ?? 0);
+      setMoodInput(entry?.mood ?? "🙂");
+    }
+
     openModal();
   };
 
-  // Unmark workout and fully reset the day
+  /* -------------------- Delete / Unmark (clear) a date entry -------------------- */
   const deleteWorkout = (dateKey) => {
-    // Update UI state instantly
+    // optimistic UI update
     setLogs((prev) => {
       const updated = { ...prev };
       delete updated[dateKey];
@@ -766,14 +835,13 @@ export default function Gym() {
       return updated;
     });
 
-    // Build outgoing payload (batched)
+    // backend payload
     const updatedLogs = { ...logs };
     delete updatedLogs[dateKey];
 
     const updatedDone = { ...doneState };
     delete updatedDone[dateKey];
 
-    // 🔥 Batch backend update (NO fetch)
     pushUpdate({
       wd_gym_logs: updatedLogs,
       wd_done: updatedDone,
@@ -783,11 +851,10 @@ export default function Gym() {
       },
     });
 
-    // Notify other pages
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
-  // Update target weight and save to backend
+  /* -------------------- Save target / current weight (batched) -------------------- */
   const saveTargetWeight = () => {
     const raw = targetWeight;
     if (!raw || isNaN(raw)) {
@@ -798,7 +865,6 @@ export default function Gym() {
     const newWeight = Number(raw);
     setTargetWeight(newWeight);
 
-    // 🔥 Batched backend save
     pushUpdate({
       wd_goals: {
         targetWeight: newWeight,
@@ -811,7 +877,6 @@ export default function Gym() {
     console.log("Target weight saved:", newWeight);
   };
 
-  // Update current weight and save to backend
   const updateCurrentWeight = () => {
     const raw = currWeight;
     if (raw === "" || isNaN(raw)) {
@@ -822,7 +887,6 @@ export default function Gym() {
     const newWeight = Number(raw);
     setCurrWeight(newWeight);
 
-    // 🔥 Batched backend save
     pushUpdate({
       wd_goals: {
         targetWeight,
@@ -835,7 +899,7 @@ export default function Gym() {
     console.log("Current weight updated:", newWeight);
   };
 
-  // Reset all progress both backend and local
+  /* -------------------- Reset full progress -------------------- */
   const resetProgress = async () => {
     const confirmReset = window.confirm("Reset ALL gym data?");
     if (!confirmReset) return;
@@ -855,7 +919,6 @@ export default function Gym() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(outgoing),
       });
-
       console.log("✅ FULL RESET DONE");
     } catch (err) {
       console.error("❌ Reset failed:", err);
@@ -863,18 +926,16 @@ export default function Gym() {
       return;
     }
 
-    // Clear local
     setLogs({});
     setDoneState({});
     setCurrWeight("");
     setTargetWeight("");
     setSundayQuote("Fetching your motivational quote...");
-
     window.dispatchEvent(new Event("lifeos:update"));
     alert("FULL RESET DONE ✅");
   };
 
-  // Derived entry and plan for rendering
+  /* -------------------- Derived values (entry/dayPlan/completion) -------------------- */
   const dateKey = fmtISO(date);
   const entry = logs[dateKey] || getEntry(dateKey);
   const dayPlan = DEFAULT_PLAN[weekday] || {
@@ -884,7 +945,6 @@ export default function Gym() {
     finisher: [],
   };
 
-  // Calculate completion and allowing save
   const totalExercises =
     (dayPlan.left?.length || 0) +
     (dayPlan.right?.length || 0) +
@@ -894,13 +954,11 @@ export default function Gym() {
     (entry.right?.filter(Boolean).length || 0) +
     (entry.finisher?.filter(Boolean).length || 0);
   let canComplete = totalExercises > 0 && completedExercises > 0;
-  // If past date, allow even if no toggles
   if (!canComplete && !dayjs(date).isSame(dayjs(), "day")) {
     canComplete = true;
   }
 
-  // Compute progress towards goal
-  // Baseline is current weight or first logged weight or target
+  // compute progress to target
   let baseline;
   if (currWeight !== "" && !isNaN(currWeight)) {
     baseline = Number(currWeight);
@@ -1098,7 +1156,6 @@ export default function Gym() {
           </button>
         </div>
       </header>
-
       {/* Progress / Weight Section */}
       <section className="mb-4 border rounded-2xl p-4 space-y-3 border-gray-700 bg-gradient-to-br from-[#0F766E] via-[#582717] to-[#0F766E] backdrop-blur-md min-h-[120px]">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1242,13 +1299,11 @@ export default function Gym() {
           </div>
         </div>
       </section>
-
       {/* Calendar + Daily Summary */}
       <section className="grid md:grid-cols-2 gap-4 mb-2">
         <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
         <DailySummaryCarousel date={date} logs={logs} />
       </section>
-
       {/* Workout Section */}
       <section className="mb-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
@@ -1518,108 +1573,211 @@ export default function Gym() {
         </div>
       </section>
 
-      {/* Modal for saving workout */}
+      {/* ------------- MODAL BLOCK WITH EXERCISE EDITOR ------------- */}
       {showModal && (
-        <Modal
-          onClose={() => setShowModal(false)}
-          onEnter={() => {
-            saveWorkout();
-            setShowModal(false);
-          }}
-        >
-          <div className="space-y-6">
-            {/* HEADER */}
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 text-transparent bg-clip-text">
-              Save Workout • {fmtDisp(date)}
-            </h3>
+        <Modal onClose={() => setShowModal(false)} onEnter={saveWorkout}>
+          <h2 className="text-xl font-bold text-emerald-200 mb-4">
+            Log Today's Workout
+          </h2>
 
-            {/* CALORIES INPUT */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-emerald-200">
-                🔥 Calories Burned
-              </label>
+          {/* CALORIES */}
+          <label className="block text-sm text-emerald-100">
+            Calories Burned
+          </label>
+          <input
+            type="number"
+            value={caloriesInput}
+            onChange={(e) => setCaloriesInput(e.target.value)}
+            className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1 mb-3 
+                       text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
+            placeholder="e.g. 500"
+          />
 
+          {/* WEIGHT */}
+          <label className="block text-sm text-emerald-100">Weight (kg)</label>
+          <input
+            type="number"
+            value={weightInput}
+            onChange={(e) => setWeightInput(e.target.value)}
+            className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1 mb-3
+                       text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
+            placeholder="e.g. 79.5"
+          />
+
+          {/* -------------------- DURATION -------------------- */}
+          <label className="block text-sm text-emerald-100 mb-1">
+            Duration
+          </label>
+
+          <div className="flex gap-4 mb-4">
+            {/* Hours */}
+            <div className="flex-1">
+              <label className="block text-xs text-emerald-200">Hours</label>
               <input
                 type="number"
-                className="
-          w-full px-3 py-2 rounded-lg
-          bg-[#0B1A1A]/80
-          text-emerald-100
-          border border-emerald-500/20
-          placeholder-emerald-300/40
-          focus:border-emerald-400/40 focus:ring-1 
-          focus:ring-emerald-400 outline-none
-          transition-all
-        "
-                value={caloriesInput}
-                onChange={(e) => setCaloriesInput(e.target.value)}
-                placeholder="e.g. 350"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    saveWorkout();
-                    setShowModal(false);
-                  }
-                }}
+                min="0"
+                max="5"
+                value={durationHours}
+                onChange={(e) => setDurationHours(Number(e.target.value))}
+                className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1
+                           text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
+                placeholder="0"
               />
             </div>
 
-            {/* WEIGHT INPUT */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-emerald-200">
-                ⚖ Current Weight (kg)
-              </label>
-
+            {/* Minutes */}
+            <div className="flex-1">
+              <label className="block text-xs text-emerald-200">Minutes</label>
               <input
-                ref={weightInputRef}
                 type="number"
-                className="
-          w-full px-3 py-2 rounded-lg
-          bg-[#0B1A1A]/80
-          text-emerald-100
-          border border-emerald-500/20
-          placeholder-emerald-300/40
-          focus:border-emerald-400/40 focus:ring-1 
-          focus:ring-emerald-400 outline-none
-          transition-all
-        "
-                value={weightInput}
-                onChange={(e) => setWeightInput(e.target.value)}
-                placeholder="e.g. 75"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    saveWorkout();
-                    setTimeout(() => weightInputRef.current?.blur(), 30);
-                  }
-                }}
+                min="0"
+                max="59"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1
+                           text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
+                placeholder="0"
               />
             </div>
+          </div>
 
-            {/* BUTTONS */}
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="
-          px-4 py-2 rounded-lg border border-emerald-500/20 
-          text-emerald-200 hover:bg-emerald-500/10
-          transition-all
-        "
-              >
-                Cancel
-              </button>
+          {/* -------------------- MOOD SELECTOR -------------------- */}
+          <label className="block text-sm text-emerald-100 mb-2">Mood</label>
 
+          <div className="flex gap-3 mb-6">
+            {["😄", "🙂", "😐", "😣", "😴"].map((m) => (
               <button
-                onClick={() => saveWorkout()}
-                className="
-          px-4 py-2 rounded-lg 
-          bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500
-          hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400
-          text-white font-semibold shadow-lg shadow-emerald-800/30
-          transition-all hover:scale-[1.03]
-        "
+                key={m}
+                type="button"
+                onClick={() => setMoodInput(m)}
+                className={`
+                  text-2xl p-2 rounded-xl transition
+                  bg-white/10 backdrop-blur-xl border border-emerald-500/20
+                  shadow-inner shadow-black/20
+                  hover:scale-110 active:scale-95
+                  ${moodInput === m ? "ring-2 ring-emerald-400" : "opacity-70"}
+                `}
               >
-                Save
+                {m}
               </button>
+            ))}
+          </div>
+
+          {/* -------------------- EXERCISE EDITOR (OPTION B — TOGGLE CHIPS) -------------------- */}
+          <h3 className="text-lg font-semibold text-emerald-200 mb-2">
+            Edit Exercises
+          </h3>
+
+          {/* LEFT */}
+          <div className="mb-4">
+            <div className="text-sm text-emerald-300 mb-1 font-medium">
+              Left
             </div>
+            <div className="flex flex-wrap gap-2">
+              {editLeft.map((ex, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    const temp = [...editLeft];
+                    temp[i].done = !temp[i].done;
+                    setEditLeft(temp);
+                  }}
+                  className={`
+                    px-3 py-1 rounded-xl text-sm font-medium transition-all
+                    border backdrop-blur-xl
+                    ${
+                      ex.done
+                        ? "bg-emerald-500/30 border-emerald-400 text-emerald-200"
+                        : "bg-white/10 border-white/20 text-gray-300"
+                    }
+                  `}
+                >
+                  {ex.name} {ex.done ? "✔" : "✘"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="mb-4">
+            <div className="text-sm text-emerald-300 mb-1 font-medium">
+              Right
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {editRight.map((ex, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    const temp = [...editRight];
+                    temp[i].done = !temp[i].done;
+                    setEditRight(temp);
+                  }}
+                  className={`
+                    px-3 py-1 rounded-xl text-sm font-medium transition-all
+                    border backdrop-blur-xl
+                    ${
+                      ex.done
+                        ? "bg-emerald-500/30 border-emerald-400 text-emerald-200"
+                        : "bg-white/10 border-white/20 text-gray-300"
+                    }
+                  `}
+                >
+                  {ex.name} {ex.done ? "✔" : "✘"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* FINISHER */}
+          <div className="mb-6">
+            <div className="text-sm text-emerald-300 mb-1 font-medium">
+              Finisher
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {editFinisher.map((ex, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    const temp = [...editFinisher];
+                    temp[i].done = !temp[i].done;
+                    setEditFinisher(temp);
+                  }}
+                  className={`
+                    px-3 py-1 rounded-xl text-sm font-medium transition-all
+                    border backdrop-blur-xl
+                    ${
+                      ex.done
+                        ? "bg-cyan-500/30 border-cyan-300 text-cyan-100"
+                        : "bg-white/10 border-white/20 text-gray-300"
+                    }
+                  `}
+                >
+                  {ex.name} {ex.done ? "✔" : "✘"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* -------------------- ACTION BUTTONS -------------------- */}
+          <div className="flex justify-end gap-3 mt-4">
+            <button
+              className="px-4 py-2 rounded-xl bg-red-500/30 border border-red-400/30 
+                         text-red-200 hover:bg-red-500/40"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="px-4 py-2 rounded-xl bg-emerald-500/30 border border-emerald-400/30 
+                         text-emerald-200 hover:bg-emerald-500/40"
+              onClick={saveWorkout}
+            >
+              Save
+            </button>
           </div>
         </Modal>
       )}
@@ -1737,46 +1895,5 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         })}
       </div>
     </section>
-  );
-}
-
-/* -------------------- Modal ------------------- */
-function Modal({ children, onClose, onEnter }) {
-  // 🔥 Handle ESC + ENTER keys
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-      if (e.key === "Enter" && onEnter) {
-        onEnter();
-      }
-    };
-
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose, onEnter]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose} // 🟢 Clicking outside closes modal
-    >
-      {/* BACKDROP */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"></div>
-
-      {/* MODAL BOX */}
-      <div
-        className="
-          relative w-full max-w-lg rounded-2xl p-6
-          bg-gradient-to-br from-[#0F1622]/95 via-[#132033]/95 to-[#0A0F1C]/95
-          border border-emerald-400/20 shadow-2xl shadow-black/40
-          animate-modalIn
-        "
-        onClick={(e) => e.stopPropagation()} // 🛑 Prevent closing on inside click
-      >
-        {children}
-      </div>
-    </div>
   );
 }
