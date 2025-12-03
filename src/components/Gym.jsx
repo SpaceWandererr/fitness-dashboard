@@ -298,8 +298,12 @@ function DailySummaryMerged({ date, logs, mode }) {
 
   perfScore = Math.min(100, Math.round(perfScore));
 
+  /* put near top of DailySummaryMerged: */
   const CAL_GOAL = 500;
-  const calDiff = entry?.calories != null ? entry.calories - CAL_GOAL : null;
+  const caloriesLogged =
+    entry?.calories != null ? Number(entry.calories) : null;
+  const caloriesDiff =
+    caloriesLogged != null ? caloriesLogged - CAL_GOAL : null;
 
   const yesterdayKey = dayjs(date).subtract(1, "day").format("YYYY-MM-DD");
   const yesterdayWeight = logs[yesterdayKey]?.weight ?? null;
@@ -372,7 +376,7 @@ function DailySummaryMerged({ date, logs, mode }) {
         {/* -------- NEW MODERN CARD -------- */}
         {mode === "new" && (
           <div className="grid grid-cols-2 gap-3">
-            {/* WIDGET TILE */}
+            {/* SETS */}
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Sets</div>
               <div className="text-lg font-bold">
@@ -380,11 +384,15 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
             </div>
 
+            {/* MUSCLES */}
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Muscles</div>
-              <div className="text-sm">{musclesWorked.join(", ") || "—"}</div>
+              <div className="text-sm">
+                {musclesWorked?.length > 0 ? musclesWorked.join(", ") : "—"}
+              </div>
             </div>
 
+            {/* DURATION */}
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Duration</div>
               <div className="text-lg font-bold">
@@ -394,27 +402,77 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
             </div>
 
+            {/* MOOD */}
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Mood</div>
-              <div className="text-lg font-bold">{mood}</div>
+              <div className="text-lg font-bold">{entry?.mood ?? "—"}</div>
             </div>
 
+            {/* SCORE */}
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Score</div>
               <div className="text-lg font-bold">{perfScore}/100</div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
-              <div className="text-xs text-emerald-200">Cal Goal</div>
-              <div className="text-lg font-bold">
-                {calDiff != null
-                  ? calDiff >= 0
-                    ? `+${calDiff}`
-                    : calDiff
-                  : "—"}
+            {/* -------------------- CALORIE STATS -------------------- */}
+            <div className="col-span-2">
+              <div
+                className="grid grid-cols-3 gap-3 
+                bg-white/10 backdrop-blur-xl 
+                p-3 rounded-2xl border border-emerald-400/20 shadow-inner"
+              >
+                {/* TARGET */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xs uppercase tracking-wide text-emerald-200">
+                    Target
+                  </span>
+                  <span className="text-lg font-bold text-emerald-300">
+                    500
+                  </span>
+                </div>
+
+                {/* BURNED */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xs uppercase tracking-wide text-emerald-200">
+                    Burned
+                  </span>
+                  <span className="text-lg font-bold text-teal-300">
+                    {entry?.calories != null ? entry.calories : "—"}
+                  </span>
+                </div>
+
+                {/* DIFF */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xs uppercase tracking-wide text-emerald-200">
+                    + / -
+                  </span>
+
+                  {(() => {
+                    const burned = entry?.calories ?? null;
+                    if (burned == null)
+                      return (
+                        <span className="text-lg font-bold text-gray-300">
+                          —
+                        </span>
+                      );
+
+                    const diff = burned - 500;
+
+                    return (
+                      <span
+                        className={`text-lg font-bold ${
+                          diff >= 0 ? "text-emerald-300" : "text-red-300"
+                        }`}
+                      >
+                        {diff >= 0 ? `+${diff}` : diff}
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
 
+            {/* WEIGHT TREND */}
             <div className="col-span-2 bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-emerald-400/20">
               <div className="text-xs text-emerald-200">Trend</div>
               <div className="text-lg font-bold">
@@ -426,6 +484,7 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
             </div>
 
+            {/* MESSAGE */}
             <div className="col-span-2 text-emerald-200 italic text-center mt-1">
               {message}
             </div>
