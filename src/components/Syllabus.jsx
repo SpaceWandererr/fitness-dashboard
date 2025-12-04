@@ -4362,21 +4362,22 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   }
 
   /* ======================= SYNCED STATE FROM MONGO ======================= */
+  // 1 BUILD TREE FIRST - FIXED
+  // 1 BUILD TREE FIRST - FIXED
   const normalizeTree = useCallback((src) => {
     const out = {};
     for (const [k, v] of Object.entries(src || {})) {
       out[k] = normalizeSection(v);
     }
     return out;
-  }, []);
+  }, []); // ✅ Stable - never changes
 
-  // 1️⃣ BUILD TREE FIRST
   const tree = useMemo(() => {
     if (dashboardState?.syllabus_tree_v2) {
       return normalizeTree(dashboardState.syllabus_tree_v2);
     }
     return normalizeTree(TREE);
-  }, [dashboardState?.syllabus_tree_v2, normalizeTree]);
+  }, [dashboardState?.syllabus_tree_v2]); // ✅ Now stable
 
   // 2️⃣ RAW META SECOND
   const meta = dashboardState?.syllabus_meta || {};
@@ -4411,6 +4412,29 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   /* ======================= AUTO SEED MONGO ======================= */
   /* ======================= INITIAL LOAD & SEEDING (FIXED!) ======================= */
+  // 1️⃣ FIRST: Load existing data from MongoDB on mount
+  useEffect(() => {
+    console.log("🔄 Loading data from MongoDB...");
+
+    fetch(API_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        console.log("✅ Loaded from MongoDB:", data);
+        if (data && Object.keys(data).length > 0) {
+          setDashboardState(data);
+        } else {
+          console.log("📭 No data in MongoDB, will seed fresh data");
+        }
+      })
+      .catch((err) => {
+        console.error("❌ Load failed:", err);
+      });
+  }, [API_URL]); // Only run once on mount
+
+  // 2️⃣ SECOND: Seed if no data exists (your existing code)
   useEffect(() => {
     // Only seed if syllabus_tree_v2 is completely missing (first-time user)
     if (dashboardState?.syllabus_tree_v2) {
@@ -4429,7 +4453,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
       syllabus_notes: {},
       syllabus_streak: [],
       syllabus_lastStudied: "",
-      // Optional: add a flag so we know it's been initialized
       syllabus_initialized: true,
     };
 
@@ -4442,7 +4465,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     })
       .then(() => console.log("Fresh syllabus seeded successfully"))
       .catch((err) => console.error("Seed failed:", err));
-  }, [dashboardState?.syllabus_tree_v2]); // Only depend on whether tree exists
+  }, [dashboardState?.syllabus_tree_v2]);
 
   /* ======================= LAST STUDIED AUTO-HIDE ======================= */
   useEffect(() => {
@@ -4625,7 +4648,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
             n.forEach((it) => {
               it.done = val;
               it.completedOn = val ? nowISO() : "";
-              if (val) lastItem = it; // ← This is CORRECT — captures the LAST item!
+              if (val) lastItem = it;
             });
             return;
           }
@@ -4634,7 +4657,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
         markRecursively(node);
 
-        // Only update lastStudied when MARKING (your desired behavior)
         const updates = { syllabus_tree_v2: newTree };
 
         if (val && lastItem) {
@@ -4644,17 +4666,17 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
           const streak = new Set(prev.syllabus_streak || []);
           streak.add(nowISO().slice(0, 10));
           updates.syllabus_streak = Array.from(streak);
-        }
-
-        // When UNMARKING → recalculate from remaining done tasks
-        if (!val) {
+        } else {
           updates.syllabus_lastStudied = findLastStudied(newTree);
         }
+
+        // 🔥 Mongo sync
+        updateDashboard(updates);
 
         return { ...prev, ...updates };
       });
     },
-    [tree]
+    [tree, updateDashboard]
   );
 
   // 3. markTask — single task (uses timestamp order)
@@ -4679,14 +4701,22 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
           streak.add(nowISO().slice(0, 10));
           updates.syllabus_streak = Array.from(streak);
         } else {
-          // When unmarking a single task → recalculate from remaining
           updates.syllabus_lastStudied = findLastStudied(newTree);
         }
 
-        return { ...prev, ...updates };
+        const newState = { ...prev, ...updates };
+
+        // ✅ IMMEDIATE SAVE - NO DEBOUNCE
+        fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newState),
+        }).catch((err) => console.error("Save failed:", err));
+
+        return newState;
       });
     },
-    [tree]
+    [tree, API_URL]
   );
 
   // 4. Keep this helper (for unmarking)
@@ -4983,25 +5013,32 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
                 {/* Reset */}
                 <button
                   onClick={() => {
-                    if (!confirm("Reset ALL progress? This cannot be undone!"))
-                      return;
+                    if (!confirm("Reset ONLY syllabus progress?")) return;
+
                     const resetTree = normalizeTree(TREE);
-                    const resetState = {
+
+                    const syllabusResetPayload = {
                       syllabus_tree_v2: resetTree,
                       syllabus_meta: {},
                       syllabus_notes: {},
                       syllabus_streak: [],
                       syllabus_lastStudied: "",
-                      syllabus_initialized: true,
                     };
-                    setDashboardState(resetState);
+
+                    // Update local state without touching gym or anything else
+                    setDashboardState((prev) => ({
+                      ...prev,
+                      ...syllabusResetPayload,
+                    }));
+
+                    // Send only syllabus reset to backend
                     fetch(API_URL, {
                       method: "PUT",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(resetState),
+                      body: JSON.stringify(syllabusResetPayload),
                     })
                       .then(() => {
-                        alert("All progress reset!");
+                        alert("Syllabus progress reset ✔");
                         window.location.reload();
                       })
                       .catch(() => alert("Reset failed!"));
