@@ -2323,7 +2323,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
     text-[#FAFAFA] shadow-xl shadow-black/40"
     >
       {/* Header - Dynamic Date Range with Month Navigation */}
-      <div className="mb-4">
+      <div className="mb-2">
         <div className="flex items-center justify-between mb-2">
           <button
             onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
@@ -2409,7 +2409,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         })()}
       </div>
       {/* 5 Rows × 7 Columns - Based on viewMonth */}
-      <div className="grid grid-cols-7 gap-1.5 mb-4">
+      <div className="grid grid-cols-7 gap-1.5 mb-2">
         {(() => {
           const cells = [];
 
