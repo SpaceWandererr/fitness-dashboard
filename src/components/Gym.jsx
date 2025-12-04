@@ -261,7 +261,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0
+    0,
   );
 
   const MUSCLES = {
@@ -316,8 +316,8 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-      ? "Great job! Keep pushing! 💪"
-      : "You showed up. That's what matters. 🚀";
+        ? "Great job! Keep pushing! 💪"
+        : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
@@ -459,7 +459,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           <span className="text-emerald-400">✓</span>
                           <span>{ex}</span>
                         </div>
-                      ) : null
+                      ) : null,
                     )}
                   </div>
                 ) : (
@@ -651,8 +651,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                        ? `↘️ ${weightTrend}kg`
-                        : "→ 0kg"
+                          ? `↘️ ${weightTrend}kg`
+                          : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -662,8 +662,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                        ? "text-emerald-300"
-                        : "text-gray-300"
+                          ? "text-emerald-300"
+                          : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -713,7 +713,7 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length
+          : (i - 1 + modes.length) % modes.length,
       );
     }
   };
@@ -835,7 +835,7 @@ export default function Gym() {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   // Modal inputs + editing states
@@ -859,7 +859,7 @@ export default function Gym() {
     (async () => {
       try {
         const res = await fetch(
-          "https://fitness-backend-laoe.onrender.com/api/state"
+          "https://fitness-backend-laoe.onrender.com/api/state",
         );
         if (res.ok) {
           const data = await res.json();
@@ -868,12 +868,12 @@ export default function Gym() {
           setCurrWeight(
             data.wd_goals?.currentWeight != null
               ? data.wd_goals.currentWeight
-              : ""
+              : "",
           );
           setTargetWeight(
             data.wd_goals?.targetWeight != null
               ? data.wd_goals.targetWeight
-              : ""
+              : "",
           );
         } else {
           console.error("Failed to fetch state:", res.status);
@@ -956,7 +956,7 @@ export default function Gym() {
     const updated = {
       ...entry,
       [section]: entry[section].map((item, i) =>
-        i === idx ? { ...item, done: !item.done } : item
+        i === idx ? { ...item, done: !item.done } : item,
       ),
     };
 
@@ -1017,11 +1017,11 @@ export default function Gym() {
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : existing.weight ?? null;
+      : (existing.weight ?? null);
 
     const newBmi = weightVal
       ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-      : existing.bmi ?? null;
+      : (existing.bmi ?? null);
 
     const updatedEntry = {
       weekday: existing.weekday || weekday,
@@ -1198,7 +1198,7 @@ export default function Gym() {
     alert("FULL RESET DONE ✅");
   };
 
-  /* -------------------- Derived values (entry/dayPlan/completion) -------------------- */
+  /* --------------- Derived values (entry/dayPlan/completion) --------------- */
   const dateKey = fmtISO(date);
   const entry = logs[dateKey] || getEntry(dateKey);
   const dayPlan = DEFAULT_PLAN[weekday] || {
@@ -1380,46 +1380,87 @@ export default function Gym() {
       border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-wide text-emerald-200">
-            Gym
-          </h1>
-          <p className="text-sm text-gray-300">
-            Log workouts, calories, weight — stable, dark-mode ready.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <select
-            value={weekday}
-            onChange={(e) => {
-              userChangedWeekday.current = true;
-              setWeekday(e.target.value);
-            }}
-            className="px-3 py-2 rounded-md border bg-[#07201f] text-[#FAFAF9] border-emerald-800 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 transition"
-          >
-            {WEEK.map((d) => (
-              <option
-                key={d}
-                value={d}
-                className="bg-[#07201f] text-emerald-100"
-              >
-                {d}
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 rounded-md border bg-[#07201f] border-emerald-800 text-[#FAFAF9] text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 transition"
-          />
-          <button
-            onClick={resetProgress}
-            className="ml-auto bg-gradient-to-r from-red-700 via-red-600 to-red-500 hover:from-red-600 hover:to-red-400 text-white px-4 py-2 rounded-md text-sm font-semibold shadow-md transition-all duration-200"
-          >
-            Reset Progress
-          </button>
+      <header
+        className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/30 
+        bg-gradient-to-br from-[#0F766E]/20 via-[#183D3D]/30 to-[#0F0F0F]/20 
+        backdrop-blur-xl p-5 shadow-xl shadow-black/40"
+      >
+        {/* Gradient Accent Border */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 -z-10" />
+
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          {/* Title Section */}
+          <div className="space-y-1 flex-shrink-0">
+            <h1 className="text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
+              💪 Gym Tracker
+            </h1>
+            <p className="text-xs text-emerald-200/70 font-medium tracking-wide">
+              Track progress • Build habits • Stay consistent
+            </p>
+          </div>
+
+          {/* Controls Section - Single Row Layout */}
+          <div className="flex items-center gap-2.5 w-full lg:w-auto lg:flex-shrink-0">
+            {/* Weekday Select - Compact */}
+            <select
+              value={weekday}
+              onChange={(e) => {
+                userChangedWeekday.current = true;
+                setWeekday(e.target.value);
+              }}
+              className="px-2.5 py-2.5 w-[110px] rounded-xl border border-emerald-700/50 
+                bg-[#07201f]/90 backdrop-blur-sm text-emerald-100 text-sm font-medium
+                focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                hover:bg-[#07201f] hover:border-emerald-600/60
+                transition-all duration-200 cursor-pointer
+                shadow-lg shadow-black/20"
+            >
+              {WEEK.map((d) => (
+                <option
+                  key={d}
+                  value={d}
+                  className="bg-[#07201f] text-emerald-100"
+                >
+                  {d}
+                </option>
+              ))}
+            </select>
+
+            {/* Date Input - Compact */}
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="px-2.5 py-2.5 w-[145px] rounded-xl border border-emerald-700/50 
+                bg-[#07201f]/90 backdrop-blur-sm text-emerald-100 text-sm font-medium
+                focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                hover:bg-[#07201f] hover:border-emerald-600/60
+                transition-all duration-200 cursor-pointer
+                shadow-lg shadow-black/20
+                [color-scheme:dark]"
+            />
+
+            {/* Reset Button - Compact */}
+            <button
+              onClick={resetProgress}
+              className="flex-1 lg:flex-initial group relative overflow-hidden
+                bg-gradient-to-r from-red-600 via-red-500 to-red-600 
+                hover:from-red-500 hover:via-red-400 hover:to-red-500
+                text-white px-4 py-2.5 rounded-xl text-sm font-bold
+                shadow-lg shadow-red-900/40 hover:shadow-red-800/60
+                transition-all duration-300 hover:scale-[1.02]
+                border border-red-400/20 whitespace-nowrap"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                <span>🔄</span>
+                <span>Reset Progress</span>
+              </span>
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
+                translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
+              />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1430,11 +1471,11 @@ export default function Gym() {
   dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
   shadow-xl shadow-black/40 backdrop-blur-md"
       >
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Target Weight */}
-          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2 border border-emerald-500/20">
-            <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
-              🎯 <span>Target</span>
+          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2.5 border border-emerald-500/20 hover:border-emerald-500/40 transition-all">
+            <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1 flex-shrink-0">
+              🎯 <span className="hidden sm:inline">Target</span>
             </span>
             <input
               type="number"
@@ -1449,14 +1490,14 @@ export default function Gym() {
                 }
               }}
               disabled={targetWeight && !isEditingTarget}
-              className={`w-16 px-2 py-1 rounded-lg border text-sm font-semibold text-center
-          focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent
-          placeholder:text-emerald-300/30 transition-all
-          ${
-            targetWeight && !isEditingTarget
-              ? "border-emerald-500/50 bg-emerald-900/20 text-emerald-200 cursor-not-allowed opacity-70"
-              : "border-emerald-500/30 bg-black/30 text-emerald-100"
-          }`}
+              className={`flex-1 min-w-0 px-2 py-1 rounded-lg border text-sm font-semibold text-center
+                focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent
+                placeholder:text-emerald-300/30 transition-all
+                ${
+                  targetWeight && !isEditingTarget
+                    ? "border-emerald-500/50 bg-emerald-900/20 text-emerald-200 cursor-not-allowed opacity-70"
+                    : "border-emerald-500/30 bg-black/30 text-emerald-100"
+                }`}
             />
             <button
               onClick={() => {
@@ -1467,23 +1508,25 @@ export default function Gym() {
                   setIsEditingTarget(false);
                 }
               }}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold text-white 
-          transition-all duration-200 hover:scale-105 shadow-sm
-          ${
-            targetWeight && !isEditingTarget
-              ? "bg-orange-600/80 hover:bg-orange-500"
-              : "bg-cyan-600/80 hover:bg-cyan-500"
-          }`}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold text-white flex-shrink-0
+                transition-all duration-200 hover:scale-105 shadow-sm
+                ${
+                  targetWeight && !isEditingTarget
+                    ? "bg-orange-600/80 hover:bg-orange-500"
+                    : "bg-cyan-600/80 hover:bg-cyan-500"
+                }`}
             >
               {targetWeight && !isEditingTarget ? "Edit" : "Set"}
             </button>
-            <span className="text-xs text-emerald-300/70">kg</span>
+            <span className="text-xs text-emerald-300/70 flex-shrink-0">
+              kg
+            </span>
           </div>
 
           {/* Current Weight */}
-          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2 border border-cyan-500/20">
-            <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1">
-              ⚖️ <span>Curr Weight</span>
+          <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2.5 border border-cyan-500/20 hover:border-cyan-500/40 transition-all">
+            <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1 flex-shrink-0">
+              ⚖️ <span className="hidden sm:inline">Curr Weight</span>
             </span>
             <input
               type="number"
@@ -1498,14 +1541,14 @@ export default function Gym() {
                 }
               }}
               disabled={currWeight && !isEditingCurrent}
-              className={`w-16 px-2 py-1 rounded-lg border text-sm font-semibold text-center
-          focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent
-          placeholder:text-cyan-300/30 transition-all
-          ${
-            currWeight && !isEditingCurrent
-              ? "border-cyan-500/50 bg-cyan-900/20 text-cyan-200 cursor-not-allowed opacity-70"
-              : "border-cyan-500/30 bg-black/30 text-cyan-100"
-          }`}
+              className={`flex-1 min-w-0 px-2 py-1 rounded-lg border text-sm font-semibold text-center
+                focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent
+                placeholder:text-cyan-300/30 transition-all
+                ${
+                  currWeight && !isEditingCurrent
+                    ? "border-cyan-500/50 bg-cyan-900/20 text-cyan-200 cursor-not-allowed opacity-70"
+                    : "border-cyan-500/30 bg-black/30 text-cyan-100"
+                }`}
             />
             <button
               onClick={() => {
@@ -1516,78 +1559,121 @@ export default function Gym() {
                   setIsEditingCurrent(false);
                 }
               }}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold text-white 
-          transition-all duration-200 hover:scale-105 shadow-sm
-          ${
-            currWeight && !isEditingCurrent
-              ? "bg-orange-600/80 hover:bg-orange-500"
-              : "bg-emerald-600/80 hover:bg-emerald-500"
-          }`}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold text-white flex-shrink-0
+                transition-all duration-200 hover:scale-105 shadow-sm
+                ${
+                  currWeight && !isEditingCurrent
+                    ? "bg-orange-600/80 hover:bg-orange-500"
+                    : "bg-emerald-600/80 hover:bg-emerald-500"
+                }`}
             >
               {currWeight && !isEditingCurrent ? "Edit" : "Set"}
             </button>
-            <span className="text-xs text-cyan-300/70">kg</span>
+            <span className="text-xs text-cyan-300/70 flex-shrink-0">kg</span>
           </div>
 
-          {/* Display Current/Today's weight */}
-          <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2 border border-teal-500/20">
-            <span className="text-xs text-gray-400">Now:</span>
-            <span className="text-teal-300 font-bold text-sm">
+          {/* Display Current/Today's weight with trend */}
+          <div className="flex flex-col gap-1.5 bg-gradient-to-br from-teal-600/10 via-teal-700/5 to-teal-800/10 rounded-xl px-3 py-2.5 border border-teal-500/30 hover:border-teal-400/50 transition-all shadow-sm">
+            <span className="text-[10px] uppercase tracking-wider text-teal-400/70 font-semibold">Now</span>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-teal-300 font-black text-xl leading-none">
+                {(() => {
+                  // 1. If TODAY has logged weight → show it
+                  if (entry?.weight != null) return `${entry.weight} kg`;
+
+                  // 2. Get all past logged weights
+                  const pastKeys = Object.keys(logs)
+                    .filter((k) => logs[k]?.weight != null && k < dateKey)
+                    .sort()
+                    .reverse(); // latest first
+
+                  // 3. If yesterday specifically has weight, use that first
+                  const yesterdayKey = dayjs(dateKey)
+                    .subtract(1, "day")
+                    .format("YYYY-MM-DD");
+                  if (logs[yesterdayKey]?.weight != null) {
+                    return `${logs[yesterdayKey].weight} kg`;
+                  }
+
+                  // 4. If no yesterday → use most recent backdated weight
+                  if (pastKeys.length > 0) {
+                    return `${logs[pastKeys[0]].weight} kg`;
+                  }
+
+                  // 5. No weight anywhere → show —
+                  return "—";
+                })()}
+              </span>
+              {/* Trend indicator */}
               {(() => {
-                // 1. If TODAY has logged weight → show it
-                if (entry?.weight != null) return `${entry.weight} kg`;
+                const yesterdayKey = dayjs(dateKey).subtract(1, "day").format("YYYY-MM-DD");
+                const todayWeight = entry?.weight;
+                const yesterdayWeight = logs[yesterdayKey]?.weight;
 
-                // 2. Get all past logged weights
-                const pastKeys = Object.keys(logs)
-                  .filter((k) => logs[k]?.weight != null && k < dateKey)
-                  .sort()
-                  .reverse(); // latest first
-
-                // 3. If yesterday specifically has weight, use that first
-                const yesterdayKey = dayjs(dateKey)
-                  .subtract(1, "day")
-                  .format("YYYY-MM-DD");
-                if (logs[yesterdayKey]?.weight != null) {
-                  return `${logs[yesterdayKey].weight} kg`;
+                if (todayWeight && yesterdayWeight) {
+                  const diff = todayWeight - yesterdayWeight;
+                  if (diff > 0) {
+                    return <span className="text-red-400 text-xs font-bold">↑{diff.toFixed(1)}</span>;
+                  } else if (diff < 0) {
+                    return <span className="text-emerald-400 text-xs font-bold">↓{Math.abs(diff).toFixed(1)}</span>;
+                  }
                 }
-
-                // 4. If no yesterday → use most recent backdated weight
-                if (pastKeys.length > 0) {
-                  return `${logs[pastKeys[0]].weight} kg`;
-                }
-
-                // 5. No weight anywhere → show —
-                return "—";
+                return null;
               })()}
-            </span>
+            </div>
+            {/* Last logged date if not today */}
+            {!entry?.weight && (() => {
+              const pastKeys = Object.keys(logs)
+                .filter((k) => logs[k]?.weight != null && k < dateKey)
+                .sort()
+                .reverse();
+
+              if (pastKeys.length > 0) {
+                const lastDate = dayjs(pastKeys[0]).format("MMM D");
+                return <span className="text-teal-500/60 text-[9px]">Last: {lastDate}</span>;
+              }
+              return null;
+            })()}
           </div>
 
           {/* Progress text */}
-          <div className="text-xs font-semibold bg-white/5 rounded-xl px-3 py-2 border border-white/10">
+          <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-2.5 border transition-all shadow-sm
+            ${pctToGoal < 0 
+              ? "bg-gradient-to-br from-red-600/10 via-red-700/5 to-red-800/10 border-red-500/30 hover:border-red-400/50" 
+              : "bg-gradient-to-br from-emerald-600/10 via-emerald-700/5 to-emerald-800/10 border-emerald-500/30 hover:border-emerald-400/50"
+            }`}>
             {pctToGoal < 0 ? (
-              <span className="flex items-center gap-1.5">
-                <span>⚠️</span>
-                <span className="text-gray-300">Regression</span>
-                <span className="text-red-400 font-bold">
-                  {Math.abs(pctToGoal).toFixed(0)}%
-                </span>
-                <span className="text-gray-500 text-[10px]">
-                  (Δ +{Math.abs(diffToGoal)} kg)
-                </span>
-              </span>
+              <>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="text-sm">⚠️</span>
+                  <span className="text-[10px] uppercase tracking-wider text-red-400/70 font-semibold">Regression</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-red-400 font-black text-xl leading-none">
+                    {Math.abs(pctToGoal).toFixed(0)}%
+                  </span>
+                  <span className="text-red-300/80 text-xs font-semibold">
+                    +{Math.abs(diffToGoal)} kg
+                  </span>
+                </div>
+              </>
             ) : (
-              <span className="flex items-center gap-1.5">
-                <span className="text-emerald-300 font-bold">
-                  {Math.min(100, pctToGoal).toFixed(0)}%
-                </span>
-                <span className="text-gray-300">to goal</span>
-                <span className="text-gray-500 text-[10px]">
-                  (Δ {diffToGoal} kg)
-                </span>
-              </span>
+              <>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="text-[10px] uppercase tracking-wider text-emerald-400/70 font-semibold">Progress</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-emerald-300 font-black text-xl leading-none">
+                    {Math.min(100, pctToGoal).toFixed(0)}%
+                  </span>
+                  <span className="text-emerald-200/80 text-xs font-semibold">
+                    {diffToGoal} kg left
+                  </span>
+                </div>
+              </>
             )}
           </div>
-        </div>
+        </div> 
 
         {/* Progress bar */}
         <div className="relative mt-2">
@@ -1609,7 +1695,7 @@ export default function Gym() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 16px)`,
             }}
           >
@@ -1683,7 +1769,7 @@ export default function Gym() {
                           : entry.right.filter((e) => e?.done).length) +
                         (Array.isArray(entry.finisher) &&
                         entry.finisher.every(
-                          (item) => typeof item === "boolean"
+                          (item) => typeof item === "boolean",
                         )
                           ? entry.finisher.filter(Boolean).length
                           : entry.finisher.filter((e) => e?.done).length)}
@@ -1706,14 +1792,14 @@ export default function Gym() {
                             : entry.right.filter((e) => e?.done).length) +
                           (Array.isArray(entry.finisher) &&
                           entry.finisher.every(
-                            (item) => typeof item === "boolean"
+                            (item) => typeof item === "boolean",
                           )
                             ? entry.finisher.filter(Boolean).length
                             : entry.finisher.filter((e) => e?.done).length)) /
                           (dayPlan.left.length +
                             dayPlan.right.length +
                             dayPlan.finisher.length)) *
-                          100
+                          100,
                       )}
                       %
                     </p>
@@ -1737,7 +1823,7 @@ export default function Gym() {
                           : entry.right.filter((e) => e?.done).length) +
                         (Array.isArray(entry.finisher) &&
                         entry.finisher.every(
-                          (item) => typeof item === "boolean"
+                          (item) => typeof item === "boolean",
                         )
                           ? entry.finisher.filter(Boolean).length
                           : entry.finisher.filter((e) => e?.done).length)) /
@@ -1804,19 +1890,19 @@ export default function Gym() {
         doneState[dateKey]
           ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
           : (Array.isArray(entry.left) &&
-            entry.left.every((item) => typeof item === "boolean")
-              ? entry.left.every(Boolean)
-              : entry.left.every((e) => e?.done)) &&
-            (Array.isArray(entry.right) &&
-            entry.right.every((item) => typeof item === "boolean")
-              ? entry.right.every(Boolean)
-              : entry.right.every((e) => e?.done)) &&
-            (Array.isArray(entry.finisher) &&
-            entry.finisher.every((item) => typeof item === "boolean")
-              ? entry.finisher.every(Boolean)
-              : entry.finisher.every((e) => e?.done))
-          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
-          : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
+              entry.left.every((item) => typeof item === "boolean")
+                ? entry.left.every(Boolean)
+                : entry.left.every((e) => e?.done)) &&
+              (Array.isArray(entry.right) &&
+              entry.right.every((item) => typeof item === "boolean")
+                ? entry.right.every(Boolean)
+                : entry.right.every((e) => e?.done)) &&
+              (Array.isArray(entry.finisher) &&
+              entry.finisher.every((item) => typeof item === "boolean")
+                ? entry.finisher.every(Boolean)
+                : entry.finisher.every((e) => e?.done))
+            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
+            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
       }
     `}
               >
@@ -2213,7 +2299,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>
+              </div>,
             );
           }
 
@@ -2318,7 +2404,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>
+              </div>,
             );
           }
 
@@ -2355,8 +2441,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                        ? "bg-yellow-500/60"
-                        : "bg-gray-700"
+                          ? "bg-yellow-500/60"
+                          : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -2376,7 +2462,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             <div className="text-xl font-bold text-emerald-300">
               {
                 Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM"))
+                  k.startsWith(today.format("YYYY-MM")),
                 ).length
               }
               <span className="text-sm text-emerald-300/60">
@@ -2414,7 +2500,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               {(() => {
                 const totalDays = today.daysInMonth();
                 const done = Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM"))
+                  k.startsWith(today.format("YYYY-MM")),
                 ).length;
                 return Math.round((done / totalDays) * 100);
               })()}
