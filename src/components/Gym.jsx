@@ -261,7 +261,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0,
+    0
   );
 
   const MUSCLES = {
@@ -316,22 +316,22 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-        ? "Great job! Keep pushing! 💪"
-        : "You showed up. That's what matters. 🚀";
+      ? "Great job! Keep pushing! 💪"
+      : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
-    "rounded-2xl p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
+    "rounded-xl p-3 sm:rounded-2xl sm:p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
 
   return (
-    <div className={`${cardClass} `}>
+    <div className={`${cardClass}`}>
       <div>
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-emerald-500/20">
-          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-xl">
+        <div className="flex items-center justify-between mb-2 pb-2 border-b border-emerald-500/20">
+          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-base sm:text-xl">
             {mode === "old" ? "Daily Summary" : "Enhanced Summary"}
           </h3>
           <span
-            className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            className={`text-[10px] px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg font-semibold transition-all ${
               entry?.done
                 ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                 : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 border border-gray-600/40"
@@ -343,19 +343,19 @@ function DailySummaryMerged({ date, logs, mode }) {
 
         {/* -------- OLD CARD -------- */}
         {mode === "old" && (
-          <div className="space-y-2">
+          <div className="space-y-2 sm:space-y-3">
             {/* DATE & MUSCLES */}
             <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header Row */}
-              <div className="flex items-center justify-between px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+              <div className="flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
                   📅 {fmtDisp(date)}
                 </div>
               </div>
 
               {/* Muscles Tags */}
-              <div className="px-3 py-2 flex justify-between items-center">
-                <div className="text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold border-r border-emerald-400/40 pr-3 mr-3">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold sm:border-r sm:border-emerald-400/40 sm:pr-3 sm:mr-3">
                   MUSCLES
                 </div>
 
@@ -364,7 +364,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                     musclesWorked.map((muscle, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-emerald-200 font-medium"
+                        className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] sm:text-xs text-emerald-200 font-medium"
                       >
                         {muscle}
                       </span>
@@ -377,22 +377,18 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
               {/* CALORIES */}
-              <div
-                className="bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 
-    dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 
-    p-3 rounded-xl border border-orange-500/30 dark:border-orange-400/20
-    hover:border-orange-400/50 transition-all"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-orange-300/70 dark:text-orange-200/60 font-semibold mb-1 flex items-center gap-1">
+              <div className="bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 p-2 sm:p-3 rounded-xl border border-orange-500/30 dark:border-orange-400/20 hover:border-orange-400/50 transition-all">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-orange-300/70 dark:text-orange-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
                   <span>🔥</span>
-                  <span>Calories</span>
+                  <span className="hidden xs:inline">Calories</span>
+                  <span className="xs:hidden">Cal</span>
                 </div>
-                <div className="text-xl font-bold text-orange-100 dark:text-orange-200 flex items-baseline gap-1">
+                <div className="text-sm sm:text-base md:text-xl font-bold text-orange-100 dark:text-orange-200 flex items-baseline gap-0.5 sm:gap-1">
                   {entry?.calories ?? "—"}
                   {entry?.calories && (
-                    <span className="text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal">
+                    <span className="text-[9px] sm:text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal">
                       kcal
                     </span>
                   )}
@@ -400,20 +396,15 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
 
               {/* WEIGHT */}
-              <div
-                className="bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 
-    dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 
-    p-3 rounded-xl border border-cyan-500/30 dark:border-cyan-400/20
-    hover:border-cyan-400/50 transition-all"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-cyan-300/70 dark:text-cyan-200/60 font-semibold mb-1 flex items-center gap-1">
+              <div className="bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 p-2 sm:p-3 rounded-xl border border-cyan-500/30 dark:border-cyan-400/20 hover:border-cyan-400/50 transition-all">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-cyan-300/70 dark:text-cyan-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
                   <span>⚖️</span>
                   <span>Weight</span>
                 </div>
-                <div className="text-xl font-bold text-cyan-100 dark:text-cyan-200 flex items-baseline gap-1">
+                <div className="text-sm sm:text-base md:text-xl font-bold text-cyan-100 dark:text-cyan-200 flex items-baseline gap-0.5 sm:gap-1">
                   {entry?.weight ?? "—"}
                   {entry?.weight && (
-                    <span className="text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal">
+                    <span className="text-[9px] sm:text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal">
                       kg
                     </span>
                   )}
@@ -421,17 +412,12 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
 
               {/* BMI */}
-              <div
-                className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 
-    dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60 
-    p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20
-    hover:border-purple-400/50 transition-all"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-purple-300/70 dark:text-purple-200/60 font-semibold mb-1 flex items-center gap-1">
+              <div className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60 p-2 sm:p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20 hover:border-purple-400/50 transition-all">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-purple-300/70 dark:text-purple-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
-                <div className="text-xl font-bold text-purple-100 dark:text-purple-200">
+                <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
                   {entry?.bmi ?? "—"}
                 </div>
               </div>
@@ -440,14 +426,14 @@ function DailySummaryMerged({ date, logs, mode }) {
             {/* Exercises Card */}
             <div className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header */}
-              <div className="px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+              <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-[9px] uppercase tracking-wider text-emerald-200/80 font-semibold">
                   EXERCISES COMPLETED
                 </div>
               </div>
 
               {/* Content */}
-              <div className="px-3 py-2">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5">
                 {performed.some((p) => p?.done) ? (
                   <div className="space-y-1.5">
                     {planExercises.map((ex, i) =>
@@ -459,7 +445,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           <span className="text-emerald-400">✓</span>
                           <span>{ex}</span>
                         </div>
-                      ) : null,
+                      ) : null
                     )}
                   </div>
                 ) : (
@@ -471,11 +457,11 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* Shows next scheduled workout */}
-            <div className="mt-4 pt-4 border-t border-emerald-500/20">
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-emerald-500/20">
               <div className="text-[10px] text-emerald-200/70 uppercase tracking-wide font-semibold mb-2">
                 Next Workout
               </div>
-              <div className="bg-white/5 rounded-lg p-2">
+              <div className="bg-white/5 rounded-lg p-2.5 sm:p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-medium text-emerald-200">
@@ -494,19 +480,19 @@ function DailySummaryMerged({ date, logs, mode }) {
 
         {/* -------- NEW MODERN CARD -------- */}
         {mode === "new" && (
-          <div className="space-y-2">
+          <div className="space-y-2 sm:space-y-3">
             {/* DATE & MUSCLES */}
             <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header Row */}
-              <div className="flex items-center justify-between px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+              <div className="flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
                   📅 {fmtDisp(date)}
                 </div>
               </div>
 
               {/* Muscles Tags */}
-              <div className="px-3 py-2 flex justify-between items-center">
-                <div className="text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold border-r border-emerald-400/40 pr-3 mr-3">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold sm:border-r sm:border-emerald-400/40 sm:pr-3 sm:mr-3">
                   MUSCLES
                 </div>
 
@@ -515,7 +501,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                     musclesWorked.map((muscle, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-emerald-200 font-medium"
+                        className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] sm:text-xs text-emerald-200 font-medium"
                       >
                         {muscle}
                       </span>
@@ -527,27 +513,27 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
             </div>
 
-            {/* KEY METRICS - 2x2 Grid - ALL EMERALD/TEAL */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* KEY METRICS - 2x2 Grid */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
               {/* SETS */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold mb-0.5">
                   Sets
                 </div>
-                <div className="text-lg font-bold text-emerald-100">
+                <div className="text-base sm:text-lg font-bold text-emerald-100">
                   {doneSets}
-                  <span className="text-sm text-emerald-300/60">
+                  <span className="text-xs sm:text-sm text-emerald-300/60">
                     /{totalSets}
                   </span>
                 </div>
               </div>
 
               {/* DURATION */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-teal-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-teal-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-teal-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-teal-200/70 font-semibold mb-0.5">
                   Duration
                 </div>
-                <div className="text-lg font-bold text-teal-100">
+                <div className="text-base sm:text-lg font-bold text-teal-100">
                   {entry?.duration
                     ? `${entry.duration.hours}h ${entry.duration.minutes}m`
                     : "—"}
@@ -555,29 +541,31 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
 
               {/* SCORE */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-cyan-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-cyan-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-cyan-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-cyan-200/70 font-semibold mb-0.5">
                   Score
                 </div>
-                <div className="text-lg font-bold text-cyan-100">
+                <div className="text-base sm:text-lg font-bold text-cyan-100">
                   {perfScore}
-                  <span className="text-sm text-cyan-300/60">/100</span>
+                  <span className="text-xs sm:text-sm text-cyan-300/60">
+                    /100
+                  </span>
                 </div>
               </div>
 
               {/* MOOD */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold mb-0.5">
                   Mood
                 </div>
-                <div className="text-lg font-bold text-emerald-100">
+                <div className="text-base sm:text-lg font-bold text-emerald-100">
                   {entry?.mood ?? "—"}
                 </div>
               </div>
             </div>
 
             {/* CALORIE STATS */}
-            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-orange-400/30">
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-orange-400/30">
               <div className="text-[9px] uppercase tracking-wider text-orange-200/80 font-semibold mb-1.5 flex items-center gap-1">
                 🔥 Calories
               </div>
@@ -588,7 +576,9 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <div className="text-[9px] text-orange-200/70 mb-0.5">
                     Target
                   </div>
-                  <div className="text-base font-bold text-orange-100">500</div>
+                  <div className="text-sm sm:text-base font-bold text-orange-100">
+                    500
+                  </div>
                 </div>
 
                 {/* BURNED */}
@@ -596,7 +586,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <div className="text-[9px] text-emerald-200/70 mb-0.5">
                     Burned
                   </div>
-                  <div className="text-base font-bold text-emerald-100">
+                  <div className="text-sm sm:text-base font-bold text-emerald-100">
                     {entry?.calories ?? "—"}
                   </div>
                 </div>
@@ -608,14 +598,14 @@ function DailySummaryMerged({ date, logs, mode }) {
                     const burned = entry?.calories ?? null;
                     if (burned == null)
                       return (
-                        <div className="text-base font-bold text-gray-400">
+                        <div className="text-sm sm:text-base font-bold text-gray-400">
                           —
                         </div>
                       );
                     const diff = burned - 500;
                     return (
                       <div
-                        className={`text-base font-bold ${
+                        className={`text-sm sm:text-base font-bold ${
                           diff >= 0 ? "text-emerald-300" : "text-red-300"
                         }`}
                       >
@@ -640,30 +630,30 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* WEIGHT TREND */}
-            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-emerald-400/30">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
                     Weight Trend
                   </div>
-                  <div className="text-lg font-bold text-emerald-100">
+                  <div className="text-base sm:text-lg font-bold text-emerald-100">
                     {weightTrend != null
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                          ? `↘️ ${weightTrend}kg`
-                          : "→ 0kg"
+                        ? `↘️ ${weightTrend}kg`
+                        : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
                 {weightTrend != null && (
                   <div
-                    className={`text-2xl ${
+                    className={`text-xl sm:text-2xl ${
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                          ? "text-emerald-300"
-                          : "text-gray-300"
+                        ? "text-emerald-300"
+                        : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -674,9 +664,9 @@ function DailySummaryMerged({ date, logs, mode }) {
 
             {/* MESSAGE */}
             {message && (
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-emerald-400/30">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">💪</span>
+                  <span className="text-base sm:text-lg flex-shrink-0">💪</span>
                   <p className="text-emerald-100 italic text-xs leading-snug flex-1">
                     {message}
                   </p>
@@ -713,7 +703,7 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length,
+          : (i - 1 + modes.length) % modes.length
       );
     }
   };
@@ -835,7 +825,7 @@ export default function Gym() {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   // Modal inputs + editing states
@@ -859,7 +849,7 @@ export default function Gym() {
     (async () => {
       try {
         const res = await fetch(
-          "https://fitness-backend-laoe.onrender.com/api/state",
+          "https://fitness-backend-laoe.onrender.com/api/state"
         );
         if (res.ok) {
           const data = await res.json();
@@ -868,12 +858,12 @@ export default function Gym() {
           setCurrWeight(
             data.wd_goals?.currentWeight != null
               ? data.wd_goals.currentWeight
-              : "",
+              : ""
           );
           setTargetWeight(
             data.wd_goals?.targetWeight != null
               ? data.wd_goals.targetWeight
-              : "",
+              : ""
           );
         } else {
           console.error("Failed to fetch state:", res.status);
@@ -956,7 +946,7 @@ export default function Gym() {
     const updated = {
       ...entry,
       [section]: entry[section].map((item, i) =>
-        i === idx ? { ...item, done: !item.done } : item,
+        i === idx ? { ...item, done: !item.done } : item
       ),
     };
 
@@ -1017,11 +1007,11 @@ export default function Gym() {
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : (existing.weight ?? null);
+      : existing.weight ?? null;
 
     const newBmi = weightVal
       ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-      : (existing.bmi ?? null);
+      : existing.bmi ?? null;
 
     const updatedEntry = {
       weekday: existing.weekday || weekday,
@@ -1390,74 +1380,74 @@ export default function Gym() {
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           {/* Title Section */}
-          <div className="space-y-1 flex-shrink-0">
-            <h1 className="text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
+          <div className="flex flex-col gap-1 flex-shrink-0 text-center sm:text-left">
+            <h1
+              className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight
+  bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text 
+  text-transparent drop-shadow-[0_0_12px_rgba(0,255,200,0.15)]
+  animate-[fadeIn_0.6s_ease]"
+            >
               💪 Gym Tracker
             </h1>
-            <p className="text-xs text-emerald-200/70 font-medium tracking-wide">
+
+            <p className="text-xs sm:text-sm text-emerald-200/70 font-medium tracking-wide">
               Track progress • Build habits • Stay consistent
             </p>
           </div>
 
           {/* Controls Section - Single Row Layout */}
-          <div className="flex items-center gap-2.5 w-full lg:w-auto lg:flex-shrink-0">
-            {/* Weekday Select - Compact */}
-            <select
-              value={weekday}
-              onChange={(e) => {
-                userChangedWeekday.current = true;
-                setWeekday(e.target.value);
-              }}
-              className="px-2.5 py-2.5 w-[110px] rounded-xl border border-emerald-700/50 
-                bg-[#07201f]/90 backdrop-blur-sm text-emerald-100 text-sm font-medium
-                focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
-                hover:bg-[#07201f] hover:border-emerald-600/60
-                transition-all duration-200 cursor-pointer
-                shadow-lg shadow-black/20"
-            >
-              {WEEK.map((d) => (
-                <option
-                  key={d}
-                  value={d}
-                  className="bg-[#07201f] text-emerald-100"
-                >
-                  {d}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
+            {/* controls wrapper */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* Week Select */}
+              <select
+                value={weekday}
+                onChange={(e) => {
+                  userChangedWeekday.current = true;
+                  setWeekday(e.target.value);
+                }}
+                className="w-full sm:w-[110px] px-3 py-2.5 rounded-xl border border-emerald-700/50 
+      bg-[#07201f]/90 text-emerald-100 text-sm font-medium shadow-lg shadow-black/20
+      focus:outline-none focus:ring-2 focus:ring-emerald-400/60 hover:border-emerald-600/60 
+      transition-all duration-200"
+              >
+                {WEEK.map((d) => (
+                  <option
+                    key={d}
+                    value={d}
+                    className="bg-[#07201f] text-emerald-100"
+                  >
+                    {d}
+                  </option>
+                ))}
+              </select>
 
-            {/* Date Input - Compact */}
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="px-2.5 py-2.5 w-[145px] rounded-xl border border-emerald-700/50 
-                bg-[#07201f]/90 backdrop-blur-sm text-emerald-100 text-sm font-medium
-                focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
-                hover:bg-[#07201f] hover:border-emerald-600/60
-                transition-all duration-200 cursor-pointer
-                shadow-lg shadow-black/20
-                [color-scheme:dark]"
-            />
+              {/* Date Input */}
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full sm:w-[145px] px-3 py-2.5 rounded-xl border border-emerald-700/50 
+      bg-[#07201f]/90 text-emerald-100 text-sm font-medium shadow-lg shadow-black/20
+      focus:outline-none focus:ring-2 focus:ring-emerald-400/60 hover:border-emerald-600/60 
+      transition-all duration-200 [color-scheme:dark]"
+              />
+            </div>
 
-            {/* Reset Button - Compact */}
+            {/* Reset Button */}
             <button
               onClick={resetProgress}
-              className="flex-1 lg:flex-initial group relative overflow-hidden
-                bg-gradient-to-r from-red-600 via-red-500 to-red-600 
-                hover:from-red-500 hover:via-red-400 hover:to-red-500
-                text-white px-4 py-2.5 rounded-xl text-sm font-bold
-                shadow-lg shadow-red-900/40 hover:shadow-red-800/60
-                transition-all duration-300 hover:scale-[1.02]
-                border border-red-400/20 whitespace-nowrap"
+              className="w-full sm:w-auto group relative overflow-hidden
+    bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-4 py-2.5 
+    rounded-xl text-sm font-bold border border-red-400/20 
+    shadow-lg shadow-red-900/40 hover:scale-[1.02] transition-all duration-300"
             >
               <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <span>🔄</span>
-                <span>Reset Progress</span>
+                🔄 Reset Progress
               </span>
               <div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
-                translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
+      -translate-x-full group-hover:translate-x-full transition-transform duration-700"
               />
             </button>
           </div>
@@ -1719,7 +1709,7 @@ export default function Gym() {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
+                Math.abs(pctToGoal)
               )}% - 16px)`,
             }}
           >
@@ -1735,13 +1725,23 @@ export default function Gym() {
       </section>
 
       {/* Calendar + Daily Summary */}
-      <section className="grid md:grid-cols-2 gap-4 mb-2">
-        <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
-        <DailySummaryCarousel date={date} logs={logs} />
+      <section className="grid gap-4 lg:grid-cols-2 w-full align-center
+      border-b border-emerald-500 pb- mb-6">
+        <div className="w-full flex">
+          <div className="w-full">
+            <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
+          </div>
+        </div>
+
+        <div className="w-full flex">
+          <div className="w-full">
+            <DailySummaryCarousel date={date} logs={logs} />
+          </div>
+        </div>
       </section>
 
       {/* Workout Section */}
-      <section className="mb-6">
+      <section className="mb-6 mt-2">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
           <div className="relative bg-gradient-to-br from-[#B82132]/95 via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] backdrop-blur-sm rounded-3xl p-5 md:p-6">
             {/* BG DECOR */}
@@ -1835,13 +1835,13 @@ export default function Gym() {
                             : entry.left.filter((e) => e?.done).length) +
                             (Array.isArray(entry.right) &&
                             entry.right.every(
-                              (item) => typeof item === "boolean",
+                              (item) => typeof item === "boolean"
                             )
                               ? entry.right.filter(Boolean).length
                               : entry.right.filter((e) => e?.done).length) +
                             (Array.isArray(entry.finisher) &&
                             entry.finisher.every(
-                              (item) => typeof item === "boolean",
+                              (item) => typeof item === "boolean"
                             )
                               ? entry.finisher.filter(Boolean).length
                               : entry.finisher.filter((e) => e?.done).length)}
@@ -1856,19 +1856,19 @@ export default function Gym() {
                           {Math.round(
                             (((Array.isArray(entry.left) &&
                             entry.left.every(
-                              (item) => typeof item === "boolean",
+                              (item) => typeof item === "boolean"
                             )
                               ? entry.left.filter(Boolean).length
                               : entry.left.filter((e) => e?.done).length) +
                               (Array.isArray(entry.right) &&
                               entry.right.every(
-                                (item) => typeof item === "boolean",
+                                (item) => typeof item === "boolean"
                               )
                                 ? entry.right.filter(Boolean).length
                                 : entry.right.filter((e) => e?.done).length) +
                               (Array.isArray(entry.finisher) &&
                               entry.finisher.every(
-                                (item) => typeof item === "boolean",
+                                (item) => typeof item === "boolean"
                               )
                                 ? entry.finisher.filter(Boolean).length
                                 : entry.finisher.filter((e) => e?.done)
@@ -1876,7 +1876,7 @@ export default function Gym() {
                               (dayPlan.left.length +
                                 dayPlan.right.length +
                                 dayPlan.finisher.length)) *
-                              100,
+                              100
                           )}
                           %
                         </p>
@@ -1896,13 +1896,13 @@ export default function Gym() {
                             : entry.left.filter((e) => e?.done).length) +
                             (Array.isArray(entry.right) &&
                             entry.right.every(
-                              (item) => typeof item === "boolean",
+                              (item) => typeof item === "boolean"
                             )
                               ? entry.right.filter(Boolean).length
                               : entry.right.filter((e) => e?.done).length) +
                             (Array.isArray(entry.finisher) &&
                             entry.finisher.every(
-                              (item) => typeof item === "boolean",
+                              (item) => typeof item === "boolean"
                             )
                               ? entry.finisher.filter(Boolean).length
                               : entry.finisher.filter((e) => e?.done).length)) /
@@ -1971,25 +1971,25 @@ export default function Gym() {
                         doneState[dateKey]
                           ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
                           : (Array.isArray(entry.left) &&
-                              entry.left.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.left.every(Boolean)
-                                : entry.left.every((e) => e?.done)) &&
-                              (Array.isArray(entry.right) &&
-                              entry.right.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.right.every(Boolean)
-                                : entry.right.every((e) => e?.done)) &&
-                              (Array.isArray(entry.finisher) &&
-                              entry.finisher.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.finisher.every(Boolean)
-                                : entry.finisher.every((e) => e?.done))
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-lg shadow-orange-500/30"
-                            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.02] shadow-lg shadow-blue-500/30"
+                            entry.left.every(
+                              (item) => typeof item === "boolean"
+                            )
+                              ? entry.left.every(Boolean)
+                              : entry.left.every((e) => e?.done)) &&
+                            (Array.isArray(entry.right) &&
+                            entry.right.every(
+                              (item) => typeof item === "boolean"
+                            )
+                              ? entry.right.every(Boolean)
+                              : entry.right.every((e) => e?.done)) &&
+                            (Array.isArray(entry.finisher) &&
+                            entry.finisher.every(
+                              (item) => typeof item === "boolean"
+                            )
+                              ? entry.finisher.every(Boolean)
+                              : entry.finisher.every((e) => e?.done))
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-lg shadow-orange-500/30"
+                          : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.02] shadow-lg shadow-blue-500/30"
                       }
                     `}
                   >
@@ -2031,7 +2031,7 @@ export default function Gym() {
                             : entry.right.some((e) => e?.done)) ||
                           (Array.isArray(entry.finisher) &&
                           entry.finisher.every(
-                            (item) => typeof item === "boolean",
+                            (item) => typeof item === "boolean"
                           )
                             ? entry.finisher.some(Boolean)
                             : entry.finisher.some((e) => e?.done))
@@ -2049,7 +2049,7 @@ export default function Gym() {
                             : entry.right.some((e) => e?.done)) ||
                           (Array.isArray(entry.finisher) &&
                           entry.finisher.every(
-                            (item) => typeof item === "boolean",
+                            (item) => typeof item === "boolean"
                           )
                             ? entry.finisher.some(Boolean)
                             : entry.finisher.some((e) => e?.done))
@@ -2317,36 +2317,41 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
 
   return (
     <section
-      className="border border-emerald-500/30 rounded-3xl px-5 py-2
+      className="
+    border border-emerald-500/30 rounded-3xl 
+    px-3 py-3 sm:px-5 sm:py-6
     bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
     dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-    text-[#FAFAFA] shadow-xl shadow-black/40"
+    text-[#FAFAFA] shadow-xl shadow-black/40
+    max-w-full overflow-hidden mx-auto sm:mx-0
+  "
     >
       {/* Header - Dynamic Date Range with Month Navigation */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4 gap-2 sm:gap-4">
           <button
             onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
-            className="w-8 h-8 rounded-full flex items-center justify-center
+            className="w-6 h-6 sm:w-8 sm:h-8
+ rounded-full flex items-center justify-center
         bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/30
         transition-all duration-200 hover:scale-110"
           >
             ‹
           </button>
 
-          <div className="text-center">
-            <div className="text-lg font-bold text-emerald-100">
+          <div className="text-center max-w-[180px] sm:max-w-none">
+            <div className="text-xs xs:text-sm sm:text-lg font-bold mb-2 text-emerald-100 truncate">
               {viewMonth.subtract(17, "day").format("MMM D")} -{" "}
               {viewMonth.add(17, "day").format("MMM D, YYYY")}
             </div>
 
             <div className="flex justify-between items-center gap-2">
               {/* Selected Date Display */}
-              <div className="flex-1">
-                <div className="text-xs font-semibold text-emerald-200">
+              <div className="flex-1  mb-">
+                <div className="text-lg font-semibold text-emerald-200">
                   {dayjs(date).format("dddd")}
                 </div>
-                <div className="text-[10px] text-emerald-300/60">
+                <div className="md:text-lg text-[10px] text-emerald-300/60">
                   {dayjs(date).format("MMMM DD, YYYY")}
                 </div>
               </div>
@@ -2357,14 +2362,17 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   setViewMonth(today);
                   setDate(today.format("YYYY-MM-DD"));
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-      bg-cyan-500/10 hover:bg-cyan-500/20 
-      border border-cyan-400/30 hover:border-cyan-400/50
-      text-[10px] font-semibold text-cyan-300 hover:text-cyan-200
-      uppercase tracking-wider transition-all duration-200
-      hover:scale-105 shadow-sm"
+                className="
+    flex items-center gap-1 
+    px-2 py-1 sm:px-3 sm:py-1.5
+    rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 
+    border border-cyan-400/30 hover:border-cyan-400/50
+    text-[8px] xs:text-[9px] sm:text-[10px] font-semibold
+    text-cyan-300 hover:text-cyan-200 uppercase tracking-wide
+    transition-all duration-200 hover:scale-105 shadow-sm
+  "
               >
-                <span>📍</span>
+                <span className="text-[10px] sm:text-xs">📍</span>
                 <span>Today</span>
               </button>
             </div>
@@ -2372,7 +2380,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
 
           <button
             onClick={() => setViewMonth(viewMonth.add(1, "month"))}
-            className="w-8 h-8 rounded-full flex items-center justify-center
+            className="w-6 h-6 sm:w-8 sm:h-8
+ rounded-full flex items-center justify-center
         bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/30
         transition-all duration-200 hover:scale-110"
           >
@@ -2381,7 +2390,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         </div>
       </div>
       {/* Weekday Headers - Dynamic based on today's position */}
-      <div className="grid grid-cols-7 gap-1.5 mb-2">
+      <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
           // Calculate which day is 3 days before today (left edge)
           const startDay = today.subtract(3, "day");
@@ -2401,15 +2410,17 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>,
+              </div>
             );
           }
 
           return headers;
         })()}
       </div>
-      {/* 5 Rows × 7 Columns - Based on viewMonth */}
-      <div className="grid grid-cols-7 gap-1.5 mb-2">
+      {
+        /* 5 Rows × 7 Columns - Based on viewMonth */
+      }
+      <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
           const cells = [];
 
@@ -2477,7 +2488,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   onClick={() => setDate(key)}
                   // title={d.format("DD-MM-YYYY")}
                   className={`
-              w-9 h-9 sm:w-10 sm:h-10 rounded-full text-xs font-medium
+              w-7 h-7 sm:w-9 sm:h-9 rounded-full text-xs font-medium
               flex items-center justify-center border
               transition-all duration-200
               cursor-pointer hover:scale-105
@@ -2501,12 +2512,12 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" />
                 )}
 
-                <div className="pointer-events-none absolute top-11 z-30 rounded-lg bg-black/90 px-2.5 py-1.5 text-[10px] text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-emerald-500/20 shadow-xl">
+                <div className="pointer-events-none absolute top-8 sm:top-11 scale-90 sm:scale-100 z-30 rounded-lg bg-black/90 px-2.5 py-1.5 text-[10px] text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-emerald-500/20 shadow-xl">
                   {d.format("MMM D")} • {isDone ? "✅ Done" : "No workout"}
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>,
+              </div>
             );
           }
 
@@ -2514,7 +2525,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         })()}
       </div>
       {/* Current Week Highlight */}
-      <div className="pt-3 border-t border-cyan-500/30 bg-cyan-500/5 -mx-5 px-5 py-3 rounded-b-3xl">
+      <div className="pt-2 sm:pt-3 border-t border-cyan-500/30 bg-cyan-500/5 -mx-3 sm:-mx-5 px-3 sm:px-5 py-2 sm:py-3 rounded-b-3xl">
         <div className="text-[10px] text-cyan-300 uppercase tracking-wide font-semibold mb-2 text-center">
           📍 Current Week (Row 3)
         </div>
@@ -2543,8 +2554,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                          ? "bg-yellow-500/60"
-                          : "bg-gray-700"
+                        ? "bg-yellow-500/60"
+                        : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -2554,17 +2565,17 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         </div>
       </div>
       {/* Monthly Stats */}
-      <div className="mt-6 pt-4 border-t border-emerald-500/20">
-        <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="mt-8 pb-8 md:p-3 border-t border-emerald-500/20">
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-2">
           {/* This Month */}
           <div className="bg-white/5 rounded-xl p-2">
-            <div className="text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
+            <div className="text-[8px] sm:text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
               This Month
             </div>
-            <div className="text-xl font-bold text-emerald-300">
+            <div className="text-lg sm:text-xl font-bold text-emerald-300">
               {
                 Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM")),
+                  k.startsWith(today.format("YYYY-MM"))
                 ).length
               }
               <span className="text-sm text-emerald-300/60">
@@ -2602,7 +2613,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               {(() => {
                 const totalDays = today.daysInMonth();
                 const done = Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM")),
+                  k.startsWith(today.format("YYYY-MM"))
                 ).length;
                 return Math.round((done / totalDays) * 100);
               })()}
@@ -2612,6 +2623,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           </div>
         </div>
       </div>
+      {/* <div className="h-5 "></div> */}
     </section>
   );
 }
