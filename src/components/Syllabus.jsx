@@ -5025,17 +5025,20 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
                       syllabus_lastStudied: "",
                     };
 
-                    // Update local state without touching gym or anything else
-                    setDashboardState((prev) => ({
-                      ...prev,
-                      ...syllabusResetPayload,
-                    }));
+                    // ✅ Merge with existing state to preserve gym data
+                    const fullPayload = {
+                      ...dashboardState, // Keep gym and other data
+                      ...syllabusResetPayload, // Override only syllabus fields
+                    };
 
-                    // Send only syllabus reset to backend
+                    // Update local state
+                    setDashboardState(fullPayload);
+
+                    // Send FULL state to backend (preserves gym data)
                     fetch(API_URL, {
                       method: "PUT",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(syllabusResetPayload),
+                      body: JSON.stringify(fullPayload), // ✅ Changed from syllabusResetPayload
                     })
                       .then(() => {
                         alert("Syllabus progress reset ✔");
