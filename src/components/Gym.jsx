@@ -1574,7 +1574,9 @@ export default function Gym() {
 
           {/* Display Current/Today's weight with trend */}
           <div className="flex flex-col gap-1.5 bg-gradient-to-br from-teal-600/10 via-teal-700/5 to-teal-800/10 rounded-xl px-3 py-2.5 border border-teal-500/30 hover:border-teal-400/50 transition-all shadow-sm">
-            <span className="text-[10px] uppercase tracking-wider text-teal-400/70 font-semibold">Now</span>
+            <span className="text-[10px] uppercase tracking-wider text-teal-400/70 font-semibold">
+              Now
+            </span>
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-teal-300 font-black text-xl leading-none">
                 {(() => {
@@ -1606,47 +1608,67 @@ export default function Gym() {
               </span>
               {/* Trend indicator */}
               {(() => {
-                const yesterdayKey = dayjs(dateKey).subtract(1, "day").format("YYYY-MM-DD");
+                const yesterdayKey = dayjs(dateKey)
+                  .subtract(1, "day")
+                  .format("YYYY-MM-DD");
                 const todayWeight = entry?.weight;
                 const yesterdayWeight = logs[yesterdayKey]?.weight;
 
                 if (todayWeight && yesterdayWeight) {
                   const diff = todayWeight - yesterdayWeight;
                   if (diff > 0) {
-                    return <span className="text-red-400 text-xs font-bold">↑{diff.toFixed(1)}</span>;
+                    return (
+                      <span className="text-red-400 text-xs font-bold">
+                        ↑{diff.toFixed(1)}
+                      </span>
+                    );
                   } else if (diff < 0) {
-                    return <span className="text-emerald-400 text-xs font-bold">↓{Math.abs(diff).toFixed(1)}</span>;
+                    return (
+                      <span className="text-emerald-400 text-xs font-bold">
+                        ↓{Math.abs(diff).toFixed(1)}
+                      </span>
+                    );
                   }
                 }
                 return null;
               })()}
             </div>
             {/* Last logged date if not today */}
-            {!entry?.weight && (() => {
-              const pastKeys = Object.keys(logs)
-                .filter((k) => logs[k]?.weight != null && k < dateKey)
-                .sort()
-                .reverse();
+            {!entry?.weight &&
+              (() => {
+                const pastKeys = Object.keys(logs)
+                  .filter((k) => logs[k]?.weight != null && k < dateKey)
+                  .sort()
+                  .reverse();
 
-              if (pastKeys.length > 0) {
-                const lastDate = dayjs(pastKeys[0]).format("MMM D");
-                return <span className="text-teal-500/60 text-[9px]">Last: {lastDate}</span>;
-              }
-              return null;
-            })()}
+                if (pastKeys.length > 0) {
+                  const lastDate = dayjs(pastKeys[0]).format("MMM D");
+                  return (
+                    <span className="text-teal-500/60 text-[9px]">
+                      Last: {lastDate}
+                    </span>
+                  );
+                }
+                return null;
+              })()}
           </div>
 
           {/* Progress text */}
-          <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-2.5 border transition-all shadow-sm
-            ${pctToGoal < 0 
-              ? "bg-gradient-to-br from-red-600/10 via-red-700/5 to-red-800/10 border-red-500/30 hover:border-red-400/50" 
-              : "bg-gradient-to-br from-emerald-600/10 via-emerald-700/5 to-emerald-800/10 border-emerald-500/30 hover:border-emerald-400/50"
-            }`}>
+          <div
+            className={`flex flex-col items-center justify-center rounded-xl px-3 py-2.5 border transition-all shadow-sm
+            ${
+              pctToGoal < 0
+                ? "bg-gradient-to-br from-red-600/10 via-red-700/5 to-red-800/10 border-red-500/30 hover:border-red-400/50"
+                : "bg-gradient-to-br from-emerald-600/10 via-emerald-700/5 to-emerald-800/10 border-emerald-500/30 hover:border-emerald-400/50"
+            }`}
+          >
             {pctToGoal < 0 ? (
               <>
                 <div className="flex items-center gap-1 mb-0.5">
                   <span className="text-sm">⚠️</span>
-                  <span className="text-[10px] uppercase tracking-wider text-red-400/70 font-semibold">Regression</span>
+                  <span className="text-[10px] uppercase tracking-wider text-red-400/70 font-semibold">
+                    Regression
+                  </span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-red-400 font-black text-xl leading-none">
@@ -1660,7 +1682,9 @@ export default function Gym() {
             ) : (
               <>
                 <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-[10px] uppercase tracking-wider text-emerald-400/70 font-semibold">Progress</span>
+                  <span className="text-[10px] uppercase tracking-wider text-emerald-400/70 font-semibold">
+                    Progress
+                  </span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-emerald-300 font-black text-xl leading-none">
@@ -1673,7 +1697,7 @@ export default function Gym() {
               </>
             )}
           </div>
-        </div> 
+        </div>
 
         {/* Progress bar */}
         <div className="relative mt-2">
@@ -1719,268 +1743,346 @@ export default function Gym() {
       {/* Workout Section */}
       <section className="mb-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
-          <div className="relative bg-gradient-to-br from-[#B82132]/95 via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] backdrop-blur-sm rounded-3xl p-6 md:p-8">
+          <div className="relative bg-gradient-to-br from-[#B82132]/95 via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] backdrop-blur-sm rounded-3xl p-5 md:p-6">
             {/* BG DECOR */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 dark:bg-emerald-400/5 rounded-full blur-3xl -z-10"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 dark:bg-cyan-400/5 rounded-full blur-3xl -z-10"></div>
 
-            {/* HEADER */}
-            <div className="mb-6 pb-4 border-b border-emerald-500/20 dark:border-emerald-400/15">
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent mb-2">
-                    {weekday}
-                  </h2>
+            {weekday === "Sunday" ? (
+              // SUNDAY REST DAY
+              <div className="text-center py-12 md:py-16">
+                <div className="mb-6">
+                  <span className="text-6xl md:text-7xl mb-4 inline-block animate-pulse">
+                    🧘‍♂️
+                  </span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent mb-4">
+                  Rest Day
+                </h2>
+                <p className="text-emerald-200/80 dark:text-emerald-300/70 text-lg md:text-xl font-medium mb-8 max-w-2xl mx-auto italic">
+                  "
+                  {dayPlan.quote ||
+                    "Recovery is just as important as training. Rest, recharge, and come back stronger."}
+                  "
+                </p>
+                <div className="flex flex-wrap justify-center gap-3 text-sm">
+                  <div className="bg-white/5 px-4 py-2 rounded-lg border border-emerald-400/20">
+                    <span className="text-emerald-300">💤 Sleep well</span>
+                  </div>
+                  <div className="bg-white/5 px-4 py-2 rounded-lg border border-teal-400/20">
+                    <span className="text-teal-300">🥗 Eat healthy</span>
+                  </div>
+                  <div className="bg-white/5 px-4 py-2 rounded-lg border border-cyan-400/20">
+                    <span className="text-cyan-300">💧 Stay hydrated</span>
+                  </div>
+                  <div className="bg-white/5 px-4 py-2 rounded-lg border border-purple-400/20">
+                    <span className="text-purple-300">🧘 Stretch lightly</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // WORKOUT DAY
+              <>
+                {/* HEADER */}
+                <div className="mb-5 pb-4 border-b border-emerald-500/20 dark:border-emerald-400/15">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent">
+                          💪 {weekday}
+                        </h2>
+                        {doneState[dateKey] && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold whitespace-nowrap">
+                            ✅ Completed
+                          </span>
+                        )}
+                      </div>
 
-                  <div className="flex items-center gap-2 text-emerald-100/80 dark:text-emerald-200/70">
-                    <span className="text-sm font-medium">{dayPlan.title}</span>
-                    <span className="text-emerald-400/60 dark:text-emerald-500/50">
-                      •
-                    </span>
-                    <span className="text-sm">{fmtDisp(date)}</span>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-emerald-200/80 dark:text-emerald-200/70 font-medium">
+                          {dayPlan.title}
+                        </span>
+                        <span className="text-emerald-400/60 dark:text-emerald-500/50">
+                          •
+                        </span>
+                        <span className="text-emerald-200/60 dark:text-emerald-300/60">
+                          📅 {fmtDisp(date)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* COMPACT STATS */}
+                    <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
+                      <div className="bg-white/5 px-3 py-1.5 rounded-lg border border-emerald-400/20 min-w-[70px]">
+                        <p className="text-[9px] uppercase tracking-wider text-emerald-300/70 font-semibold mb-0.5">
+                          Total
+                        </p>
+                        <p className="text-lg font-black text-emerald-100">
+                          {dayPlan.left.length +
+                            dayPlan.right.length +
+                            dayPlan.finisher.length}
+                        </p>
+                      </div>
+
+                      <div className="bg-white/5 px-3 py-1.5 rounded-lg border border-teal-400/20 min-w-[70px]">
+                        <p className="text-[9px] uppercase tracking-wider text-teal-300/70 font-semibold mb-0.5">
+                          Done
+                        </p>
+                        <p className="text-lg font-black text-teal-100">
+                          {(Array.isArray(entry.left) &&
+                          entry.left.every((item) => typeof item === "boolean")
+                            ? entry.left.filter(Boolean).length
+                            : entry.left.filter((e) => e?.done).length) +
+                            (Array.isArray(entry.right) &&
+                            entry.right.every(
+                              (item) => typeof item === "boolean",
+                            )
+                              ? entry.right.filter(Boolean).length
+                              : entry.right.filter((e) => e?.done).length) +
+                            (Array.isArray(entry.finisher) &&
+                            entry.finisher.every(
+                              (item) => typeof item === "boolean",
+                            )
+                              ? entry.finisher.filter(Boolean).length
+                              : entry.finisher.filter((e) => e?.done).length)}
+                        </p>
+                      </div>
+
+                      <div className="bg-white/5 px-3 py-1.5 rounded-lg border border-cyan-400/20 min-w-[70px]">
+                        <p className="text-[9px] uppercase tracking-wider text-cyan-300/70 font-semibold mb-0.5">
+                          Progress
+                        </p>
+                        <p className="text-lg font-black text-cyan-100">
+                          {Math.round(
+                            (((Array.isArray(entry.left) &&
+                            entry.left.every(
+                              (item) => typeof item === "boolean",
+                            )
+                              ? entry.left.filter(Boolean).length
+                              : entry.left.filter((e) => e?.done).length) +
+                              (Array.isArray(entry.right) &&
+                              entry.right.every(
+                                (item) => typeof item === "boolean",
+                              )
+                                ? entry.right.filter(Boolean).length
+                                : entry.right.filter((e) => e?.done).length) +
+                              (Array.isArray(entry.finisher) &&
+                              entry.finisher.every(
+                                (item) => typeof item === "boolean",
+                              )
+                                ? entry.finisher.filter(Boolean).length
+                                : entry.finisher.filter((e) => e?.done)
+                                    .length)) /
+                              (dayPlan.left.length +
+                                dayPlan.right.length +
+                                dayPlan.finisher.length)) *
+                              100,
+                          )}
+                          %
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PROGRESS BAR */}
+                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-700 ease-out shadow-lg shadow-emerald-500/50"
+                      style={{
+                        width: `${
+                          (((Array.isArray(entry.left) &&
+                          entry.left.every((item) => typeof item === "boolean")
+                            ? entry.left.filter(Boolean).length
+                            : entry.left.filter((e) => e?.done).length) +
+                            (Array.isArray(entry.right) &&
+                            entry.right.every(
+                              (item) => typeof item === "boolean",
+                            )
+                              ? entry.right.filter(Boolean).length
+                              : entry.right.filter((e) => e?.done).length) +
+                            (Array.isArray(entry.finisher) &&
+                            entry.finisher.every(
+                              (item) => typeof item === "boolean",
+                            )
+                              ? entry.finisher.filter(Boolean).length
+                              : entry.finisher.filter((e) => e?.done).length)) /
+                            (dayPlan.left.length +
+                              dayPlan.right.length +
+                              dayPlan.finisher.length)) *
+                          100
+                        }%`,
+                      }}
+                    ></div>
                   </div>
                 </div>
 
-                {/* QUICK STATS */}
-                <div className="flex flex-wrap gap-2">
-                  <div className="bg-white/5 px-3 py-2 rounded-lg border border-emerald-400/20">
-                    <p className="text-[10px] uppercase tracking-wide text-emerald-300/70 font-semibold">
-                      Total
-                    </p>
-                    <p className="text-xl font-bold text-emerald-100">
-                      {dayPlan.left.length +
-                        dayPlan.right.length +
-                        dayPlan.finisher.length}
-                    </p>
-                  </div>
+                {/* 3 COLUMN LAYOUT */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                  {/* LEFT COLUMN */}
+                  <ExerciseColumn
+                    title="💪 Left"
+                    items={entry.left}
+                    dayPlanItems={dayPlan.left}
+                    planLength={dayPlan.left.length}
+                    color="emerald"
+                    section="left"
+                    toggle={toggle}
+                    doneState={doneState}
+                    dateKey={dateKey}
+                  />
 
-                  <div className="bg-white/5 px-3 py-2 rounded-lg border border-teal-400/20">
-                    <p className="text-[10px] uppercase tracking-wide text-teal-300/70 font-semibold">
-                      Done
-                    </p>
-                    <p className="text-xl font-bold text-teal-100">
-                      {(Array.isArray(entry.left) &&
-                      entry.left.every((item) => typeof item === "boolean")
-                        ? entry.left.filter(Boolean).length
-                        : entry.left.filter((e) => e?.done).length) +
-                        (Array.isArray(entry.right) &&
-                        entry.right.every((item) => typeof item === "boolean")
-                          ? entry.right.filter(Boolean).length
-                          : entry.right.filter((e) => e?.done).length) +
-                        (Array.isArray(entry.finisher) &&
-                        entry.finisher.every(
-                          (item) => typeof item === "boolean",
-                        )
-                          ? entry.finisher.filter(Boolean).length
-                          : entry.finisher.filter((e) => e?.done).length)}
-                    </p>
-                  </div>
+                  {/* RIGHT COLUMN */}
+                  <ExerciseColumn
+                    title="💪 Right"
+                    items={entry.right}
+                    dayPlanItems={dayPlan.right}
+                    planLength={dayPlan.right.length}
+                    color="teal"
+                    section="right"
+                    toggle={toggle}
+                    doneState={doneState}
+                    dateKey={dateKey}
+                  />
 
-                  <div className="bg-white/5 px-3 py-2 rounded-lg border border-cyan-400/20">
-                    <p className="text-[10px] uppercase tracking-wide text-cyan-300/70 font-semibold">
-                      Progress
-                    </p>
-                    <p className="text-xl font-bold text-cyan-100">
-                      {Math.round(
-                        (((Array.isArray(entry.left) &&
-                        entry.left.every((item) => typeof item === "boolean")
-                          ? entry.left.filter(Boolean).length
-                          : entry.left.filter((e) => e?.done).length) +
+                  {/* FINISHER COLUMN */}
+                  <ExerciseColumn
+                    title={`🔥 ${dayPlan.finisherLabel || "Finisher"}`}
+                    items={entry.finisher}
+                    dayPlanItems={dayPlan.finisher}
+                    planLength={dayPlan.finisher.length}
+                    color="cyan"
+                    section="finisher"
+                    toggle={toggle}
+                    doneState={doneState}
+                    dateKey={dateKey}
+                  />
+                </div>
+
+                {/* FOOTER BUTTONS */}
+                <div className="flex flex-wrap gap-2.5 pt-4 border-t border-emerald-500/20">
+                  {/* MARK ALL / UNMARK ALL */}
+                  <button
+                    onClick={() =>
+                      !doneState[dateKey] && toggleMarkAll(dateKey)
+                    }
+                    disabled={doneState[dateKey]}
+                    className={`group relative px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2
+                      ${
+                        doneState[dateKey]
+                          ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
+                          : (Array.isArray(entry.left) &&
+                              entry.left.every(
+                                (item) => typeof item === "boolean",
+                              )
+                                ? entry.left.every(Boolean)
+                                : entry.left.every((e) => e?.done)) &&
+                              (Array.isArray(entry.right) &&
+                              entry.right.every(
+                                (item) => typeof item === "boolean",
+                              )
+                                ? entry.right.every(Boolean)
+                                : entry.right.every((e) => e?.done)) &&
+                              (Array.isArray(entry.finisher) &&
+                              entry.finisher.every(
+                                (item) => typeof item === "boolean",
+                              )
+                                ? entry.finisher.every(Boolean)
+                                : entry.finisher.every((e) => e?.done))
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-lg shadow-orange-500/30"
+                            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.02] shadow-lg shadow-blue-500/30"
+                      }
+                    `}
+                  >
+                    {(Array.isArray(entry.left) &&
+                    entry.left.every((item) => typeof item === "boolean")
+                      ? entry.left.every(Boolean)
+                      : entry.left.every((e) => e?.done)) &&
+                    (Array.isArray(entry.right) &&
+                    entry.right.every((item) => typeof item === "boolean")
+                      ? entry.right.every(Boolean)
+                      : entry.right.every((e) => e?.done)) &&
+                    (Array.isArray(entry.finisher) &&
+                    entry.finisher.every((item) => typeof item === "boolean")
+                      ? entry.finisher.every(Boolean)
+                      : entry.finisher.every((e) => e?.done)) ? (
+                      <>
+                        ❌ <span>Unmark All</span>
+                      </>
+                    ) : (
+                      <>
+                        ✔️ <span>Mark All</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* MARK DONE */}
+                  {!doneState[dateKey] ? (
+                    <button
+                      onClick={openModal}
+                      disabled={
+                        !(
+                          (Array.isArray(entry.left) &&
+                          entry.left.every((item) => typeof item === "boolean")
+                            ? entry.left.some(Boolean)
+                            : entry.left.some((e) => e?.done)) ||
                           (Array.isArray(entry.right) &&
                           entry.right.every((item) => typeof item === "boolean")
-                            ? entry.right.filter(Boolean).length
-                            : entry.right.filter((e) => e?.done).length) +
+                            ? entry.right.some(Boolean)
+                            : entry.right.some((e) => e?.done)) ||
                           (Array.isArray(entry.finisher) &&
                           entry.finisher.every(
                             (item) => typeof item === "boolean",
                           )
-                            ? entry.finisher.filter(Boolean).length
-                            : entry.finisher.filter((e) => e?.done).length)) /
-                          (dayPlan.left.length +
-                            dayPlan.right.length +
-                            dayPlan.finisher.length)) *
-                          100,
-                      )}
-                      %
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* PROGRESS BAR */}
-              <div className="w-full bg-white/10 rounded-full h-2.5 overflow-hidden shadow-inner">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-700 ease-out"
-                  style={{
-                    width: `${
-                      (((Array.isArray(entry.left) &&
-                      entry.left.every((item) => typeof item === "boolean")
-                        ? entry.left.filter(Boolean).length
-                        : entry.left.filter((e) => e?.done).length) +
-                        (Array.isArray(entry.right) &&
-                        entry.right.every((item) => typeof item === "boolean")
-                          ? entry.right.filter(Boolean).length
-                          : entry.right.filter((e) => e?.done).length) +
-                        (Array.isArray(entry.finisher) &&
-                        entry.finisher.every(
-                          (item) => typeof item === "boolean",
+                            ? entry.finisher.some(Boolean)
+                            : entry.finisher.some((e) => e?.done))
                         )
-                          ? entry.finisher.filter(Boolean).length
-                          : entry.finisher.filter((e) => e?.done).length)) /
-                        (dayPlan.left.length +
-                          dayPlan.right.length +
-                          dayPlan.finisher.length)) *
-                      100
-                    }%`,
-                  }}
-                ></div>
-              </div>
-            </div>
+                      }
+                      className={`flex-1 sm:flex-initial group relative px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
+                        ${
+                          (Array.isArray(entry.left) &&
+                          entry.left.every((item) => typeof item === "boolean")
+                            ? entry.left.some(Boolean)
+                            : entry.left.some((e) => e?.done)) ||
+                          (Array.isArray(entry.right) &&
+                          entry.right.every((item) => typeof item === "boolean")
+                            ? entry.right.some(Boolean)
+                            : entry.right.some((e) => e?.done)) ||
+                          (Array.isArray(entry.finisher) &&
+                          entry.finisher.every(
+                            (item) => typeof item === "boolean",
+                          )
+                            ? entry.finisher.some(Boolean)
+                            : entry.finisher.some((e) => e?.done))
+                            ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.02] shadow-lg shadow-emerald-500/30"
+                            : "bg-slate-700/40 text-slate-500 cursor-not-allowed opacity-60"
+                        }
+                      `}
+                    >
+                      <span>✅</span>
+                      <span>Mark Workout Done</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => deleteWorkout(dateKey)}
+                        className="group relative px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.02] shadow-lg shadow-red-500/30 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <span>❌</span>
+                        <span>Unmark & Clear</span>
+                      </button>
 
-            {/* 3 COLUMN LAYOUT */}
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              {/* LEFT COLUMN */}
-              <ExerciseColumn
-                title="Left"
-                items={entry.left}
-                dayPlanItems={dayPlan.left}
-                planLength={dayPlan.left.length}
-                color="emerald"
-                section="left"
-                toggle={toggle}
-                doneState={doneState}
-                dateKey={dateKey}
-              />
-
-              {/* RIGHT COLUMN */}
-              <ExerciseColumn
-                title="Right"
-                items={entry.right}
-                dayPlanItems={dayPlan.right}
-                planLength={dayPlan.right.length}
-                color="emerald"
-                section="right"
-                toggle={toggle}
-                doneState={doneState}
-                dateKey={dateKey}
-              />
-
-              {/* FINISHER COLUMN */}
-              <ExerciseColumn
-                title={dayPlan.finisherLabel || "Finisher"}
-                items={entry.finisher}
-                dayPlanItems={dayPlan.finisher}
-                planLength={dayPlan.finisher.length}
-                color="cyan"
-                section="finisher"
-                toggle={toggle}
-                doneState={doneState}
-                dateKey={dateKey}
-              />
-            </div>
-
-            {/* FOOTER BUTTONS */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t border-emerald-500/20">
-              {/* MARK ALL / UNMARK ALL */}
-              <button
-                onClick={() => !doneState[dateKey] && toggleMarkAll(dateKey)}
-                disabled={doneState[dateKey]}
-                className={`group relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300
-      ${
-        doneState[dateKey]
-          ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
-          : (Array.isArray(entry.left) &&
-              entry.left.every((item) => typeof item === "boolean")
-                ? entry.left.every(Boolean)
-                : entry.left.every((e) => e?.done)) &&
-              (Array.isArray(entry.right) &&
-              entry.right.every((item) => typeof item === "boolean")
-                ? entry.right.every(Boolean)
-                : entry.right.every((e) => e?.done)) &&
-              (Array.isArray(entry.finisher) &&
-              entry.finisher.every((item) => typeof item === "boolean")
-                ? entry.finisher.every(Boolean)
-                : entry.finisher.every((e) => e?.done))
-            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.05] shadow-lg shadow-orange-500/30"
-            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.05] shadow-lg shadow-blue-500/30"
-      }
-    `}
-              >
-                {(Array.isArray(entry.left) &&
-                entry.left.every((item) => typeof item === "boolean")
-                  ? entry.left.every(Boolean)
-                  : entry.left.every((e) => e?.done)) &&
-                (Array.isArray(entry.right) &&
-                entry.right.every((item) => typeof item === "boolean")
-                  ? entry.right.every(Boolean)
-                  : entry.right.every((e) => e?.done)) &&
-                (Array.isArray(entry.finisher) &&
-                entry.finisher.every((item) => typeof item === "boolean")
-                  ? entry.finisher.every(Boolean)
-                  : entry.finisher.every((e) => e?.done))
-                  ? "❌ Unmark All"
-                  : "✔️ Mark All"}
-              </button>
-
-              {/* MARK DONE */}
-              {!doneState[dateKey] ? (
-                <button
-                  onClick={openModal}
-                  disabled={
-                    !(
-                      (Array.isArray(entry.left) &&
-                      entry.left.every((item) => typeof item === "boolean")
-                        ? entry.left.some(Boolean)
-                        : entry.left.some((e) => e?.done)) ||
-                      (Array.isArray(entry.right) &&
-                      entry.right.every((item) => typeof item === "boolean")
-                        ? entry.right.some(Boolean)
-                        : entry.right.some((e) => e?.done)) ||
-                      (Array.isArray(entry.finisher) &&
-                      entry.finisher.every((item) => typeof item === "boolean")
-                        ? entry.finisher.some(Boolean)
-                        : entry.finisher.some((e) => e?.done))
-                    )
-                  }
-                  className={`group relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300
-        ${
-          (Array.isArray(entry.left) &&
-          entry.left.every((item) => typeof item === "boolean")
-            ? entry.left.some(Boolean)
-            : entry.left.some((e) => e?.done)) ||
-          (Array.isArray(entry.right) &&
-          entry.right.every((item) => typeof item === "boolean")
-            ? entry.right.some(Boolean)
-            : entry.right.some((e) => e?.done)) ||
-          (Array.isArray(entry.finisher) &&
-          entry.finisher.every((item) => typeof item === "boolean")
-            ? entry.finisher.some(Boolean)
-            : entry.finisher.some((e) => e?.done))
-            ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.05] shadow-lg shadow-emerald-500/30"
-            : "bg-slate-700/40 text-slate-500 cursor-not-allowed opacity-60"
-        }
-      `}
-                >
-                  ✅ Mark Workout Done
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => deleteWorkout(dateKey)}
-                    className="group relative px-6 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.05] shadow-lg shadow-red-500/30 transition-all duration-300"
-                  >
-                    ❌ Unmark & Clear
-                  </button>
-
-                  <button
-                    onClick={editWorkout}
-                    className="group relative px-6 py-3 rounded-xl font-semibold text-sm bg-white/10 text-emerald-100 border border-emerald-400/30 hover:border-emerald-400/50 hover:scale-[1.05] transition-all duration-300"
-                  >
-                    ✏️ Edit
-                  </button>
-                </>
-              )}
-            </div>
+                      <button
+                        onClick={editWorkout}
+                        className="group relative px-5 py-2.5 rounded-xl font-bold text-sm bg-white/10 text-emerald-100 border border-emerald-400/30 hover:border-emerald-400/50 hover:scale-[1.02] transition-all duration-300 flex items-center gap-2"
+                      >
+                        <span>✏️</span>
+                        <span>Edit</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
