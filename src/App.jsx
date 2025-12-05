@@ -149,10 +149,11 @@ export default function App() {
         // ---------------------------------------------------
         // ⭐ FIX: Ensure syllabus_tree_v2 is ALWAYS available
         // ---------------------------------------------------
+        // Around line 70-80 in the loadState useEffect
         const hasBackendSyllabus =
           state.syllabus_tree_v2 &&
-          state.syllabus_tree_v2.sub &&
-          state.syllabus_tree_v2.sub.length > 0;
+          typeof state.syllabus_tree_v2 === "object" &&
+          Object.keys(state.syllabus_tree_v2).length > 0;
 
         // If backend sent empty syllabus → use TREE from Syllabus.jsx
         if (!hasBackendSyllabus) {
@@ -181,6 +182,7 @@ export default function App() {
     };
 
     window.addEventListener("lifeos:update", handleLifeosUpdate);
+    window.addEventListener("storage", handleLifeosUpdate);
 
     // initial load
     loadState();
@@ -206,7 +208,7 @@ export default function App() {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     const latestWeight = wh.length > 0 ? wh[wh.length - 1].weight : "—";
-    const gymDates = Object.keys(gymLogs);
+    const gymDates = Object.keys(gymLogs).sort();
 
     function walk(node) {
       let total = 0;
@@ -267,6 +269,10 @@ export default function App() {
     style.textContent = glowCSS;
     document.head.appendChild(style);
   }, []);
+
+  window.lifeOSsync = () => {
+    window.dispatchEvent(new Event("lifeos:update"));
+  };
 
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
@@ -1596,7 +1602,14 @@ function GymPanel({ gymDates }) {
 }
 
 function TopicsPanel({ stats }) {
-  const { topicsDone, topicsTotal } = stats;
+  const [localStats, setLocalStats] = useState(stats);
+
+  useEffect(() => {
+    setLocalStats(stats);
+  }, [stats]);
+
+  const { topicsDone, topicsTotal } = localStats;
+
   const percent =
     topicsTotal > 0 ? Math.round((topicsDone / topicsTotal) * 100) : 0;
 

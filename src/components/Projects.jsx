@@ -238,7 +238,10 @@ function fireConfetti() {
 }
 
 /* MAIN COMPONENT — PART 1 START */
-export default function StudyProjectsAdvanced() {
+export default function StudyProjectsAdvanced({
+  dashboardState,
+  updateDashboard,
+}) {
   // theme
 
   // filters / view
@@ -261,6 +264,13 @@ export default function StudyProjectsAdvanced() {
   /* confirmDeadline shape:
      { section, idx, existingDate, onConfirm: fn, onCancel: fn }
   */
+
+  // Load backend saved goals into progress state
+  useEffect(() => {
+    if (dashboardState?.wd_goals) {
+      setProgress(dashboardState.wd_goals);
+    }
+  }, [dashboardState?.wd_goals]);
 
   // persist progress/xp/level/bonus
   useEffect(() => saveJSON(STORE.PROGRESS, progress), [progress]);
@@ -300,7 +310,7 @@ export default function StudyProjectsAdvanced() {
     const list = PROJECT_SECTIONS[key] || [];
     if (list.length === 0) return 0;
     const done = Object.entries(progress[key] || {}).filter(
-      ([k, v]) => !isNaN(k) && v === true,
+      ([k, v]) => !isNaN(k) && v === true
     ).length;
     return Math.round((done / list.length) * 100);
   };
@@ -311,7 +321,7 @@ export default function StudyProjectsAdvanced() {
     Object.entries(PROJECT_SECTIONS).forEach(([k, v]) => {
       total += v.length;
       const sectionDone = Object.entries(progress[k] || {}).filter(
-        ([k2, v2]) => !isNaN(k2) && v2 === true,
+        ([k2, v2]) => !isNaN(k2) && v2 === true
       ).length;
       done += sectionDone;
     });
@@ -331,7 +341,7 @@ export default function StudyProjectsAdvanced() {
     if (!next[section].completionDates) next[section].completionDates = {};
     if (!next[section].deadlineDates) next[section].deadlineDates = {};
 
-    // toggle done
+    // toggle status
     next[section][idx] = !wasDone;
 
     if (!wasDone) {
@@ -361,13 +371,22 @@ export default function StudyProjectsAdvanced() {
     // full section bonus
     const list = PROJECT_SECTIONS[section];
     const doneCount = Object.entries(next[section]).filter(
-      ([k, v]) => !isNaN(k) && v === true,
+      ([k, v]) => !isNaN(k) && v === true
     ).length;
 
     if (doneCount === list.length && !bonusGiven[section]) {
       setXP((v) => v + SECTION_BONUS);
       setBonusGiven((b) => ({ ...b, [section]: true }));
       fireConfetti();
+    }
+
+    // --- NEW: Save to backend ---
+    if (typeof updateDashboard === "function") {
+      updateDashboard({ wd_goals: next });
+
+      setTimeout(() => {
+        window.lifeOSsync?.();
+      }, 600);
     }
   };
 
@@ -480,8 +499,8 @@ export default function StudyProjectsAdvanced() {
         d === "Beginner"
           ? "bg-white/5 border-white/10"
           : d === "Intermediate"
-            ? "bg-white/8 border-white/12"
-            : "bg-white/12 border-white/20"
+          ? "bg-white/8 border-white/12"
+          : "bg-white/12 border-white/20"
       }`}
     >
       {d}
@@ -489,8 +508,6 @@ export default function StudyProjectsAdvanced() {
   );
 
   // --- PART 3 (continues from PART 2) ---
-
-  
 
   return (
     <div
@@ -836,7 +853,7 @@ export default function StudyProjectsAdvanced() {
                                     canonIdx
                                   ] &&
                                   `Completed on: ${formatDate(
-                                    progress[sec].completionDates[canonIdx],
+                                    progress[sec].completionDates[canonIdx]
                                   )}`}
                               </div>
                             </div>
@@ -1006,7 +1023,7 @@ export default function StudyProjectsAdvanced() {
                           </span>
                           <span className="opacity-70">{date}</span>
                         </div>
-                      ),
+                      )
                     )}
                   </div>
                 ))

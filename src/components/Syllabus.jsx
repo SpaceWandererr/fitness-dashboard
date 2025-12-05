@@ -4148,11 +4148,7 @@ const TREE = {
   },
 };
 
-// ... bunch of code ... syllabus component ... etc ...
-
-// Make TREE available globally so App.jsx can use syllabus data
-window.TREE = TREE;
-
+if (!window.TREE) window.TREE = TREE;
 
 // Stabilize meta reference to prevent re-renders
 // Fixed: Always return the latest value, not stale ref.current
@@ -4349,6 +4345,9 @@ const normalizeWholeTree = (src) => normalizeTree(src);
 // Add this somewhere near the top (replace old todayISO if exists)
 const nowISO = () => new Date().toISOString(); // e.g. "2025-11-30T13:45:22.123Z"
 
+// Make TREE available globally so App.jsx can use syllabus data
+window.TREE = TREE;
+
 /* ======================= MAIN ======================= */
 export default function Syllabus({ dashboardState, setDashboardState }) {
   // ---------------- MONGO CONFIG ----------------
@@ -4358,7 +4357,32 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   // ⛑ Guard: prevent crash before state arrives
   if (!dashboardState) {
-    return <div className="p-6 text-white">Loading syllabus from Mongo...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10]">
+        <div className="relative">
+          {/* Pulsing ring */}
+          <div className="absolute inset-0 animate-ping rounded-full bg-emerald-400/20" />
+
+          {/* Content */}
+          <div className="relative rounded-2xl border border-emerald-500/30 bg-black/60 px-8 py-6 backdrop-blur-xl shadow-[0_0_40px_rgba(16,185,129,0.3)]">
+            <div className="flex items-center gap-4">
+              {/* Spinning loader */}
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-400/30 border-t-emerald-400" />
+
+              {/* Text */}
+              <div>
+                <p className="font-mono text-sm font-semibold tracking-wider text-emerald-300">
+                  INITIALIZING NEURAL CORE
+                </p>
+                <p className="mt-1 font-mono text-xs text-emerald-400/70">
+                  Loading syllabus matrix from database...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   /* ======================= SYNCED STATE FROM MONGO ======================= */
@@ -4499,24 +4523,28 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   /* ======================= DASHBOARD UPDATE ======================= */
   const updateDashboard = useCallback(
     (updates) => {
-      // Update local state first
       setDashboardState((prev) => {
         const newState = {
           ...prev,
           ...updates,
         };
 
-        // Save to MongoDB asynchronously AFTER state update (debounced)
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current);
         }
+
         saveTimeoutRef.current = setTimeout(() => {
           fetch(API_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newState),
-          }).catch((err) => console.error("Mongo save failed:", err));
-        }, 500); // Debounce saves by 500ms
+          })
+            .then(() => {
+              // 🔥 Sync AFTER Mongo saved, not before
+              window.lifeOSsync?.();
+            })
+            .catch((err) => console.error("Mongo save failed:", err));
+        }, 500);
 
         return newState;
       });
@@ -4711,7 +4739,12 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newState),
-        }).catch((err) => console.error("Save failed:", err));
+        })
+          .then(() => {
+            console.log("Mongo save → syncing dashboard");
+            window.lifeOSsync?.();
+          })
+          .catch((err) => console.error("Mongo save failed:", err));
 
         return newState;
       });
@@ -4760,6 +4793,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     updateDashboard({
       syllabus_tree_v2: newTree,
     });
+    window.lifeOSsync?.();
   };
 
   /* ======================= NOTES ======================= */
@@ -5033,7 +5067,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
                     // Update local state
                     setDashboardState(fullPayload);
-
+                    window.lifeOSsync?.();
                     // Send FULL state to backend (preserves gym data)
                     fetch(API_URL, {
                       method: "PUT",
