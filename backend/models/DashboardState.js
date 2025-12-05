@@ -18,6 +18,7 @@ const DashboardStateSchema = new mongoose.Schema(
 
     wd_done: { type: Object, default: {} },
     syllabus_tree_v2: { type: Object, default: {} },
+    wd_projects: { type: Object, default: {} }, // <-- REQUIRED FIX
 
     wd_start_weight: Number,
     wd_dark: String,

@@ -8,6 +8,8 @@ console.log("🔥 Schema paths:", DashboardState.schema.paths);
 const router = express.Router();
 const USER_ID = "default";
 
+
+
 // ✅ GET current dashboard state
 router.get("/", async (req, res) => {
   try {
@@ -39,6 +41,7 @@ router.put("/", async (req, res) => {
       "wd_weight_history",
       "syllabus_tree_v2",
       "wd_goals",
+      "wd_projects",
     ];
 
     mustBeObject.forEach((key) => {

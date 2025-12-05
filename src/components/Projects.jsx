@@ -1,15 +1,7 @@
-// StudyProjectsAdvanced.jsx — UPDATED (PART 1 of 4)
-// Implemented:
-// - Removed "Suggested" line
-// - Set Deadline button (clock icon + text) placed under title (Option A)
-// - No auto-deadline on card click
-// - Deadline only via Set Deadline button (auto 3/5/7 days by difficulty)
-// - Popup if deadline exists: "Deadline already exists. Set a new one?"
-// - Deadline + timer on same line
-// - Timer hides when expired or when project completed
-// - Deadline cleared when completed or when unchecked
-// - Deadline reappears only after clicking Set Deadline
-// - "Completed on" area fixed height to avoid layout shifts
+// StudyProjectsAdvanced.jsx — FINAL FULLY WIRED VERSION
+// - Local + Backend sync for everything (progress, XP, deadlines, bonuses)
+// - Same UI & behavior as your advanced version
+// - Uses wd_projects on backend, with _meta for XP + bonuses
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,11 +16,6 @@ import {
   Layers,
   Clock, // clock icon for Set Deadline
 } from "lucide-react";
-
-/*  NOTE:
-    This file is split into parts for your request. This is PART 1.
-    Continue with "Send Part 2" to receive the next piece.
-*/
 
 /* LocalStorage keys (consistent with your global namespace) */
 const STORE = {
@@ -237,13 +224,11 @@ function fireConfetti() {
   draw();
 }
 
-/* MAIN COMPONENT — PART 1 START */
+/* MAIN COMPONENT */
 export default function StudyProjectsAdvanced({
   dashboardState,
   updateDashboard,
 }) {
-  // theme
-
   // filters / view
   const [query, setQuery] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("All");
@@ -262,30 +247,45 @@ export default function StudyProjectsAdvanced({
   const [modal, setModal] = useState(null); // { section, idx, title, diff }
   const [confirmDeadline, setConfirmDeadline] = useState(null);
   /* confirmDeadline shape:
-     { section, idx, existingDate, onConfirm: fn, onCancel: fn }
+     { section, idx, existingDate, newDate?, onConfirm: fn, onCancel: fn }
   */
 
-  // Load backend saved goals into progress state
+  /* ---------------------------
+     LOAD FROM BACKEND (PRIMARY)
+  ----------------------------*/
   useEffect(() => {
-    if (dashboardState?.wd_goals) {
-      setProgress(dashboardState.wd_goals);
-    }
-  }, [dashboardState?.wd_goals]);
+    if (
+      dashboardState &&
+      dashboardState.wd_projects &&
+      typeof dashboardState.wd_projects === "object"
+    ) {
+      const { _meta = {}, ...sections } = dashboardState.wd_projects;
 
-  // persist progress/xp/level/bonus
+      setProgress(sections || {});
+
+      if (typeof _meta.xp === "number") setXP(_meta.xp);
+      if (_meta.bonusGiven && typeof _meta.bonusGiven === "object") {
+        setBonusGiven(_meta.bonusGiven);
+      }
+      // level will auto-derive from xp via effect below
+    }
+  }, [dashboardState]);
+
+  /* ---------------------------
+     LOCAL CACHE (SECONDARY)
+  ----------------------------*/
   useEffect(() => saveJSON(STORE.PROGRESS, progress), [progress]);
   useEffect(() => saveJSON(STORE.XP, xp), [xp]);
   useEffect(() => saveJSON(STORE.LEVEL, level), [level]);
   useEffect(() => saveJSON(STORE.BONUS, bonusGiven), [bonusGiven]);
 
-  // theme listener
+  /* ---------------------------
+     THEME LISTENER (unchanged)
+  ----------------------------*/
   useEffect(() => {
     const syncTheme = () => {
       const root = document.documentElement;
-      const isDark = root.classList.contains("dark");
-
-      // Optional: if you still need state for icons/toggles
-      // setIsDark?.(isDark);
+      root.classList.contains("dark");
     };
 
     syncTheme();
@@ -294,7 +294,9 @@ export default function StudyProjectsAdvanced({
     return () => window.removeEventListener("theme-changed", syncTheme);
   }, []);
 
-  // compute level from XP
+  /* ---------------------------
+     LEVEL FROM XP
+  ----------------------------*/
   useEffect(() => {
     let lv = 0;
     let remaining = xp;
@@ -305,7 +307,9 @@ export default function StudyProjectsAdvanced({
     if (lv !== level) setLevel(lv);
   }, [xp]);
 
-  // section progress helper
+  /* ---------------------------
+     PROGRESS HELPERS
+  ----------------------------*/
   const sectionProgress = (key) => {
     const list = PROJECT_SECTIONS[key] || [];
     if (list.length === 0) return 0;
@@ -328,11 +332,34 @@ export default function StudyProjectsAdvanced({
     return total ? Math.round((done / total) * 100) : 0;
   };
 
-  // End of PART 1. Continue with "Send Part 2" to get the next chunk (project toggling, Set Deadline logic, UI rendering of cards, and modals).
+  /* ---------------------------
+     SYNC TO BACKEND (ONE PLACE)
+  ----------------------------*/
+  const syncAll = (nextProgress, nextXP, nextBonusGiven) => {
+    if (typeof updateDashboard !== "function") return;
 
-  // --- PART 2 (continues immediately from PART 1) ---
+    const payload = JSON.parse(
+      JSON.stringify({
+        ...nextProgress,
+        _meta: {
+          xp: nextXP,
+          bonusGiven: nextBonusGiven,
+        },
+      })
+    );
 
-  // Toggle project complete/incomplete
+    updateDashboard((prev) => ({
+      ...prev,
+      wd_projects: payload,
+    }));
+
+
+    window.dispatchEvent(new Event("lifeos:update"));
+  };
+
+  /* ---------------------------
+     TOGGLE PROJECT
+  ----------------------------*/
   const toggleProject = (section, idx) => {
     const wasDone = !!(progress[section] && progress[section][idx]);
 
@@ -360,13 +387,16 @@ export default function StudyProjectsAdvanced({
       delete next[section].deadlineDates[idx];
     }
 
-    setProgress(next);
-
     // XP logic
     const diff = difficultyForIndex(idx);
     const gain = XP_VALUES[diff];
 
-    setXP((v) => (wasDone ? Math.max(0, v - gain) : v + gain));
+    let nextXP = xp;
+    if (wasDone) {
+      nextXP = Math.max(0, xp - gain);
+    } else {
+      nextXP = xp + gain;
+    }
 
     // full section bonus
     const list = PROJECT_SECTIONS[section];
@@ -374,25 +404,25 @@ export default function StudyProjectsAdvanced({
       ([k, v]) => !isNaN(k) && v === true
     ).length;
 
-    if (doneCount === list.length && !bonusGiven[section]) {
-      setXP((v) => v + SECTION_BONUS);
-      setBonusGiven((b) => ({ ...b, [section]: true }));
+    let nextBonusGiven = { ...bonusGiven };
+
+    if (!wasDone && doneCount === list.length && !bonusGiven[section]) {
+      nextXP += SECTION_BONUS;
+      nextBonusGiven = { ...bonusGiven, [section]: true };
       fireConfetti();
     }
 
-    // --- NEW: Save to backend ---
-    if (typeof updateDashboard === "function") {
-      updateDashboard({ wd_goals: next });
+    setProgress(next);
+    setXP(nextXP);
+    setBonusGiven(nextBonusGiven);
 
-      setTimeout(() => {
-        window.lifeOSsync?.();
-      }, 600);
-    }
+    // Save everything to backend + fire global update
+    syncAll(next, nextXP, nextBonusGiven);
   };
 
   /* -------------------------------
-   SET DEADLINE (button version)
--------------------------------- */
+     SET DEADLINE (button version)
+  ------------------------------- */
 
   const handleSetDeadline = (section, idx) => {
     const existing = progress?.[section]?.deadlineDates?.[idx] || null;
@@ -403,11 +433,6 @@ export default function StudyProjectsAdvanced({
         section,
         idx,
         existingDate: existing,
-        onConfirm: () => {
-          setConfirmDeadline(null);
-          applyNewDeadline(section, idx);
-        },
-        onCancel: () => setConfirmDeadline(null),
       });
       return;
     }
@@ -429,11 +454,12 @@ export default function StudyProjectsAdvanced({
     next[section].deadlineDates[idx] = iso;
 
     setProgress(next);
+    syncAll(next, xp, bonusGiven);
   };
 
   /* ----------------------------
-   SEARCH + FILTERED SECTIONS
------------------------------ */
+     SEARCH + FILTERED SECTIONS
+  ---------------------------- */
 
   const filteredSections = useMemo(() => {
     if (!query && filterDifficulty === "All") return PROJECT_SECTIONS;
@@ -460,8 +486,8 @@ export default function StudyProjectsAdvanced({
   }, [query, filterDifficulty]);
 
   /* ----------------------------
-   Checkbox Component
------------------------------ */
+     Checkbox Component
+  ----------------------------- */
 
   const Checkbox = ({ checked, onChange }) => (
     <button
@@ -490,8 +516,8 @@ export default function StudyProjectsAdvanced({
   );
 
   /* ----------------------------
-   Difficulty Pill Component
------------------------------ */
+     Difficulty Pill Component
+  ----------------------------- */
 
   const DiffPill = ({ d }) => (
     <span
@@ -507,7 +533,9 @@ export default function StudyProjectsAdvanced({
     </span>
   );
 
-  // --- PART 3 (continues from PART 2) ---
+  /* ============================
+     RENDER
+  ============================ */
 
   return (
     <div
@@ -527,7 +555,7 @@ export default function StudyProjectsAdvanced({
               MERN Project Roadmap
             </h1>
             <p className="text-sm opacity-80 mt-1">
-              70 projects • XP system • Saved locally
+              70 projects • XP system • Saved locally + backend
             </p>
           </div>
 
@@ -554,6 +582,7 @@ export default function StudyProjectsAdvanced({
             </div>
           </div>
         </header>
+
         {/* FILTERS */}
         <div className="flex flex-col flex-wrap lg:flex-row lg:items-center justify-center gap-3 mb-6 w-full">
           {/* SEARCH BAR */}
@@ -627,9 +656,8 @@ export default function StudyProjectsAdvanced({
 
             {/* ACTION BUTTONS */}
             <div className="flex flex-wrap lg:flex-nowrap gap-2 w-full lg:w-auto">
-              {/* SAVED LOCALLY */}
               <button className="p-2 px-3 rounded-xl border border-border bg-blue-500/20 hover:bg-blue-500/30 transition-colors w-full lg:w-auto text-xs lg:text-sm whitespace-nowrap">
-                Saved locally
+                Saved locally + backend
               </button>
 
               {/* EXPORT JSON */}
@@ -663,211 +691,215 @@ export default function StudyProjectsAdvanced({
                   setXP(0);
                   setLevel(0);
                   setBonusGiven({});
+                  syncAll({}, 0, {});
                 }}
               >
                 Reset All
               </button>
             </div>
           </div>
-        </div>
+        </div>;
 
-        {/* MAIN VIEW */}
-        {view === "sections" && (
-          <div className="space-y-3">
-            {Object.entries(filteredSections).map(([sec, list]) => (
-              <section
-                key={sec}
-                className="rounded-2xl border border-border p-4 backdrop-blur-md bg-black/20"
-              >
-                {/* SECTION HEADER */}
-                <header
-                  onClick={() =>
-                    setOpenSection(openSection === sec ? null : sec)
-                  }
-                  className="flex items-center justify-between cursor-pointer hover:bg-white/5 dark:hover:bg-white/10 rounded-xl px-2 py-1 transition-all "
+        {
+          /* MAIN VIEW */
+        }
+        {
+          view === "sections" && (
+            <div className="space-y-3">
+              {Object.entries(filteredSections).map(([sec, list]) => (
+                <section
+                  key={sec}
+                  className="rounded-2xl border border-border p-4 backdrop-blur-md bg-black/20"
                 >
-                  <div className="flex items-center gap-3 ">
-                    <div className="w-12 h-12 rounded-lg border border-border bg-black/30 flex items-center justify-center ">
-                      {sec.includes("HTML") && (
-                        <LayoutList className="w-6 h-6 text-cyan-300" />
-                      )}
-                      {sec.includes("CSS") && (
-                        <Award className="w-6 h-6 text-pink-300" />
-                      )}
-                      {sec.includes("TAILWIND") && (
-                        <Code className="w-6 h-6 text-sky-300" />
-                      )}
-                      {sec.includes("JAVASCRIPT") && (
-                        <Cpu className="w-6 h-6 text-yellow-300" />
-                      )}
-                      {sec.includes("REACT") && (
-                        <Code className="w-6 h-6 text-violet-300" />
-                      )}
-                      {sec.includes("NODE") && (
-                        <Database className="w-6 h-6 text-green-300" />
-                      )}
-                      {sec.includes("MERN") && (
-                        <Code className="w-6 h-6 text-amber-300" />
-                      )}
-                    </div>
+                  {/* SECTION HEADER */}
+                  <header
+                    onClick={() =>
+                      setOpenSection(openSection === sec ? null : sec)
+                    }
+                    className="flex items-center justify-between cursor-pointer hover:bg-white/5 dark:hover:bg-white/10 rounded-xl px-2 py-1 transition-all "
+                  >
+                    <div className="flex items-center gap-3 ">
+                      <div className="w-12 h-12 rounded-lg border border-border bg-black/30 flex items-center justify-center ">
+                        {sec.includes("HTML") && (
+                          <LayoutList className="w-6 h-6 text-cyan-300" />
+                        )}
+                        {sec.includes("CSS") && (
+                          <Award className="w-6 h-6 text-pink-300" />
+                        )}
+                        {sec.includes("TAILWIND") && (
+                          <Code className="w-6 h-6 text-sky-300" />
+                        )}
+                        {sec.includes("JAVASCRIPT") && (
+                          <Cpu className="w-6 h-6 text-yellow-300" />
+                        )}
+                        {sec.includes("REACT") && (
+                          <Code className="w-6 h-6 text-violet-300" />
+                        )}
+                        {sec.includes("NODE") && (
+                          <Database className="w-6 h-6 text-green-300" />
+                        )}
+                        {sec.includes("MERN") && (
+                          <Code className="w-6 h-6 text-amber-300" />
+                        )}
+                      </div>
 
-                    <div>
-                      <h3 className="text-xl font-semibold">
-                        {sec.replaceAll("_", " ")}
-                      </h3>
-                      <div className="text-sm opacity-70">
-                        {PROJECT_SECTIONS[sec]?.length || list.length} projects
-                        • {sectionProgress(sec)}% complete
+                      <div>
+                        <h3 className="text-xl font-semibold">
+                          {sec.replaceAll("_", " ")}
+                        </h3>
+                        <div className="text-sm opacity-70">
+                          {PROJECT_SECTIONS[sec]?.length || list.length}{" "}
+                          projects • {sectionProgress(sec)}% complete
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-24 sm:w-40 h-2 sm:h-3 bg-black/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-cyan-400"
-                        style={{ width: `${sectionProgress(sec)}%` }}
-                      />
+                    <div className="flex items-center gap-4">
+                      <div className="w-24 sm:w-40 h-2 sm:h-3 bg-black/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-cyan-400"
+                          style={{ width: `${sectionProgress(sec)}%` }}
+                        />
+                      </div>
+
+                      <div className="text-lg opacity-70">
+                        {openSection === sec ? "▲" : "▼"}
+                      </div>
                     </div>
+                  </header>
 
-                    <div className="text-lg opacity-70">
-                      {openSection === sec ? "▲" : "▼"}
-                    </div>
-                  </div>
-                </header>
+                  {/* SECTION BODY */}
+                  <AnimatePresence>
+                    {openSection === sec && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+                      >
+                        {list.map((title, idx) => {
+                          const canonList = PROJECT_SECTIONS[sec] || [];
+                          const canonIdx =
+                            canonList.indexOf(title) === -1
+                              ? idx
+                              : canonList.indexOf(title);
 
-                {/* SECTION BODY */}
-                <AnimatePresence>
-                  {openSection === sec && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
-                    >
-                      {list.map((title, idx) => {
-                        const canonList = PROJECT_SECTIONS[sec] || [];
-                        const canonIdx =
-                          canonList.indexOf(title) === -1
-                            ? idx
-                            : canonList.indexOf(title);
+                          const done = progress?.[sec]?.[canonIdx] === true;
+                          const diff = difficultyForIndex(canonIdx);
 
-                        const done = progress?.[sec]?.[canonIdx] === true;
-                        const diff = difficultyForIndex(canonIdx);
+                          const deadline =
+                            progress?.[sec]?.deadlineDates?.[canonIdx] || null;
+                          const remaining =
+                            deadline && !done
+                              ? getRemainingString(deadline)
+                              : "";
 
-                        const deadline =
-                          progress?.[sec]?.deadlineDates?.[canonIdx] || null;
-                        const remaining =
-                          deadline && !done ? getRemainingString(deadline) : "";
+                          return (
+                            <motion.article
+                              key={title + idx}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={(e) => {
+                                // clicking card should NOT set deadline
+                                if (e.target.closest("button")) return;
+                                toggleProject(sec, canonIdx);
+                              }}
+                              className={`p-4 rounded-xl border border-border flex flex-col sm:flex-row gap-3 items-start cursor-pointer ${
+                                done ? "bg-black/40" : "bg-black/20"
+                              }`}
+                            >
+                              <Checkbox
+                                checked={done}
+                                onChange={() => toggleProject(sec, canonIdx)}
+                              />
 
-                        const expired = remaining === "Expired";
-
-                        return (
-                          <motion.article
-                            key={title + idx}
-                            whileHover={{ scale: 1.02 }}
-                            onClick={(e) => {
-                              // clicking card should NOT set deadline
-                              if (e.target.closest("button")) return;
-                              toggleProject(sec, canonIdx);
-                            }}
-                            className={`p-4 rounded-xl border border-border flex flex-col sm:flex-row gap-3 items-start cursor-pointer ${
-                              done ? "bg-black/40" : "bg-black/20"
-                            }`}
-                          >
-                            <Checkbox
-                              checked={done}
-                              onChange={() => toggleProject(sec, canonIdx)}
-                            />
-
-                            <div className="flex-0">
-                              {/* TITLE + DIFFICULTY + DETAILS */}
-                              <div
-                                className="flex flex-col
+                              <div className="flex-0">
+                                {/* TITLE + DIFFICULTY + DETAILS */}
+                                <div
+                                  className="flex flex-col
                                   sm:flex-row sm:items-center
                                   sm:justify-between gap-2 w-full"
-                              >
-                                <h4
-                                  className={`font-medium ${
-                                    done ? "line-through opacity-60" : ""
-                                  }`}
                                 >
-                                  {title}
-                                </h4>
+                                  <h4
+                                    className={`font-medium ${
+                                      done ? "line-through opacity-60" : ""
+                                    }`}
+                                  >
+                                    {title}
+                                  </h4>
 
-                                <div className="flex items-center gap-2">
-                                  <DiffPill d={diff} />
+                                  <div className="flex items-center gap-2">
+                                    <DiffPill d={diff} />
 
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setModal({
+                                          section: sec,
+                                          idx: canonIdx,
+                                          title,
+                                          diff,
+                                        });
+                                      }}
+                                      className="text-xs opacity-80"
+                                    >
+                                      Details →
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* SET DEADLINE BUTTON */}
+                                <div className="mt-2 flex items-center gap-3 text-xs">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setModal({
-                                        section: sec,
-                                        idx: canonIdx,
-                                        title,
-                                        diff,
-                                      });
+                                      handleSetDeadline(sec, canonIdx);
                                     }}
-                                    className="text-xs opacity-80"
+                                    className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-black/10 hover:bg-black/20 transition"
                                   >
-                                    Details →
+                                    <Clock className="w-3 h-3" />
+                                    Set Deadline
                                   </button>
-                                </div>
-                              </div>
 
-                              {/* SET DEADLINE BUTTON */}
-                              <div className="mt-2 flex items-center gap-3 text-xs">
-                                {/* SET DEADLINE BUTTON */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSetDeadline(sec, canonIdx);
-                                  }}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-black/10 hover:bg-black/20 transition"
-                                >
-                                  <Clock className="w-3 h-3" />
-                                  Set Deadline
-                                </button>
-
-                                {/* DEADLINE DATE */}
-                                {deadline && !done && (
-                                  <span className="opacity-80">
-                                    Deadline: {formatDate(deadline)}
-                                  </span>
-                                )}
-
-                                {/* TIMER */}
-                                {deadline &&
-                                  !done &&
-                                  remaining !== "Expired" && (
-                                    <span className="opacity-70">
-                                      {remaining}
+                                  {/* DEADLINE DATE */}
+                                  {deadline && !done && (
+                                    <span className="opacity-80">
+                                      Deadline: {formatDate(deadline)}
                                     </span>
                                   )}
-                              </div>
 
-                              {/* FIXED HEIGHT Completed-on area */}
-                              <div className="h-4 mt-2 text-[10px] opacity-60">
-                                {done &&
-                                  progress?.[sec]?.completionDates?.[
-                                    canonIdx
-                                  ] &&
-                                  `Completed on: ${formatDate(
-                                    progress[sec].completionDates[canonIdx]
-                                  )}`}
+                                  {/* TIMER */}
+                                  {deadline &&
+                                    !done &&
+                                    remaining !== "Expired" && (
+                                      <span className="opacity-70">
+                                        {remaining}
+                                      </span>
+                                    )}
+                                </div>
+
+                                {/* FIXED HEIGHT Completed-on area */}
+                                <div className="h-4 mt-2 text-[10px] opacity-60">
+                                  {done &&
+                                    progress?.[sec]?.completionDates?.[
+                                      canonIdx
+                                    ] &&
+                                    `Completed on: ${formatDate(
+                                      progress[sec].completionDates[canonIdx]
+                                    )}`}
+                                </div>
                               </div>
-                            </div>
-                          </motion.article>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </section>
-            ))}
-          </div>
-        )}
-        {/* Roadmap + Top10 views continue in Part 4 */}
+                            </motion.article>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </section>
+              ))}
+            </div>
+          )
+        }
+
         {/* ROADMAP VIEW */}
         {view === "roadmap" && (
           <div className="space-y-4">
@@ -938,6 +970,7 @@ export default function StudyProjectsAdvanced({
             </div>
           </div>
         )}
+
         {/* TOP 10 VIEW */}
         {view === "top10" && (
           <div>
@@ -945,18 +978,7 @@ export default function StudyProjectsAdvanced({
               Top 10 career-focused projects
             </h3>
             <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                "Full Auth + Profile + Roles (MERN)",
-                "Portfolio with Projects & Blog (HTML/CSS/Tailwind)",
-                "Kanban Board (React) / Productivity App",
-                "MERN E-Commerce (end-to-end)",
-                "Auth Service + Notes API (Node/Mongo)",
-                "Component Library + Storybook (React)",
-                "Dashboard UI (Tailwind) + Charts",
-                "Chat App (MERN or React + Socket)",
-                "Expense Tracker with Charts (JS/React)",
-                "Deployment Demo + CI Pipeline (MERN)",
-              ].map((t, i) => (
+              {TOP_10.map((t, i) => (
                 <motion.div
                   key={t}
                   whileHover={{ scale: 1.02 }}
@@ -979,12 +1001,12 @@ export default function StudyProjectsAdvanced({
             </div>
           </div>
         )}
-        {/* TimeLine */}
+
+        {/* TIMELINE VIEW */}
         {view === "timeline" && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold">Learning Roadmap</h3>
 
-            {/* Optional: Keep old timeline below */}
             <div className="border-t border-border pt-6 mt-6">
               <h4 className="text-md font-semibold mb-3">
                 Completed Tasks Log
@@ -996,43 +1018,44 @@ export default function StudyProjectsAdvanced({
                   timeline.
                 </p>
               ) : (
-                Object.entries(progress).map(([section, tasks]) => (
-                  <div
-                    key={section}
-                    className="rounded-xl border border-border p-4 bg-black/20 mb-4"
-                  >
-                    <h4 className="font-semibold text-sm mb-2">
-                      {section.replaceAll("_", " ")}
-                    </h4>
+                Object.entries(progress)
+                  .filter(([section]) => section !== "_meta")
+                  .map(([section, tasks]) => (
+                    <div
+                      key={section}
+                      className="rounded-xl border border-border p-4 bg-black/20 mb-4"
+                    >
+                      <h4 className="font-semibold text-sm mb-2">
+                        {section.replaceAll("_", " ")}
+                      </h4>
 
-                    {Object.entries(tasks?.completionDates || {}).length ===
-                      0 && (
-                      <p className="text-xs opacity-60">
-                        No completed tasks yet.
-                      </p>
-                    )}
+                      {Object.entries(tasks?.completionDates || {}).length ===
+                        0 && (
+                        <p className="text-xs opacity-60">
+                          No completed tasks yet.
+                        </p>
+                      )}
 
-                    {Object.entries(tasks?.completionDates || {}).map(
-                      ([idx, date]) => (
-                        <div
-                          key={idx}
-                          className="flex justify-between text-xs border-b border-border/30 py-1"
-                        >
-                          <span>
-                            {PROJECT_SECTIONS[section]?.[idx] || "Unknown Task"}
-                          </span>
-                          <span className="opacity-70">{date}</span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                ))
+                      {Object.entries(tasks?.completionDates || {}).map(
+                        ([idx, date]) => (
+                          <div
+                            key={idx}
+                            className="flex justify-between text-xs border-b border-border/30 py-1"
+                          >
+                            <span>
+                              {PROJECT_SECTIONS[section]?.[idx] ||
+                                "Unknown Task"}
+                            </span>
+                            <span className="opacity-70">{date}</span>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ))
               )}
             </div>
           </div>
         )}
-
-        {/* FOOTER */}
 
         {/* DETAIL MODAL */}
         <AnimatePresence>
@@ -1095,6 +1118,7 @@ export default function StudyProjectsAdvanced({
             </motion.div>
           )}
         </AnimatePresence>
+
         {/* CONFIRM DEADLINE POPUP */}
         <AnimatePresence>
           {confirmDeadline && (
@@ -1151,7 +1175,6 @@ export default function StudyProjectsAdvanced({
                     className="px-4 py-2 rounded-xl border border-border bg-black/30"
                     onClick={() => {
                       if (confirmDeadline.newDate) {
-                        // apply date manually
                         const next = structuredClone(progress);
                         if (!next[confirmDeadline.section].deadlineDates)
                           next[confirmDeadline.section].deadlineDates = {};
@@ -1160,6 +1183,7 @@ export default function StudyProjectsAdvanced({
                         ] = confirmDeadline.newDate;
 
                         setProgress(next);
+                        syncAll(next, xp, bonusGiven);
                       }
 
                       setConfirmDeadline(null);
@@ -1175,4 +1199,4 @@ export default function StudyProjectsAdvanced({
       </div>
     </div>
   );
-} // END COMPONENT
+}

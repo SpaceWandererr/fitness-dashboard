@@ -274,6 +274,36 @@ export default function App() {
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
+  // ----------------- GLOBAL BACKEND SYNC ENGINE -----------------
+  const saveTimeoutRef = useRef(null);
+
+  const updateDashboard = (updates) => {
+    if (!dashboardState) return;
+
+    const newState = {
+      ...dashboardState,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setDashboardState(newState);
+
+    // Debounce backend save
+    clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      fetch(API_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newState),
+      })
+        .then(() => {
+          console.log("🔥 Dashboard updated on backend");
+          window.dispatchEvent(new Event("lifeos:update"));
+        })
+        .catch((err) => console.error("❌ MongoDB update failed:", err));
+    }, 500);
+  };
+
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
 
@@ -572,7 +602,10 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Projects />
+                  <Projects
+                    dashboardState={dashboardState}
+                    updateDashboard={updateDashboard}
+                  />
                 </motion.div>
               }
             />
