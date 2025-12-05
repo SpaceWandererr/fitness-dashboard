@@ -280,15 +280,28 @@ export default function App() {
   const updateDashboard = (updates) => {
     if (!dashboardState) return;
 
+    const mergedState =
+      typeof updates === "function"
+        ? updates(dashboardState) // <-- functional update support
+        : {
+            ...dashboardState,
+            ...Object.fromEntries(
+              Object.entries(updates).map(([key, value]) => [
+                key,
+                typeof value === "object" && value !== null
+                  ? { ...(dashboardState[key] || {}), ...value }
+                  : value,
+              ])
+            ),
+          };
+
     const newState = {
-      ...dashboardState,
-      ...updates,
+      ...mergedState,
       updatedAt: new Date().toISOString(),
     };
 
     setDashboardState(newState);
 
-    // Debounce backend save
     clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       fetch(API_URL, {
@@ -297,12 +310,13 @@ export default function App() {
         body: JSON.stringify(newState),
       })
         .then(() => {
-          console.log("🔥 Dashboard updated on backend");
+          console.log("🔥 Saved to backend");
           window.dispatchEvent(new Event("lifeos:update"));
         })
         .catch((err) => console.error("❌ MongoDB update failed:", err));
     }, 500);
   };
+
 
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";

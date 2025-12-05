@@ -368,22 +368,16 @@ export default function StudyProjectsAdvanced({
     if (!next[section].completionDates) next[section].completionDates = {};
     if (!next[section].deadlineDates) next[section].deadlineDates = {};
 
-    // toggle status
+    // toggle
     next[section][idx] = !wasDone;
 
     if (!wasDone) {
-      // marking complete → set completion date
       next[section].completionDates[idx] = new Date()
         .toISOString()
         .split("T")[0];
-
-      // CLEAR DEADLINE ON COMPLETION
       delete next[section].deadlineDates[idx];
     } else {
-      // unmarking → remove completion date
       delete next[section].completionDates[idx];
-
-      // CLEAR DEADLINE WHEN UNCHECKED
       delete next[section].deadlineDates[idx];
     }
 
@@ -391,14 +385,9 @@ export default function StudyProjectsAdvanced({
     const diff = difficultyForIndex(idx);
     const gain = XP_VALUES[diff];
 
-    let nextXP = xp;
-    if (wasDone) {
-      nextXP = Math.max(0, xp - gain);
-    } else {
-      nextXP = xp + gain;
-    }
+    let nextXP = wasDone ? Math.max(0, xp - gain) : xp + gain;
 
-    // full section bonus
+    // bonus check
     const list = PROJECT_SECTIONS[section];
     const doneCount = Object.entries(next[section]).filter(
       ([k, v]) => !isNaN(k) && v === true
@@ -412,11 +401,12 @@ export default function StudyProjectsAdvanced({
       fireConfetti();
     }
 
+    // local UI update
     setProgress(next);
     setXP(nextXP);
     setBonusGiven(nextBonusGiven);
 
-    // Save everything to backend + fire global update
+    // backend + localStorage sync
     syncAll(next, nextXP, nextBonusGiven);
   };
 
@@ -454,6 +444,8 @@ export default function StudyProjectsAdvanced({
     next[section].deadlineDates[idx] = iso;
 
     setProgress(next);
+
+    // sync including XP + bonus state
     syncAll(next, xp, bonusGiven);
   };
 
@@ -698,7 +690,7 @@ export default function StudyProjectsAdvanced({
               </button>
             </div>
           </div>
-        </div>;
+        </div>
 
         {
           /* MAIN VIEW */
