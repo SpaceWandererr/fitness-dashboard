@@ -4957,6 +4957,31 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     return { plan, remaining };
   };
 
+const todayISO = () => new Date().toISOString().split("T")[0];
+
+async function toggleTopicDone(path, index) {
+  const updatedTree = structuredClone(syllabusTree);
+
+  // Navigate dynamically
+  let node = updatedTree;
+  for (const part of path) node = node[part];
+
+  const topic = node[index];
+  topic.done = !topic.done;
+  topic.completedOn = topic.done ? todayISO() : "";
+
+  setSyllabusTree(updatedTree);
+
+  // ---- UPDATE STUDY COMPLETION TO CALENDAR ----
+  setDoneMap((prev) => {
+    const updated = { ...prev, [todayISO()]: true };
+    syncToBackend({ wd_done: updated, syllabus_tree_v2: updatedTree });
+    return updated;
+  });
+}
+
+
+
   /* ======================= RENDER ======================= */
   return (
     <div

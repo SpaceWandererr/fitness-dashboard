@@ -70,7 +70,7 @@ function renderExercises(iso, gymLogsState) {
 export default function CalendarFullDarkUpdated() {
   const [month, setMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState(todayISO());
-  const [syllabus, setSyllabus] = useState({});
+  const [syllabus_tree_v2, setSyllabusTree] = useState({});
   const [gymLogs, setGymLogs] = useState({});
   const [doneMap, setDoneMap] = useState({});
   const [notesMap, setNotesMap] = useState({});
@@ -89,7 +89,7 @@ export default function CalendarFullDarkUpdated() {
         const res = await fetch(`${API}`);
         const data = await res.json();
 
-        setSyllabus(data.syllabus_tree_v2 || {});
+        setSyllabusTree(data.syllabus_tree_v2 || {});
         setGymLogs(data.wd_gym_logs || {});
         setDoneMap(data.wd_done || {});
         setNotesMap(data.wd_notes_v1 || {});
@@ -108,22 +108,41 @@ export default function CalendarFullDarkUpdated() {
 
   const studyMap = useMemo(() => {
     const out = {};
+
     function walk(node) {
       if (!node) return;
+
+      // Agar array hai toh ye leaf topics list hai
       if (Array.isArray(node)) {
         node.forEach((it) => {
           if (it && it.done && it.completedOn) {
-            out[it.completedOn] = out[it.completedOn] || [];
-            out[it.completedOn].push(it.title || it.name || "Topic");
+            // 🔑 completedOn ko sirf date (YYYY-MM-DD) me convert karo
+            let dayKey = "";
+
+            if (typeof it.completedOn === "string") {
+              // ISO string hai: "2025-12-06T15:45:21.123Z" → "2025-12-06"
+              dayKey = it.completedOn.slice(0, 10);
+            } else {
+              // Safety fallback
+              dayKey = dayjs(it.completedOn).format("YYYY-MM-DD");
+            }
+
+            if (!dayKey) return;
+
+            if (!out[dayKey]) out[dayKey] = [];
+            out[dayKey].push(it.title || it.name || "Topic");
           }
         });
         return;
       }
-      for (const v of Object.values(node || {})) walk(v);
+
+      // Agar object hai, toh andar jao
+      Object.values(node || {}).forEach(walk);
     }
-    walk(syllabus || {});
+
+    walk(syllabus_tree_v2 || {});
     return out;
-  }, [syllabus]);
+  }, [syllabus_tree_v2]);
 
   const days = useMemo(() => {
     const start = month.startOf("month").startOf("week");
@@ -205,7 +224,9 @@ export default function CalendarFullDarkUpdated() {
   function saveNoteForDate(date, text) {
     const next = { ...notesMap, [date]: text };
     setNotesMap(next);
-    syncToBackend("wd_notes_v1", next);
+    syncToBackend({
+      wd_notes_v1: next,
+    });
   }
 
   function exportAll() {
