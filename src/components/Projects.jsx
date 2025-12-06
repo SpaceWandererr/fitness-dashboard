@@ -748,90 +748,105 @@ export default function StudyProjectsAdvanced({
                         return (
                           <motion.article
                             key={`${title}-${idx}`}
-                            whileHover={{ scale: 1.01 }}
-                            className={`p-3 sm:p-4 rounded-xl border transition-all ${
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className={`group relative pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 rounded-xl transition-all ${
                               done
-                                ? "bg-emerald-500/10 border-emerald-500/30"
-                                : "bg-black/20 border-border hover:bg-white/5"
+                                ? "bg-gradient-to-r from-emerald-500/10 to-transparent"
+                                : "bg-gradient-to-r from-black/30 to-transparent hover:from-cyan-500/10"
                             }`}
                           >
-                            {/* TOP ROW: Checkbox + Title + Difficulty */}
-                            <div className="flex items-start gap-3">
-                              <Checkbox
-                                checked={done}
-                                onToggle={() => toggleProject(sec, canonIdx)}
-                              />
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                                  <h4
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleProject(sec, canonIdx);
-                                    }}
-                                    className={`font-medium text-sm sm:text-base cursor-pointer hover:text-emerald-300 transition leading-tight ${
-                                      done ? "line-through opacity-60" : ""
-                                    }`}
+                            {/* Timeline Dot & Line */}
+                            <div className="absolute left-2 sm:left-4 top-0 bottom-0 flex flex-col items-center">
+                              <div
+                                className={`w-5 h-5 sm:w-4 sm:h-4 rounded-full border-2 mt-3 transition-all ${
+                                  done
+                                    ? "bg-emerald-500 border-emerald-400 shadow-lg shadow-emerald-500/50"
+                                    : "bg-black border-cyan-500 group-hover:bg-cyan-500"
+                                }`}
+                              >
+                                {done && (
+                                  <svg
+                                    className="w-full h-full text-white p-0.5"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
                                   >
-                                    {title}
-                                  </h4>
-
-                                  <div className="flex items-center gap-2 flex-shrink-0">
-                                    <DiffPill d={diff} />
-                                  </div>
-                                </div>
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                )}
                               </div>
+                              <div
+                                className={`flex-1 w-px mt-2 ${
+                                  done ? "bg-emerald-500/30" : "bg-white/10"
+                                }`}
+                              />
                             </div>
 
-                            {/* DEADLINE & ACTIONS ROW */}
-                            <div className="mt-3 ml-9 space-y-2">
-                              {/* Deadline Info */}
-                              {deadline && !done && (
-                                <div className="flex flex-wrap items-center gap-2 text-xs">
-                                  <span className="px-2 py-1 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-200">
-                                    📅 {formatDate(deadline)}
-                                  </span>
-                                  {remaining !== "Expired" && (
-                                    <span className="px-2 py-1 rounded-md bg-blue-500/20 border border-blue-500/30 text-blue-200">
-                                      ⏱️ {remaining}
-                                    </span>
-                                  )}
-                                  {remaining === "Expired" && (
-                                    <span className="px-2 py-1 rounded-md bg-red-500/20 border border-red-500/30 text-red-200">
-                                      ⚠️ Expired
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                            {/* Content */}
+                            <div className="space-y-2">
+                              {/* Title & Difficulty */}
+                              <div className="flex items-start justify-between gap-2">
+                                <h4
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleProject(sec, canonIdx);
+                                  }}
+                                  className={`font-medium text-sm cursor-pointer transition ${
+                                    done
+                                      ? "line-through opacity-50"
+                                      : "hover:text-cyan-300"
+                                  }`}
+                                >
+                                  {title}
+                                </h4>
+                                <DiffPill d={diff} />
+                              </div>
 
-                              {/* Completion Date */}
-                              {done &&
-                                progress?.[sec]?.completionDates?.[
-                                  canonIdx
-                                ] && (
-                                  <div className="text-xs opacity-70 px-2 py-1 rounded-md bg-emerald-500/20 border border-emerald-500/30">
-                                    ✅ Completed:{" "}
-                                    {formatDate(
-                                      progress[sec].completionDates[canonIdx]
-                                    )}
+                              {/* Meta Information */}
+                              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                                {deadline && !done && (
+                                  <div
+                                    className={`px-2 py-0.5 rounded ${
+                                      remaining === "Expired"
+                                        ? "bg-red-500/20 text-red-200"
+                                        : "bg-amber-500/20 text-amber-200"
+                                    }`}
+                                  >
+                                    {remaining === "Expired"
+                                      ? `Expired: ${formatDate(deadline)}`
+                                      : `Due: ${formatDate(
+                                          deadline
+                                        )} (${remaining})`}
                                   </div>
                                 )}
 
-                              {/* Action Buttons */}
-                              <div className="flex flex-wrap items-center gap-2">
+                                {done &&
+                                  progress?.[sec]?.completionDates?.[
+                                    canonIdx
+                                  ] && (
+                                    <div className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
+                                      Completed:{" "}
+                                      {formatDate(
+                                        progress[sec].completionDates[canonIdx]
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+
+                              {/* Quick Actions - Hidden on desktop (hover), Always visible on mobile */}
+                              <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                 <button
                                   onClick={(e) => {
-                                    e.preventDefault();
                                     e.stopPropagation();
                                     handleSetDeadline(sec, canonIdx);
                                   }}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-black/20 hover:bg-black/40 transition text-xs"
+                                  className="text-[11px] px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10"
                                 >
-                                  <Clock className="w-3 h-3" />
-                                  <span className="hidden sm:inline">
-                                    Set Deadline
-                                  </span>
-                                  <span className="sm:hidden">Deadline</span>
+                                  ⏰ Set Deadline
                                 </button>
 
                                 <button
@@ -844,9 +859,9 @@ export default function StudyProjectsAdvanced({
                                       diff,
                                     });
                                   }}
-                                  className="px-2 py-1 rounded-md border border-border bg-black/20 hover:bg-black/40 transition text-xs"
+                                  className="text-[11px] px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10"
                                 >
-                                  Details
+                                  📋 Details
                                 </button>
                               </div>
                             </div>
