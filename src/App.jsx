@@ -60,17 +60,32 @@ export default function App() {
 
   function FloatingScrollControl() {
     const [atBottom, setAtBottom] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-      const onScroll = () => {
-        const scrollTop = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const fullHeight = document.documentElement.scrollHeight;
+      let ticking = false;
 
-        setAtBottom(scrollTop + windowHeight >= fullHeight - 200);
+      const onScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            const scrollTop =
+              window.scrollY || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const fullHeight = document.documentElement.scrollHeight;
+
+            // Show button only after scrolling 200px
+            setIsVisible(scrollTop > 200);
+
+            // Check if near bottom (within 200px)
+            setAtBottom(scrollTop + windowHeight >= fullHeight - 200);
+
+            ticking = false;
+          });
+          ticking = true;
+        }
       };
 
-      window.addEventListener("scroll", onScroll);
+      window.addEventListener("scroll", onScroll, { passive: true });
       onScroll(); // run once on load
       return () => window.removeEventListener("scroll", onScroll);
     }, []);
@@ -86,20 +101,26 @@ export default function App() {
       }
     };
 
+    // Don't render if not visible
+    if (!isVisible) return null;
+
     return (
       <button
         onClick={handleClick}
         title={atBottom ? "Go to Top" : "Go to Bottom"}
+        aria-label={atBottom ? "Scroll to top" : "Scroll to bottom"}
         className="
-        fixed bottom-6 right-6 z-[999]
+        fixed bottom-6 right-6 z-50
         w-12 h-12 rounded-full
         flex items-center justify-center
         bg-black/70 backdrop-blur-md
         border border-teal-400/40
         text-teal-300 text-xl
         shadow-[0_0_20px_rgba(34,211,238,0.4)]
-        hover:bg-teal-500/10 hover:scale-105
+        hover:bg-teal-500/10 hover:scale-110
+        active:scale-95
         transition-all duration-200
+        animate-in fade-in slide-in-from-bottom-4
       "
       >
         {atBottom ? "▲" : "▼"}
@@ -316,7 +337,6 @@ export default function App() {
         .catch((err) => console.error("❌ MongoDB update failed:", err));
     }, 500);
   };
-
 
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
@@ -1108,7 +1128,8 @@ function HomeDashboard({
 
       {/* VISION + NZ MIGRATION + CORE DIRECTIVES */}
       {/* Same content, but cards shown via VisionCarousel */}
-      <section className="w-full space-y-12">
+      {/* Vision Cards Section */}
+      <section className="w-full space-y-12 px-6">
         <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-200/80 text-center">
           Vision Horizon · 2026–2027
         </h3>
@@ -1169,8 +1190,8 @@ function HomeDashboard({
                     </li>
                   </ul>
                   <p className="mt-6 font-mono text-cyan-300">
-                    “Code like a warrior: no bugs, no mercy. Every line is a
-                    step toward financial independence.”
+                    "Code like a warrior: no bugs, no mercy. Every line is a
+                    step toward financial independence."
                   </p>
                 </>
               }
@@ -1226,8 +1247,8 @@ function HomeDashboard({
                     </li>
                   </ul>
                   <p className="mt-6 font-mono text-emerald-300">
-                    “From Gujarat grids to Kiwi horizons. Build the rocket
-                    first.”
+                    "From Gujarat grids to Kiwi horizons. Build the rocket
+                    first."
                   </p>
                 </>
               }
@@ -1275,7 +1296,7 @@ function HomeDashboard({
                     </li>
                   </ul>
                   <p className="mt-6 font-mono text-orange-300">
-                    “Pain now, power permanent.”
+                    "Pain now, power permanent."
                   </p>
                 </>
               }
@@ -1312,7 +1333,7 @@ function HomeDashboard({
                     <li>• Metric: 95%+ daily task completion</li>
                   </ul>
                   <p className="mt-6 font-mono text-purple-300">
-                    “Discipline is the only real superpower.”
+                    "Discipline is the only real superpower."
                   </p>
                 </>
               }
@@ -1351,7 +1372,7 @@ function HomeDashboard({
                     </li>
                   </ul>
                   <p className="mt-6 font-mono text-yellow-200">
-                    “Freedom is not a place. It’s a balance sheet plus skills.”
+                    "Freedom is not a place. It's a balance sheet plus skills."
                   </p>
                 </>
               }
@@ -1359,12 +1380,12 @@ function HomeDashboard({
           ]}
         />
 
-        {/* NZ MIGRATION COMMAND BLOCK (DEEP DIVE) – still here, full width */}
+        {/* NZ MIGRATION COMMAND BLOCK (DEEP DIVE) */}
         <NZMigrationBlock />
       </section>
 
-      {/* NZ Migration Deep Dive + Data (Directives) – unchanged */}
-      <section className="w-full snap-y snap-mandatory px-6">
+      {/* Directives Section - REMOVE px-6 from section tag */}
+      <section className="w-full snap-y snap-mandatory">
         <div className="w-full space-y-8">
           <div className="w-full">
             <DirectivesBlock />
@@ -1929,7 +1950,7 @@ function DirectivesBlock() {
         rounded-3xl
         border border-emerald-500/40
         bg-gradient-to-br from-emerald-900/20 via-teal-900/20 to-cyan-900/10
-        px-10 py-10
+        px-4 sm:px-6 md:px-10 py-6 md:py-10
         backdrop-blur-xl
         shadow-[0_0_60px_rgba(16,185,129,0.3)]
       "
@@ -1950,8 +1971,8 @@ function DirectivesBlock() {
           </div>
         </div>
 
-        {/* Main Layout Grid (unchanged) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Layout Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* LEFT: Directive Cards */}
           <div className="lg:col-span-2 grid sm:grid-cols-2 gap-4">
             {directives.map((item, i) => (
@@ -1961,7 +1982,7 @@ function DirectivesBlock() {
                 rounded-xl
                 bg-black/30
                 border border-emerald-500/20
-                px-6 py-5
+                px-4 sm:px-6 py-4 sm:py-5
                 shadow-inner shadow-black/60
                 hover:border-emerald-400/40
                 transition-all duration-300
@@ -1989,7 +2010,7 @@ function DirectivesBlock() {
             rounded-xl
             bg-black/30
             border border-emerald-500/30
-            px-6 py-6
+            px-4 sm:px-6 py-5 sm:py-6
             shadow-[0_0_25px_rgba(16,185,129,0.15)]
           "
           >
@@ -2028,32 +2049,9 @@ function DirectivesBlock() {
   );
 }
 
+
 /* ======================= SMALL UI HELPERS ======================= */
 
-function StatCard({ label, value, sub, icon, active, onClick }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      whileHover={{ y: -3, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={`group flex w-full flex-col items-start rounded-2xl border px-4 py-3 text-left shadow-lg transition-all ${
-        active
-          ? "border-teal-400 bg-black/70 shadow-[0_0_25px_rgba(45,212,191,0.5)]"
-          : "border-teal-500/25 bg-black/50 hover:border-teal-300/70 hover:shadow-[0_0_18px_rgba(45,212,191,0.4)]"
-      }`}
-    >
-      <div className="flex w-full items-center justify-between">
-        <span className="text-lg">{icon}</span>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-teal-200/80">
-          {active ? "OPEN" : "TAP TO OPEN"}
-        </span>
-      </div>
-      <p className="mt-2 text-xs font-semibold text-slate-200/90">{label}</p>
-      <p className="text-lg font-bold text-teal-100">{value}</p>
-      <p className="mt-0.5 text-[11px] text-slate-300/75">{sub}</p>
-    </motion.button>
-  );
-}
 
 function InfoRow({ label, value }) {
   return (
@@ -2093,21 +2091,6 @@ const links = [
 ];
 
 /* ======================= UTIL ======================= */
-
-function labelForPanel(key) {
-  switch (key) {
-    case "weight":
-      return "Weight";
-    case "gym":
-      return "Gym";
-    case "topics":
-      return "Coding";
-    case "streak":
-      return "Streak";
-    default:
-      return key;
-  }
-}
 
 const glowCSS = `
 .glow-text {
