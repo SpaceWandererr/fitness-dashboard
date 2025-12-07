@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import http from "http"; // ✅ Important for Render (Fix HTTP2 bug)
+import http from "http";
 
 // Routes
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -17,8 +17,7 @@ const app = express();
 app.disable("x-powered-by");
 app.set("etag", false);
 
-// ------------------- CORS FIX (Render + Frontend) -------------------
-// ---- CORS FIX ----
+// ------------------- CORS -------------------
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
@@ -40,42 +39,12 @@ app.use((req, res, next) => {
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   next();
 });
 
-// Preflight response
 app.options("*", cors());
-
-// Extra CORS header layer (important)
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (!origin || allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
-  }
-
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-  );
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  // Stop OPTION request from going to route handlers
-  if (req.method === "OPTIONS") {
-    return res.status(204).send();
-  }
-
-  next();
-});
-
-// ---------------------- Body Parsing ----------------------
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use(
   cors({
@@ -84,17 +53,16 @@ app.use(
   })
 );
 
-// ---------------------- Test Routes ----------------------
-app.all("(/*)?", (req, res) => {
-  res.json({ status: "API running" });
-});
+// ---------------------- Body Parsing ----------------------
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-
+// ---------------------- Test Route ----------------------
 app.get("/api/test", (req, res) => {
   res.json({ message: "Hello from your backend 🚀" });
 });
 
-// ---------------------- Models Config ----------------------
+// ---------------------- Dynamic Model Loading ----------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const modelsConfigPath = path.resolve(__dirname, "..", "config", "models.json");
@@ -124,20 +92,29 @@ app.get("/api/models", (req, res) => {
   res.json(modelsConfig);
 });
 
-// ---------------------- Routes ----------------------
+// ---------------------- API Routes ----------------------
 app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
-// ---------------------- Database & Server Start ----------------------
+// ---------------------- FINAL FALLBACK (MUST be LAST) ----------------------
+app.all("*", (req, res) => {
+  res.status(404).json({
+    status: "API running",
+    route: req.originalUrl,
+    message: "Route not found",
+  });
+});
+
+// ---------------------- DB + Server Start ----------------------
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-const server = http.createServer(app); // ✅ Use HTTP server
+const server = http.createServer(app);
 
 mongoose
-  .connect(MONGO_URI, { family: 4 }) // IPv4 fix
+  .connect(MONGO_URI, { family: 4 })
   .then(() => {
-    console.log("✅ MongoDB Atlas Connected");
+    console.log("🟢 MongoDB Atlas Connected");
     server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => console.error("❌ MongoDB connection failed:", err.message));
