@@ -44,7 +44,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options("*", cors());
+app.options(/.*/, cors());
 
 app.use(
   cors({
@@ -97,13 +97,14 @@ app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
 // ---------------------- FINAL FALLBACK (MUST be LAST) ----------------------
-app.all("*", (req, res) => {
+app.all(/.*/, (req, res) => {
   res.status(404).json({
     status: "API running",
     route: req.originalUrl,
     message: "Route not found",
   });
 });
+
 
 // ---------------------- DB + Server Start ----------------------
 const PORT = process.env.PORT || 5000;
