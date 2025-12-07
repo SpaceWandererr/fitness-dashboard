@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
@@ -61,6 +62,7 @@ export default function App() {
   function FloatingScrollControl() {
     const [atBottom, setAtBottom] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+    const [hasAnimated, setHasAnimated] = useState(false);
 
     useEffect(() => {
       let ticking = false;
@@ -73,10 +75,7 @@ export default function App() {
             const windowHeight = window.innerHeight;
             const fullHeight = document.documentElement.scrollHeight;
 
-            // Show button only after scrolling 200px
             setIsVisible(scrollTop > 200);
-
-            // Check if near bottom (within 200px)
             setAtBottom(scrollTop + windowHeight >= fullHeight - 200);
 
             ticking = false;
@@ -86,22 +85,24 @@ export default function App() {
       };
 
       window.addEventListener("scroll", onScroll, { passive: true });
-      onScroll(); // run once on load
+      onScroll();
       return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    const handleClick = () => {
-      if (atBottom) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: "smooth",
-        });
+    // Run animation only once when it becomes visible
+    useEffect(() => {
+      if (isVisible && !hasAnimated) {
+        setHasAnimated(true);
       }
+    }, [isVisible, hasAnimated]);
+
+    const handleClick = () => {
+      window.scrollTo({
+        top: atBottom ? 0 : document.documentElement.scrollHeight,
+        behavior: "smooth",
+      });
     };
 
-    // Don't render if not visible
     if (!isVisible) return null;
 
     return (
@@ -109,19 +110,14 @@ export default function App() {
         onClick={handleClick}
         title={atBottom ? "Go to Top" : "Go to Bottom"}
         aria-label={atBottom ? "Scroll to top" : "Scroll to bottom"}
-        className="
-        fixed bottom-6 right-6 z-50
-        w-12 h-12 rounded-full
-        flex items-center justify-center
-        bg-black/70 backdrop-blur-md
-        border border-teal-400/40
-        text-teal-300 text-xl
-        shadow-[0_0_20px_rgba(34,211,238,0.4)]
-        hover:bg-teal-500/10 hover:scale-110
-        active:scale-95
+        className={`fixed bottom-6 right-6 z-50
+        w-12 h-12 rounded-full flex items-center justify-center
+        bg-black/70 backdrop-blur-md border border-teal-400/40
+        text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)]
+        hover:bg-teal-500/10 hover:scale-110 active:scale-95
         transition-all duration-200
-        animate-in fade-in slide-in-from-bottom-4
-      "
+        ${hasAnimated ? "animate-in fade-in slide-in-from-bottom-4" : ""}
+      `}
       >
         {atBottom ? "▲" : "▼"}
       </button>
@@ -296,47 +292,47 @@ export default function App() {
   };
 
   // ----------------- GLOBAL BACKEND SYNC ENGINE -----------------
+  const lastSavedRef = useRef(null);
   const saveTimeoutRef = useRef(null);
 
-  const updateDashboard = (updates) => {
-    if (!dashboardState) return;
+  const updateDashboard = useCallback(
+    (updates) => {
+      if (!dashboardState) return;
 
-    const mergedState =
-      typeof updates === "function"
-        ? updates(dashboardState) // <-- functional update support
-        : {
-            ...dashboardState,
-            ...Object.fromEntries(
-              Object.entries(updates).map(([key, value]) => [
-                key,
-                typeof value === "object" && value !== null
-                  ? { ...(dashboardState[key] || {}), ...value }
-                  : value,
-              ])
-            ),
-          };
+      const resolvedUpdates =
+        typeof updates === "function" ? updates(dashboardState) : updates;
 
-    const newState = {
-      ...mergedState,
-      updatedAt: new Date().toISOString(),
-    };
+      const newState = {
+        ...dashboardState,
+        ...resolvedUpdates,
+      };
 
-    setDashboardState(newState);
+      // 🛑 If nothing changed, don't send request
+      if (JSON.stringify(newState) === JSON.stringify(lastSavedRef.current)) {
+        return;
+      }
 
-    clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = setTimeout(() => {
-      fetch(API_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newState),
-      })
-        .then(() => {
-          console.log("🔥 Saved to backend");
-          window.dispatchEvent(new Event("lifeos:update"));
+      setDashboardState(newState);
+
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(resolvedUpdates), // 🔥 only send changes
         })
-        .catch((err) => console.error("❌ MongoDB update failed:", err));
-    }, 500);
-  };
+          .then((r) => r.json())
+          .then((data) => {
+            lastSavedRef.current = newState;
+            console.log("🔥 Saved to backend");
+          })
+          .catch((err) => console.error("❌ Save error:", err));
+      }, 600);
+    },
+    [dashboardState, API_URL]
+  );
+
+  // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
 
   const bgClass =
     "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
@@ -665,7 +661,10 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Planner />
+                  <Planner
+                    dashboardState={dashboardState}
+                    updateDashboard={updateDashboard}
+                  />
                 </motion.div>
               }
             />
@@ -2049,9 +2048,7 @@ function DirectivesBlock() {
   );
 }
 
-
 /* ======================= SMALL UI HELPERS ======================= */
-
 
 function InfoRow({ label, value }) {
   return (

@@ -5,38 +5,95 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import http from "http"; // ✅ Important for Render (Fix HTTP2 bug)
 
+// Routes
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import snapshotRoutes from "./routes/snapshotRoutes.js";
 
 dotenv.config();
 
 const app = express();
+app.disable("x-powered-by");
+app.set("etag", false);
 
-// Middleware
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
+// ------------------- CORS FIX (Render + Frontend) -------------------
+// ---- CORS FIX ----
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://fitness-dashboard-laoe.vercel.app",
+  "https://fitness-frontend.vercel.app",
+];
 
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
+// Preflight response
+app.options("*", cors());
+
+// Extra CORS header layer (important)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // Stop OPTION request from going to route handlers
+  if (req.method === "OPTIONS") {
+    return res.status(204).send();
+  }
+
+  next();
+});
+
+// ---------------------- Body Parsing ----------------------
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
-// Test Route
+// ---------------------- Test Routes ----------------------
 app.get("/", (req, res) => {
   res.send("✅ Backend is running properly");
 });
 
-// API test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "Hello from your backend 🚀" });
 });
 
-// Serve models config to clients
+// ---------------------- Models Config ----------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const modelsConfigPath = path.resolve(__dirname, "..", "config", "models.json");
@@ -47,17 +104,14 @@ function loadModelsConfig() {
   try {
     const raw = fs.readFileSync(modelsConfigPath, "utf8");
     modelsConfig = JSON.parse(raw);
-    console.log(`✅ Loaded models config from ${modelsConfigPath}`);
+    console.log(`✅ Loaded models.json from ${modelsConfigPath}`);
   } catch (err) {
-    console.warn(`⚠️ Could not load models config at ${modelsConfigPath}:`, err.message);
-    modelsConfig = { enabledModels: [], defaultModel: null };
+    console.warn("⚠️ Could not load models config:", err.message);
   }
 }
 
-// initial load
 loadModelsConfig();
 
-// watch for changes and reload on change
 fs.watchFile(modelsConfigPath, { interval: 1000 }, (curr, prev) => {
   if (curr.mtimeMs !== prev.mtimeMs) {
     console.log("🔁 models.json changed — reloading...");
@@ -69,24 +123,20 @@ app.get("/api/models", (req, res) => {
   res.json(modelsConfig);
 });
 
-// MongoDB Connection
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-
+// ---------------------- Routes ----------------------
 app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
+// ---------------------- Database & Server Start ----------------------
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+
+const server = http.createServer(app); // ✅ Use HTTP server
+
 mongoose
-  .connect(MONGO_URI, {
-    family: 4   // 🔥 Forces IPv4 and fixes Render DNS issue
-  })
+  .connect(MONGO_URI, { family: 4 }) // IPv4 fix
   .then(() => {
     console.log("✅ MongoDB Atlas Connected");
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-    });
+    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:");
-    console.error(err.message);
-  });
+  .catch((err) => console.error("❌ MongoDB connection failed:", err.message));

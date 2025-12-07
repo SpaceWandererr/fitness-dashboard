@@ -48,6 +48,8 @@ function syncToBackend() {
 
   syncTimer = setTimeout(async () => {
     const payload = {
+      wd_planner: JSON.parse(localStorage.getItem("wd_planner") || "{}"),
+
       wd_mern_progress: localStorage.getItem("wd_mern_progress"),
       wd_weight_current: localStorage.getItem("wd_weight_current"),
       wd_weight_history: localStorage.getItem("wd_weight_history"),
@@ -91,9 +93,6 @@ export function save(key, value) {
   }
 }
 
-
-
-
 export function load(key, fallback = null) {
   try {
     const s = localStorage.getItem(key);
@@ -109,3 +108,4 @@ export function load(key, fallback = null) {
   }
 }
 
+export { syncToBackend };
