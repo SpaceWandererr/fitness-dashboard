@@ -85,9 +85,10 @@ app.use(
 );
 
 // ---------------------- Test Routes ----------------------
-app.get("/", (req, res) => {
-  res.send("✅ Backend is running properly");
+app.all("(/*)?", (req, res) => {
+  res.json({ status: "API running" });
 });
+
 
 app.get("/api/test", (req, res) => {
   res.json({ message: "Hello from your backend 🚀" });
