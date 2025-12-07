@@ -145,68 +145,86 @@ export default function App() {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
-  // 🔗 NEW: load dashboard state from Mongo (backend) and refresh on "lifeos:update"
+  // ----------------- LOAD DASHBOARD STATE FROM BACKEND -----------------
   useEffect(() => {
     let cancelled = false;
 
     async function loadState() {
+      console.log("📡 Loading dashboard from backend...");
+
       try {
         const res = await fetch(API_URL);
 
         if (!res.ok) {
-          console.error("Failed to load dashboard state", res.status);
+          console.error("❌ Backend error:", res.status);
           return;
         }
 
         const data = await res.json();
 
-        // backend may send { state: {...} } or the state directly
+        // Backend may send wrapper or raw
         let state = data.state || data.dashboardState || data || {};
 
-        // ---------------------------------------------------
-        // ⭐ FIX: Ensure syllabus_tree_v2 is ALWAYS available
-        // ---------------------------------------------------
-        // Around line 70-80 in the loadState useEffect
+        // ---------------- SYLLABUS FIX ----------------
+        const rawTree = window?.TREE;
+
         const hasBackendSyllabus =
           state.syllabus_tree_v2 &&
           typeof state.syllabus_tree_v2 === "object" &&
           Object.keys(state.syllabus_tree_v2).length > 0;
 
-        // If backend sent empty syllabus → use TREE from Syllabus.jsx
         if (!hasBackendSyllabus) {
-          if (window?.TREE) {
-            console.warn("Using TREE fallback for syllabus_tree_v2");
-            state.syllabus_tree_v2 = window.TREE;
-          } else {
-            console.warn("No syllabus found and TREE not available yet");
-          }
+          console.warn("📌 Backend empty → Using raw TREE.");
+          state.syllabus_tree_v2 = structuredClone(rawTree);
+        } else {
+          console.log("📚 Syllabus loaded from backend.");
         }
-        // ---------------------------------------------------
 
+        // 🚨 Normalize only ONCE
+        if (
+          state.syllabus_tree_v2 &&
+          typeof state.syllabus_tree_v2 === "object" &&
+          !state.syllabus_tree_v2.__normalized
+        ) {
+          console.log("🔧 Normalizing syllabus now...");
+          state.syllabus_tree_v2 = normalizeSection(
+            structuredClone(state.syllabus_tree_v2)
+          );
+          state.syllabus_tree_v2.__normalized = true;
+        } else {
+          console.log("✔ Syllabus already normalized. Skipping.");
+        }
+        // ------------------------------------------------
+
+        // Prevent unnecessary rerenders
         if (!cancelled) {
-          setDashboardState(state);
+          setDashboardState((prev) => {
+            if (JSON.stringify(prev) === JSON.stringify(state)) {
+              console.log("🛑 No state change.");
+              return prev;
+            }
+            console.log("✅ Applying restored dashboard state.");
+            return state;
+          });
         }
       } catch (err) {
-        if (!cancelled) {
-          console.error("Error loading dashboard state", err);
-        }
+        if (!cancelled) console.error("🔥 Load error:", err);
       }
     }
 
-    const handleLifeosUpdate = () => {
-      // Gym / Syllabus will dispatch this after saving
-      loadState();
-    };
+    // Listen for update triggers
+    const handleLifeosUpdate = () => loadState();
 
     window.addEventListener("lifeos:update", handleLifeosUpdate);
     window.addEventListener("storage", handleLifeosUpdate);
 
-    // initial load
+    // Initial call
     loadState();
 
     return () => {
       cancelled = true;
       window.removeEventListener("lifeos:update", handleLifeosUpdate);
+      window.removeEventListener("storage", handleLifeosUpdate);
     };
   }, []);
 
@@ -291,7 +309,7 @@ export default function App() {
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
-  // ----------------- GLOBAL BACKEND SYNC ENGINE -----------------
+  // ----------------- GLOBAL BACKEND SAVE ENGINE -----------------
   const lastSavedRef = useRef(null);
   const saveTimeoutRef = useRef(null);
 
@@ -302,15 +320,10 @@ export default function App() {
       const resolvedUpdates =
         typeof updates === "function" ? updates(dashboardState) : updates;
 
-      const newState = {
-        ...dashboardState,
-        ...resolvedUpdates,
-      };
+      const newState = { ...dashboardState, ...resolvedUpdates };
 
-      // 🛑 If nothing changed, don't send request
-      if (JSON.stringify(newState) === JSON.stringify(lastSavedRef.current)) {
+      if (JSON.stringify(newState) === JSON.stringify(lastSavedRef.current))
         return;
-      }
 
       setDashboardState(newState);
 
@@ -319,14 +332,14 @@ export default function App() {
         fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(resolvedUpdates), // 🔥 only send changes
+          body: JSON.stringify({ state: newState }),
         })
           .then((r) => r.json())
-          .then((data) => {
+          .then(() => {
             lastSavedRef.current = newState;
-            console.log("🔥 Saved to backend");
+            console.log("💾 Synced to backend");
           })
-          .catch((err) => console.error("❌ Save error:", err));
+          .catch((err) => console.error("❌ Sync failed:", err));
       }, 600);
     },
     [dashboardState, API_URL]

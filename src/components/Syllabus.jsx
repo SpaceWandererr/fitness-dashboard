@@ -4302,38 +4302,46 @@ function totalsOf(node) {
  * { JS: { Basics: { Scope: [...] } } }
  */
 function normalizeSection(sectionObj) {
+  if (!sectionObj || typeof sectionObj !== "object") return sectionObj;
+
+  // 🚨 Prevent recursion on already normalized tree
+  if (sectionObj.__normalized) return sectionObj;
+
   const out = {};
 
-  for (const [rawKey, value] of Object.entries(sectionObj || {})) {
-    // If it's already nested
+  for (const [rawKey, value] of Object.entries(sectionObj)) {
+    if (rawKey === "__normalized") continue;
+
     if (!rawKey.includes("›")) {
-      out[rawKey] = isArray(value) ? deepClone(value) : normalizeSection(value);
+      out[rawKey] = Array.isArray(value)
+        ? structuredClone(value)
+        : normalizeSection(value);
       continue;
     }
 
-    // Convert "A › B › C" into ["A", "B", "C"]
     const parts = rawKey
       .split("›")
-      .map((s) => s.trim())
+      .map((p) => p.trim())
       .filter(Boolean);
-
     let ref = out;
 
-    for (let i = 0; i < parts.length; i++) {
-      const p = parts[i];
-
-      // Last part → assign leaf
-      if (i === parts.length - 1)
-        ref[p] = isArray(value) ? deepClone(value) : normalizeSection(value);
-      else {
-        if (!isObject(ref[p])) ref[p] = {};
+    parts.forEach((p, i) => {
+      if (i === parts.length - 1) {
+        ref[p] = Array.isArray(value)
+          ? structuredClone(value)
+          : normalizeSection(value);
+      } else {
+        if (!ref[p] || typeof ref[p] !== "object") ref[p] = {};
         ref = ref[p];
       }
-    }
+    });
   }
 
+  out.__normalized = true; // 🔥 mark as normalized
   return out;
 }
+
+
 
 /**
  * Normalizes your entire syllabus TREE
