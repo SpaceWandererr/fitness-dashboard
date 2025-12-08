@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
+const API_URL = "https://fitness-backend-laoe.onrender.com/api/state";
+const LOCAL_KEY = "wd_dashboard_state";
+
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
   "Episode 1 - Code": {
@@ -4148,2187 +4151,679 @@ const TREE = {
   },
 };
 
-if (!window.TREE) window.TREE = TREE;
+/* ======================= UTILITIES ======================= */
 
-// Stabilize meta reference to prevent re-renders
-// Fixed: Always return the latest value, not stale ref.current
-function useStable(obj) {
-  const ref = useRef(obj);
-  // Update ref synchronously to avoid stale reads
-  if (ref.current !== obj) {
-    ref.current = obj;
-  }
-  return ref.current;
-}
-
-/* =======https://fitness-backend-laoe.onrender.com/=============== KEYS ======================= */
-const K_TREE = "syllabus_tree_v2";
-const K_META = "syllabus_meta_v2";
-const K_NOTES = "syllabus_notes_v2";
-const K_STREAK = "syllabus_streak_v2";
-
-/* ======================= UTIL ======================= */
-
-/**
- * Check if value is an array
- */
 const isArray = Array.isArray;
-
-/**
- * Check if value is a plain object (not null, not array)
- */
 const isObject = (o) => !!o && typeof o === "object" && !Array.isArray(o);
 
-/**
- * Returns today's date in YYYY-MM-DD format
- */
-const todayISO = () => new Date().toISOString().slice(0, 10);
-
-/**
- * Safe deep clone using JSON method
- * NOTE: Only use for pure JSON objects
- */
 const deepClone = (o) => JSON.parse(JSON.stringify(o || {}));
 
-/**
- * Converts path array to a readable string
- * Example: ["JS", "Basics", "Scope"] → "JS > Basics > Scope"
- */
-const pathKey = (pathArr) => {
-  return pathArr
-    .map(
-      (p) =>
-        String(p)
-          .trim() // remove leading/trailing spaces
-          .replace(/\s+/g, "_") // convert spaces to _
-          .replace(/[^\w_]/g, "") // remove invalid chars like > - :
-          .toLowerCase() // normalize casing
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+// path → stable key string (for notes / meta)
+const pathKey = (pathArr) =>
+  pathArr
+    .map((p) =>
+      String(p)
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^\w_]/g, "")
+        .toLowerCase()
     )
-    .join("__"); // consistent and clean
-};
+    .join("__");
 
-/**
- * Creates unique key for item lists based on path + index
- */
-const itemKey = (path, idx) => `${pathKey(path)} ## ${idx}`;
+/* ======================= MAIN COMPONENT ======================= */
 
-/**
- * Format ISO date → DD-MM-YYYY
- */
-function formatDateDDMMYYYY(iso) {
-  if (!iso) return "";
+export default function Syllabus({ dashboardState, setDashboardState }) {
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://fitness-backend-laoe.onrender.com/api/state";
 
-  const d = new Date(iso);
-  if (isNaN(d)) return iso;
-
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
-
-  return `${dd}-${mm}-${yyyy}`;
-}
-
-/**
- * Returns number of days between two ISO dates
- * Example: 2025-01-01 and 2025-01-05 → 4
- */
-function daysDiff(aISO, bISO) {
-  if (!aISO || !bISO) return null;
-
-  const a = new Date(aISO);
-  const b = new Date(bISO);
-
-  if (isNaN(a) || isNaN(b)) return null;
-
-  const ms = a.setHours(0, 0, 0, 0) - b.setHours(0, 0, 0, 0);
-
-  return Math.round(ms / 86400000);
-}
-
-/**
- * Safely get any nested node reference from tree using path array
- * Example: ["JS", "Basics", "Scope"]
- */
-function getRefAtPath(obj, path) {
-  let ref = obj;
-
-  for (const part of path) {
-    if (!ref || typeof ref !== "object") return undefined;
-    ref = ref[part];
+  // Guard
+  if (!dashboardState) {
+    return <div className="p-6 text-white">Loading syllabus…</div>;
   }
 
-  return ref;
-}
+  const totalsOf = (node, visited = new WeakSet()) => {
+    if (!node || typeof node !== "object") {
+      return { total: 0, done: 0, pct: 0 };
+    }
 
-/**
- * Calculates total items + done items from a section
- * Works for both array nodes and recursive objects
- */
-function totalsOf(node) {
-  // If it's a leaf array
-  if (isArray(node)) {
-    const total = node.length;
-    const done = node.filter((i) => i.done).length;
+    // stop circular reference
+    if (visited.has(node)) {
+      return { total: 0, done: 0, pct: 0 };
+    }
+    visited.add(node);
+
+    // If it's an array of tasks
+    if (Array.isArray(node)) {
+      const total = node.length;
+      const done = node.filter((task) => task.done).length;
+      return {
+        total,
+        done,
+        pct: total ? Math.round((done / total) * 100) : 0,
+      };
+    }
+
+    // If it's an object
+    let total = 0;
+    let done = 0;
+
+    for (const value of Object.values(node)) {
+      const sub = totalsOf(value, visited);
+      total += sub.total;
+      done += sub.done;
+    }
 
     return {
       total,
       done,
       pct: total ? Math.round((done / total) * 100) : 0,
     };
-  }
-
-  // If it's nested object
-  let total = 0;
-  let done = 0;
-
-  for (const v of Object.values(node || {})) {
-    const t = totalsOf(v);
-    total += t.total;
-    done += t.done;
-  }
-
-  return {
-    total,
-    done,
-    pct: total ? Math.round((done / total) * 100) : 0,
   };
-}
 
-/**
- * Converts flat › format into nested object structure
- * Example:
- * "JS › Basics › Scope": [items]
- * becomes:
- * { JS: { Basics: { Scope: [...] } } }
- */
-function normalizeSection(sectionObj) {
-  if (!sectionObj || typeof sectionObj !== "object") return sectionObj;
+  /* ---------- TREE (DERIVED FROM STATE) ---------- */
+  const rawTree = dashboardState?.syllabus_tree_v2;
 
-  // 🚨 Prevent recursion on already normalized tree
-  if (sectionObj.__normalized) return sectionObj;
+  const tree =
+    rawTree && typeof rawTree === "object" && Object.keys(rawTree).length > 0
+      ? rawTree
+      : TREE;
 
-  const out = {};
-
-  for (const [rawKey, value] of Object.entries(sectionObj)) {
-    if (rawKey === "__normalized") continue;
-
-    if (!rawKey.includes("›")) {
-      out[rawKey] = Array.isArray(value)
-        ? structuredClone(value)
-        : normalizeSection(value);
-      continue;
-    }
-
-    const parts = rawKey
-      .split("›")
-      .map((p) => p.trim())
-      .filter(Boolean);
-    let ref = out;
-
-    parts.forEach((p, i) => {
-      if (i === parts.length - 1) {
-        ref[p] = Array.isArray(value)
-          ? structuredClone(value)
-          : normalizeSection(value);
-      } else {
-        if (!ref[p] || typeof ref[p] !== "object") ref[p] = {};
-        ref = ref[p];
-      }
-    });
-  }
-
-  out.__normalized = true; // 🔥 mark as normalized
-  return out;
-}
-
-
-
-/**
- * Normalizes your entire syllabus TREE
- * Converts all sections into nested structures
- */
-// keep for compatibility but delegate to normalized version
-const normalizeWholeTree = (src) => normalizeTree(src);
-
-// Add this somewhere near the top (replace old todayISO if exists)
-const nowISO = () => new Date().toISOString(); // e.g. "2025-11-30T13:45:22.123Z"
-
-// Make TREE available globally so App.jsx can use syllabus data
-window.TREE = TREE;
-
-/* ======================= MAIN ======================= */
-export default function Syllabus({ dashboardState, setDashboardState }) {
-  // ---------------- MONGO CONFIG ----------------
-  const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://fitness-backend-laoe.onrender.com/api/state";
-
-  // ⛑ Guard: prevent crash before state arrives
-  if (!dashboardState) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10]">
-        <div className="relative">
-          {/* Pulsing ring */}
-          <div className="absolute inset-0 animate-ping rounded-full bg-emerald-400/20" />
-
-          {/* Content */}
-          <div className="relative rounded-2xl border border-emerald-500/30 bg-black/60 px-8 py-6 backdrop-blur-xl shadow-[0_0_40px_rgba(16,185,129,0.3)]">
-            <div className="flex items-center gap-4">
-              {/* Spinning loader */}
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-400/30 border-t-emerald-400" />
-
-              {/* Text */}
-              <div>
-                <p className="font-mono text-sm font-semibold tracking-wider text-emerald-300">
-                  INITIALIZING NEURAL CORE
-                </p>
-                <p className="mt-1 font-mono text-xs text-emerald-400/70">
-                  Loading syllabus matrix from database...
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ======================= SYNCED STATE FROM MONGO ======================= */
-  // 1 BUILD TREE FIRST - FIXED
-  // 1 BUILD TREE FIRST - FIXED
-  const normalizeTree = useCallback((src) => {
-    const out = {};
-    for (const [k, v] of Object.entries(src || {})) {
-      out[k] = normalizeSection(v);
-    }
-    return out;
-  }, []); // ✅ Stable - never changes
-
-  const tree = useMemo(() => {
-    if (dashboardState?.syllabus_tree_v2) {
-      return normalizeTree(dashboardState.syllabus_tree_v2);
-    }
-    return normalizeTree(TREE);
-  }, [dashboardState?.syllabus_tree_v2]); // ✅ Now stable
-
-  // 2️⃣ RAW META SECOND
+  /* ---------- OTHER STATE FROM DASHBOARD ---------- */
+  const notes = dashboardState?.syllabus_notes || {};
+  const streakSet = new Set(dashboardState?.syllabus_streak || []);
+  const lastStudied = dashboardState?.syllabus_lastStudied || "";
   const meta = dashboardState?.syllabus_meta || {};
 
-  // 3️⃣ STABLE META THIRD - Use useMemo to ensure updates properly
-  const stableMeta = useMemo(() => meta, [meta]);
-
-  // 4️⃣ NOTES / REMINDERS
-  const nr = dashboardState?.syllabus_notes || {};
-  const daySet = new Set(dashboardState?.syllabus_streak || []);
-
-  const [showLastStudied, setShowLastStudied] = useState(true);
-
-  const lastStudied = dashboardState?.syllabus_lastStudied || "";
-  const LAST_STUDIED_HIDE_MINUTES = 10;
-
   const [query, setQuery] = useState("");
-  const [showTopBtn, setShowTopBtn] = useState(false);
-  const [milestone, setMilestone] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [showTop, setShowTop] = useState(false);
   const [saving, setSaving] = useState(false);
-  const saveTimeoutRef = useRef(null);
 
-  /* ======================= CLEANUP TIMEOUT ======================= */
+  const saveTimeoutRef = useRef(null);
+  // ------------------ LOAD STATE (LOCAL FIRST, THEN BACKEND) ------------------
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+    async function loadState() {
+      try {
+        // 1️⃣ Load from localStorage instantly (instant UI, no freeze)
+        const local = localStorage.getItem("wd_dashboard_state");
+        if (local) {
+          console.log("⚡ Loaded from local cache");
+          setDashboardState(JSON.parse(local));
+        }
+
+        // 2️⃣ Fetch updated version from backend (async)
+        const res = await fetch(
+          "https://fitness-backend-laoe.onrender.com/api/state"
+        );
+
+        if (res.ok) {
+          const serverState = await res.json();
+
+          console.log("🔥 Loaded from Mongo backend");
+
+          // Update local + state only if backend contains valid data
+          if (serverState && typeof serverState === "object") {
+            setDashboardState(serverState);
+            localStorage.setItem(
+              "wd_dashboard_state",
+              JSON.stringify(serverState)
+            );
+          }
+        }
+      } catch (err) {
+        console.error("❌ Failed to load:", err);
       }
-    };
+    }
+
+    loadState();
   }, []);
 
-  /* ======================= AUTO SEED MONGO ======================= */
-  /* ======================= INITIAL LOAD & SEEDING (FIXED!) ======================= */
-  // 1️⃣ FIRST: Load existing data from MongoDB on mount
-  useEffect(() => {
-    console.log("🔄 Loading data from MongoDB...");
+  /* ======================= GLOBAL UPDATE (LOCAL + BACKEND) ======================= */
 
-    fetch(API_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("✅ Loaded from MongoDB:", data);
-        if (data && Object.keys(data).length > 0) {
-          setDashboardState(data);
-        } else {
-          console.log("📭 No data in MongoDB, will seed fresh data");
-        }
-      })
-      .catch((err) => {
-        console.error("❌ Load failed:", err);
-      });
-  }, [API_URL]); // Only run once on mount
-
-  // 2️⃣ SECOND: Seed if no data exists (your existing code)
-  useEffect(() => {
-    // Only seed if syllabus_tree_v2 is completely missing (first-time user)
-    if (dashboardState?.syllabus_tree_v2) {
-      console.log("Syllabus already exists in Mongo. Skipping seed.");
-      return;
-    }
-
-    console.log("First time setup: Seeding fresh syllabus into Mongo...");
-
-    const freshTree = normalizeTree(TREE);
-
-    const seeded = {
-      ...dashboardState,
-      syllabus_tree_v2: freshTree,
-      syllabus_meta: {},
-      syllabus_notes: {},
-      syllabus_streak: [],
-      syllabus_lastStudied: "",
-      syllabus_initialized: true,
-    };
-
-    setDashboardState(seeded);
-
-    fetch(API_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(seeded),
-    })
-      .then(() => console.log("Fresh syllabus seeded successfully"))
-      .catch((err) => console.error("Seed failed:", err));
-  }, [dashboardState?.syllabus_tree_v2]);
-
-  /* ======================= LAST STUDIED AUTO-HIDE ======================= */
-  useEffect(() => {
-    if (!lastStudied) return;
-
-    setShowLastStudied(true);
-
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
-
-    return () => clearTimeout(timer);
-  }, [lastStudied]);
-
-  /* ======================= STREAK ======================= */
-  const streak = useMemo(() => {
-    const has = (iso) => daySet.has(iso);
-    let st = 0;
-    const d = new Date();
-    while (true) {
-      const iso = d.toISOString().slice(0, 10);
-      if (has(iso)) st++;
-      else break;
-      d.setDate(d.getDate() - 1);
-    }
-    return st;
-  }, [dashboardState?.syllabus_streak]);
-
-  const grand = useMemo(() => totalsOf(tree), [tree]);
-
-  /* ======================= DASHBOARD UPDATE ======================= */
   const updateDashboard = useCallback(
     (updates) => {
       setDashboardState((prev) => {
         const newState = {
           ...prev,
           ...updates,
+          updatedAt: new Date().toISOString(),
         };
 
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
+        // local save
+        try {
+          window.localStorage.setItem(LOCAL_KEY, JSON.stringify(newState));
+        } catch (e) {
+          console.error("localStorage failed:", e);
         }
 
+        // backend save (debounced)
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = setTimeout(() => {
+          setSaving(true);
           fetch(API_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newState),
           })
-            .then(() => {
-              // 🔥 Sync AFTER Mongo saved, not before
-              window.lifeOSsync?.();
-            })
-            .catch((err) => console.error("Mongo save failed:", err));
+            .catch((err) => console.error("Mongo save failed:", err))
+            .finally(() => setSaving(false));
         }, 500);
 
         return newState;
       });
     },
-    [API_URL]
+    [API_URL, setDashboardState]
   );
 
-  /* ======================= ACTIONS ======================= */
-
-  // ✅ Stable Toggle (does not break after Mongo re-render)
-  const toggleOpen = useCallback(
-    (path) => {
-      const key = pathKey(path);
-
-      // Use functional update to read latest state
-      setDashboardState((prev) => {
-        const current = prev?.syllabus_meta || {};
-        const prevOpen = current[key]?.open || false;
-
-        const newState = {
-          ...prev,
-          syllabus_meta: {
-            ...current,
-            [key]: {
-              ...(current[key] || {}),
-              open: !prevOpen,
-            },
-          },
-        };
-
-        // Save to MongoDB asynchronously AFTER state update (debounced, no event)
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-        saveTimeoutRef.current = setTimeout(() => {
-          fetch(API_URL, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newState),
-          }).catch((err) => console.error("Mongo save failed:", err));
-        }, 500); // Debounce saves by 500ms
-
-        return newState;
-      });
-    },
-    [API_URL]
-  );
-
-  // alias for Section header click
-  const onSectionHeaderClick = (path) => {
-    toggleOpen(path);
-  };
-
-  const setTargetDate = (path, date) => {
-    const key = pathKey(path);
-    const newTree = deepClone(tree);
-    const node = getRefAtPath(newTree, path);
-    const updatedMeta = {
-      ...meta,
-      [key]: { ...(meta[key] || {}), targetDate: date },
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
+  }, []);
 
-    // Cascade deadline to all nested subsections and topics
-    function cascadeDeadline(node, deadline, currentPath, metaObj) {
-      if (Array.isArray(node)) {
-        // It's a task list - set deadline for all tasks
-        node.forEach((item) => {
-          if (!item.deadline) {
-            item.deadline = deadline;
-          }
-        });
-      } else if (isObject(node)) {
-        // It's a nested object - recurse into children
-        for (const [childKey, childVal] of Object.entries(node || {})) {
-          const childPath = [...currentPath, childKey];
-          const childKeyStr = pathKey(childPath);
+  /* ======================= TOGGLE TASK ======================= */
 
-          // Set targetDate in meta for subsection
-          if (!metaObj[childKeyStr]) {
-            metaObj[childKeyStr] = {};
-          }
-          metaObj[childKeyStr].targetDate = deadline;
+  const toggleTask = (path) => {
+    const newTree = deepClone(tree);
 
-          // Recurse into children
-          cascadeDeadline(childVal, deadline, childPath, metaObj);
-        }
-      }
+    let ref = newTree;
+    for (let i = 0; i < path.length - 1; i++) {
+      ref = ref[path[i]];
     }
 
-    // Only cascade if a date is provided (not when clearing)
-    if (node && date) {
-      cascadeDeadline(node, date, path, updatedMeta);
-    }
+    const last = path[path.length - 1];
+    const item = ref[last];
+
+    item.done = !item.done;
+    item.completedOn = item.done ? todayISO() : "";
 
     updateDashboard({
-      syllabus_meta: updatedMeta,
       syllabus_tree_v2: newTree,
     });
   };
 
-  const setSectionTargetPct = (secKey, pct) => {
-    const key = pathKey([secKey]);
+  /* ======================= DEADLINE & NOTES ======================= */
 
-    updateDashboard({
-      syllabus_meta: {
-        ...meta,
-        [key]: {
-          ...(meta[key] || {}),
-          targetPct: Number(pct || 0),
-        },
-      },
-    });
-  };
+  const setDeadline = useCallback(
+    (path) => {
+      const newTree = deepClone(tree);
+      let ref = newTree;
+      for (let i = 0; i < path.length - 1; i++) {
+        ref = ref[path[i]];
+      }
+      const lastKey = path[path.length - 1];
 
-  // 1. Keep your full timestamp
-  const nowISO = () => new Date().toISOString();
+      const current = ref[lastKey].deadline || "";
+      const next = prompt(
+        "Set deadline (YYYY-MM-DD). Leave empty to clear:",
+        current
+      );
+      if (next === null) return;
 
-  // 2. setAllAtPath — YOUR ORIGINAL LOGIC (CORRECT!) + proper unmark fix
-  const setAllAtPath = useCallback(
-    (path, val) => {
-      setDashboardState((prev) => {
-        const newTree = deepClone(prev.syllabus_tree_v2 || tree);
-        const node = getRefAtPath(newTree, path);
-
-        let lastItem = null;
-
-        const markRecursively = (n) => {
-          if (Array.isArray(n)) {
-            n.forEach((it) => {
-              it.done = val;
-              it.completedOn = val ? nowISO() : "";
-              if (val) lastItem = it;
-            });
-            return;
-          }
-          for (const v of Object.values(n || {})) markRecursively(v);
-        };
-
-        markRecursively(node);
-
-        const updates = { syllabus_tree_v2: newTree };
-
-        if (val && lastItem) {
-          updates.syllabus_lastStudied = `${
-            lastItem.title
-          } — ${new Date().toLocaleString("en-IN")}`;
-          const streak = new Set(prev.syllabus_streak || []);
-          streak.add(nowISO().slice(0, 10));
-          updates.syllabus_streak = Array.from(streak);
-        } else {
-          updates.syllabus_lastStudied = findLastStudied(newTree);
-        }
-
-        // 🔥 Mongo sync
-        updateDashboard(updates);
-
-        return { ...prev, ...updates };
-      });
+      ref[lastKey].deadline = next.trim();
+      treeRef.current = newTree;
+      updateDashboard({ syllabus_tree_v2: newTree });
     },
     [tree, updateDashboard]
   );
 
-  // 3. markTask — single task (uses timestamp order)
-  const markTask = useCallback(
-    (path, idx, val) => {
-      setDashboardState((prev) => {
-        const newTree = deepClone(prev.syllabus_tree_v2 || tree);
-        const parent = getRefAtPath(newTree, path.slice(0, -1));
-        const leafKey = path[path.length - 1];
-        const item = parent[leafKey][idx];
-
-        item.done = val;
-        item.completedOn = val ? nowISO() : "";
-
-        const updates = { syllabus_tree_v2: newTree };
-
-        if (val) {
-          updates.syllabus_lastStudied = `${
-            item.title
-          } — ${new Date().toLocaleString("en-IN")}`;
-          const streak = new Set(prev.syllabus_streak || []);
-          streak.add(nowISO().slice(0, 10));
-          updates.syllabus_streak = Array.from(streak);
-        } else {
-          updates.syllabus_lastStudied = findLastStudied(newTree);
-        }
-
-        const newState = { ...prev, ...updates };
-
-        // ✅ IMMEDIATE SAVE - NO DEBOUNCE
-        fetch(API_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newState),
-        })
-          .then(() => {
-            console.log("Mongo save → syncing dashboard");
-            window.lifeOSsync?.();
-          })
-          .catch((err) => console.error("Mongo save failed:", err));
-
-        return newState;
-      });
+  const setNote = useCallback(
+    (path, text) => {
+      const key = pathKey(path);
+      const updated = { ...notes, [key]: text };
+      updateDashboard({ syllabus_notes: updated });
     },
-    [tree, API_URL]
+    [notes, updateDashboard]
   );
 
-  // 4. Keep this helper (for unmarking)
-  const findLastStudied = useCallback((treeRoot) => {
-    let latestTitle = "";
-    let latestTime = 0;
+  /* ======================= EXPORT / IMPORT ======================= */
 
-    const walk = (node) => {
-      if (Array.isArray(node)) {
-        node.forEach((task) => {
-          if (task.done && task.completedOn) {
-            const t = new Date(task.completedOn).getTime();
-            if (t > latestTime) {
-              latestTime = t;
-              latestTitle = task.title;
-            }
-          }
-        });
-      } else {
-        Object.values(node || {}).forEach(walk);
-      }
-    };
-
-    walk(treeRoot);
-    if (!latestTitle) return "";
-    const d = new Date(latestTime);
-    return `${latestTitle} — ${d.toLocaleString("en-IN")}`;
-  }, []);
-
-  // ✅ Fix: Task deadline setter with Mongo sync
-  const setTaskDeadline = (path, idx, date) => {
-    const newTree = deepClone(tree);
-
-    const parent = getRefAtPath(newTree, path.slice(0, -1));
-    const leafKey = path[path.length - 1];
-
-    if (!parent || !parent[leafKey] || !parent[leafKey][idx]) return;
-
-    parent[leafKey][idx].deadline = date;
-
-    updateDashboard({
-      syllabus_tree_v2: newTree,
-    });
-    window.lifeOSsync?.();
-  };
-
-  /* ======================= NOTES ======================= */
-  const setNR = useCallback(
-    (newNR) => {
-      // Handle functional updates like setState
-      if (typeof newNR === "function") {
-        setDashboardState((prev) => {
-          const currentNotes = prev?.syllabus_notes || {};
-          const updatedNotes = newNR(currentNotes);
-          const newState = {
-            ...prev,
-            syllabus_notes: updatedNotes,
-          };
-
-          // Save to MongoDB
-          if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-          }
-          saveTimeoutRef.current = setTimeout(() => {
-            fetch(API_URL, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(newState),
-            }).catch((err) => console.error("Mongo save failed:", err));
-          }, 500);
-
-          return newState;
-        });
-      } else {
-        updateDashboard({ syllabus_notes: newNR });
-      }
-    },
-    [updateDashboard, API_URL]
-  );
-
-  /* ======================= EXPORT ======================= */
-  function exportProgress() {
-    const payload = {
-      syllabus_tree_v2: tree,
-      syllabus_meta: meta,
-      syllabus_notes: nr,
-      syllabus_streak: Array.from(daySet),
+  const exportProgress = () => {
+    const data = {
+      syllabus_tree_v2: treeRef.current,
+      syllabus_notes: notes,
+      syllabus_streak: Array.from(streakSet),
       syllabus_lastStudied: lastStudied,
+      syllabus_meta: meta,
     };
-
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
     });
-
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "syllabus_backup.json";
+    a.href = url;
+    a.download = "syllabus-progress.json";
     a.click();
-  }
+    URL.revokeObjectURL(url);
+  };
 
-  /* ======================= IMPORT ======================= */
-  function importProgress(e) {
-    const file = e.target.files[0];
+  const importProgress = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
-
-    reader.onload = (event) => {
+    reader.onload = () => {
       try {
-        const data = JSON.parse(event.target.result);
-
-        const updated = {
-          ...dashboardState,
-          ...data,
+        const parsed = JSON.parse(reader.result);
+        const updates = {
+          syllabus_tree_v2: parsed.syllabus_tree_v2 || TREE,
+          syllabus_notes: parsed.syllabus_notes || {},
+          syllabus_streak: parsed.syllabus_streak || [],
+          syllabus_lastStudied: parsed.syllabus_lastStudied || "",
+          syllabus_meta: parsed.syllabus_meta || {},
         };
-
-        setDashboardState(updated);
-
-        fetch(API_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
-        });
-
-        alert("✅ Syllabus imported successfully");
-        window.location.reload();
+        treeRef.current = deepClone(updates.syllabus_tree_v2);
+        updateDashboard(updates);
+        alert("✅ Syllabus imported");
       } catch {
-        alert("❌ Import failed. Invalid file.");
+        alert("❌ Invalid file");
       }
     };
-
     reader.readAsText(file);
-  }
+  };
 
-  /* ======================= SCROLL ======================= */
-  useEffect(() => {
-    const onScroll = () => setShowTopBtn(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  /* ======================= SEARCH FILTER ======================= */
 
-  /* ======================= FILTERED ======================= */
-  const filtered = useMemo(() => {
+  const filteredTree = useMemo(() => {
     if (!query.trim()) return tree;
     const q = query.toLowerCase();
 
-    function filterNode(node) {
+    const filterNode = (node) => {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
           (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
-
       const out = {};
       for (const [k, v] of Object.entries(node || {})) {
         const child = filterNode(v);
         if (child) out[k] = child;
       }
       return Object.keys(out).length ? out : null;
-    }
+    };
 
     return filterNode(tree) || {};
   }, [tree, query]);
 
-  /* ======================= GENERATE SMART PLAN ======================= */
-  const generateSmartPlan = (availableMins) => {
-    const leaves = [];
+  /* ======================= SMART PLAN & DAILY URGENT ======================= */
 
-    function walk(node) {
+  const generateSmartPlan = useCallback(() => {
+    const leaves = [];
+    const visited = new WeakSet();
+
+    const walk = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (visited.has(node)) return;
+      visited.add(node);
+
       if (Array.isArray(node)) {
         node.forEach((it) => {
           if (!it.done) {
             leaves.push({
               title: it.title,
               deadline: it.deadline || "",
-              estimate: 0.5,
             });
           }
+          if (typeof it === "object") walk(it);
         });
         return;
       }
-      for (const v of Object.values(node || {})) walk(v);
-    }
+
+      for (const v of Object.values(node)) walk(v);
+    };
 
     walk(tree);
 
-    const sorted = leaves.sort((a, b) => {
-      const da = a.deadline ? Date.parse(a.deadline) : Infinity;
-      const db = b.deadline ? Date.parse(b.deadline) : Infinity;
-      return da - db;
-    });
+    return leaves;
+  }, [dashboardState?.syllabus_tree_v2]);
 
-    const plan = [];
-    let remaining = availableMins;
+  const urgentList = useMemo(() => {
+    const items = [];
+    const visited = new WeakSet();
 
-    for (const t of sorted) {
-      const mins = Math.round(t.estimate * 60);
-      if (remaining >= mins) {
-        plan.push(t);
-        remaining -= mins;
+    const walk = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (visited.has(node)) return;
+      visited.add(node);
+
+      if (Array.isArray(node)) {
+        node.forEach((it) => {
+          if (!it?.done && it?.deadline) {
+            items.push({ title: it.title, deadline: it.deadline });
+          }
+          if (typeof it === "object") walk(it);
+        });
+        return;
       }
+
+      for (const v of Object.values(node)) walk(v);
+    };
+
+    walk(tree);
+
+    return items
+      .map((i) => ({
+        ...i,
+        d: i.deadline ? Date.parse(i.deadline) : Infinity,
+      }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 6);
+  }, [dashboardState?.syllabus_tree_v2]);
+
+  const handleSmartPlanClick = () => {
+    const minsStr = prompt("⏱ Available study time today (minutes)?", "60");
+
+    if (!minsStr) return;
+    const mins = Number(minsStr);
+
+    if (!Number.isFinite(mins) || mins <= 0) {
+      alert("⚠️ Enter a valid positive number.");
+      return;
     }
 
-    return { plan, remaining };
+    const list = generateSmartPlan(); // now returns array only
+
+    if (!list.length) {
+      alert("🔥 All tasks done — nothing left to schedule!");
+      return;
+    }
+
+    // Rough estimate: 30 mins per task (adjust later)
+    const taskDuration = 30;
+    const maxTasks = Math.max(1, Math.floor(mins / taskDuration));
+
+    const plan = list.slice(0, maxTasks);
+
+    const lines = plan.map(
+      (p, i) => `${i + 1}. ${p.title}${p.deadline ? `  ⏳(${p.deadline})` : ""}`
+    );
+
+    alert(
+      `📘 Smart Study Plan\n--------------------------------\n` +
+        `⏰ Study Duration: ${mins} mins\n` +
+        `📌 Tasks: ${plan.length}\n\n` +
+        lines.join("\n") +
+        `\n\n🚀 Tip: Mark tasks done as you finish.`
+    );
   };
 
-const todayISO = () => new Date().toISOString().split("T")[0];
+  /* ======================= PROGRESS, STREAK, SCROLL ======================= */
 
-async function toggleTopicDone(path, index) {
-  const updatedTree = structuredClone(syllabusTree);
+  const grand = useMemo(
+    () => totalsOf(tree),
+    [dashboardState?.syllabus_tree_v2]
+  );
+  const streak = useMemo(
+    () => streakSet.size,
+    [dashboardState?.syllabus_streak]
+  );
 
-  // Navigate dynamically
-  let node = updatedTree;
-  for (const part of path) node = node[part];
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 300);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  const topic = node[index];
-  topic.done = !topic.done;
-  topic.completedOn = topic.done ? todayISO() : "";
-
-  setSyllabusTree(updatedTree);
-
-  // ---- UPDATE STUDY COMPLETION TO CALENDAR ----
-  setDoneMap((prev) => {
-    const updated = { ...prev, [todayISO()]: true };
-    syncToBackend({ wd_done: updated, syllabus_tree_v2: updatedTree });
-    return updated;
-  });
-}
-
-
+  const scrollTop = () =>
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
 
   /* ======================= RENDER ======================= */
+
   return (
-    <div
-      className="
-  min-h-[80vh] rounded-xl p-2
-  text-[#dceee8] dark:text-[#E6F1FF]
-  bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-  dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-  dark:border-[#00D1FF33]
-"
-    >
-      <header className="sticky top-0 z-40 rounded-xl mb-6 animate-fadeIn">
-        <div
-          className=" rounded-xl
-    relative overflow-hidden
-    bg-gradient-to-br from-[#0F0F0F]/95 via-[#183D3D]/90 to-[#B82132]/85
-    dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
-    backdrop-blur-2xl border border-[#00D1FF]/30
-    shadow-[0_0_30px_rgba(0,209,255,0.15)]
-    dark:border-[#00D1FF33]
-  "
-        >
-          {/* Animated Background Layers */}
-          <div className="absolute inset-0 bg-stripes animate-stripes opacity-30" />
-          <div className="absolute inset-0 bg-wave animate-wave opacity-20" />
-
-          <div className="relative max-w-7xl mx-auto px-4 py-5 space-y-5">
-            {/* Top Row: Title + Buttons */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              {/* Title */}
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#FF8F8F] to-[#B82132] shadow-lg shadow-[#FF8F8F]/60 animate-shimmer">
-                  <span className="text-2xl font-black text-black">Code</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#a7f3d0] via-[#00D1FF] to-[#E6F1FF] animate-shimmer bg-shimmer">
-                    Jay's Web Dev-2026
-                  </h1>
-                  <p className="text-xs sm:text-sm text-[#a7f3d0]/80 font-medium">
-                    Master Full-Stack in 365 Days
-                  </p>
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Streak */}
-                <div
-                  className={`
-            px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0ca56d] to-[#18c481] 
-            text-black font-bold text-sm shadow-lg shadow-[#18c481]/50
-            flex items-center gap-2 animate-shimmer
-            ${grand.pct >= 90 ? "animate-heartbeat" : ""}
-          `}
-                >
-                  Streak: <b>{Array.from(daySet).length}</b>
-                </div>
-
-                {/* Expand All */}
-                <button
-                  onClick={() => {
-                    const updated = { ...dashboardState.syllabus_meta };
-                    Object.keys(TREE).forEach((ep) => {
-                      const key = pathKey([ep]);
-                      updated[key] = { ...(updated[key] || {}), open: true };
-                    });
-                    updateDashboard({ syllabus_meta: updated });
-                  }}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
-                >
-                  Expand
-                </button>
-
-                {/* Collapse All */}
-                <button
-                  onClick={() => {
-                    const updated = { ...dashboardState.syllabus_meta };
-                    Object.keys(updated).forEach((k) => {
-                      updated[k] = { ...updated[k], open: false };
-                    });
-                    updateDashboard({ syllabus_meta: updated });
-                  }}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
-                >
-                  Collapse
-                </button>
-
-                {/* Reset */}
-                <button
-                  onClick={() => {
-                    if (!confirm("Reset ONLY syllabus progress?")) return;
-
-                    const resetTree = normalizeTree(TREE);
-
-                    const syllabusResetPayload = {
-                      syllabus_tree_v2: resetTree,
-                      syllabus_meta: {},
-                      syllabus_notes: {},
-                      syllabus_streak: [],
-                      syllabus_lastStudied: "",
-                    };
-
-                    // ✅ Merge with existing state to preserve gym data
-                    const fullPayload = {
-                      ...dashboardState, // Keep gym and other data
-                      ...syllabusResetPayload, // Override only syllabus fields
-                    };
-
-                    // Update local state
-                    setDashboardState(fullPayload);
-                    window.lifeOSsync?.();
-                    // Send FULL state to backend (preserves gym data)
-                    fetch(API_URL, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(fullPayload), // ✅ Changed from syllabusResetPayload
-                    })
-                      .then(() => {
-                        alert("Syllabus progress reset ✔");
-                        window.location.reload();
-                      })
-                      .catch(() => alert("Reset failed!"));
-                  }}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#B82132] text-white hover:bg-[#a51b2a] shadow-lg transition-all duration-300"
-                >
-                  Reset
-                </button>
-
-                {/* Export */}
-                <button
-                  onClick={exportProgress}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
-                >
-                  Export
-                </button>
-
-                {/* Import */}
-                <label className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#113f30]/90 text-[#d9ebe5] border border-[#1f6a50]/60 hover:bg-[#0F3A2B] hover:border-[#00D1FF]/50 hover:shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300 cursor-pointer">
-                  Import
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={importProgress}
-                    className="hidden"
-                  />
-                </label>
-              </div>
+    <div className="min-h-[80vh] rounded-xl p-2 text-[#dceee8] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 rounded-xl bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] backdrop-blur-xl border border-[#0B5134]/60 shadow-lg">
+        <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
+              Syllabus — Web Dev 2026
+            </h1>
+            <div className="flex flex-wrap gap-2 items-center justify-end">
+              <span className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#0ca56d] to-[#18c481] text-black text-sm font-semibold">
+                🔥 Streak: {streak} days
+              </span>
+              <button
+                onClick={handleSmartPlanClick}
+                className="px-3 py-1.5 rounded-xl text-sm bg-[#0b4766] border border-[#1e6b8b]/60 hover:bg-[#08364d]"
+              >
+                🧠 Smart Plan
+              </button>
+              <button
+                onClick={exportProgress}
+                className="px-3 py-1.5 rounded-xl text-sm bg-[#1b2838] border border-[#3b4a5a]/60 hover:bg-[#17212d]"
+              >
+                ⬇ Export
+              </button>
+              <label className="px-3 py-1.5 rounded-xl text-sm bg-[#1b2838] border border-[#3b4a5a]/60 hover:bg-[#17212d] cursor-pointer">
+                ⬆ Import
+                <input
+                  type="file"
+                  accept="application/json"
+                  onChange={importProgress}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={() => {
+                  if (
+                    !confirm("Reset ALL syllabus progress, notes and streak?")
+                  )
+                    return;
+                  treeRef.current = deepClone(TREE);
+                  updateDashboard({
+                    syllabus_tree_v2: treeRef.current,
+                    syllabus_notes: {},
+                    syllabus_streak: [],
+                    syllabus_lastStudied: "",
+                    syllabus_meta: {},
+                  });
+                  scrollTop();
+                }}
+                className="px-3 py-1.5 rounded-xl text-sm bg-[#B82132] hover:bg-[#9f1828]"
+              >
+                Reset
+              </button>
+              {saving && (
+                <span className="text-xs text-green-200 animate-pulse">
+                  Saving…
+                </span>
+              )}
             </div>
+          </div>
 
-            {/* Progress Section */}
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#d9ebe5]">
-                <span className="font-medium">
-                  Progress: {grand.done} / {grand.total} topics
+          {/* Progress */}
+          <div>
+            <div className="flex items-center justify-between text-xs text-[#d9ebe5]">
+              <span>
+                Progress: {grand.done}/{grand.total}
+              </span>
+              <span className="font-semibold text-[#a7f3d0]">{grand.pct}%</span>
+              {lastStudied && (
+                <span className="text-[11px] text-emerald-200">
+                  Last studied: {lastStudied}
                 </span>
-
-                {showLastStudied && lastStudied ? (
-                  <div className="flex items-center gap-2 text-green-300/90 font-medium animate-fadeIn">
-                    Last studied:{" "}
-                    <span className="text-green-200">{lastStudied}</span>
-                  </div>
-                ) : lastStudied ? (
-                  <div className="text-[#a7f3d0]/60 text-sm italic">
-                    Keep going!
-                  </div>
-                ) : (
-                  <div className="text-[#a7f3d0]/60 text-sm italic">
-                    No topics completed yet
-                  </div>
-                )}
-
-                <span className="font-bold text-[#a7f3d0] text-lg">
-                  {grand.pct}%
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="relative h-3 rounded-full bg-[#102720]/90 overflow-hidden border border-[#0B5134]/60">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer" />
-
-                <div
-                  className={`
-              absolute inset-0 transition-all duration-1200 ease-out
-              ${grand.pct >= 90 ? "animate-heartbeat" : ""}
-              ${
-                grand.pct < 25
-                  ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e]"
-                  : grand.pct < 50
-                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80]"
-                  : grand.pct < 75
-                  ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0]"
-                  : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_20px_#ef444450]"
-              }
-            `}
-                  style={{ width: `${Math.max(grand.pct, 0.5)}%` }}
-                >
-                  <div className="absolute inset-0 bg-white/30 animate-shimmer" />
-                </div>
-              </div>
+              )}
+            </div>
+            <div className="mt-2 h-2.5 rounded-full bg-black/40 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#22c55e] to-[#4ade80] transition-all duration-700"
+                style={{ width: `${grand.pct}%` }}
+              />
             </div>
           </div>
         </div>
       </header>
 
-      {/* === Search Bar === */}
-      <div className="w-full px-3 mt-4 mb-2">
-        <div className="max-w-6xl mx-auto">
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search syllabus topics..."
-              className="
-                w-full px-4 py-3 pl-12 rounded-xl
-                bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
-                dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-                border border-[#0B5134]/60 dark:border-[#00D1FF33]
-                text-[#d9ebe5] dark:text-[#E6F1FF]
-                placeholder:text-[#a7f3d0]/50 dark:placeholder:text-gray-500
-                focus:outline-none focus:ring-2 focus:ring-[#00d1b2]/50
-                focus:border-[#00d1b2]/70
-                shadow-[0_0_15px_rgba(0,0,0,0.2)]
-                transition-all duration-200
-              "
-            />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a7f3d0]/70 dark:text-gray-400 pointer-events-none">
-              🔍
-            </div>
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                className="
-                  absolute right-3 top-1/2 -translate-y-1/2
-                  px-2 py-1 rounded-md
-                  text-[#d9ebe5] dark:text-gray-300
-                  hover:bg-[#0B5134]/40 dark:hover:bg-gray-700/30
-                  transition-colors
-                  text-sm
-                "
-                title="Clear search"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          {query && (
-            <div className="mt-2 text-xs text-[#a7f3d0]/70 dark:text-gray-400">
-              {Object.keys(filtered).length > 0 ? (
-                <span>Found {Object.keys(filtered).length} section(s)</span>
-              ) : (
-                <span>No matches found</span>
-              )}
-            </div>
-          )}
-        </div>
+      {/* SEARCH */}
+      <div className="max-w-6xl mx-auto px-3 mt-4">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search topics…"
+          className="w-full px-3 py-2 rounded-xl bg-black/30 border border-[#17443a] text-sm outline-none focus:ring-2 focus:ring-[#3FA796]"
+        />
       </div>
 
-      {/* === Combined Layout (Planner + Topics) === */}
-      <div className="w-full px-3 mt-2 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
-        {/* RIGHT SIDE (above on mobile) */}
-        <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
-          {/* 🗓️ Daily Planner */}
-          <div
-            className="
-           rounded-2xl 
-           border border-[#1a4a39]/40 
-           backdrop-blur-md p-4
-           shadow-[0_0_20px_rgba(0,0,0,0.2)]
-           bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
-           dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
-           dark:border-gray-800
-           "
-          >
-            <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
-            <p className="text-sm opacity-80 mb-3">
-              Closest-deadline topics not yet done.
+      {/* DAILY URGENT LIST */}
+      <div className="max-w-6xl mx-auto px-3 mt-4">
+        <div className="bg-black/30 border border-[#17443a] rounded-xl p-4">
+          <h3 className="font-semibold text-lg mb-2">
+            🎯 Today’s Urgent Topics
+          </h3>
+          {urgentList.length === 0 ? (
+            <p className="text-xs text-gray-300">
+              🎉 No pending deadlines — great job!
             </p>
-            <DailyPlanner tree={tree} />
-          </div>
-
-          {/* 🤖 Smart Suggest */}
-          <div
-            className="rounded-2xl border border-[#1a4a39]/40
-             backdrop-blur-md p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
-             bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
-             dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]"
-          >
-            <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
-          </div>
-        </div>
-
-        {/* LEFT SIDE — All Topics */}
-        <div className="order-2 lg:order-1 lg:col-span-6 space-y-4 ">
-          <main className="w-full px-0 md:px-1 space-y-4">
-            {Object.entries(filtered).map(([secKey, secVal]) => (
-              <SectionCard
-                key={secKey}
-                secKey={secKey}
-                node={secVal}
-                stableMeta={stableMeta}
-                nr={nr}
-                setNR={setNR}
-                setSectionTargetPct={setSectionTargetPct}
-                setTargetDate={setTargetDate}
-                toggleOpen={toggleOpen} // ✅ USE ONLY THIS
-                setAllAtPath={setAllAtPath}
-                markTask={markTask}
-                setTaskDeadline={setTaskDeadline}
-              />
-            ))}
-          </main>
-        </div>
-      </div>
-
-      {showTopBtn && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-4 right-4 z-40 h-11 w-11 rounded-full shadow-lg bg-[#FF8F8F] text-white flex items-center justify-center text-xl"
-        >
-          ↑
-        </button>
-      )}
-      {milestone && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-500 text-white shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-          {milestone}
-        </div>
-      )}
-    </div>
-  );
-}
-
-<style>
-  {`
-
-  @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 4s infinite;
-}
-
-  /* Custom scrollbar for better aesthetics */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  /* 🔥 Moving diagonal stripes */
-.bg-stripes {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(255,255,255,0.15),
-    rgba(255,255,255,0.15) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-  background-size: 200% 100%;
-}
-
-/* 🔥 Wave shimmer */
-.bg-wave {
-  background-image: linear-gradient(
-    110deg,
-    transparent 25%,
-    rgba(255,255,255,0.12) 50%,
-    transparent 75%
-  );
-  background-size: 300% 100%;
-}
-
-/* Stripes Animation */
-@keyframes stripeMove {
-  from { background-position: 0 0; }
-  to { background-position: 200% 0; }
-}
-.animate-stripes {
-  animation: stripeMove 3s linear infinite;
-}
-
-/* Smooth Wave Animation */
-@keyframes waveMove {
-  from { background-position: 0% 50%; }
-  to { background-position: 100% 50%; }
-}
-.animate-wave {
-  animation: waveMove 3.5s ease-in-out infinite;
-}
-
-/* Heartbeat effect when >= 90% */
-@keyframes heartbeat {
-  0% { transform: scale(1); }
-  20% { transform: scale(1.2); }
-  40% { transform: scale(1); }
-  60% { transform: scale(1.15); }
-  80% { transform: scale(1); }
-  100% { transform: scale(1); }
-}
-.animate-heartbeat {
-  animation: heartbeat 1s infinite;
-}
-
-.bg-shimmer {
-  background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255,255,255,0.5) 50%,
-    transparent 70%
-  );
-  background-size: 200% 100%;
-}
-
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 3s linear infinite;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 4s infinite;
-}
-
-    `}
-</style>;
-
-/* ======================= Main Section ======================= */
-// ------------------ TASK ITEM (must be top-level) ------------------
-function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
-  const key = itemKey(path, idx);
-  const localDateRef = useRef(null);
-
-  const completedDate = nr[key]?.completedDate;
-
-  return (
-    <li
-      key={idx}
-      onClick={() => markTask(path, idx, !it.done)}
-      className={`
-        p-2 rounded-lg border border-[#00d1b2]/30 
-        cursor-pointer transition
-        ${it.done ? "opacity-80" : ""}
-      `}
-    >
-      <div className="flex justify-between gap-2">
-        {/* LEFT */}
-        <div className="flex items-start gap-2">
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              markTask(path, idx, !it.done);
-            }}
-            className={`
-              w-5 h-5 border flex items-center justify-center cursor-pointer 
-              ${it.done ? "bg-[#ED4135]/80" : "bg-[#0B2F2A]"}
-            `}
-          >
-            {it.done && "✓"}
-          </div>
-
-          <div>
-            <div className={it.done ? "line-through opacity-80" : ""}>
-              {it.title}
-            </div>
-
-            {/* Show deadline if set */}
-            {it.deadline && (
-              <div className="text-xs opacity-70 text-[#a7f3d0]">
-                ⏰ Deadline: {formatDateDDMMYYYY(it.deadline)}
-              </div>
-            )}
-
-            {/* Show completed date if done */}
-            {it.done && completedDate && (
-              <div className="text-xs opacity-70">
-                ✅ Completed: {new Date(completedDate).toLocaleDateString()}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT */}
-        <div onClick={(e) => e.stopPropagation()} className="flex gap-2">
-          <input
-            type="number"
-            min={0}
-            step="0.25"
-            value={nr[key]?.estimate !== undefined ? nr[key].estimate : 0.5}
-            onChange={(e) =>
-              setNR((old) => ({
-                ...old,
-                [key]: {
-                  ...(old[key] || {}),
-                  estimate: Number(e.target.value),
-                },
-              }))
-            }
-            className="w-16 text-xs rounded px-1 border border-[#00d1b2]/40 bg-black/40"
-          />
-
-          <div className="relative">
-            <input
-              type="date"
-              ref={localDateRef}
-              value={it.deadline ?? ""}
-              onChange={(e) => setTaskDeadline(path, idx, e.target.value)}
-              className="absolute opacity-0 pointer-events-none w-0 h-0"
-            />
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Position the input near the button before showing picker
-                if (localDateRef.current) {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  localDateRef.current.style.position = "fixed";
-                  localDateRef.current.style.left = `${rect.left}px`;
-                  localDateRef.current.style.top = `${rect.bottom + 5}px`;
-                  localDateRef.current.style.zIndex = "9999";
-                  localDateRef.current.showPicker();
-                }
-              }}
-              className="text-xs border border-[#00d1b2]/40 px-2 py-2 flex wrap-nowrap rounded hover:bg-[#00d1b2]/10 transition"
-              title={
-                it.deadline
-                  ? `Deadline: ${formatDateDDMMYYYY(it.deadline)}`
-                  : "Set deadline"
-              }
-            >
-              📅 {it.deadline ? formatDateDDMMYYYY(it.deadline) : "Deadline"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function SectionCard({
-  secKey,
-  node,
-  stableMeta,
-  nr,
-  setNR,
-  onSectionHeaderClick,
-  setTargetDate,
-  toggleOpen,
-  setAllAtPath,
-  markTask,
-  setTaskDeadline,
-}) {
-  /* ======================= SETUP ======================= */
-
-  const sectionPath = [secKey];
-
-  // Section meta (collapse state + target date)
-  const m = stableMeta[pathKey(sectionPath)] || { open: false, targetDate: "" };
-  // Progress calculations
-  const totals = totalsOf(node);
-  const allDone = totals.total > 0 && totals.done === totals.total;
-
-  // Date input ref
-  const sectionDateRef = useRef(null);
-
-  // Collapse animation height
-  const wrapRef = useRef(null);
-  const [maxH, setMaxH] = useState(0);
-
-  /* ======================= HEIGHT ANIMATION ======================= */
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-
-    // Measure height based on open state
-    const measure = () => setMaxH(m.open ? el.scrollHeight : 0);
-    measure();
-
-    // Auto update when content size changes
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-
-    return () => ro.disconnect();
-  }, [m.open, node, stableMeta, nr]);
-
-  return (
-    <section
-      className="
-        rounded-md
-        border border-[#1c5b44]/40
-        dark:border-[#00D1FF33]
-        backdrop-blur-md
-        bg-gradient-to-br 
-        from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-        shadow-[0_0_20px_rgba(0,0,0,0.2)]
-        overflow-hidden
-      "
-    >
-      {/* ======================= HEADER ======================= */}
-      <div
-        onClick={() => toggleOpen(sectionPath)}
-        data-expanded={m.open}
-        data-done={allDone}
-        className="
-          relative cursor-pointer
-          border border-[#0B5134] 
-          bg-gradient-to-br from-[#183D3D] to-[#B82132]
-          dark:from-[#0F1622] dark:to-[#0A0F1C]
-          text-[#CFE8E1]
-          rounded-md px-2 py-1.5 
-          transition-all duration-300
-          hover:border-[#2F6B60]
-          hover:shadow-[0_0_10px_rgba(47,107,96,0.4)]
-        "
-      >
-        {/* ======================= PROGRESS BAR ======================= */}
-        <div className="absolute top-0 left-0 right-0 mx-1 h-2  rounded-full bg-[#0E1F19] overflow-hidden">
-          {/* Glass Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/0 pointer-events-none" />
-
-          {/* Progress Fill */}
-          <div
-            className={`
-              h-full transition-all duration-700 ease-out
-              ${totals.pct >= 90 ? "animate-heartbeat" : ""}
-              ${
-                totals.pct < 25
-                  ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
-                  : totals.pct < 50
-                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                  : totals.pct < 75
-                  ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                  : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
-              }
-            `}
-            style={{
-              width: `${totals.pct}%`,
-              minWidth: totals.pct > 0 ? "6px" : "6px",
-            }}
-          >
-            {/* Visual texture effects */}
-            <div className="absolute inset-0 bg-stripes animate-stripes pointer-events-none" />
-            <div className="absolute inset-0 bg-wave animate-wave pointer-events-none opacity-40" />
-          </div>
-        </div>
-
-        {/* ======================= TITLE + CONTROLS ======================= */}
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-2">
-          {/* LEFT: Arrow + Section Name */}
-          <div className="flex items-start gap-2 min-w-0">
-            <span className="text-lg select-none shrink-0">
-              {m.open ? "🔽" : "▶️"}
-            </span>
-            <span className="font-semibold text-base sm:text-lg leading-snug break-words">
-              {secKey}
-            </span>
-          </div>
-
-          {/* RIGHT: Stats + Actions */}
-          <div
-            className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Progress stats */}
-            <span className="shrink-0">
-              {totals.done}/{totals.total} • {totals.pct}% • ~
-              {totals.estimate || 0}h
-            </span>
-
-            {/* Mark All Button */}
-            <button
-              onClick={() => setAllAtPath(sectionPath, !allDone)}
-              className="
-                px-2 py-1 rounded-md border
-                border-[#00d1b2]/50 bg-[#051C14]
-                text-xs font-medium
-                hover:bg-[#07261b]
-                transition-colors shrink-0
-              "
-            >
-              {allDone ? "Undo all" : "Mark all"}
-            </button>
-
-            {/* Deadline Picker */}
-            <div className="relative">
-              {/* hidden input */}
-              <input
-                type="date"
-                ref={sectionDateRef}
-                value={m.targetDate ?? ""}
-                onChange={(e) => setTargetDate(sectionPath, e.target.value)}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-              />
-
-              {/* custom button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (sectionDateRef.current) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    sectionDateRef.current.style.position = "fixed";
-                    sectionDateRef.current.style.left = `${rect.left}px`;
-                    sectionDateRef.current.style.top = `${rect.bottom + 5}px`;
-                    sectionDateRef.current.style.zIndex = "9999";
-                    sectionDateRef.current.showPicker();
-                  }
-                }}
-                className="
-                  px-2 py-1 border border-[#0B5134] rounded-md
-                  bg-[#051C14] text-xs
-                  hover:border-[#2F6B60] transition
-                "
-              >
-                📅{" "}
-                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================= EXPANDABLE CONTENT ======================= */}
-      <div
-        style={{
-          maxHeight: `${maxH}px`,
-          transition: "max-height 420ms ease",
-        }}
-        className="overflow-hidden"
-      >
-        <div ref={wrapRef} className="px-4 pb-4 pt-2 space-y-2">
-          {Object.entries(node || {}).map(([name, child]) => (
-            <SubNode
-              key={name}
-              name={name}
-              node={child}
-              path={[secKey, name]}
-              stableMeta={stableMeta}
-              nr={nr}
-              setNR={setNR}
-              toggleOpen={toggleOpen}
-              setTargetDate={setTargetDate}
-              setAllAtPath={setAllAtPath}
-              markTask={markTask}
-              setTaskDeadline={setTaskDeadline}
-            />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/********************** Sub Section **********************/
-
-function SubNode({
-  name,
-  node,
-  path,
-  stableMeta,
-  nr,
-  setNR,
-  toggleOpen,
-  setTargetDate,
-  setAllAtPath,
-  markTask,
-  setTaskDeadline,
-}) {
-  /* ======================= META ======================= */
-  const k = pathKey(path);
-  const m = stableMeta[k] || { open: false, targetDate: "" };
-
-  /* ======================= STATS ======================= */
-  const totals = useMemo(() => totalsOf(node), [node]);
-  const allDone = totals.total > 0 && totals.done === totals.total;
-
-  /* ======================= COLLAPSE ANIMATION ======================= */
-  const contentRef = useRef(null);
-  const subsectionDateRef = useRef(null);
-  const [height, setHeight] = useState("0px");
-
-  useEffect(() => {
-    if (m.open && contentRef.current) {
-      setHeight(contentRef.current.scrollHeight + "px");
-    } else {
-      setHeight("0px");
-    }
-  }, [m.open, node]);
-
-  /* ======================= AUTO-SAVE completedDate ======================= */
-  const completedRef = useRef(new Set());
-
-  useEffect(() => {
-    if (!Array.isArray(node)) return;
-
-    const updates = {};
-    let hasChanges = false;
-
-    node.forEach((it, idx) => {
-      const key = itemKey(path, idx);
-      const cacheKey = key; // FIX: Remove _${it.done} — cache only tracks the task, not state
-
-      if (it.done) {
-        // Item is done: set completedDate if not already set
-        if (!completedRef.current.has(cacheKey) && !nr[key]?.completedDate) {
-          updates[key] = {
-            ...(nr[key] || {}),
-            completedDate: new Date().toISOString(),
-          };
-          completedRef.current.add(cacheKey);
-          hasChanges = true;
-        }
-      } else {
-        // Item is undone: clear completedDate if it exists
-        if (nr[key]?.completedDate) {
-          const { completedDate, ...rest } = nr[key];
-          updates[key] = rest;
-          hasChanges = true;
-        }
-        // FIX: Always clear cache on unmark to allow re-set on next mark
-        completedRef.current.delete(cacheKey);
-      }
-    });
-
-    // Only update if there are actual changes to prevent loops
-    if (hasChanges) {
-      setNR((old) => ({
-        ...old,
-        ...updates,
-      }));
-    }
-  }, [node, path, setNR]); // Removed 'nr' from deps to prevent loop
-
-  /* ======================= HOUR ROLLUP ======================= */
-  const hoursRollup = useMemo(() => {
-    if (!Array.isArray(node)) {
-      let est = 0;
-      for (const [childKey, childVal] of Object.entries(node || {})) {
-        if (Array.isArray(childVal)) {
-          childVal.forEach((_, idx) => {
-            const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
-            );
-            est += isFinite(e) ? e : 0.5;
-          });
-        } else {
-          Object.entries(childVal || {}).forEach(([gk, gv]) => {
-            if (Array.isArray(gv)) {
-              gv.forEach((_, idx) => {
-                const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
-                );
-                est += isFinite(e) ? e : 0.5;
-              });
-            }
-          });
-        }
-      }
-      return est;
-    }
-
-    return node.reduce((s, _, idx) => {
-      const e = Number(nr[itemKey(path, idx)]?.estimate || 0.5);
-      return s + (isFinite(e) ? e : 0.5);
-    }, 0);
-  }, [node, nr, path]);
-
-  /* ======================= UI ======================= */
-  return (
-    <div
-      className="
-        rounded-xl border border-[#0B5134]/35 dark:border-gray-800
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-        text-[#d9ebe5] shadow-[0_0_15px_rgba(0,0,0,0.2)]
-      "
-    >
-      {/* HEADER */}
-      <div
-        onClick={() => toggleOpen(path)}
-        className="
-          p-2 cursor-pointer bg-[#134039]
-          hover:bg-[#00d1b2]/10
-          border-l-4 border-[#D42916]
-          rounded-xl
-        "
-      >
-        <div className="flex justify-between gap-2 flex-wrap">
-          <div className="flex gap-2">
-            <span>{m.open ? "🔽" : "▶️"}</span>
-            <span>{name}</span>
-          </div>
-
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="flex gap-2 text-xs"
-          >
-            <span>
-              {totals.done}/{totals.total} • {totals.pct}% •{" "}
-              {hoursRollup.toFixed(1)}h
-            </span>
-
-            <button
-              onClick={() => setAllAtPath(path, !allDone)}
-              className="px-2 py-1 border border-[#00d1b2]/50 rounded hover:bg-[#0B2F2A]/80 transition"
-            >
-              {allDone ? "Undo all" : "Mark all"}
-            </button>
-
-            {/* Deadline Picker for Subsection */}
-            <div className="relative">
-              <input
-                type="date"
-                ref={subsectionDateRef}
-                value={m.targetDate ?? ""}
-                onChange={(e) => setTargetDate(path, e.target.value)}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-              />
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (subsectionDateRef.current) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    subsectionDateRef.current.style.position = "fixed";
-                    subsectionDateRef.current.style.left = `${rect.left}px`;
-                    subsectionDateRef.current.style.top = `${
-                      rect.bottom + 5
-                    }px`;
-                    subsectionDateRef.current.style.zIndex = "9999";
-                    subsectionDateRef.current.showPicker();
-                  }
-                }}
-                className="
-                  px-2 py-1 border border-[#0B5134] rounded-md
-                  bg-[#051C14] text-xs
-                  hover:border-[#2F6B60] transition
-                "
-              >
-                📅{" "}
-                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* BODY */}
-      <div
-        ref={contentRef}
-        style={{ maxHeight: height }}
-        className="transition-all overflow-hidden"
-      >
-        <div className="px-3 pb-3">
-          {/* LEAF TASKS */}
-          {Array.isArray(node) ? (
-            <ul className="space-y-2">
-              {node.map((it, idx) => (
-                <TaskItem
+          ) : (
+            <ul className="space-y-1 text-sm">
+              {urgentList.map((i, idx) => (
+                <li
                   key={idx}
-                  it={it}
-                  idx={idx}
-                  path={path}
-                  nr={nr}
-                  setNR={setNR}
-                  markTask={markTask}
-                  setTaskDeadline={setTaskDeadline}
-                />
+                  className="flex items-center justify-between bg-black/25 px-2 py-1 rounded-md border border-[#0B5134]/40"
+                >
+                  <span>{i.title}</span>
+                  <span className="text-xs text-emerald-200">
+                    ⏰ {i.deadline}
+                  </span>
+                </li>
               ))}
             </ul>
-          ) : (
-            /* SUB SECTIONS (FIXED) */
-            <div className="space-y-2">
-              {node &&
-                typeof node === "object" &&
-                !Array.isArray(node) &&
-                Object.entries(node).map(([childKey, childVal]) => (
-                  <SubNode
-                    key={childKey}
-                    name={childKey}
-                    node={childVal}
-                    path={[...path, childKey]}
-                    stableMeta={stableMeta}
-                    nr={nr}
-                    setNR={setNR}
-                    toggleOpen={toggleOpen}
-                    setTargetDate={setTargetDate}
-                    setAllAtPath={setAllAtPath}
-                    markTask={markTask}
-                    setTaskDeadline={setTaskDeadline}
-                  />
-                ))}
-            </div>
           )}
         </div>
       </div>
+
+      {/* TREE */}
+      <main className="max-w-6xl mx-auto px-3 py-5 space-y-4">
+        <TreeView
+          node={filteredTree}
+          path={[]}
+          notes={notes}
+          toggleTask={toggleTask}
+          setDeadline={setDeadline}
+          setNote={setNote}
+        />
+      </main>
+
+      {showTop && (
+        <button
+          onClick={scrollTop}
+          className="fixed bottom-4 right-4 px-3 py-2 rounded-full bg-black/70 border border-[#3FA796]/70 text-xs"
+        >
+          ⬆ Top
+        </button>
+      )}
     </div>
   );
 }
 
-/******************** DAILY AUTO PLANNER ********************/
+/* ======================= RECURSIVE TREE VIEW ======================= */
 
-function DailyPlanner({ tree }) {
-  /* ======================= COLLECT ALL PENDING TASKS ======================= */
+function TreeView({ node, path, notes, toggleTask, setDeadline, setNote }) {
+  if (!node) return null;
 
-  const items = [];
+  if (Array.isArray(node)) {
+    return (
+      <div className="space-y-2 mt-2">
+        {node.map((item, idx) => {
+          const p = [...path, idx];
+          const key = pathKey(p);
+          const noteVal = notes[key] || "";
 
-  // Recursive scan through the syllabus tree
-  (function walk(node, path) {
-    // If it's a task list (array)
-    if (Array.isArray(node)) {
-      node.forEach((it) => {
-        if (!it.done) {
-          items.push({
-            title: it.title,
-            deadline: it.deadline || "",
-          });
-        }
-      });
-      return;
-    }
-
-    // If it's a nested section
-    for (const [k, v] of Object.entries(node || {})) {
-      walk(v, [...path, k]);
-    }
-  })(tree, []);
-
-  /* ======================= SORT BY DEADLINE ======================= */
-
-  const withDeadlines = items
-    .map((i) => ({
-      ...i,
-      // Convert deadline string → timestamp for sorting
-      d: i.deadline ? Date.parse(i.deadline) : Number.POSITIVE_INFINITY,
-    }))
-    .sort((a, b) => a.d - b.d) // Soonest deadline first
-    .slice(0, 6); // Show top 6 tasks
-
-  /* ======================= UI RENDER ======================= */
-
-  return (
-    <ul className="text-sm list-disc pl-5 space-y-1">
-      {withDeadlines.length === 0 && (
-        <li className="text-gray-400 italic text-xs">
-          🎉 All tasks completed or no deadlines set.
-        </li>
-      )}
-
-      {withDeadlines.map((i, idx) => (
-        <li
-          key={idx}
-          className="
-            flex items-start justify-between gap-2
-            bg-black/30 rounded-md px-2 py-1
-            border border-[#0B5134]/40
-          "
-        >
-          {/* LEFT: Task title */}
-          <span className="flex-1 text-[#d9ebe5] leading-snug">{i.title}</span>
-
-          {/* RIGHT: Deadline */}
-          {i.deadline && (
-            <span className="text-xs text-[#a7f3d0] whitespace-nowrap">
-              ⏰ {formatDateDDMMYYYY(i.deadline)}
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/******************** SMART SUGGEST (AI STUDY PLANNER) ********************/
-/*
-  - Reads directly from live syllabus tree (Mongo-synced tree)
-  - Updates when tree changes
-  - Handles deadline urgency colors
-  - Shows estimate + remaining time
-  - Keeps your exact UI vibes, only fixed broken bits
-*/
-
-function SmartSuggest({ generateSmartPlan, tree }) {
-  const [minutes, setMinutes] = useState(120);
-  const [plan, setPlan] = useState([]);
-  const [remaining, setRemaining] = useState(0);
-  const [summary, setSummary] = useState("");
-
-  /* ========== Keep plan updated when syllabus changes ========== */
-  useEffect(() => {
-    setPlan((prev) =>
-      prev.map((p) => {
-        const match = findInTree(tree, p.title);
-        return match ? { ...p, done: !!match.done } : p;
-      })
-    );
-  }, [tree]);
-
-  /* ========== Main Suggest Button Logic ========== */
-  const handleSuggest = () => {
-    const { plan, remaining } = generateSmartPlan(minutes);
-
-    // Sort by closest deadlines first
-    const sorted = [...plan].sort((a, b) => {
-      const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-      const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-      return da - db;
-    });
-
-    // Dynamic motivation summary
-    let sum = "";
-    if (sorted.length === 0) sum = "No urgent topics found for now! 🎉";
-    else if (sorted.length <= 2)
-      sum = "🧠 Focus on these key tasks today — high impact and short!";
-    else if (sorted.length <= 4)
-      sum = "⚡ Balanced day ahead! Let’s tackle core and conceptual topics.";
-    else sum = "🚀 Power day! Deep-dive into multiple modules today.";
-
-    setPlan(sorted);
-    setRemaining(remaining);
-    setSummary(sum);
-  };
-
-  /* ========== Deadline Text Helper ========== */
-  function daysLeft(deadline) {
-    if (!deadline) return "";
-
-    const today = new Date();
-    const d = new Date(deadline);
-
-    const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-
-    if (diff > 0) return `Due in ${diff} day${diff > 1 ? "s" : ""}`;
-    if (diff === 0) return "Due today!";
-    return `Overdue by ${Math.abs(diff)} day${Math.abs(diff) > 1 ? "s" : ""}`;
-  }
-
-  /* ========== Safely Find Task in Tree by Title ========== */
-  function findInTree(node, title) {
-    if (Array.isArray(node)) {
-      for (const it of node) {
-        if (it.title === title) return it;
-      }
-    } else {
-      for (const [, v] of Object.entries(node || {})) {
-        const found = findInTree(v, title);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
-  /* ========== UI ========== */
-  return (
-    <div
-      className="
-      rounded-2xl border border-[#0B5134]/40
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
-      dark:border-[#00D1FF33]
-      p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]
-      transition-all duration-300
-    "
-    >
-      {/* ===== Header ===== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-        <h3 className="font-semibold flex items-center gap-2 text-base">
-          🤖 Smart Suggest
-        </h3>
-
-        <span
-          className="
-            text-[11px] px-3 py-1 rounded-full
-            bg-[#FF8F8F] text-black font-semibold
-            dark:bg-[#451013] dark:text-[#FFD1D1]
-            border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
-            whitespace-nowrap sm:ml-auto
-            transition-all duration-200
-            hover:bg-[#ff6f6f] dark:hover:bg-[#5A1418]
-          "
-        >
-          AI Study Planner
-        </span>
-      </div>
-
-      {/* ===== Time Input ===== */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <label className="text-xs font-medium whitespace-nowrap">
-          Minutes:
-        </label>
-
-        <input
-          type="number"
-          value={minutes}
-          onChange={(e) => setMinutes(Number(e.target.value))}
-          className="
-            flex-1 px-2 py-1 text-sm rounded-md border 
-            bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
-            dark:border-[#00D1FF33] 
-            border-[#0B5134] outline-none text-white
-            min-w-[70px]
-          "
-        />
-
-        <button
-          onClick={handleSuggest}
-          className="
-            px-3 py-1.5 rounded-md 
-            bg-[#FF8F8F] text-black font-semibold text-xs
-            border border-[#FF8F8F]/40
-            shadow-sm
-            transition-all duration-200
-            hover:bg-[#ff6f6f] hover:shadow-[0_0_6px_rgba(255,143,143,0.5)]
-            active:scale-[0.97]
-            dark:bg-[#451013] dark:text-[#FFD1D1]
-            dark:hover:bg-[#5A1418]
-          "
-        >
-          Suggest
-        </button>
-      </div>
-
-      {/* ===== Motivation Summary ===== */}
-      {summary && (
-        <p className="text-xs italic mb-3 text-white/60 dark:text-gray-300">
-          {summary}
-        </p>
-      )}
-
-      {/* ===== Suggestions ===== */}
-      <div className="space-y-2">
-        {plan.length === 0 ? (
-          <p className="text-xs opacity-70 italic">No topics suggested yet.</p>
-        ) : (
-          plan.map((item, i) => {
-            const now = new Date();
-
-            // Deadline urgency styling
-            const urgency =
-              item.deadline && new Date(item.deadline) < now
-                ? "bg-red-500/15 text-red-400"
-                : item.deadline &&
-                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                ? "bg-yellow-500/10 text-yellow-300"
-                : "bg-green-500/10 text-green-400";
-
-            const countdown = daysLeft(item.deadline);
-
-            return (
-              <div
-                key={i}
-                className={`
-                  rounded-lg border border-[#0B5134] 
-                  dark:border-gray-800 p-2 text-sm transition-all duration-300 
-                  hover:bg-[#FF8F8F]/5
-                  ${item.done ? "opacity-60 line-through" : ""}
-                `}
-              >
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-                  <span className="font-medium text-[#d9ebe5]">
-                    • {item.title}
-                  </span>
-
-                  {countdown && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full ${urgency}`}
-                    >
-                      {countdown}
-                    </span>
+          return (
+            <div
+              key={key}
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-black/25 border border-white/10 rounded-xl px-3 py-2"
+            >
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  className="mt-1 accent-emerald-400"
+                  checked={!!item.done}
+                  onChange={() => toggleTask(p)}
+                />
+                <div>
+                  <div
+                    className={`text-sm ${
+                      item.done ? "line-through opacity-60" : ""
+                    }`}
+                  >
+                    {item.title}
+                  </div>
+                  {item.deadline && (
+                    <div className="text-[11px] text-emerald-200/80">
+                      ⏰ {item.deadline}
+                    </div>
                   )}
                 </div>
+              </div>
 
-                {/* Time Estimate */}
-                <div
-                  className={`text-xs mt-1 ${
-                    item.done ? "opacity-40" : "opacity-80"
-                  }`}
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <button
+                  onClick={() => setDeadline(p)}
+                  className="text-[11px] px-2 py-1 rounded-lg bg-[#102720] border border-[#1e6b4c]/60 hover:bg-[#0b1f18]"
                 >
-                  ⏱ ~{Math.round(item.estimate * 60)} mins
+                  📅 Deadline
+                </button>
+                <textarea
+                  value={noteVal}
+                  onChange={(e) => setNote(p, e.target.value)}
+                  placeholder="Note…"
+                  rows={1}
+                  className="text-[11px] w-full sm:w-48 px-2 py-1 rounded-lg bg-black/40 border border-white/10 focus:outline-none focus:ring-1 focus:ring-emerald-300 resize-none"
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(node).map(([title, child]) => {
+        const p = [...path, title];
+        const info = totalsOf(child, new WeakSet());
+
+        return (
+          <section
+            key={pathKey(p)}
+            className="rounded-2xl bg-black/25 border border-white/10 shadow-md"
+          >
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <div className="text-sm md:text-base font-semibold text-[#E6F1FF]">
+                  {title}
+                </div>
+                <div className="text-[11px] text-emerald-200/80">
+                  {info.done}/{info.total} • {info.pct}% done
                 </div>
               </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* ===== Footer ===== */}
-      <div
-        className="
-        mt-4 text-xs text-white/60 dark:text-gray-400 
-        border-t border-[#0B5134] dark:border-gray-800 pt-2 
-        flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2
-      "
-      >
-        <span>
-          {plan.length > 0
-            ? `Remaining buffer: ${remaining} mins`
-            : "Enter available time to get a plan!"}
-        </span>
-
-        {plan.length > 0 && (
-          <button className="text-[#FF8F8F] font-medium hover:underline text-xs whitespace-nowrap">
-            Start Focus Mode 🚀
-          </button>
-        )}
-      </div>
+              <div className="w-24 h-1.5 rounded-full bg-black/40 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#22c55e] to-[#4ade80]"
+                  style={{ width: `${info.pct}%` }}
+                />
+              </div>
+            </div>
+            <div className="px-4 pb-3">
+              <TreeView
+                node={child}
+                path={p}
+                notes={notes}
+                toggleTask={toggleTask}
+                setDeadline={setDeadline}
+                setNote={setNote}
+              />
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

@@ -28,6 +28,68 @@ import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
 
+function normalizeSection(section, _visited = new WeakSet()) {
+  // Base cases
+  if (!section || typeof section !== "object") return section;
+
+  // ✅ PREVENT INFINITE RECURSION - return empty object
+  if (_visited.has(section)) {
+    console.warn("⚠️ Circular reference detected in normalizeSection");
+    return {}; // Return empty object instead of the circular one
+  }
+
+  _visited.add(section);
+
+  // Handle arrays
+  if (Array.isArray(section)) {
+    return section.map((item) => normalizeSection(item, _visited));
+  }
+
+  // Handle objects
+  const normalized = {};
+
+  // Copy properties
+  for (const key of Object.keys(section)) {
+    // Skip special metadata that might cause issues
+    if (key === "__normalized" || key.startsWith("_")) {
+      normalized[key] = section[key];
+      continue;
+    }
+
+    // Handle nested objects/arrays
+    if (typeof section[key] === "object" && section[key] !== null) {
+      normalized[key] = normalizeSection(section[key], _visited);
+    } else {
+      normalized[key] = section[key];
+    }
+  }
+
+  // Set defaults for topic objects (those with 'title')
+  if (section.title) {
+    if (!("done" in normalized)) normalized.done = false;
+    if (!("deadline" in normalized)) normalized.deadline = "";
+    if (!("completedOn" in normalized)) normalized.completedOn = "";
+  }
+
+  return normalized;
+}
+
+// ---- Load from localStorage first (instant render) ----
+useEffect(() => {
+  const cached = localStorage.getItem("lifeos_state");
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed?.syllabus_tree_v2) {
+        console.log("⚡ Loaded syllabus instantly from local cache");
+        setDashboardState(parsed);
+      }
+    } catch (e) {
+      console.warn("Cache corrupted, ignoring.");
+    }
+  }
+}, []);
+
 /* ======================= MAIN APP ======================= */
 
 export default function App() {
@@ -245,13 +307,18 @@ export default function App() {
     const latestWeight = wh.length > 0 ? wh[wh.length - 1].weight : "—";
     const gymDates = Object.keys(gymLogs).sort();
 
-    function walk(node) {
+    function walk(node, visited = new WeakSet()) {
       let total = 0;
       let done = 0;
 
+      // Prevent circular references
+      if (!node || typeof node !== "object") return { total: 0, done: 0 };
+      if (visited.has(node)) return { total: 0, done: 0 };
+      visited.add(node);
+
       if (Array.isArray(node)) {
         node.forEach((item) => {
-          const r = walk(item);
+          const r = walk(item, visited);
           total += r.total;
           done += r.done;
         });
@@ -261,10 +328,9 @@ export default function App() {
           total++;
           if (node.done) done++;
         }
-
         // nested objects (Episode → Section → Topic arrays)
         Object.values(node).forEach((child) => {
-          const r = walk(child);
+          const r = walk(child, visited);
           total += r.total;
           done += r.done;
         });
@@ -273,7 +339,7 @@ export default function App() {
       return { total, done };
     }
 
-    const { total, done: doneTopics } = walk(syllabus, done);
+    const { total, done: doneTopics } = walk(syllabus);
 
     let streak = 0;
     const today = dayjs();
@@ -322,10 +388,8 @@ export default function App() {
 
       const newState = { ...dashboardState, ...resolvedUpdates };
 
-      if (JSON.stringify(newState) === JSON.stringify(lastSavedRef.current))
-        return;
-
       setDashboardState(newState);
+      localStorage.setItem("lifeos_state", JSON.stringify(newState));
 
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
@@ -335,14 +399,11 @@ export default function App() {
           body: JSON.stringify({ state: newState }),
         })
           .then((r) => r.json())
-          .then(() => {
-            lastSavedRef.current = newState;
-            console.log("💾 Synced to backend");
-          })
+          .then(() => console.log("💾 Synced to backend"))
           .catch((err) => console.error("❌ Sync failed:", err));
-      }, 600);
+      }, 700);
     },
-    [dashboardState, API_URL]
+    [dashboardState]
   );
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
