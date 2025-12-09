@@ -209,8 +209,10 @@ function MiniCalendar({ selectedDate, setSelectedDate }) {
 
               <div className="relative z-10">{d.date()}</div>
               {hasTasks && (
-                <div className="relative z-10 w-1 h-1
-                  rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]" />
+                <div
+                  className="relative z-10 w-1 h-1
+                  rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]"
+                />
               )}
             </button>
           );
@@ -303,9 +305,11 @@ function WeatherCard({
             placeholder="Search city..."
             className="w-full bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 mb-2 text-sm text-[#E8FFFA] placeholder:text-[#7FAFA4]"
           />
-          <div className="max-h-40 overflow-auto border
+          <div
+            className="max-h-40 overflow-auto border
             border-[#2F6B60]/40 rounded bg-black/40
-            ">
+            "
+          >
             {suggestions?.map((s, i) => (
               <div
                 key={i}
@@ -327,11 +331,13 @@ function WeatherCard({
       )}
 
       {/* Card visual */}
-      <div className="relative rounded-xl overflow-hidden 
+      <div
+        className="relative rounded-xl overflow-hidden 
         border border-[#2F6B60]/40 bg-black/20 h-[270px]
         bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
         bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
-        dark:to-[#0A0F1C]">
+        dark:to-[#0A0F1C]"
+      >
         {/* Lottie background */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
@@ -356,12 +362,12 @@ function WeatherCard({
         </div>
 
         {/* stats panel at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-3
+        <div
+          className="absolute bottom-0 left-0 right-0 p-3
           bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8]
           grid grid-cols-2 gap-y-1
-          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-          bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
-          dark:to-[#0A0F1C]">
+          "
+        >
           <div>Humidity: {weatherData?.main?.humidity ?? "—"}%</div>
           <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
           <div>UV: {weatherData?.meta?.uv ?? "—"}</div>

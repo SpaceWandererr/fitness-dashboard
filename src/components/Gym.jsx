@@ -321,17 +321,17 @@ function DailySummaryMerged({ date, logs, mode }) {
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
-    "rounded-2xl p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
+    "rounded-xl p-3 sm:rounded-2xl sm:p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
 
   return (
-    <div className={`${cardClass} `}>
+    <div className={`${cardClass}`}>
       <div>
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-emerald-500/20">
-          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-xl">
+        <div className="flex items-center justify-between mb-2 pb-2 border-b border-emerald-500/20">
+          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-base sm:text-xl">
             {mode === "old" ? "Daily Summary" : "Enhanced Summary"}
           </h3>
           <span
-            className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            className={`text-[10px] px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg font-semibold transition-all ${
               entry?.done
                 ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                 : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 border border-gray-600/40"
@@ -343,19 +343,19 @@ function DailySummaryMerged({ date, logs, mode }) {
 
         {/* -------- OLD CARD -------- */}
         {mode === "old" && (
-          <div className="space-y-2">
+          <div className="space-y-2 sm:space-y-3">
             {/* DATE & MUSCLES */}
             <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header Row */}
-              <div className="flex items-center justify-between px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+              <div className="flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
                   📅 {fmtDisp(date)}
                 </div>
               </div>
 
               {/* Muscles Tags */}
-              <div className="px-3 py-2 flex justify-between items-center">
-                <div className="text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold border-r border-emerald-400/40 pr-3 mr-3">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold sm:border-r sm:border-emerald-400/40 sm:pr-3 sm:mr-3">
                   MUSCLES
                 </div>
 
@@ -364,7 +364,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                     musclesWorked.map((muscle, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-emerald-200 font-medium"
+                        className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] sm:text-xs text-emerald-200 font-medium"
                       >
                         {muscle}
                       </span>
@@ -377,22 +377,18 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
               {/* CALORIES */}
-              <div
-                className="bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 
-    dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 
-    p-3 rounded-xl border border-orange-500/30 dark:border-orange-400/20
-    hover:border-orange-400/50 transition-all"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-orange-300/70 dark:text-orange-200/60 font-semibold mb-1 flex items-center gap-1">
+              <div className="bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 p-2 sm:p-3 rounded-xl border border-orange-500/30 dark:border-orange-400/20 hover:border-orange-400/50 transition-all">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-orange-300/70 dark:text-orange-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
                   <span>🔥</span>
-                  <span>Calories</span>
+                  <span className="hidden xs:inline">Calories</span>
+                  <span className="xs:hidden">Cal</span>
                 </div>
-                <div className="text-xl font-bold text-orange-100 dark:text-orange-200 flex items-baseline gap-1">
+                <div className="text-sm sm:text-base md:text-xl font-bold text-orange-100 dark:text-orange-200 flex items-baseline gap-0.5 sm:gap-1">
                   {entry?.calories ?? "—"}
                   {entry?.calories && (
-                    <span className="text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal">
+                    <span className="text-[9px] sm:text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal">
                       kcal
                     </span>
                   )}
@@ -400,20 +396,15 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
 
               {/* WEIGHT */}
-              <div
-                className="bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 
-    dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 
-    p-3 rounded-xl border border-cyan-500/30 dark:border-cyan-400/20
-    hover:border-cyan-400/50 transition-all"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-cyan-300/70 dark:text-cyan-200/60 font-semibold mb-1 flex items-center gap-1">
+              <div className="bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 p-2 sm:p-3 rounded-xl border border-cyan-500/30 dark:border-cyan-400/20 hover:border-cyan-400/50 transition-all">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-cyan-300/70 dark:text-cyan-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
                   <span>⚖️</span>
                   <span>Weight</span>
                 </div>
-                <div className="text-xl font-bold text-cyan-100 dark:text-cyan-200 flex items-baseline gap-1">
+                <div className="text-sm sm:text-base md:text-xl font-bold text-cyan-100 dark:text-cyan-200 flex items-baseline gap-0.5 sm:gap-1">
                   {entry?.weight ?? "—"}
                   {entry?.weight && (
-                    <span className="text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal">
+                    <span className="text-[9px] sm:text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal">
                       kg
                     </span>
                   )}
@@ -421,17 +412,12 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
 
               {/* BMI */}
-              <div
-                className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 
-    dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60 
-    p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20
-    hover:border-purple-400/50 transition-all"
-              >
-                <div className="text-[9px] uppercase tracking-wider text-purple-300/70 dark:text-purple-200/60 font-semibold mb-1 flex items-center gap-1">
+              <div className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60 p-2 sm:p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20 hover:border-purple-400/50 transition-all">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-purple-300/70 dark:text-purple-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
-                <div className="text-xl font-bold text-purple-100 dark:text-purple-200">
+                <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
                   {entry?.bmi ?? "—"}
                 </div>
               </div>
@@ -440,14 +426,14 @@ function DailySummaryMerged({ date, logs, mode }) {
             {/* Exercises Card */}
             <div className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header */}
-              <div className="px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+              <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-[9px] uppercase tracking-wider text-emerald-200/80 font-semibold">
                   EXERCISES COMPLETED
                 </div>
               </div>
 
               {/* Content */}
-              <div className="px-3 py-2">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5">
                 {performed.some((p) => p?.done) ? (
                   <div className="space-y-1.5">
                     {planExercises.map((ex, i) =>
@@ -471,11 +457,11 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* Shows next scheduled workout */}
-            <div className="mt-4 pt-4 border-t border-emerald-500/20">
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-emerald-500/20">
               <div className="text-[10px] text-emerald-200/70 uppercase tracking-wide font-semibold mb-2">
                 Next Workout
               </div>
-              <div className="bg-white/5 rounded-lg p-2">
+              <div className="bg-white/5 rounded-lg p-2.5 sm:p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm font-medium text-emerald-200">
@@ -494,19 +480,19 @@ function DailySummaryMerged({ date, logs, mode }) {
 
         {/* -------- NEW MODERN CARD -------- */}
         {mode === "new" && (
-          <div className="space-y-2">
+          <div className="space-y-2 sm:space-y-3">
             {/* DATE & MUSCLES */}
             <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header Row */}
-              <div className="flex items-center justify-between px-3 py-2 bg-black/20 border-b border-emerald-400/20">
+              <div className="flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
                   📅 {fmtDisp(date)}
                 </div>
               </div>
 
               {/* Muscles Tags */}
-              <div className="px-3 py-2 flex justify-between items-center">
-                <div className="text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold border-r border-emerald-400/40 pr-3 mr-3">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold sm:border-r sm:border-emerald-400/40 sm:pr-3 sm:mr-3">
                   MUSCLES
                 </div>
 
@@ -515,7 +501,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                     musclesWorked.map((muscle, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-emerald-200 font-medium"
+                        className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] sm:text-xs text-emerald-200 font-medium"
                       >
                         {muscle}
                       </span>
@@ -527,27 +513,27 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
             </div>
 
-            {/* KEY METRICS - 2x2 Grid - ALL EMERALD/TEAL */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* KEY METRICS - 2x2 Grid */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
               {/* SETS */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold mb-0.5">
                   Sets
                 </div>
-                <div className="text-lg font-bold text-emerald-100">
+                <div className="text-base sm:text-lg font-bold text-emerald-100">
                   {doneSets}
-                  <span className="text-sm text-emerald-300/60">
+                  <span className="text-xs sm:text-sm text-emerald-300/60">
                     /{totalSets}
                   </span>
                 </div>
               </div>
 
               {/* DURATION */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-teal-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-teal-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-teal-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-teal-200/70 font-semibold mb-0.5">
                   Duration
                 </div>
-                <div className="text-lg font-bold text-teal-100">
+                <div className="text-base sm:text-lg font-bold text-teal-100">
                   {entry?.duration
                     ? `${entry.duration.hours}h ${entry.duration.minutes}m`
                     : "—"}
@@ -555,29 +541,31 @@ function DailySummaryMerged({ date, logs, mode }) {
               </div>
 
               {/* SCORE */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-cyan-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-cyan-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-cyan-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-cyan-200/70 font-semibold mb-0.5">
                   Score
                 </div>
-                <div className="text-lg font-bold text-cyan-100">
+                <div className="text-base sm:text-lg font-bold text-cyan-100">
                   {perfScore}
-                  <span className="text-sm text-cyan-300/60">/100</span>
+                  <span className="text-xs sm:text-sm text-cyan-300/60">
+                    /100
+                  </span>
                 </div>
               </div>
 
               {/* MOOD */}
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
-                <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2 sm:p-2.5 rounded-xl border border-emerald-400/30">
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold mb-0.5">
                   Mood
                 </div>
-                <div className="text-lg font-bold text-emerald-100">
+                <div className="text-base sm:text-lg font-bold text-emerald-100">
                   {entry?.mood ?? "—"}
                 </div>
               </div>
             </div>
 
             {/* CALORIE STATS */}
-            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-orange-400/30">
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-orange-400/30">
               <div className="text-[9px] uppercase tracking-wider text-orange-200/80 font-semibold mb-1.5 flex items-center gap-1">
                 🔥 Calories
               </div>
@@ -588,7 +576,9 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <div className="text-[9px] text-orange-200/70 mb-0.5">
                     Target
                   </div>
-                  <div className="text-base font-bold text-orange-100">500</div>
+                  <div className="text-sm sm:text-base font-bold text-orange-100">
+                    500
+                  </div>
                 </div>
 
                 {/* BURNED */}
@@ -596,7 +586,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <div className="text-[9px] text-emerald-200/70 mb-0.5">
                     Burned
                   </div>
-                  <div className="text-base font-bold text-emerald-100">
+                  <div className="text-sm sm:text-base font-bold text-emerald-100">
                     {entry?.calories ?? "—"}
                   </div>
                 </div>
@@ -608,14 +598,14 @@ function DailySummaryMerged({ date, logs, mode }) {
                     const burned = entry?.calories ?? null;
                     if (burned == null)
                       return (
-                        <div className="text-base font-bold text-gray-400">
+                        <div className="text-sm sm:text-base font-bold text-gray-400">
                           —
                         </div>
                       );
                     const diff = burned - 500;
                     return (
                       <div
-                        className={`text-base font-bold ${
+                        className={`text-sm sm:text-base font-bold ${
                           diff >= 0 ? "text-emerald-300" : "text-red-300"
                         }`}
                       >
@@ -640,13 +630,13 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* WEIGHT TREND */}
-            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-emerald-400/30">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
                     Weight Trend
                   </div>
-                  <div className="text-lg font-bold text-emerald-100">
+                  <div className="text-base sm:text-lg font-bold text-emerald-100">
                     {weightTrend != null
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
@@ -658,7 +648,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
                 {weightTrend != null && (
                   <div
-                    className={`text-2xl ${
+                    className={`text-xl sm:text-2xl ${
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
@@ -674,9 +664,9 @@ function DailySummaryMerged({ date, logs, mode }) {
 
             {/* MESSAGE */}
             {message && (
-              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 rounded-xl border border-emerald-400/30">
+              <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-emerald-400/30">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">💪</span>
+                  <span className="text-base sm:text-lg flex-shrink-0">💪</span>
                   <p className="text-emerald-100 italic text-xs leading-snug flex-1">
                     {message}
                   </p>
@@ -1235,7 +1225,30 @@ export default function Gym() {
       baseline = targetWeight !== "" ? Number(targetWeight) : null;
     }
   }
-  const current = entry.weight != null ? entry.weight : baseline;
+  // smarter fallback weight system
+  let current;
+
+  if (entry?.weight != null) {
+    current = entry.weight;
+  } else {
+    const yesterdayKey = dayjs(dateKey).subtract(1, "day").format("YYYY-MM-DD");
+
+    if (logs[yesterdayKey]?.weight != null) {
+      current = logs[yesterdayKey].weight;
+    } else {
+      const history = Object.keys(logs)
+        .filter((k) => logs[k]?.weight != null && k < dateKey)
+        .sort()
+        .reverse();
+
+      if (history.length > 0) {
+        current = logs[history[0]].weight; // last logged weight
+      } else {
+        current = baseline;
+      }
+    }
+  }
+
   const tw = targetWeight !== "" ? Number(targetWeight) : null;
   let pctToGoal = 0;
   if (
@@ -1370,6 +1383,7 @@ export default function Gym() {
 
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [isEditingCurrent, setIsEditingCurrent] = useState(false);
+  const [showExerciseEditor, setShowExerciseEditor] = useState(false);
 
   return (
     <div
@@ -1390,74 +1404,74 @@ export default function Gym() {
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           {/* Title Section */}
-          <div className="space-y-1 flex-shrink-0">
-            <h1 className="text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
+          <div className="flex flex-col gap-1 flex-shrink-0 text-center sm:text-left">
+            <h1
+              className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight
+  bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text 
+  text-transparent drop-shadow-[0_0_12px_rgba(0,255,200,0.15)]
+  animate-[fadeIn_0.6s_ease]"
+            >
               💪 Gym Tracker
             </h1>
-            <p className="text-xs text-emerald-200/70 font-medium tracking-wide">
+
+            <p className="text-xs sm:text-sm text-emerald-200/70 font-medium tracking-wide">
               Track progress • Build habits • Stay consistent
             </p>
           </div>
 
           {/* Controls Section - Single Row Layout */}
-          <div className="flex items-center gap-2.5 w-full lg:w-auto lg:flex-shrink-0">
-            {/* Weekday Select - Compact */}
-            <select
-              value={weekday}
-              onChange={(e) => {
-                userChangedWeekday.current = true;
-                setWeekday(e.target.value);
-              }}
-              className="px-2.5 py-2.5 w-[110px] rounded-xl border border-emerald-700/50 
-                bg-[#07201f]/90 backdrop-blur-sm text-emerald-100 text-sm font-medium
-                focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
-                hover:bg-[#07201f] hover:border-emerald-600/60
-                transition-all duration-200 cursor-pointer
-                shadow-lg shadow-black/20"
-            >
-              {WEEK.map((d) => (
-                <option
-                  key={d}
-                  value={d}
-                  className="bg-[#07201f] text-emerald-100"
-                >
-                  {d}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
+            {/* controls wrapper */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* Week Select */}
+              <select
+                value={weekday}
+                onChange={(e) => {
+                  userChangedWeekday.current = true;
+                  setWeekday(e.target.value);
+                }}
+                className="w-full sm:w-[110px] px-3 py-2.5 rounded-xl border border-emerald-700/50 
+      bg-[#07201f]/90 text-emerald-100 text-sm font-medium shadow-lg shadow-black/20
+      focus:outline-none focus:ring-2 focus:ring-emerald-400/60 hover:border-emerald-600/60 
+      transition-all duration-200"
+              >
+                {WEEK.map((d) => (
+                  <option
+                    key={d}
+                    value={d}
+                    className="bg-[#07201f] text-emerald-100"
+                  >
+                    {d}
+                  </option>
+                ))}
+              </select>
 
-            {/* Date Input - Compact */}
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="px-2.5 py-2.5 w-[145px] rounded-xl border border-emerald-700/50 
-                bg-[#07201f]/90 backdrop-blur-sm text-emerald-100 text-sm font-medium
-                focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
-                hover:bg-[#07201f] hover:border-emerald-600/60
-                transition-all duration-200 cursor-pointer
-                shadow-lg shadow-black/20
-                [color-scheme:dark]"
-            />
+              {/* Date Input */}
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full sm:w-[145px] px-3 py-2.5 rounded-xl border border-emerald-700/50 
+      bg-[#07201f]/90 text-emerald-100 text-sm font-medium shadow-lg shadow-black/20
+      focus:outline-none focus:ring-2 focus:ring-emerald-400/60 hover:border-emerald-600/60 
+      transition-all duration-200 [color-scheme:dark]"
+              />
+            </div>
 
-            {/* Reset Button - Compact */}
+            {/* Reset Button */}
             <button
               onClick={resetProgress}
-              className="flex-1 lg:flex-initial group relative overflow-hidden
-                bg-gradient-to-r from-red-600 via-red-500 to-red-600 
-                hover:from-red-500 hover:via-red-400 hover:to-red-500
-                text-white px-4 py-2.5 rounded-xl text-sm font-bold
-                shadow-lg shadow-red-900/40 hover:shadow-red-800/60
-                transition-all duration-300 hover:scale-[1.02]
-                border border-red-400/20 whitespace-nowrap"
+              className="w-full sm:w-auto group relative overflow-hidden
+    bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-4 py-2.5 
+    rounded-xl text-sm font-bold border border-red-400/20 
+    shadow-lg shadow-red-900/40 hover:scale-[1.02] transition-all duration-300"
             >
               <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <span>🔄</span>
-                <span>Reset Progress</span>
+                🔄 Reset Progress
               </span>
               <div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
-                translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
+      -translate-x-full group-hover:translate-x-full transition-transform duration-700"
               />
             </button>
           </div>
@@ -1466,7 +1480,7 @@ export default function Gym() {
 
       {/* Progress / Weight Section */}
       <section
-        className="mb-4 border border-emerald-500/30 rounded-3xl p-5 space-y-4 
+        className="mb-2 border border-emerald-500/30 rounded-3xl p-5 space-y-4 
   bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
   dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
   shadow-xl shadow-black/40 backdrop-blur-md"
@@ -1573,84 +1587,192 @@ export default function Gym() {
           </div>
 
           {/* Display Current/Today's weight with trend */}
-          <div className="flex flex-col gap-1.5 bg-gradient-to-br from-teal-600/10 via-teal-700/5 to-teal-800/10 rounded-xl px-3 py-2.5 border border-teal-500/30 hover:border-teal-400/50 transition-all shadow-sm">
-            <span className="text-[10px] uppercase tracking-wider text-teal-400/70 font-semibold">
-              Now
-            </span>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-teal-300 font-black text-xl leading-none">
-                {(() => {
-                  // 1. If TODAY has logged weight → show it
-                  if (entry?.weight != null) return `${entry.weight} kg`;
-
-                  // 2. Get all past logged weights
-                  const pastKeys = Object.keys(logs)
-                    .filter((k) => logs[k]?.weight != null && k < dateKey)
-                    .sort()
-                    .reverse(); // latest first
-
-                  // 3. If yesterday specifically has weight, use that first
-                  const yesterdayKey = dayjs(dateKey)
-                    .subtract(1, "day")
-                    .format("YYYY-MM-DD");
-                  if (logs[yesterdayKey]?.weight != null) {
-                    return `${logs[yesterdayKey].weight} kg`;
-                  }
-
-                  // 4. If no yesterday → use most recent backdated weight
-                  if (pastKeys.length > 0) {
-                    return `${logs[pastKeys[0]].weight} kg`;
-                  }
-
-                  // 5. No weight anywhere → show —
-                  return "—";
-                })()}
+          <div className="bg-gradient-to-br from-teal-600/10 via-teal-700/5 to-teal-800/10 rounded-xl px-3 py-2.5 border border-teal-500/30 shadow-sm">
+            {/* Header Row */}
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] uppercase tracking-wider text-teal-400/70 font-semibold">
+                Weight Tracking • {dayjs(date).format("MMM D")}
               </span>
-              {/* Trend indicator */}
+
+              {/* Status right aligned */}
               {(() => {
-                const yesterdayKey = dayjs(dateKey)
-                  .subtract(1, "day")
-                  .format("YYYY-MM-DD");
-                const todayWeight = entry?.weight;
-                const yesterdayWeight = logs[yesterdayKey]?.weight;
+                const hasWeight = entry?.weight != null;
+                const isToday = dayjs(date).isSame(dayjs(), "day");
+                const isFuture = dayjs(date).isAfter(dayjs(), "day");
 
-                if (todayWeight && yesterdayWeight) {
-                  const diff = todayWeight - yesterdayWeight;
-                  if (diff > 0) {
-                    return (
-                      <span className="text-red-400 text-xs font-bold">
-                        ↑{diff.toFixed(1)}
-                      </span>
-                    );
-                  } else if (diff < 0) {
-                    return (
-                      <span className="text-emerald-400 text-xs font-bold">
-                        ↓{Math.abs(diff).toFixed(1)}
-                      </span>
-                    );
-                  }
-                }
-                return null;
-              })()}
-            </div>
-            {/* Last logged date if not today */}
-            {!entry?.weight &&
-              (() => {
-                const pastKeys = Object.keys(logs)
-                  .filter((k) => logs[k]?.weight != null && k < dateKey)
-                  .sort()
-                  .reverse();
-
-                if (pastKeys.length > 0) {
-                  const lastDate = dayjs(pastKeys[0]).format("MMM D");
+                if (isFuture) {
                   return (
-                    <span className="text-teal-500/60 text-[9px]">
-                      Last: {lastDate}
+                    <span className="text-[10px] text-gray-400/70 italic">
+                      Future
                     </span>
                   );
                 }
+
+                if (isToday && !hasWeight) {
+                  return (
+                    <span className="text-[10px] text-amber-400/80 font-medium">
+                      ⚠️ Not Logged
+                    </span>
+                  );
+                }
+
+                if (!isToday && !hasWeight) {
+                  return (
+                    <span className="text-[10px] text-gray-400/70">
+                      No Entry
+                    </span>
+                  );
+                }
+
+                if (hasWeight) {
+                  return (
+                    <span className="text-[10px] text-emerald-400/80 font-medium">
+                      ✓ Logged
+                    </span>
+                  );
+                }
+
                 return null;
               })()}
+            </div>
+
+            {/* Weight + Trend + Last recorded (Right side) */}
+            <div className="flex items-center justify-between">
+              {/* Weight Value */}
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-teal-300 font-black text-2xl leading-none">
+                  {(() => {
+                    const hasWeight = entry?.weight != null;
+
+                    // If current date has weight, show it
+                    if (hasWeight) {
+                      return entry.weight;
+                    }
+
+                    // Otherwise, find most recent weight before this date
+                    const history = Object.keys(logs)
+                      .filter((k) => logs[k]?.weight != null && k < dateKey)
+                      .sort()
+                      .reverse();
+
+                    if (history.length > 0) {
+                      return logs[history[0]].weight;
+                    }
+
+                    return "—";
+                  })()}
+                </span>
+                {/* ALWAYS show kg when there's a weight value (current OR fallback) */}
+                {(() => {
+                  const hasWeight = entry?.weight != null;
+
+                  if (hasWeight) return true;
+
+                  // Check if fallback weight exists
+                  const history = Object.keys(logs)
+                    .filter((k) => logs[k]?.weight != null && k < dateKey)
+                    .sort()
+                    .reverse();
+
+                  return history.length > 0;
+                })() && (
+                  <span className="text-[11px] text-teal-400/60 font-semibold">
+                    kg
+                  </span>
+                )}
+              </div>
+
+              {/* Right side cluster: trend + last date - FIXED HEIGHT */}
+              <div className="flex flex-col items-end justify-center gap-0.5 min-h-[34px]">
+                {/* Trend arrow - RESERVED SPACE */}
+                <div className="h-[14px] flex items-center justify-end">
+                  {(() => {
+                    const hasWeight = entry?.weight != null;
+                    if (!hasWeight) return null;
+
+                    // Find the most recent previous weight
+                    const history = Object.keys(logs)
+                      .filter((k) => logs[k]?.weight != null && k < dateKey)
+                      .sort()
+                      .reverse();
+
+                    if (history.length === 0) return null;
+
+                    const prevWeight = logs[history[0]].weight;
+                    const diff = entry.weight - prevWeight;
+
+                    if (Math.abs(diff) < 0.01) return null; // No change
+
+                    return (
+                      <span
+                        className={`text-[11px] font-bold flex items-center gap-0.5 ${
+                          diff > 0 ? "text-red-400" : "text-emerald-400"
+                        }`}
+                      >
+                        {diff > 0 ? "↑" : "↓"}
+                        {Math.abs(diff).toFixed(1)}kg
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {/* Last recorded date or status - RESERVED SPACE */}
+                <div className="h-[12px] flex items-center justify-end">
+                  <span className="text-[9px] text-teal-500/60">
+                    {(() => {
+                      const hasWeight = entry?.weight != null;
+                      const isToday = dayjs(date).isSame(dayjs(), "day");
+                      const isFuture = dayjs(date).isAfter(dayjs(), "day");
+
+                      // Future date - SHOW LAST WEIGHT INFO
+                      if (isFuture) {
+                        const history = Object.keys(logs)
+                          .filter((k) => logs[k]?.weight != null && k < dateKey)
+                          .sort()
+                          .reverse();
+
+                        if (history.length > 0) {
+                          const lastDate = dayjs(history[0]);
+                          const daysAgo = dayjs(date).diff(lastDate, "day");
+                          return `Last: ${lastDate.format(
+                            "MMM D",
+                          )} (${daysAgo}d ago)`;
+                        }
+                        return "No history";
+                      }
+
+                      // Current date HAS weight
+                      if (hasWeight) {
+                        if (isToday) {
+                          return `Logged today`;
+                        }
+                        return `Recorded`;
+                      }
+
+                      // Current date NO weight - show fallback source
+                      const history = Object.keys(logs)
+                        .filter((k) => logs[k]?.weight != null && k < dateKey)
+                        .sort()
+                        .reverse();
+
+                      if (history.length > 0) {
+                        const lastDate = dayjs(history[0]);
+                        const daysAgo = dayjs(date).diff(lastDate, "day");
+
+                        if (isToday) {
+                          return `Last: ${lastDate.format(
+                            "MMM D",
+                          )} (${daysAgo}d ago)`;
+                        }
+                        return `From: ${lastDate.format("MMM D")}`;
+                      }
+
+                      return "No history";
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Progress text */}
@@ -1735,13 +1857,25 @@ export default function Gym() {
       </section>
 
       {/* Calendar + Daily Summary */}
-      <section className="grid md:grid-cols-2 gap-4 mb-2">
-        <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
-        <DailySummaryCarousel date={date} logs={logs} />
+      <section
+        className="grid gap-4 lg:grid-cols-2 w-full align-center
+      "
+      >
+        <div className="w-full flex">
+          <div className="w-full">
+            <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
+          </div>
+        </div>
+
+        <div className="w-full flex">
+          <div className="w-full">
+            <DailySummaryCarousel date={date} logs={logs} />
+          </div>
+        </div>
       </section>
 
       {/* Workout Section */}
-      <section className="mb-6">
+      <section className="mb-6 mt-2">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
           <div className="relative bg-gradient-to-br from-[#B82132]/95 via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] backdrop-blur-sm rounded-3xl p-5 md:p-6">
             {/* BG DECOR */}
@@ -1958,128 +2092,90 @@ export default function Gym() {
                   />
                 </div>
 
-                {/* FOOTER BUTTONS */}
-                <div className="flex flex-wrap gap-2.5 pt-4 border-t border-emerald-500/20">
-                  {/* MARK ALL / UNMARK ALL */}
-                  <button
-                    onClick={() =>
-                      !doneState[dateKey] && toggleMarkAll(dateKey)
-                    }
-                    disabled={doneState[dateKey]}
-                    className={`group relative px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2
-                      ${
-                        doneState[dateKey]
-                          ? "bg-gray-700/40 text-gray-400 cursor-not-allowed opacity-60"
-                          : (Array.isArray(entry.left) &&
-                              entry.left.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.left.every(Boolean)
-                                : entry.left.every((e) => e?.done)) &&
-                              (Array.isArray(entry.right) &&
-                              entry.right.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.right.every(Boolean)
-                                : entry.right.every((e) => e?.done)) &&
-                              (Array.isArray(entry.finisher) &&
-                              entry.finisher.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.finisher.every(Boolean)
-                                : entry.finisher.every((e) => e?.done))
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-lg shadow-orange-500/30"
-                            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-[1.02] shadow-lg shadow-blue-500/30"
-                      }
-                    `}
+                {/* FOOTER ACTION BAR */}
+                <div className="mt-4 border-t border-emerald-500/20 pt-4">
+                  <div
+                    className="
+    grid gap-2 
+    grid-cols-1 
+    xs:grid-cols-2 
+    sm:grid-cols-2
+    md:grid-cols-3
+    lg:grid-cols-4
+  "
                   >
-                    {(Array.isArray(entry.left) &&
-                    entry.left.every((item) => typeof item === "boolean")
-                      ? entry.left.every(Boolean)
-                      : entry.left.every((e) => e?.done)) &&
-                    (Array.isArray(entry.right) &&
-                    entry.right.every((item) => typeof item === "boolean")
-                      ? entry.right.every(Boolean)
-                      : entry.right.every((e) => e?.done)) &&
-                    (Array.isArray(entry.finisher) &&
-                    entry.finisher.every((item) => typeof item === "boolean")
-                      ? entry.finisher.every(Boolean)
-                      : entry.finisher.every((e) => e?.done)) ? (
-                      <>
-                        ❌ <span>Unmark All</span>
-                      </>
+                    {/* MARK ALL / UNMARK ALL */}
+                    <button
+                      onClick={() =>
+                        !doneState[dateKey] && toggleMarkAll(dateKey)
+                      }
+                      disabled={doneState[dateKey]}
+                      className={`
+        w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300
+        ${
+          doneState[dateKey]
+            ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
+            : entry.left.every((e) => e?.done) &&
+                entry.right.every((e) => e?.done) &&
+                entry.finisher.every((e) => e?.done)
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+        }
+      `}
+                    >
+                      {entry.left.every((e) => e?.done) &&
+                      entry.right.every((e) => e?.done) &&
+                      entry.finisher.every((e) => e?.done)
+                        ? "❌ Unmark All"
+                        : "✔️ Mark All"}
+                    </button>
+
+                    {/* MAIN DONE BUTTON OR EDIT/DELETE */}
+                    {!doneState[dateKey] ? (
+                      <button
+                        onClick={openModal}
+                        disabled={
+                          !(
+                            entry.left.some((e) => e?.done) ||
+                            entry.right.some((e) => e?.done) ||
+                            entry.finisher.some((e) => e?.done)
+                          )
+                        }
+                        className={`
+          w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300
+          ${
+            entry.left.some((e) => e?.done) ||
+            entry.right.some((e) => e?.done) ||
+            entry.finisher.some((e) => e?.done)
+              ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.02] shadow-md shadow-emerald-600/30"
+              : "bg-gray-600/30 text-gray-500 cursor-not-allowed"
+          }
+        `}
+                      >
+                        ✅ Mark Workout Done
+                      </button>
                     ) : (
                       <>
-                        ✔️ <span>Mark All</span>
+                        {/* DELETE */}
+                        <button
+                          onClick={() => deleteWorkout(dateKey)}
+                          className="w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2
+          bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.02] transition-all duration-300 shadow-md shadow-red-600/30"
+                        >
+                          ❌ Clear Day
+                        </button>
+
+                        {/* EDIT */}
+                        <button
+                          onClick={editWorkout}
+                          className="w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2
+           text-emerald-200 bg-white/10 backdrop-blur-md border border-emerald-400/30 hover:bg-white/15 hover:border-emerald-300/50 transition-all duration-300"
+                        >
+                          ✏️ Edit
+                        </button>
                       </>
                     )}
-                  </button>
-
-                  {/* MARK DONE */}
-                  {!doneState[dateKey] ? (
-                    <button
-                      onClick={openModal}
-                      disabled={
-                        !(
-                          (Array.isArray(entry.left) &&
-                          entry.left.every((item) => typeof item === "boolean")
-                            ? entry.left.some(Boolean)
-                            : entry.left.some((e) => e?.done)) ||
-                          (Array.isArray(entry.right) &&
-                          entry.right.every((item) => typeof item === "boolean")
-                            ? entry.right.some(Boolean)
-                            : entry.right.some((e) => e?.done)) ||
-                          (Array.isArray(entry.finisher) &&
-                          entry.finisher.every(
-                            (item) => typeof item === "boolean",
-                          )
-                            ? entry.finisher.some(Boolean)
-                            : entry.finisher.some((e) => e?.done))
-                        )
-                      }
-                      className={`flex-1 sm:flex-initial group relative px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
-                        ${
-                          (Array.isArray(entry.left) &&
-                          entry.left.every((item) => typeof item === "boolean")
-                            ? entry.left.some(Boolean)
-                            : entry.left.some((e) => e?.done)) ||
-                          (Array.isArray(entry.right) &&
-                          entry.right.every((item) => typeof item === "boolean")
-                            ? entry.right.some(Boolean)
-                            : entry.right.some((e) => e?.done)) ||
-                          (Array.isArray(entry.finisher) &&
-                          entry.finisher.every(
-                            (item) => typeof item === "boolean",
-                          )
-                            ? entry.finisher.some(Boolean)
-                            : entry.finisher.some((e) => e?.done))
-                            ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.02] shadow-lg shadow-emerald-500/30"
-                            : "bg-slate-700/40 text-slate-500 cursor-not-allowed opacity-60"
-                        }
-                      `}
-                    >
-                      <span>✅</span>
-                      <span>Mark Workout Done</span>
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => deleteWorkout(dateKey)}
-                        className="group relative px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.02] shadow-lg shadow-red-500/30 transition-all duration-300 flex items-center gap-2"
-                      >
-                        <span>❌</span>
-                        <span>Unmark & Clear</span>
-                      </button>
-
-                      <button
-                        onClick={editWorkout}
-                        className="group relative px-5 py-2.5 rounded-xl font-bold text-sm bg-white/10 text-emerald-100 border border-emerald-400/30 hover:border-emerald-400/50 hover:scale-[1.02] transition-all duration-300 flex items-center gap-2"
-                      >
-                        <span>✏️</span>
-                        <span>Edit</span>
-                      </button>
-                    </>
-                  )}
+                  </div>
                 </div>
               </>
             )}
@@ -2090,207 +2186,304 @@ export default function Gym() {
       {/* ------------- MODAL BLOCK WITH EXERCISE EDITOR ------------- */}
       {showModal && (
         <Modal onClose={() => setShowModal(false)} onEnter={saveWorkout}>
-          <h2 className="text-xl font-bold text-emerald-200 mb-4">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent mb-5">
             Log Today's Workout
           </h2>
 
-          {/* CALORIES */}
-          <label className="block text-sm text-emerald-100">
-            Calories Burned
-          </label>
-          <input
-            type="number"
-            value={caloriesInput}
-            onChange={(e) => setCaloriesInput(e.target.value)}
-            className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1 mb-3 
-                       text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
-            placeholder="e.g. 500"
-          />
-
-          {/* WEIGHT */}
-          <label className="block text-sm text-emerald-100">Weight (kg)</label>
-          <input
-            type="number"
-            value={weightInput}
-            onChange={(e) => setWeightInput(e.target.value)}
-            className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1 mb-3
-                       text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
-            placeholder="e.g. 79.5"
-          />
-
-          {/* -------------------- DURATION -------------------- */}
-          <label className="block text-sm text-emerald-100 mb-1">
-            Duration
-          </label>
-
-          <div className="flex gap-4 mb-4">
-            {/* Hours */}
-            <div className="flex-1">
-              <label className="block text-xs text-emerald-200">Hours</label>
+          {/* -------------------- QUICK STATS GRID -------------------- */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* CALORIES */}
+            <div>
+              <label className="block text-xs uppercase tracking-wide text-emerald-200/70 mb-1.5 font-semibold">
+                🔥 Calories
+              </label>
               <input
                 type="number"
-                min="0"
-                max="5"
-                value={durationHours}
-                onChange={(e) => setDurationHours(Number(e.target.value))}
-                className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1
-                           text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
-                placeholder="0"
+                value={caloriesInput}
+                onChange={(e) => setCaloriesInput(e.target.value)}
+                className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                     border border-emerald-400/30 rounded-xl p-2.5 
+                     text-emerald-100 placeholder:text-emerald-300/40
+                     outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                     transition-all duration-200"
+                placeholder="500"
               />
             </div>
 
-            {/* Minutes */}
-            <div className="flex-1">
-              <label className="block text-xs text-emerald-200">Minutes</label>
+            {/* WEIGHT */}
+            <div>
+              <label className="block text-xs uppercase tracking-wide text-cyan-200/70 mb-1.5 font-semibold">
+                ⚖️ Weight
+              </label>
               <input
                 type="number"
-                min="0"
-                max="59"
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                className="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-2 mt-1
-                           text-emerald-100 outline-none focus:ring-2 focus:ring-emerald-400/40"
-                placeholder="0"
+                step="0.1"
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
+                className="w-full bg-gradient-to-br from-[#183D3D]/30 via-[#0F2A2A]/20 to-[#0A1F1F]/30 
+                     border border-cyan-400/30 rounded-xl p-2.5 
+                     text-cyan-100 placeholder:text-cyan-300/40
+                     outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400
+                     transition-all duration-200"
+                placeholder="79.5"
               />
+            </div>
+          </div>
+
+          {/* -------------------- DURATION -------------------- */}
+          <div className="mb-4">
+            <label className="block text-xs uppercase tracking-wide text-teal-200/70 mb-1.5 font-semibold">
+              ⏱️ Duration
+            </label>
+            <div className="flex gap-3">
+              {/* Hours */}
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    value={durationHours}
+                    onChange={(e) => setDurationHours(Number(e.target.value))}
+                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                         border border-teal-400/30 rounded-xl p-2.5 pr-10
+                         text-teal-100 placeholder:text-teal-300/40
+                         outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
+                         transition-all duration-200"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-teal-300/60 font-medium">
+                    hrs
+                  </span>
+                </div>
+              </div>
+
+              {/* Minutes */}
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                         border border-teal-400/30 rounded-xl p-2.5 pr-10
+                         text-teal-100 placeholder:text-teal-300/40
+                         outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
+                         transition-all duration-200"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-teal-300/60 font-medium">
+                    min
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* -------------------- MOOD SELECTOR -------------------- */}
-          <label className="block text-sm text-emerald-100 mb-2">Mood</label>
+          <div className="mb-5">
+            <label className="block text-xs uppercase tracking-wide text-purple-200/70 mb-2 font-semibold">
+              😊 Mood
+            </label>
+            <div className="flex gap-2 sm:gap-3">
+              {["😄", "🙂", "😐", "😣", "😴"].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMoodInput(m)}
+                  className={`
+              flex-1 text-2xl sm:text-3xl p-2.5 sm:p-3 rounded-xl transition-all duration-200
+              bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl 
+              border-2 shadow-lg
+              hover:scale-105 active:scale-95
+              ${
+                moodInput === m
+                  ? "border-purple-400 bg-purple-500/20 shadow-purple-500/30 scale-105"
+                  : "border-white/10 opacity-60 hover:opacity-100 hover:border-white/30"
+              }
+            `}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <div className="flex gap-3 mb-6">
-            {["😄", "🙂", "😐", "😣", "😴"].map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMoodInput(m)}
-                className={`
-                  text-2xl p-2 rounded-xl transition
-                  bg-white/10 backdrop-blur-xl border border-emerald-500/20
-                  shadow-inner shadow-black/20
-                  hover:scale-110 active:scale-95
-                  ${moodInput === m ? "ring-2 ring-emerald-400" : "opacity-70"}
-                `}
+          {/* -------------------- COLLAPSIBLE EXERCISE EDITOR -------------------- */}
+          <div className="mb-5">
+            <button
+              type="button"
+              onClick={() => setShowExerciseEditor(!showExerciseEditor)}
+              className="w-full flex items-center justify-between p-3 rounded-xl
+                   bg-gradient-to-br from-emerald-500/20 to-teal-500/20
+                   border border-emerald-400/30 hover:border-emerald-400/50
+                   transition-all duration-200 group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💪</span>
+                <span className="text-sm font-semibold text-emerald-200">
+                  Edit Exercise Checklist
+                </span>
+                <span className="text-xs text-emerald-300/60 font-medium">
+                  (
+                  {editLeft.filter((e) => e.done).length +
+                    editRight.filter((e) => e.done).length +
+                    editFinisher.filter((e) => e.done).length}{" "}
+                  completed)
+                </span>
+              </div>
+              <svg
+                className={`w-5 h-5 text-emerald-300 transition-transform duration-300 ${
+                  showExerciseEditor ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {m}
-              </button>
-            ))}
-          </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
 
-          {/* -------------------- EXERCISE EDITOR (OPTION B — TOGGLE CHIPS) -------------------- */}
-          <h3 className="text-lg font-semibold text-emerald-200 mb-2">
-            Edit Exercises
-          </h3>
-
-          {/* LEFT */}
-          <div className="mb-4">
-            <div className="text-sm text-emerald-300 mb-1 font-medium">
-              Left
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {editLeft.map((ex, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    const temp = [...editLeft];
-                    temp[i].done = !temp[i].done;
-                    setEditLeft(temp);
-                  }}
-                  className={`
-                    px-3 py-1 rounded-xl text-sm font-medium transition-all
-                    border backdrop-blur-xl
+            {/* COLLAPSIBLE CONTENT */}
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                showExerciseEditor
+                  ? "max-h-[600px] opacity-100 mt-3"
+                  : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="space-y-3 p-3 rounded-xl bg-black/20 border border-emerald-400/20">
+                {/* LEFT */}
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-emerald-300/80 mb-2 font-semibold flex items-center gap-1.5">
+                    <span className="w-1 h-4 bg-emerald-400 rounded-full"></span>
+                    Left Side
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {editLeft.map((ex, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          const temp = [...editLeft];
+                          temp[i].done = !temp[i].done;
+                          setEditLeft(temp);
+                        }}
+                        className={`
+                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                    border backdrop-blur-xl hover:scale-105 active:scale-95
                     ${
                       ex.done
-                        ? "bg-emerald-500/30 border-emerald-400 text-emerald-200"
-                        : "bg-white/10 border-white/20 text-gray-300"
+                        ? "bg-emerald-500/30 border-emerald-400 text-emerald-100 shadow-lg shadow-emerald-500/20"
+                        : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
                     }
                   `}
-                >
-                  {ex.name} {ex.done ? "✔" : "✘"}
-                </button>
-              ))}
-            </div>
-          </div>
+                      >
+                        {ex.done ? "✓" : "○"} {ex.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          {/* RIGHT */}
-          <div className="mb-4">
-            <div className="text-sm text-emerald-300 mb-1 font-medium">
-              Right
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {editRight.map((ex, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    const temp = [...editRight];
-                    temp[i].done = !temp[i].done;
-                    setEditRight(temp);
-                  }}
-                  className={`
-                    px-3 py-1 rounded-xl text-sm font-medium transition-all
-                    border backdrop-blur-xl
+                {/* RIGHT */}
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-teal-300/80 mb-2 font-semibold flex items-center gap-1.5">
+                    <span className="w-1 h-4 bg-teal-400 rounded-full"></span>
+                    Right Side
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {editRight.map((ex, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          const temp = [...editRight];
+                          temp[i].done = !temp[i].done;
+                          setEditRight(temp);
+                        }}
+                        className={`
+                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                    border backdrop-blur-xl hover:scale-105 active:scale-95
                     ${
                       ex.done
-                        ? "bg-emerald-500/30 border-emerald-400 text-emerald-200"
-                        : "bg-white/10 border-white/20 text-gray-300"
+                        ? "bg-teal-500/30 border-teal-400 text-teal-100 shadow-lg shadow-teal-500/20"
+                        : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
                     }
                   `}
-                >
-                  {ex.name} {ex.done ? "✔" : "✘"}
-                </button>
-              ))}
-            </div>
-          </div>
+                      >
+                        {ex.done ? "✓" : "○"} {ex.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          {/* FINISHER */}
-          <div className="mb-6">
-            <div className="text-sm text-emerald-300 mb-1 font-medium">
-              Finisher
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {editFinisher.map((ex, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    const temp = [...editFinisher];
-                    temp[i].done = !temp[i].done;
-                    setEditFinisher(temp);
-                  }}
-                  className={`
-                    px-3 py-1 rounded-xl text-sm font-medium transition-all
-                    border backdrop-blur-xl
+                {/* FINISHER */}
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-cyan-300/80 mb-2 font-semibold flex items-center gap-1.5">
+                    <span className="w-1 h-4 bg-cyan-400 rounded-full"></span>
+                    Finisher
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {editFinisher.map((ex, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          const temp = [...editFinisher];
+                          temp[i].done = !temp[i].done;
+                          setEditFinisher(temp);
+                        }}
+                        className={`
+                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                    border backdrop-blur-xl hover:scale-105 active:scale-95
                     ${
                       ex.done
-                        ? "bg-cyan-500/30 border-cyan-300 text-cyan-100"
-                        : "bg-white/10 border-white/20 text-gray-300"
+                        ? "bg-cyan-500/30 border-cyan-300 text-cyan-100 shadow-lg shadow-cyan-500/20"
+                        : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
                     }
                   `}
-                >
-                  {ex.name} {ex.done ? "✔" : "✘"}
-                </button>
-              ))}
+                      >
+                        {ex.done ? "✓" : "○"} {ex.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* -------------------- ACTION BUTTONS -------------------- */}
-          <div className="flex justify-end gap-3 mt-4">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-emerald-500/20">
             <button
-              className="px-4 py-2 rounded-xl bg-red-500/30 border border-red-400/30 
-                         text-red-200 hover:bg-red-500/40"
+              type="button"
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm
+                   bg-gradient-to-r from-red-600/30 to-red-500/30 
+                   border border-red-400/40 text-red-200 
+                   hover:from-red-600/40 hover:to-red-500/40 hover:border-red-400/60
+                   transition-all duration-200 hover:scale-105 active:scale-95"
               onClick={() => setShowModal(false)}
             >
               Cancel
             </button>
 
             <button
-              className="px-4 py-2 rounded-xl bg-emerald-500/30 border border-emerald-400/30 
-                         text-emerald-200 hover:bg-emerald-500/40"
+              type="button"
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm
+                   bg-gradient-to-r from-emerald-600/40 to-teal-600/40 
+                   border border-emerald-400/50 text-emerald-100
+                   hover:from-emerald-600/50 hover:to-teal-600/50 hover:border-emerald-400/70
+                   shadow-lg shadow-emerald-500/20
+                   transition-all duration-200 hover:scale-105 active:scale-95"
               onClick={saveWorkout}
             >
-              Save
+              Save Workout
             </button>
           </div>
         </Modal>
@@ -2317,71 +2510,88 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
 
   return (
     <section
-      className="border border-emerald-500/30 rounded-3xl px-5 py-2
+      className="
+    border border-emerald-500/30 rounded-3xl 
+    px-3 py-3 sm:px-5 sm:py-2.5
     bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
     dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-    text-[#FAFAFA] shadow-xl shadow-black/40"
+    text-[#FAFAFA] shadow-xl shadow-black/40
+    max-w-full overflow-hidden mx-auto sm:mx-0
+  "
     >
-      {/* Header - Dynamic Date Range with Month Navigation */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between mb-2">
+      {/* Header - Matching Calendar Style */}
+      <div className="mb-4">
+        {/* Top Row: Date Range + Navigation Arrows */}
+        <div className="flex items-center justify-between mb-3 gap-2">
+          {/* Left Arrow */}
           <button
             onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
-            className="w-8 h-8 rounded-full flex items-center justify-center
-        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/30
-        transition-all duration-200 hover:scale-110"
+            className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0
+        rounded-full flex items-center justify-center
+        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20
+        transition-all duration-200 hover:scale-110 active:scale-95
+        text-lg sm:text-xl font-bold"
           >
             ‹
           </button>
 
-          <div className="text-center">
-            <div className="text-lg font-bold text-emerald-100">
+          {/* Date Range - Centered */}
+          <div className="flex-1 text-center">
+            <div className="text-sm sm:text-base md:text-lg font-bold text-emerald-200/90">
               {viewMonth.subtract(17, "day").format("MMM D")} -{" "}
               {viewMonth.add(17, "day").format("MMM D, YYYY")}
             </div>
-
-            <div className="flex justify-between items-center gap-2">
-              {/* Selected Date Display */}
-              <div className="flex-1">
-                <div className="text-xs font-semibold text-emerald-200">
-                  {dayjs(date).format("dddd")}
-                </div>
-                <div className="text-[10px] text-emerald-300/60">
-                  {dayjs(date).format("MMMM DD, YYYY")}
-                </div>
-              </div>
-
-              {/* Quick Jump to Today Button */}
-              <button
-                onClick={() => {
-                  setViewMonth(today);
-                  setDate(today.format("YYYY-MM-DD"));
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-      bg-cyan-500/10 hover:bg-cyan-500/20 
-      border border-cyan-400/30 hover:border-cyan-400/50
-      text-[10px] font-semibold text-cyan-300 hover:text-cyan-200
-      uppercase tracking-wider transition-all duration-200
-      hover:scale-105 shadow-sm"
-              >
-                <span>📍</span>
-                <span>Today</span>
-              </button>
-            </div>
           </div>
 
+          {/* Right Arrow */}
           <button
             onClick={() => setViewMonth(viewMonth.add(1, "month"))}
-            className="w-8 h-8 rounded-full flex items-center justify-center
-        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/30
-        transition-all duration-200 hover:scale-110"
+            className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0
+        rounded-full flex items-center justify-center
+        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20
+        transition-all duration-200 hover:scale-110 active:scale-95
+        text-lg sm:text-xl font-bold"
           >
             ›
           </button>
         </div>
+
+        {/* Bottom Row: Selected Date + Today Button - NO CARD BACKGROUND */}
+        <div className="flex items-center justify-between gap-3 sm:gap-4 py-2">
+          {/* Selected Date Display */}
+          <div className="flex-1 min-w-0">
+            <div className="text-base sm:text-lg md:text-xl font-bold text-emerald-200 truncate">
+              {dayjs(date).format("dddd")}
+            </div>
+            <div className="text-xs sm:text-sm text-emerald-300/60 truncate">
+              {dayjs(date).format("MMMM DD, YYYY")}
+            </div>
+          </div>
+
+          {/* Quick Jump to Today Button */}
+          <button
+            onClick={() => {
+              setViewMonth(today);
+              setDate(today.format("YYYY-MM-DD"));
+            }}
+            className="flex-shrink-0 flex items-center gap-1.5 
+        px-3 py-2 sm:px-4 sm:py-2.5
+        rounded-xl 
+        bg-cyan-500/20 hover:bg-cyan-500/30
+        border border-cyan-400/30 hover:border-cyan-400/50
+        text-[10px] sm:text-xs font-bold
+        text-cyan-200 hover:text-cyan-100 
+        uppercase tracking-wider
+        transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            <span className="text-xs sm:text-sm">📍</span>
+            <span>Today</span>
+          </button>
+        </div>
       </div>
+
       {/* Weekday Headers - Dynamic based on today's position */}
-      <div className="grid grid-cols-7 gap-1.5 mb-2">
+      <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
           // Calculate which day is 3 days before today (left edge)
           const startDay = today.subtract(3, "day");
@@ -2408,8 +2618,9 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           return headers;
         })()}
       </div>
+
       {/* 5 Rows × 7 Columns - Based on viewMonth */}
-      <div className="grid grid-cols-7 gap-1.5 mb-2">
+      <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
           const cells = [];
 
@@ -2477,7 +2688,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   onClick={() => setDate(key)}
                   // title={d.format("DD-MM-YYYY")}
                   className={`
-              w-9 h-9 sm:w-10 sm:h-10 rounded-full text-xs font-medium
+              w-7 h-7 sm:w-9 sm:h-9 rounded-full text-xs font-medium
               flex items-center justify-center border
               transition-all duration-200
               cursor-pointer hover:scale-105
@@ -2501,7 +2712,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" />
                 )}
 
-                <div className="pointer-events-none absolute top-11 z-30 rounded-lg bg-black/90 px-2.5 py-1.5 text-[10px] text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-emerald-500/20 shadow-xl">
+                <div className="pointer-events-none absolute top-8 sm:top-11 scale-90 sm:scale-100 z-30 rounded-lg bg-black/90 px-2.5 py-1.5 text-[10px] text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-emerald-500/20 shadow-xl">
                   {d.format("MMM D")} • {isDone ? "✅ Done" : "No workout"}
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
@@ -2514,7 +2725,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         })()}
       </div>
       {/* Current Week Highlight */}
-      <div className="pt-3 border-t border-cyan-500/30 bg-cyan-500/5 -mx-5 px-5 py-3 rounded-b-3xl">
+      <div className="pt-2 sm:pt-3 border-t border-cyan-500/30 bg-cyan-500/5 -mx-3 sm:-mx-5 px-3 sm:px-5 py-2 sm:py-3 rounded-b-3xl">
         <div className="text-[10px] text-cyan-300 uppercase tracking-wide font-semibold mb-2 text-center">
           📍 Current Week (Row 3)
         </div>
@@ -2554,14 +2765,14 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         </div>
       </div>
       {/* Monthly Stats */}
-      <div className="mt-6 pt-4 border-t border-emerald-500/20">
-        <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="mt-4 md:p-3 border-t border-emerald-500/20">
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-0">
           {/* This Month */}
           <div className="bg-white/5 rounded-xl p-2">
-            <div className="text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
+            <div className="text-[8px] sm:text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
               This Month
             </div>
-            <div className="text-xl font-bold text-emerald-300">
+            <div className="text-lg sm:text-xl font-bold text-emerald-300">
               {
                 Object.keys(doneState || {}).filter((k) =>
                   k.startsWith(today.format("YYYY-MM")),
@@ -2612,6 +2823,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           </div>
         </div>
       </div>
+      {/* <div className="h-5 "></div> */}
     </section>
   );
 }
