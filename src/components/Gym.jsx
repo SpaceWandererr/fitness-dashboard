@@ -1636,9 +1636,13 @@ export default function Gym() {
               })()}
             </div>
 
+<<<<<<< HEAD
             {
               /* Weight + Trend + Last recorded (Right side) */
             }
+=======
+            {/* Weight + Trend + Last recorded (Right side) */}
+>>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
             <div className="flex items-center justify-between">
               {/* Weight Value */}
               <div className="flex items-baseline gap-1.5">
@@ -1737,7 +1741,11 @@ export default function Gym() {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
+<<<<<<< HEAD
                             "MMM D"
+=======
+                            "MMM D",
+>>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -1763,7 +1771,11 @@ export default function Gym() {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
+<<<<<<< HEAD
                             "MMM D"
+=======
+                            "MMM D",
+>>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -2118,10 +2130,17 @@ export default function Gym() {
           doneState[dateKey]
             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
             : entry.left.every((e) => e?.done) &&
+<<<<<<< HEAD
               entry.right.every((e) => e?.done) &&
               entry.finisher.every((e) => e?.done)
             ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
             : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+=======
+                entry.right.every((e) => e?.done) &&
+                entry.finisher.every((e) => e?.done)
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+>>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
         }
       `}
                     >
@@ -2620,7 +2639,11 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           return headers;
         })()}
       </div>
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
       {/* 5 Rows × 7 Columns - Based on viewMonth */}
       <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
