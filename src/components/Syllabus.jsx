@@ -4409,7 +4409,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     };
 
     // 1️⃣ React state
-    setDashboardState(updated);
+    updateDashboard({ syllabus_tree_v2: tree });
 
     // 2️⃣ Local save
     try {
@@ -4451,75 +4451,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   const [saving, setSaving] = useState(false);
   const saveTimeoutRef = useRef(null);
 
-  /* ======================= CLEANUP TIMEOUT ======================= */
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  /* ======================= AUTO SEED MONGO ======================= */
-  useEffect(() => {
-    if (!dashboardState?.syllabus_tree_v2) {
-      console.log("🌱 First-time setup → storing syllabus...");
-
-      const seeded = {
-        ...dashboardState,
-        syllabus_tree_v2: structuredClone(TREE),
-      };
-
-      setDashboardState(seeded);
-
-      // local first
-      try {
-        window.localStorage.setItem(LOCAL_KEY, JSON.stringify(seeded));
-      } catch (err) {
-        console.error("⚠️ localStorage save failed (seed):", err);
-      }
-
-      // then backend
-      fetch(API_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(seeded),
-      }).catch((err) => console.error("Mongo save error:", err));
-    }
-  }, []);
-
-  /* ======================= LAST STUDIED AUTO-HIDE ======================= */
-  useEffect(() => {
-    if (!lastStudied) return;
-
-    setShowLastStudied(true);
-
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
-
-    return () => clearTimeout(timer);
-  }, [lastStudied]);
-
-  /* ======================= STREAK ======================= */
-  const streak = useMemo(() => {
-    const has = (iso) => daySet.has(iso);
-    let st = 0;
-    const d = new Date();
-    while (true) {
-      const iso = d.toISOString().slice(0, 10);
-      if (has(iso)) st++;
-      else break;
-      d.setDate(d.getDate() - 1);
-    }
-    return st;
-  }, [dashboardState?.syllabus_streak]);
-
-  const grand = useMemo(
-    () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2]
-  );
-
   /* ======================= DASHBOARD UPDATE ======================= */
   const updateDashboard = useCallback(
     (updates) => {
@@ -4552,6 +4483,61 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
       });
     },
     [API_URL]
+  );
+
+  /* ======================= CLEANUP TIMEOUT ======================= */
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  /* ======================= AUTO SEED MONGO ======================= */
+  useEffect(() => {
+    if (!dashboardState?.syllabus_tree_v2) {
+      console.log("🌱 First-time setup → storing syllabus...");
+
+      const seededTree = structuredClone(TREE);
+
+      // Store only once using updateDashboard (handles both saving layers)
+      updateDashboard({
+        syllabus_tree_v2: seededTree,
+      });
+    }
+  }, [dashboardState, updateDashboard]);
+
+  /* ======================= LAST STUDIED AUTO-HIDE ======================= */
+  useEffect(() => {
+    if (!lastStudied) return;
+
+    setShowLastStudied(true);
+
+    const timer = setTimeout(() => {
+      setShowLastStudied(false);
+    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
+
+    return () => clearTimeout(timer);
+  }, [lastStudied]);
+
+  /* ======================= STREAK ======================= */
+  const streak = useMemo(() => {
+    const has = (iso) => daySet.has(iso);
+    let st = 0;
+    const d = new Date();
+    while (true) {
+      const iso = d.toISOString().slice(0, 10);
+      if (has(iso)) st++;
+      else break;
+      d.setDate(d.getDate() - 1);
+    }
+    return st;
+  }, [dashboardState?.syllabus_streak]);
+
+  const grand = useMemo(
+    () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
+    [dashboardState?.syllabus_tree_v2]
   );
 
   /* ======================= ACTIONS ======================= */
@@ -4806,7 +4792,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
           ...data,
         };
 
-        setDashboardState(updated);
+        updateDashboard({ syllabus_tree_v2: tree });
 
         try {
           window.localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
@@ -4963,7 +4949,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 Expand
               </button>
-              ;{/* Collapse */}
+              {/* Collapse */}
               <button
                 onClick={() => {
                   const curr = dashboardState.syllabus_meta || {};
@@ -4980,7 +4966,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 Collapse
               </button>
-              ;{/* Reset */}
+              {/* Reset */}
               <button
                 onClick={() => {
                   if (!confirm("Reset ALL syllabus progress?")) return;
@@ -5014,7 +5000,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               >
                 Reset
               </button>
-              ; ; ; ; ; ; ; ; ; ; ; ;{/* Export */}
+              {/* Export */}
               <button
                 onClick={exportProgress}
                 className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
