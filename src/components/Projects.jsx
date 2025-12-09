@@ -341,11 +341,7 @@ export default function StudyProjectsAdvanced({
       JSON.stringify({
         ...nextProgress,
         _meta: { xp: nextXP, bonusGiven: nextBonusGiven },
-<<<<<<< HEAD
-      })
-=======
       }),
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
     );
     updateDashboard((prev) => ({
       ...prev,
@@ -823,11 +819,7 @@ export default function StudyProjectsAdvanced({
                                     {remaining === "Expired"
                                       ? `Expired: ${formatDate(deadline)}`
                                       : `Due: ${formatDate(
-<<<<<<< HEAD
-                                          deadline
-=======
                                           deadline,
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
                                         )} (${remaining})`}
                                   </div>
                                 )}
@@ -839,11 +831,7 @@ export default function StudyProjectsAdvanced({
                                     <div className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
                                       Completed:{" "}
                                       {formatDate(
-<<<<<<< HEAD
                                         progress[sec].completionDates[canonIdx]
-=======
-                                        progress[sec].completionDates[canonIdx],
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
                                       )}
                                     </div>
                                   )}
@@ -1032,11 +1020,7 @@ export default function StudyProjectsAdvanced({
                               </span>
                               <span className="opacity-70">{date}</span>
                             </div>
-<<<<<<< HEAD
-                          )
-=======
                           ),
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
                         )
                       )}
                     </div>

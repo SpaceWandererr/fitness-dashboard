@@ -174,14 +174,10 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
               )}
               <div className="relative z-10">{d.date()}</div>
               {hasTasks && (
-<<<<<<< HEAD
-                <div className="relative z-10 w-1 h-1 rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]" />
-=======
                 <div
                   className="relative z-10 w-1 h-1
                   rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]"
                 />
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
               )}
             </button>
           );
@@ -274,15 +270,11 @@ function WeatherCard({
             placeholder="Search city..."
             className="w-full bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 mb-2 text-sm text-[#E8FFFA] placeholder:text-[#7FAFA4]"
           />
-<<<<<<< HEAD
-          <div className="max-h-40 overflow-auto border border-[#2F6B60]/40 rounded bg-black/40">
-=======
           <div
             className="max-h-40 overflow-auto border
             border-[#2F6B60]/40 rounded bg-black/40
             "
           >
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
             {suggestions?.map((s, i) => (
               <div
                 key={i}
@@ -303,9 +295,6 @@ function WeatherCard({
         </div>
       )}
 
-<<<<<<< HEAD
-      <div className="relative rounded-xl overflow-hidden border border-[#2F6B60]/40 bg-black/20 h-[270px] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
-=======
       {/* Card visual */}
       <div
         className="relative rounded-xl overflow-hidden 
@@ -314,7 +303,6 @@ function WeatherCard({
         bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
         dark:to-[#0A0F1C]"
       >
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
         {/* Lottie background */}
         <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
           {lottieData && (
@@ -335,10 +323,6 @@ function WeatherCard({
           <div className="text-sm text-[#9FF2E8]">{condition}</div>
         </div>
 
-<<<<<<< HEAD
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8] grid grid-cols-2 gap-y-1">
-          <div>Humidity: {weatherData?.main?.humidity ?? "--"}%</div>
-=======
         {/* stats panel at bottom */}
         <div
           className="absolute bottom-0 left-0 right-0 p-3
@@ -347,7 +331,6 @@ function WeatherCard({
           "
         >
           <div>Humidity: {weatherData?.main?.humidity ?? "—"}%</div>
->>>>>>> 98f25d35669350584b6ca394cf6617959d442f33
           <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
           <div>UV: {weatherData?.meta?.uv ?? "--"}</div>
           <div>

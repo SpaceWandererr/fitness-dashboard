@@ -74,21 +74,7 @@ function normalizeSection(section, _visited = new WeakSet()) {
   return normalized;
 }
 
-// ---- Load from localStorage first (instant render) ----
-useEffect(() => {
-  const cached = localStorage.getItem("lifeos_state");
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      if (parsed?.syllabus_tree_v2) {
-        console.log("⚡ Loaded syllabus instantly from local cache");
-        setDashboardState(parsed);
-      }
-    } catch (e) {
-      console.warn("Cache corrupted, ignoring.");
-    }
-  }
-}, []);
+
 
 /* ======================= MAIN APP ======================= */
 
@@ -125,6 +111,22 @@ export default function App() {
     const [atBottom, setAtBottom] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [hasAnimated, setHasAnimated] = useState(false);
+
+    // ---- Load from localStorage first (instant render) ----
+    useEffect(() => {
+      const cached = localStorage.getItem("lifeos_state");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed?.syllabus_tree_v2) {
+            console.log("⚡ Loaded syllabus instantly from local cache");
+            setDashboardState(parsed);
+          }
+        } catch (e) {
+          console.warn("Cache corrupted, ignoring.");
+        }
+      }
+    }, []);
 
     useEffect(() => {
       let ticking = false;
