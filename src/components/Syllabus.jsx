@@ -4387,6 +4387,9 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   // This is now the final stable syllabus tree for the UI.
   const tree = treeRef.current;
 
+  // this creates a dummy state update function to force redraw
+  const [, forceRender] = useState(0);
+
   // ========= FIXED SYLLABUS TOGGLE (WORKING + LOCAL + BACKEND SAVE) =========
   const toggleTask = (path) => {
     // point to treeRef version (never re-created)
@@ -4648,21 +4651,31 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   };
 
   const setAllAtPath = (path, val) => {
-    const newTree = deepClone(tree);
+    // Clone LIVE reference — not stale React variable
+    const newTree = deepClone(treeRef.current);
     const node = getRefAtPath(newTree, path);
 
     let lastItem = null;
 
     (function mark(n) {
+      if (!n) return;
+
+      // If it's an array of tasks
       if (Array.isArray(n)) {
         n.forEach((it) => {
-          it.done = val;
-          it.completedOn = val ? todayISO() : "";
-          if (val) lastItem = it;
+          if (typeof it === "object" && it.title) {
+            it.done = val;
+            it.completedOn = val ? todayISO() : "";
+            if (val) lastItem = it;
+          }
         });
         return;
       }
-      for (const v of Object.values(n || {})) mark(v);
+
+      // Nested nodes
+      for (const v of Object.values(n)) {
+        if (typeof v === "object") mark(v);
+      }
     })(node);
 
     const updates = { syllabus_tree_v2: newTree };
@@ -4674,11 +4687,16 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
+    // Save globally
     updateDashboard(updates);
-  };
 
+    // 🔥 Instant UI update
+    treeRef.current = newTree;
+    forceRender((n) => n + 1);
+  };
+  // ✅ Fix: Task marker with Mongo sync
   const markTask = (path, idx, val) => {
-    const newTree = deepClone(tree);
+    const newTree = deepClone(treeRef.current);
 
     const parent = getRefAtPath(newTree, path.slice(0, -1));
     const leafKey = path[path.length - 1];
@@ -4696,8 +4714,14 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
+    // 🔥 Instant UI update FIRST
+    treeRef.current = newTree;
+    forceRender((x) => x + 1);
+
+    // 🧠 Then persist
     updateDashboard(updates);
   };
+
   // ✅ Fix: Task deadline setter with Mongo sync
   const setTaskDeadline = (path, idx, date) => {
     const newTree = deepClone(tree);
