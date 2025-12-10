@@ -4201,7 +4201,7 @@ const pathKey = (pathArr) => {
           .trim() // remove leading/trailing spaces
           .replace(/\s+/g, "_") // convert spaces to _
           .replace(/[^\w_]/g, "") // remove invalid chars like > - :
-          .toLowerCase() // normalize casing
+          .toLowerCase(), // normalize casing
     )
     .join("__"); // consistent and clean
 };
@@ -4365,7 +4365,15 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   // ⛑ Guard: prevent crash before state arrives
   if (!dashboardState) {
-    return <div className="p-6 text-white">Loading syllabus from Mongo...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <div className="flex space-x-2 text-4xl">
+          <span className="animate-bounce">💪</span>
+          <span className="animate-bounce [animation-delay:0.2s]">🏋️</span>
+          <span className="animate-bounce [animation-delay:0.4s]">🔥</span>
+        </div>
+      </div>
+    );
   }
 
   /* ======================= SYNCED STATE FROM MONGO ======================= */
@@ -4485,7 +4493,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         return newState;
       });
     },
-    [API_URL]
+    [API_URL],
   );
 
   /* ======================= CLEANUP TIMEOUT ======================= */
@@ -4517,9 +4525,12 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
+    const timer = setTimeout(
+      () => {
+        setShowLastStudied(false);
+      },
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
+    );
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4540,7 +4551,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   const grand = useMemo(
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2]
+    [dashboardState?.syllabus_tree_v2],
   );
 
   /* ======================= ACTIONS ======================= */
@@ -4581,7 +4592,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         return newState;
       });
     },
-    [API_URL]
+    [API_URL],
   );
 
   // alias for Section header click
@@ -4777,7 +4788,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         updateDashboard({ syllabus_notes: newNR });
       }
     },
-    [updateDashboard, API_URL]
+    [updateDashboard, API_URL],
   );
 
   /* ======================= EXPORT ======================= */
@@ -4854,7 +4865,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -5087,10 +5098,10 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               grand.pct < 25
                 ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
                 : grand.pct < 50
-                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                : grand.pct < 75
-                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                  : grand.pct < 75
+                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
             }
           `}
                 style={{
@@ -5525,10 +5536,10 @@ function SectionCard({
                 totals.pct < 25
                   ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                   : totals.pct < 50
-                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                  : totals.pct < 75
-                  ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                  : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
+                      ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                      : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
               }
             `}
             style={{
@@ -5738,7 +5749,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5747,7 +5758,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5991,7 +6002,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      })
+      }),
     );
   }, [tree]);
 
@@ -6140,9 +6151,9 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               item.deadline && new Date(item.deadline) < now
                 ? "bg-red-500/15 text-red-400"
                 : item.deadline &&
-                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                ? "bg-yellow-500/10 text-yellow-300"
-                : "bg-green-500/10 text-green-400";
+                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                  ? "bg-yellow-500/10 text-yellow-300"
+                  : "bg-green-500/10 text-green-400";
 
             const countdown = daysLeft(item.deadline);
 
