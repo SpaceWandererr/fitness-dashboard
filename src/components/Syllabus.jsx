@@ -4395,11 +4395,47 @@ const LOCAL_KEY = "wd_dashboard_state";
    // ⛑ Guard: prevent crash before state arrives
    if (!dashboardState) {
      return (
-       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-         <div className="flex space-x-2 text-4xl">
-           <span className="animate-bounce">💪</span>
-           <span className="animate-bounce [animation-delay:0.2s]">🏋️</span>
-           <span className="animate-bounce [animation-delay:0.4s]">🔥</span>
+       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0A0F1C] overflow-hidden">
+         <div className="flex flex-col items-center gap-6">
+           {/* Animated Icons */}
+           <div className="flex space-x-4 text-5xl">
+             <span className="animate-bounce" style={{ animationDelay: "0s" }}>
+               💪
+             </span>
+             <span
+               className="animate-bounce"
+               style={{ animationDelay: "0.2s" }}
+             >
+               🏋️
+             </span>
+             <span
+               className="animate-bounce"
+               style={{ animationDelay: "0.4s" }}
+             >
+               🔥
+             </span>
+           </div>
+
+           {/* Loading Text */}
+           <div className="text-center space-y-2">
+             <h2 className="text-xl font-semibold text-[#CFE8E1] animate-pulse">
+               Loading your fitness journey...
+             </h2>
+             <div className="flex items-center justify-center gap-1">
+               <div
+                 className="w-2 h-2 bg-[#00d1b2] rounded-full animate-bounce"
+                 style={{ animationDelay: "0s" }}
+               ></div>
+               <div
+                 className="w-2 h-2 bg-[#00d1b2] rounded-full animate-bounce"
+                 style={{ animationDelay: "0.2s" }}
+               ></div>
+               <div
+                 className="w-2 h-2 bg-[#00d1b2] rounded-full animate-bounce"
+                 style={{ animationDelay: "0.4s" }}
+               ></div>
+             </div>
+           </div>
          </div>
        </div>
      );
