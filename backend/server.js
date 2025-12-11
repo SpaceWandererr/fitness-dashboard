@@ -23,7 +23,10 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://fitness-dashboard-laoe.vercel.app",
   "https://fitness-frontend.vercel.app",
+  "https://os-dashboard.vercel.app", // ✅ ADD THIS
+  "https://os-dashboard.vercel.app/", // (optional)
 ];
+
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
