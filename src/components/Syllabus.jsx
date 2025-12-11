@@ -4376,7 +4376,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     );
   }
 
-  /* ======================= SYNCED STATE FROM MONGO ======================= */
   /* ======================= SYLLABUS TREE (SAFE + FIXED) ======================= */
 
   // Tree is stored ONCE to prevent infinite re-renders, recursion, or re-normalizing.
@@ -4507,17 +4506,19 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   /* ======================= AUTO SEED MONGO ======================= */
   useEffect(() => {
-    if (!dashboardState?.syllabus_tree_v2) {
+    // Only seed if we confirmed there's no backend data AND no localStorage
+    const hasLocalData = window.localStorage.getItem(LOCAL_KEY);
+
+    if (!dashboardState?.syllabus_tree_v2 && !hasLocalData) {
       console.log("🌱 First-time setup → storing syllabus...");
 
       const seededTree = structuredClone(TREE);
 
-      // Store only once using updateDashboard (handles both saving layers)
       updateDashboard({
         syllabus_tree_v2: seededTree,
       });
     }
-  }, [dashboardState, updateDashboard]);
+  }, [dashboardState?.syllabus_tree_v2]); // Only run when tree state changes
 
   /* ======================= LAST STUDIED AUTO-HIDE ======================= */
   useEffect(() => {
@@ -4553,6 +4554,43 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
     [dashboardState?.syllabus_tree_v2],
   );
+
+  // Add this after your useState declarations
+  useEffect(() => {
+    const fetchBackendData = async () => {
+      try {
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("✅ Loaded from backend:", data);
+
+          // Update state with backend data
+          setDashboardState(data);
+
+          // Also update localStorage
+          window.localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+        } else {
+          console.warn("⚠️ Backend returned:", response.status);
+        }
+      } catch (err) {
+        console.error("❌ Backend fetch failed:", err);
+        // Fallback to localStorage if backend fails
+        const local = window.localStorage.getItem(LOCAL_KEY);
+        if (local) {
+          setDashboardState(JSON.parse(local));
+        }
+      }
+    };
+
+    // Only fetch if dashboardState is empty or missing syllabus data
+    if (!dashboardState?.syllabus_tree_v2) {
+      fetchBackendData();
+    }
+  }, []); // Run only once on mount
 
   /* ======================= ACTIONS ======================= */
 
