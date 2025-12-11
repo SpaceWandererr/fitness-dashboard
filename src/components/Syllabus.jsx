@@ -5476,34 +5476,34 @@ const LOCAL_KEY = "wd_dashboard_state";
 
  /* ======================= Main Section ======================= */
  // ------------------ TASK ITEM (must be top-level) ------------------
-function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
-  const key = itemKey(path, idx);
-  const completedDate = nr[key]?.completedDate;
-  const deadline = nr[key]?.deadline;
-  
-  // Date picker state
-  const buttonRef = useRef(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
+ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
+   const key = itemKey(path, idx);
+   const completedDate = nr[key]?.completedDate;
+   const deadline = nr[key]?.deadline;
 
-  // Calculate days difference between completion and deadline
-  const getDaysDifference = () => {
-    if (!it.done || !completedDate || !deadline) return null;
-    
-    const completed = new Date(completedDate);
-    const due = new Date(deadline);
-    const diffTime = due.getTime() - completed.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
-  };
+   // Date picker state
+   const buttonRef = useRef(null);
+   const [showDatePicker, setShowDatePicker] = useState(false);
+   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
 
-  const daysDiff = getDaysDifference();
+   // Calculate days difference between completion and deadline
+   const getDaysDifference = () => {
+     if (!it.done || !completedDate || !deadline) return null;
 
-  return (
-    <>
-      <li
-        className={`
+     const completed = new Date(completedDate);
+     const due = new Date(deadline);
+     const diffTime = due.getTime() - completed.getTime();
+     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+     return diffDays;
+   };
+
+   const daysDiff = getDaysDifference();
+
+   return (
+     <>
+       <li
+         className={`
           p-2.5 rounded-lg border transition-all duration-200
           ${
             it.done
@@ -5511,18 +5511,18 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               : "border-[#00d1b2]/40 bg-[#0B2F2A]/50 hover:bg-[#0B2F2A]/70 hover:border-[#00d1b2]/60"
           }
         `}
-      >
-        {/* MAIN ROW */}
-        <div className="flex items-center justify-between gap-2">
-          {/* LEFT: Checkbox + Title */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {/* Checkbox */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                markTask(path, idx, !it.done);
-              }}
-              className={`
+       >
+         {/* MAIN ROW */}
+         <div className="flex items-center justify-between gap-2">
+           {/* LEFT: Checkbox + Title */}
+           <div className="flex items-center gap-2 min-w-0 flex-1">
+             {/* Checkbox */}
+             <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 markTask(path, idx, !it.done);
+               }}
+               className={`
                 shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center 
                 transition-all cursor-pointer font-bold text-xs
                 ${
@@ -5531,45 +5531,49 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                     : "bg-transparent border-[#00d1b2]/50 hover:border-[#00d1b2] hover:bg-[#00d1b2]/10"
                 }
               `}
-            >
-              {it.done && "✓"}
-            </button>
+             >
+               {it.done && "✓"}
+             </button>
 
-            {/* Title */}
-            <div
-              onClick={() => markTask(path, idx, !it.done)}
-              className={`
+             {/* Title */}
+             <div
+               onClick={() => markTask(path, idx, !it.done)}
+               className={`
                 cursor-pointer text-sm break-words flex-1 transition-all duration-200
-                ${it.done ? "line-through opacity-70 text-gray-400 dark:text-gray-500" : "text-[#d9ebe5]"}
+                ${
+                  it.done
+                    ? "line-through opacity-70 text-gray-400 dark:text-gray-500"
+                    : "text-[#d9ebe5]"
+                }
               `}
-            >
-              {it.title}
-            </div>
-          </div>
+             >
+               {it.title}
+             </div>
+           </div>
 
-          {/* RIGHT: Compact Controls */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 shrink-0"
-          >
-            {/* Estimate Hours - Compact */}
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step="0.25"
-              value={nr[key]?.estimate !== undefined ? nr[key].estimate : 0.5}
-              onChange={(e) =>
-                setNR((old) => ({
-                  ...old,
-                  [key]: {
-                    ...(old[key] || {}),
-                    estimate: Number(e.target.value),
-                  },
-                }))
-              }
-              onClick={(e) => e.stopPropagation()}
-              className="
+           {/* RIGHT: Compact Controls */}
+           <div
+             onClick={(e) => e.stopPropagation()}
+             className="flex items-center gap-1.5 shrink-0"
+           >
+             {/* Estimate Hours - Compact */}
+             <input
+               type="number"
+               min={0}
+               max={100}
+               step="0.25"
+               value={nr[key]?.estimate !== undefined ? nr[key].estimate : 0.5}
+               onChange={(e) =>
+                 setNR((old) => ({
+                   ...old,
+                   [key]: {
+                     ...(old[key] || {}),
+                     estimate: Number(e.target.value),
+                   },
+                 }))
+               }
+               onClick={(e) => e.stopPropagation()}
+               className="
                 w-12 text-xs rounded px-1.5 py-1
                 border border-[#00d1b2]/40 
                 bg-[#051C14] text-[#d9ebe5]
@@ -5577,36 +5581,36 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 focus:outline-none focus:ring-1 focus:ring-[#00d1b2]
                 transition text-center
               "
-              title="Estimated hours"
-            />
-            <span className="text-[10px] text-gray-500">h</span>
+               title="Estimated hours"
+             />
+             <span className="text-[10px] text-gray-500">h</span>
 
-            {/* Date Picker Button */}
-            <button
-              ref={buttonRef}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!showDatePicker && buttonRef.current) {
-                  const rect = buttonRef.current.getBoundingClientRect();
-                  const calendarWidth = 240;
+             {/* Date Picker Button */}
+             <button
+               ref={buttonRef}
+               onClick={(e) => {
+                 e.stopPropagation();
+                 if (!showDatePicker && buttonRef.current) {
+                   const rect = buttonRef.current.getBoundingClientRect();
+                   const calendarWidth = 240;
 
-                  let left = rect.left + window.scrollX;
-                  let top = rect.bottom + window.scrollY + 5;
+                   let left = rect.left + window.scrollX;
+                   let top = rect.bottom + window.scrollY + 5;
 
-                  if (left + calendarWidth > window.innerWidth) {
-                    left = window.innerWidth - calendarWidth - 10;
-                  }
-                  if (top + 280 > window.innerHeight + window.scrollY) {
-                    top = rect.top + window.scrollY - 280;
-                  }
+                   if (left + calendarWidth > window.innerWidth) {
+                     left = window.innerWidth - calendarWidth - 10;
+                   }
+                   if (top + 280 > window.innerHeight + window.scrollY) {
+                     top = rect.top + window.scrollY - 280;
+                   }
 
-                  setPickerPosition({ top, left });
-                  setShowDatePicker(true);
-                } else {
-                  setShowDatePicker(false);
-                }
-              }}
-              className="
+                   setPickerPosition({ top, left });
+                   setShowDatePicker(true);
+                 } else {
+                   setShowDatePicker(false);
+                 }
+               }}
+               className="
                 text-[11px] border rounded
                 px-2 py-1
                 border-[#00d1b2]/40 bg-[#051C14] text-[#d9ebe5]
@@ -5614,168 +5618,175 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 transition cursor-pointer
                 whitespace-nowrap
               "
-              title={
-                deadline
-                  ? `Deadline: ${formatDateDDMMYYYY(deadline)}`
-                  : "Set deadline"
-              }
-            >
-              📅 {deadline ? formatDateDDMMYYYY(deadline) : "Set"}
-            </button>
+               title={
+                 deadline
+                   ? `Deadline: ${formatDateDDMMYYYY(deadline)}`
+                   : "Set deadline"
+               }
+             >
+               📅 {deadline ? formatDateDDMMYYYY(deadline) : "Set"}
+             </button>
 
-            {/* Clear Deadline Button */}
-            {deadline && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTaskDeadline(path, idx, "");
-                }}
-                className="
+             {/* Clear Deadline Button */}
+             {deadline && (
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   setTaskDeadline(path, idx, "");
+                 }}
+                 className="
                   w-6 h-6 flex items-center justify-center
                   border border-red-500/50 rounded
                   bg-red-900/20 text-xs text-red-400
                   hover:bg-red-900/40 hover:border-red-500
                   transition-colors
                 "
-                title="Clear deadline"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
+                 title="Clear deadline"
+               >
+                 ✕
+               </button>
+             )}
+           </div>
+         </div>
 
-        {/* META ROW - FIXED with consistent space and smooth transitions */}
-        {(deadline || (it.done && completedDate)) && (
-          <div className="mt-2 pl-6 text-[10px] transition-all duration-200">
-            {/* Deadline Display - Only show if NOT completed */}
-            {deadline && !it.done && (
-              <div className="flex items-center gap-1 text-[#a7f3d0] dark:text-[#6ee7b7]">
-                <span>⏰</span>
-                <span>Due: {formatDateDDMMYYYY(deadline)}</span>
-              </div>
-            )}
+         {/* META ROW - FIXED with consistent space and smooth transitions */}
+         {(deadline || (it.done && completedDate)) && (
+           <div className="mt-2 pl-6 text-[10px] transition-all duration-200">
+             {/* Deadline Display - Only show if NOT completed */}
+             {deadline && !it.done && (
+               <div className="flex items-center gap-1 text-[#a7f3d0] dark:text-[#6ee7b7]">
+                 <span>⏰</span>
+                 <span>Due: {formatDateDDMMYYYY(deadline)}</span>
+               </div>
+             )}
 
-            {/* Completed Status with Days Before/After Deadline */}
-            {it.done && completedDate && (
-              <div className="flex items-center gap-1 flex-wrap">
-                <span>✅</span>
-                <span className="text-emerald-400 dark:text-emerald-300">
-                  Completed on {new Date(completedDate).toLocaleDateString()}
-                </span>
-                
-                {/* Show days difference if deadline exists */}
-                {deadline && daysDiff !== null && (
-                  <span
-                    className={`
+             {/* Completed Status with Days Before/After Deadline */}
+             {it.done && completedDate && (
+               <div className="flex items-center gap-1 flex-wrap">
+                 <span>✅</span>
+                 <span className="text-emerald-400 dark:text-emerald-300">
+                   Completed on {new Date(completedDate).toLocaleDateString()}
+                 </span>
+
+                 {/* Show days difference if deadline exists */}
+                 {deadline && daysDiff !== null && (
+                   <span
+                     className={`
                       ml-1 font-semibold
-                      ${daysDiff > 0 ? "text-green-400" : daysDiff < 0 ? "text-red-400" : "text-yellow-400"}
+                      ${
+                        daysDiff > 0
+                          ? "text-green-400"
+                          : daysDiff < 0
+                          ? "text-red-400"
+                          : "text-yellow-400"
+                      }
                     `}
-                  >
-                    {daysDiff > 0
-                      ? `(${daysDiff} day${daysDiff !== 1 ? 's' : ''} before deadline)`
-                      : daysDiff < 0
-                      ? `(${Math.abs(daysDiff)} day${Math.abs(daysDiff) !== 1 ? 's' : ''} after deadline)`
-                      : "(on deadline day)"}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </li>
+                   >
+                     {daysDiff > 0
+                       ? `(${daysDiff} day${
+                           daysDiff !== 1 ? "s" : ""
+                         } before deadline)`
+                       : daysDiff < 0
+                       ? `(${Math.abs(daysDiff)} day${
+                           Math.abs(daysDiff) !== 1 ? "s" : ""
+                         } after deadline)`
+                       : "(on deadline day)"}
+                   </span>
+                 )}
+               </div>
+             )}
+           </div>
+         )}
+       </li>
 
-      {/* ======================= COMPACT DATEPICKER PORTAL ======================= */}
-      {showDatePicker &&
-        createPortal(
-          <div
-            style={{
-              position: "absolute",
-              top: `${pickerPosition.top}px`,
-              left: `${pickerPosition.left}px`,
-              zIndex: 99999,
-            }}
-          >
-            <div
-              className="
+       {/* ======================= COMPACT DATEPICKER PORTAL ======================= */}
+       {showDatePicker &&
+         createPortal(
+           <div
+             style={{
+               position: "absolute",
+               top: `${pickerPosition.top}px`,
+               left: `${pickerPosition.left}px`,
+               zIndex: 99999,
+             }}
+           >
+             <div
+               className="
                 rounded-lg p-1.5 shadow-xl border transition-all
                 w-[240px] max-w-[90vw]
                 bg-white dark:bg-[#0F1622]
                 border-gray-300 dark:border-[#2F6B60]
                 shadow-black/20 dark:shadow-black/60
               "
-              style={{
-                fontSize: "13px",
-              }}
-            >
-              <DatePicker
-                selected={deadline ? new Date(deadline) : null}
-                onChange={(date) => {
-                  const formatted = date
-                    ? date.toISOString().split("T")[0]
-                    : "";
-                  setTaskDeadline(path, idx, formatted);
-                  setShowDatePicker(false);
-                }}
-                onClickOutside={() => setShowDatePicker(false)}
-                inline
-                calendarClassName="compact-datepicker"
-                renderCustomHeader={({
-                  date,
-                  decreaseMonth,
-                  increaseMonth,
-                }) => (
-                  <div
-                    className="
+               style={{
+                 fontSize: "13px",
+               }}
+             >
+               <DatePicker
+                 selected={deadline ? new Date(deadline) : null}
+                 onChange={(date) => {
+                   const formatted = date
+                     ? date.toISOString().split("T")[0]
+                     : "";
+                   setTaskDeadline(path, idx, formatted);
+                   setShowDatePicker(false);
+                 }}
+                 onClickOutside={() => setShowDatePicker(false)}
+                 inline
+                 calendarClassName="compact-datepicker"
+                 renderCustomHeader={({
+                   date,
+                   decreaseMonth,
+                   increaseMonth,
+                 }) => (
+                   <div
+                     className="
                       flex items-center justify-between 
                       px-2 py-1.5 rounded-t-lg mb-1
                       bg-gray-100 dark:bg-[#0B5134]
                     "
-                  >
-                    <button
-                      onClick={decreaseMonth}
-                      className="
+                   >
+                     <button
+                       onClick={decreaseMonth}
+                       className="
                         transition p-0.5 text-lg font-bold
                         text-gray-700 dark:text-[#CFE8E1]
                         hover:text-blue-600 dark:hover:text-[#00d1b2]
                       "
-                    >
-                      ‹
-                    </button>
-                    <span
-                      className="
+                     >
+                       ‹
+                     </button>
+                     <span
+                       className="
                         font-semibold text-sm
                         text-gray-900 dark:text-[#CFE8E1]
                       "
-                    >
-                      {date.toLocaleString("default", {
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <button
-                      onClick={increaseMonth}
-                      className="
+                     >
+                       {date.toLocaleString("default", {
+                         month: "short",
+                         year: "numeric",
+                       })}
+                     </span>
+                     <button
+                       onClick={increaseMonth}
+                       className="
                         transition p-0.5 text-lg font-bold
                         text-gray-700 dark:text-[#CFE8E1]
                         hover:text-blue-600 dark:hover:text-[#00d1b2]
                       "
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              />
-            </div>
-          </div>,
-          document.body
-        )}
-    </>
-  );
-}
-
-export default TaskItem;
-
+                     >
+                       ›
+                     </button>
+                   </div>
+                 )}
+               />
+             </div>
+           </div>,
+           document.body
+         )}
+     </>
+   );
+ }
 
  // ------------------ SECTION CARD ------------------
  function SectionCard({
