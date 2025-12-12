@@ -17,55 +17,46 @@ const app = express();
 app.disable("x-powered-by");
 app.set("etag", false);
 
-// ------------------- CORS -------------------
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://fitness-dashboard-laoe.vercel.app",
-  "https://fitness-frontend.vercel.app",
-  "https://os-dashboard.vercel.app", // ✅ ADD THIS
-  "https://os-dashboard.vercel.app/", // (optional)
-];
-
+// ------------------------------------------------------
+// ⭐ CLEAN GLOBAL CORS (WORKS FOR ALL DOMAINS & DEVICES)
+// ------------------------------------------------------
+app.use(
+  cors({
+    origin: "*",
+    methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    allowedHeaders: "Content-Type, Authorization",
+  }),
+);
 
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-
+  if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
 
-app.options(/.*/, cors());
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
-
-// ---------------------- Body Parsing ----------------------
+// ------------------------------------------------------
+// Body Parsing
+// ------------------------------------------------------
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// ---------------------- Test Route ----------------------
+// ------------------------------------------------------
+// Test Route
+// ------------------------------------------------------
 app.get("/api/test", (req, res) => {
   res.json({ message: "Hello from your backend 🚀" });
 });
 
-// ---------------------- Dynamic Model Loading ----------------------
+// ------------------------------------------------------
+// Dynamic Model Loading
+// ------------------------------------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const modelsConfigPath = path.resolve(__dirname, "..", "config", "models.json");
@@ -91,16 +82,21 @@ fs.watchFile(modelsConfigPath, { interval: 1000 }, (curr, prev) => {
   }
 });
 
+// Models API
 app.get("/api/models", (req, res) => {
   res.json(modelsConfig);
 });
 
-// ---------------------- API Routes ----------------------
+// ------------------------------------------------------
+// API Routes
+// ------------------------------------------------------
 app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
-// ---------------------- FINAL FALLBACK (MUST be LAST) ----------------------
-app.all(/.*/, (req, res) => {
+// ------------------------------------------------------
+// Final Fallback Route
+// ------------------------------------------------------
+app.all("*", (req, res) => {
   res.status(404).json({
     status: "API running",
     route: req.originalUrl,
@@ -108,8 +104,9 @@ app.all(/.*/, (req, res) => {
   });
 });
 
-
-// ---------------------- DB + Server Start ----------------------
+// ------------------------------------------------------
+// DB Connection + Start Server
+// ------------------------------------------------------
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
