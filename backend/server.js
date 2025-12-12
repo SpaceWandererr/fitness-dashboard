@@ -18,23 +18,22 @@ app.disable("x-powered-by");
 app.set("etag", false);
 
 // ------------------------------------------------------
-// ⭐ CLEAN GLOBAL CORS (WORKS FOR ALL DOMAINS & DEVICES)
+// ⭐ GLOBAL CORS (SAFE FOR RENDER)
 // ------------------------------------------------------
-// ---------------------- FINAL FALLBACK (SAFE VERSION) ----------------------
-app.use((req, res) => {
-  res.status(404).json({
-    status: "API running",
-    route: req.originalUrl,
-    message: "Route not found",
-  });
-});
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
@@ -68,7 +67,7 @@ function loadModelsConfig() {
   try {
     const raw = fs.readFileSync(modelsConfigPath, "utf8");
     modelsConfig = JSON.parse(raw);
-    console.log(`✅ Loaded models.json from ${modelsConfigPath}`);
+    console.log("✅ Loaded models.json");
   } catch (err) {
     console.warn("⚠️ Could not load models config:", err.message);
   }
@@ -76,11 +75,9 @@ function loadModelsConfig() {
 
 loadModelsConfig();
 
-fs.watchFile(modelsConfigPath, { interval: 1000 }, (curr, prev) => {
-  if (curr.mtimeMs !== prev.mtimeMs) {
-    console.log("🔁 models.json changed — reloading...");
-    loadModelsConfig();
-  }
+fs.watchFile(modelsConfigPath, { interval: 1000 }, () => {
+  console.log("🔁 models.json changed — reloading...");
+  loadModelsConfig();
 });
 
 // Models API
@@ -89,15 +86,15 @@ app.get("/api/models", (req, res) => {
 });
 
 // ------------------------------------------------------
-// API Routes
+// Routes
 // ------------------------------------------------------
 app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
 // ------------------------------------------------------
-// Final Fallback Route
+// ⭐ SAFE FINAL FALLBACK (NO WILDCARDS, NO REGEX)
 // ------------------------------------------------------
-app.all("*", (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     status: "API running",
     route: req.originalUrl,
@@ -106,7 +103,7 @@ app.all("*", (req, res) => {
 });
 
 // ------------------------------------------------------
-// DB Connection + Start Server
+// DB + Server Start
 // ------------------------------------------------------
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
