@@ -20,13 +20,14 @@ app.set("etag", false);
 // ------------------------------------------------------
 // ⭐ CLEAN GLOBAL CORS (WORKS FOR ALL DOMAINS & DEVICES)
 // ------------------------------------------------------
-app.use(
-  cors({
-    origin: "*",
-    methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    allowedHeaders: "Content-Type, Authorization",
-  }),
-);
+// ---------------------- FINAL FALLBACK (SAFE VERSION) ----------------------
+app.use((req, res) => {
+  res.status(404).json({
+    status: "API running",
+    route: req.originalUrl,
+    message: "Route not found",
+  });
+});
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
