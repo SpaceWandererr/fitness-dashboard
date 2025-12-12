@@ -74,8 +74,6 @@ function normalizeSection(section, _visited = new WeakSet()) {
   return normalized;
 }
 
-
-
 /* ======================= MAIN APP ======================= */
 
 export default function App() {
@@ -113,20 +111,21 @@ export default function App() {
     const [hasAnimated, setHasAnimated] = useState(false);
 
     // ---- Load from localStorage first (instant render) ----
+    // Load cached only ONCE, not every render
     useEffect(() => {
       const cached = localStorage.getItem("lifeos_state");
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed?.syllabus_tree_v2) {
-            console.log("⚡ Loaded syllabus instantly from local cache");
-            setDashboardState(parsed);
-          }
-        } catch (e) {
-          console.warn("Cache corrupted, ignoring.");
+      if (!cached) return;
+
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === "object") {
+          console.log("⚡ Loaded syllabus instantly from local cache");
+          setDashboardState(parsed);
         }
+      } catch (e) {
+        console.warn("Invalid cache ignored", e);
       }
-    }, []);
+    }, []); // <-- VERY IMPORTANT
 
     useEffect(() => {
       let ticking = false;
@@ -252,7 +251,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2)
+            structuredClone(state.syllabus_tree_v2),
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -405,7 +404,7 @@ export default function App() {
           .catch((err) => console.error("❌ Sync failed:", err));
       }, 700);
     },
-    [dashboardState]
+    [dashboardState],
   );
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
@@ -993,10 +992,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1644,10 +1643,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>
