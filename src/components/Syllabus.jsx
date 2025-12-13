@@ -4372,6 +4372,8 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     import.meta.env.VITE_API_URL ||
     "https://fitness-backend-laoe.onrender.com/api/state";
 
+  const isResettingRef = useRef(false);
+
   // ⛑ Guard: prevent crash before state arrives
   if (!dashboardState) {
     return (
