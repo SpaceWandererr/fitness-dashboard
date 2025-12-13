@@ -4338,47 +4338,6 @@ const LOCAL_KEY = "wd_dashboard_state";
  }
 
  /**
-  * Converts flat › format into nested object structure
-  * Example:
-  * "JS › Basics › Scope": [items]
-  * becomes:
-  * { JS: { Basics: { Scope: [...] } } }
-  */
- // function normalizeSection(sectionObj) {
- //   const out = {};
-
- //   for (const [rawKey, value] of Object.entries(sectionObj || {})) {
- //     // If it's already nested
- //     if (!rawKey.includes("›")) {
- //       out[rawKey] = isArray(value) ? deepClone(value) : normalizeSection(value);
- //       continue;
- //     }
-
- //     // Convert "A › B › C" into ["A", "B", "C"]
- //     const parts = rawKey
- //       .split("›")
- //       .map((s) => s.trim())
- //       .filter(Boolean);
-
- //     let ref = out;
-
- //     for (let i = 0; i < parts.length; i++) {
- //       const p = parts[i];
-
- //       // Last part → assign leaf
- //       if (i === parts.length - 1)
- //         ref[p] = isArray(value) ? deepClone(value) : normalizeSection(value);
- //       else {
- //         if (!isObject(ref[p])) ref[p] = {};
- //         ref = ref[p];
- //       }
- //     }
- //   }
-
- //   return out;
- // }
-
- /**
   * Normalizes your entire syllabus TREE
   * Converts all sections into nested structures
   */
@@ -5397,14 +5356,6 @@ const LOCAL_KEY = "wd_dashboard_state";
          </div>
        </div>
 
-       {showTopBtn && (
-         <button
-           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-           className="fixed bottom-4 right-4 z-40 h-11 w-11 rounded-full shadow-lg bg-[#FF8F8F] text-white flex items-center justify-center text-xl"
-         >
-           ↑
-         </button>
-       )}
        {milestone && (
          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-emerald-500 text-white shadow-[0_0_20px_rgba(0,0,0,0.2)]">
            {milestone}

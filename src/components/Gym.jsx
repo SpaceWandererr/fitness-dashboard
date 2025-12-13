@@ -17,98 +17,64 @@ const fmtDisp = (d) => dayjs(d).format("DD-MM-YYYY");
 // Sunday Quote Fetcher
 async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   const LOCAL_FALLBACK = [
-    "Discipline is doing what needs to be done even when you don’t feel like doing it. — Unknown",
-    "Your body can stand almost anything. It’s your mind that you have to convince. — Unknown",
+    "Discipline is doing what needs to be done even when you don't feel like doing it. — Unknown",
+    "Your body can stand almost anything. It's your mind that you have to convince. — Unknown",
     "Push yourself because no one else is going to do it for you. — Unknown",
     "Rest is not idleness. Sometimes, rest is the most productive thing you can do. — Unknown",
     "Small consistent steps every day lead to massive results over time. — Unknown",
   ];
-  const now = Date.now();
+
   const cacheKey = "wd_sunday_quote_cache";
-  const cache = (() => {
+  const now = Date.now();
+  const cooldownMs = (opts.cooldownSeconds || 60) * 1000;
+  const hasLocalStorage =
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
+  // ---------- Read cache (ONLY real quotes) ----------
+  let cache = null;
+  if (hasLocalStorage) {
     try {
-      return JSON.parse(localStorage.getItem(cacheKey) || "null");
-    } catch {
-      return null;
-    }
-  })();
-  if (
-    cache &&
-    cache.ts &&
-    now - cache.ts < (opts.cooldownSeconds || 60) * 1000
-  ) {
+      cache = JSON.parse(localStorage.getItem(cacheKey));
+    } catch {}
+  }
+
+  if (cache?.ts && now - cache.ts < cooldownMs && cache?.source === "api") {
     return cache.text;
   }
-  const sources = [
-    {
-      id: "zenquotes-direct",
-      fn: async () => {
-        const res = await fetch("https://zenquotes.io/api/random");
-        if (!res.ok) throw new Error("zenquotes down");
-        const [data] = await res.json();
-        return `“${data.q || "Keep going"}” — ${data.a || "Unknown"}`;
-      },
-    },
-    {
-      id: "quotable",
-      fn: async () => {
-        const res = await fetch("https://api.quotable.io/random");
-        if (!res.ok) throw res;
-        const data = await res.json();
-        return `“${data.content}” — ${data.author || "Unknown"}`;
-      },
-    },
-    {
-      id: "typefit",
-      fn: async () => {
-        const res = await fetch("https://type.fit/api/quotes");
-        if (!res.ok) throw res;
-        const arr = await res.json();
-        const pick = arr[Math.floor(Math.random() * arr.length)];
-        return `“${pick.text}” — ${pick.author || "Unknown"}`;
-      },
-    },
-    {
-      id: "local-fallback",
-      fn: () =>
-        Promise.resolve(
-          LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)],
-        ),
-    },
-  ];
-  for (const src of sources) {
-    try {
-      const txt = await src.fn();
+
+  // ---------- Browser-safe API (DummyJSON) ----------
+  try {
+    const res = await fetch("https://dummyjson.com/quotes/random");
+    if (!res.ok) throw new Error("dummyjson failed");
+
+    const data = await res.json();
+    const txt = `“${data.quote}” — ${data.author || "Unknown"}`;
+
+    // ✅ Cache ONLY real API result
+    if (hasLocalStorage) {
       try {
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), text: txt }),
+          JSON.stringify({
+            ts: Date.now(),
+            text: txt,
+            source: "api",
+          })
         );
       } catch {}
-      return txt;
-    } catch (err) {
-      if (err && err.status) {
-        if (err.status === 429) {
-          console.warn(`[quotes] ${src.id} rate-limited (429)`);
-          break;
-        }
-        console.warn(`[quotes] ${src.id} failed: ${err.status}`);
-        continue;
-      }
-      console.warn(`[quotes] ${src.id} error:`, err);
-      continue;
     }
+
+    return txt;
+  } catch {
+    // silent fail → fallback below
   }
-  if (cache && cache.text) return cache.text;
-  const localPick =
-    LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)];
-  try {
-    localStorage.setItem(
-      cacheKey,
-      JSON.stringify({ ts: Date.now(), text: localPick }),
-    );
-  } catch {}
-  return localPick;
+
+  // ---------- Fallback (NOT cached) ----------
+  if (cache?.text && cache?.source === "api") {
+    return cache.text;
+  }
+
+  return LOCAL_FALLBACK[Math.floor(Math.random() * LOCAL_FALLBACK.length)];
 }
 
 /* ---------------------- Full 6-day Workout Plan ---------------------- */
@@ -868,10 +834,16 @@ export default function Gym({ dashboardState, updateDashboard }) {
   // sunday quote
   useEffect(() => {
     if (weekday === "Sunday") {
-      fetchSundayQuote()
-        .then(setSundayQuote)
+      fetchSundayQuote({ cooldownSeconds: 60 })
+        .then((text) => {
+          console.log("📝 Quote received:", text); // Debug log
+          setSundayQuote(text);
+        })
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
+          setSundayQuote(
+            "Recovery is just as important as training. Rest, recharge, and come back stronger."
+          );
         });
     }
   }, [weekday]);
@@ -1888,10 +1860,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                   Rest Day
                 </h2>
                 <p className="text-emerald-200/80 dark:text-emerald-300/70 text-lg md:text-xl font-medium mb-8 max-w-2xl mx-auto italic">
-                  "
-                  {dayPlan.quote ||
-                    "Recovery is just as important as training. Rest, recharge, and come back stronger."}
-                  "
+                  "{sundayQuote}"
                 </p>
                 <div className="flex flex-wrap justify-center gap-3 text-sm">
                   <div className="bg-white/5 px-4 py-2 rounded-lg border border-emerald-400/20">

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
@@ -122,69 +121,72 @@ export default function App() {
     }
   }, []);
 
-  function FloatingScrollControl() {
-    const [atBottom, setAtBottom] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
-    const [hasAnimated, setHasAnimated] = useState(false);
-
-    // ---- Load from localStorage first (instant render) ----
+  // In App.jsx - Replace your FloatingScrollControl with this:
+  function FloatingScrollControl({ scrollRef }) {
+    const [showUpArrow, setShowUpArrow] = useState(false);
 
     useEffect(() => {
-      let ticking = false;
+      const el = scrollRef?.current || window;
 
-      const onScroll = () => {
-        if (!ticking) {
-          window.requestAnimationFrame(() => {
-            const scrollTop =
-              window.scrollY || document.documentElement.scrollTop;
-            const windowHeight = window.innerHeight;
-            const fullHeight = document.documentElement.scrollHeight;
+      const getScrollTop = () =>
+        el === window ? window.scrollY : el.scrollTop;
 
-            setIsVisible(scrollTop > 200);
-            setAtBottom(scrollTop + windowHeight >= fullHeight - 200);
+      const getScrollableDistance = () =>
+        el === window
+          ? document.documentElement.scrollHeight - window.innerHeight
+          : el.scrollHeight - el.clientHeight;
 
-            ticking = false;
-          });
-          ticking = true;
-        }
+      const checkScroll = () => {
+        const scrollTop = getScrollTop();
+        const scrollableDistance = getScrollableDistance();
+        const halfwayPoint = scrollableDistance * 0.5;
+
+        setShowUpArrow((prev) => {
+          if (scrollTop > halfwayPoint + 50) return true;
+          if (scrollTop < halfwayPoint - 50) return false;
+          return prev;
+        });
       };
 
-      window.addEventListener("scroll", onScroll, { passive: true });
-      onScroll();
-      return () => window.removeEventListener("scroll", onScroll);
-    }, []);
+      let timeout;
+      const onScroll = () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(checkScroll, 100);
+      };
 
-    // Run animation only once when it becomes visible
-    useEffect(() => {
-      if (isVisible && !hasAnimated) {
-        setHasAnimated(true);
-      }
-    }, [isVisible, hasAnimated]);
+      el.addEventListener("scroll", onScroll, { passive: true });
+      checkScroll();
+
+      return () => {
+        el.removeEventListener("scroll", onScroll);
+        clearTimeout(timeout);
+      };
+    }, [scrollRef]);
 
     const handleClick = () => {
-      window.scrollTo({
-        top: atBottom ? 0 : document.documentElement.scrollHeight,
-        behavior: "smooth",
-      });
-    };
+      const el = scrollRef?.current || window;
 
-    if (!isVisible) return null;
+      if (el === window) {
+        window.scrollTo({
+          top: showUpArrow ? 0 : document.documentElement.scrollHeight,
+          behavior: "smooth",
+        });
+      } else {
+        el.scrollTo({
+          top: showUpArrow ? 0 : el.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    };
 
     return (
       <button
         onClick={handleClick}
-        title={atBottom ? "Go to Top" : "Go to Bottom"}
-        aria-label={atBottom ? "Scroll to top" : "Scroll to bottom"}
-        className={`fixed bottom-6 right-6 z-50
-        w-12 h-12 rounded-full flex items-center justify-center
-        bg-black/70 backdrop-blur-md border border-teal-400/40
-        text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)]
-        hover:bg-teal-500/10 hover:scale-110 active:scale-95
-        transition-all duration-200
-        ${hasAnimated ? "animate-in fade-in slide-in-from-bottom-4" : ""}
-      `}
+        aria-label={showUpArrow ? "Scroll to top" : "Scroll to bottom"}
+        title={showUpArrow ? "Go to Top" : "Go to Bottom"}
+        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-md border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
       >
-        {atBottom ? "▲" : "▼"}
+        {showUpArrow ? "▲" : "▼"}
       </button>
     );
   }
@@ -791,9 +793,22 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="relative z-10 bg-black/40 py-3 text-center text-xs text-slate-300/80">
-        Life Matrix v3 • Crafted for Jay • {new Date().getFullYear()}
+      <footer className="relative z-10 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-lg border-t border-cyan-500/20 py-4 text-center shadow-[0_-10px_30px_rgba(6,182,212,0.1)]">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm px-4">
+          <span className="text-cyan-300 font-bold tracking-wider drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+            🌟 Jay
+          </span>
+          <span className="text-cyan-500/50">|</span>
+          <span className="text-cyan-200/80 font-medium">
+            💪 Fitness • 💻 Code • 📈 Growth
+          </span>
+          <span className="text-cyan-500/50">|</span>
+          <span className="text-cyan-400/70 font-medium">
+            {new Date().getFullYear()}
+          </span>
+        </div>
       </footer>
+
       <FloatingScrollControl />
     </div>
   );
@@ -995,10 +1010,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1646,10 +1661,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                    ? "Fat loss in progress ✅"
-                    : diff > 0
-                      ? "Weight increased ⚠️"
-                      : "Stable"
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
               }
             />
           </div>
