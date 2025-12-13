@@ -1020,48 +1020,104 @@ export default function Planner({ dashboardState, updateDashboard }) {
 
                 {/* Items with proper scroll */}
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#2F6B60]/60 scrollbar-track-transparent">
-                  <AnimatePresence mode="wait">
-                    {items.length === 0 ? (
+                  <AnimatePresence>
+                    {items.map((t, idx) => (
                       <motion.div
-                        key="empty"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="h-full flex flex-col items-center justify-center text-sm text-[#7FAFA4] border border-dashed border-[#2F6B60]/40 rounded p-4"
+                        key={`${slot}-${t}-${idx}`}
+                        layout
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="group flex items-center justify-between gap-2 p-2.5 rounded-md border border-[#2F6B60]/30 bg-black/20 hover:bg-black/30 hover:border-[#3FA796]/50 transition"
                       >
-                        Empty — drop a task here
+                        <div className="text-sm text-[#E8FFFA] truncate flex-1">
+                          {t}
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                          <button
+                            onClick={() => moveToNextSlot(slot, idx)}
+                            className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
+                          >
+                            ▶
+                          </button>
+                          <button
+                            onClick={() => removeFrom(slot, idx)}
+                            className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs hover:shadow-[0_0_8px_rgba(214,30,54,0.6)] transition"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </motion.div>
-                    ) : (
-                      items.map((t, idx) => (
-                        <motion.div
-                          key={`${slot}-${t}-${idx}`}
-                          layout
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          className="group flex items-center justify-between gap-2 p-2.5 rounded-md border border-[#2F6B60]/30 bg-black/20 hover:bg-black/30 hover:border-[#3FA796]/50 transition"
-                        >
-                          <div className="text-sm text-[#E8FFFA] truncate flex-1">
-                            {t}
-                          </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-                            <button
-                              onClick={() => moveToNextSlot(slot, idx)}
-                              className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-                            >
-                              ▶
-                            </button>
-                            <button
-                              onClick={() => removeFrom(slot, idx)}
-                              className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs hover:shadow-[0_0_8px_rgba(214,30,54,0.6)] transition"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
+                    ))}
                   </AnimatePresence>
+
+                  {/* Empty State with Animations */}
+                  {items.length === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="h-full flex flex-col items-center justify-center gap-3 text-sm text-[#7FAFA4] border-2 border-dashed border-[#2F6B60]/40 rounded-lg p-6 bg-gradient-to-br from-black/10 to-transparent relative overflow-hidden"
+                    >
+                      {/* Animated background pulse */}
+                      <motion.div
+                        className="absolute inset-0 bg-[#3FA796]/5 rounded-lg"
+                        animate={{
+                          scale: [1, 1.05, 1],
+                          opacity: [0.3, 0.5, 0.3],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+
+                      {/* Animated icon */}
+                      <motion.div
+                        animate={{
+                          y: [0, -5, 0],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="relative z-10 text-3xl opacity-50"
+                      >
+                        📋
+                      </motion.div>
+
+                      {/* Text content */}
+                      <div className="relative z-10 text-center">
+                        <div className="font-medium text-[#9FF2E8] mb-1">
+                          No tasks yet
+                        </div>
+                        <div className="text-xs opacity-75">
+                          Drag & drop a task here
+                        </div>
+                      </div>
+
+                      {/* Animated dots */}
+                      <div className="relative z-10 flex gap-2 mt-2">
+                        {[0, 1, 2].map((i) => (
+                          <motion.div
+                            key={i}
+                            className="w-1.5 h-1.5 rounded-full bg-[#3FA796]"
+                            animate={{
+                              scale: [1, 1.3, 1],
+                              opacity: [0.3, 1, 0.3],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              delay: i * 0.2,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             );
