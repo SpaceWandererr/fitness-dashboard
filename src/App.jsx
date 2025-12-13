@@ -88,7 +88,7 @@ export default function App() {
 
   const themeBtnRef = useRef(null);
   const [flashOrigin, setFlashOrigin] = useState({ x: 0, y: 0 });
-  const [dashboardState, setDashboardState] = useState(null);
+  const [dashboardState, setDashboardState] = useState({});
 
   const [stats, setStats] = useState({
     weight: "—",
@@ -228,7 +228,7 @@ export default function App() {
         const data = await res.json();
 
         // Backend may send wrapper or raw
-        let state = data.state || data.dashboardState || data || {};
+        let state = data.dashboardState || data || {};
 
         // ---------------- SYLLABUS FIX ----------------
 
@@ -397,7 +397,7 @@ export default function App() {
         fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newState }),
+          body: JSON.stringify(newState),
         })
           .then((r) => r.json())
           .then(() => console.log("💾 Synced to backend"))
@@ -694,7 +694,10 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Gym dashboardState={dashboardState} />
+                  <Gym
+                    dashboardState={dashboardState}
+                    updateDashboard={updateDashboard}
+                  />
                 </motion.div>
               }
             />

@@ -1,33 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 
-/* ---------------------- Write Queue (Paste Here!) ---------------------- */
-let writeQueue = null;
-let writeTimer = null;
-
-function pushUpdate(data) {
-  writeQueue = { ...writeQueue, ...data };
-
-  clearTimeout(writeTimer);
-  writeTimer = setTimeout(flushUpdate, 3000);
-}
-
-async function flushUpdate() {
-  if (!writeQueue) return;
-
-  try {
-    await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(writeQueue),
-    });
-  } catch (err) {
-    console.error("BATCH SAVE FAILED", err);
-  }
-
-  writeQueue = null;
-}
-
 /* ---------------------- Constants ---------------------- */
 const WEEK = [
   "Monday",
@@ -808,7 +781,7 @@ function Modal({ children, onClose, onEnter }) {
 const HEIGHT_CM = 176; // used to compute BMI
 
 /* -------------------- Exported Gym component STARTS below -------------------- */
-export default function Gym() {
+export default function Gym({ dashboardState, updateDashboard }) {
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
@@ -953,7 +926,7 @@ export default function Gym() {
     setLogs((prev) => ({ ...prev, [dateKey]: updated }));
   };
 
-  /* -------------------- Toggle mark all / unmark all -------------------- */
+  /* -------------------- Toggle mark all / unmark all (DRAFT ONLY) -------------------- */
   const toggleMarkAll = (dateKey) => {
     const entry = logs[dateKey] || getEntry(dateKey);
 
@@ -964,14 +937,21 @@ export default function Gym() {
 
     const val = !allDone;
 
-    const updated = {
+    const updatedEntry = {
       ...entry,
       left: entry.left.map((e) => ({ ...e, done: val })),
       right: entry.right.map((e) => ({ ...e, done: val })),
       finisher: entry.finisher.map((e) => ({ ...e, done: val })),
+      done: false, // 🔒 NEVER finalize here
     };
 
-    setLogs((prev) => ({ ...prev, [dateKey]: updated }));
+    // UI-only draft update
+    setLogs((prev) => ({
+      ...prev,
+      [dateKey]: updatedEntry,
+    }));
+
+    // ❌ DO NOT touch doneState here
   };
 
   /* -------------------- Modal open (preload modal inputs) -------------------- */
@@ -1029,28 +1009,33 @@ export default function Gym() {
       mood: moodInput,
     };
 
-    // update UI
-    setLogs((prev) => ({ ...prev, [dateKey]: updatedEntry }));
-    setDoneState((prev) => ({ ...prev, [dateKey]: true }));
+    /* ---------- BUILD UPDATED STATE SNAPSHOT ---------- */
+
+    const updatedLogs = {
+      ...logs,
+      [dateKey]: updatedEntry,
+    };
+
+    const updatedDone = {
+      ...doneState,
+      [dateKey]: true,
+    };
+
+    /* ---------- UPDATE UI (INSTANT) ---------- */
+
+    setLogs(updatedLogs);
+    setDoneState(updatedDone);
     setShowModal(false);
 
-    // queue/batch update to backend
-    const outgoing = {
-      wd_gym_logs: {
-        ...logs,
-        [dateKey]: updatedEntry,
-      },
-      wd_done: {
-        ...doneState,
-        [dateKey]: true,
-      },
+    /* ---------- SINGLE SOURCE OF TRUTH ---------- */
+    updateDashboard({
+      wd_gym_logs: updatedLogs,
+      wd_done: updatedDone,
       wd_goals: {
         targetWeight,
         currentWeight: currWeight,
       },
-    };
-
-    pushUpdate(outgoing);
+    });
   };
 
   /* -------------------- Edit existing workout (open modal with values) -------------------- */
@@ -1095,7 +1080,8 @@ export default function Gym() {
     const updatedDone = { ...doneState };
     delete updatedDone[dateKey];
 
-    pushUpdate({
+    // ✅ SINGLE SOURCE OF TRUTH
+    updateDashboard({
       wd_gym_logs: updatedLogs,
       wd_done: updatedDone,
       wd_goals: {
@@ -1103,11 +1089,9 @@ export default function Gym() {
         currentWeight: currWeight,
       },
     });
-
-    window.dispatchEvent(new Event("lifeos:update"));
   };
 
-  /* -------------------- Save target / current weight (batched) -------------------- */
+  /* -------------------- Save target / current weight -------------------- */
   const saveTargetWeight = () => {
     const raw = targetWeight;
     if (!raw || isNaN(raw)) {
@@ -1118,7 +1102,8 @@ export default function Gym() {
     const newWeight = Number(raw);
     setTargetWeight(newWeight);
 
-    pushUpdate({
+    // ✅ SINGLE SOURCE OF TRUTH
+    updateDashboard({
       wd_goals: {
         targetWeight: newWeight,
         currentWeight: currWeight,
@@ -1140,7 +1125,8 @@ export default function Gym() {
     const newWeight = Number(raw);
     setCurrWeight(newWeight);
 
-    pushUpdate({
+    // ✅ SINGLE SOURCE OF TRUTH
+    updateDashboard({
       wd_goals: {
         targetWeight,
         currentWeight: newWeight,
@@ -1153,7 +1139,7 @@ export default function Gym() {
   };
 
   /* -------------------- Reset full progress -------------------- */
-  const resetProgress = async () => {
+  const resetProgress = () => {
     const confirmReset = window.confirm("Reset ALL gym data?");
     if (!confirmReset) return;
 
@@ -1166,25 +1152,16 @@ export default function Gym() {
       },
     };
 
-    try {
-      await fetch("https://fitness-backend-laoe.onrender.com/api/state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(outgoing),
-      });
-      console.log("✅ FULL RESET DONE");
-    } catch (err) {
-      console.error("❌ Reset failed:", err);
-      alert("Reset failed!");
-      return;
-    }
+    // 🔑 SINGLE SOURCE OF TRUTH
+    updateDashboard(outgoing);
 
+    // local UI reset (instant feedback)
     setLogs({});
     setDoneState({});
     setCurrWeight("");
     setTargetWeight("");
     setSundayQuote("Fetching your motivational quote...");
-    window.dispatchEvent(new Event("lifeos:update"));
+
     alert("FULL RESET DONE ✅");
   };
 
@@ -1385,6 +1362,18 @@ export default function Gym() {
   const [isEditingCurrent, setIsEditingCurrent] = useState(false);
   const [showExerciseEditor, setShowExerciseEditor] = useState(false);
 
+  useEffect(() => {
+    const t = dashboardState?.wd_goals?.targetWeight;
+    const c = dashboardState?.wd_goals?.currentWeight;
+
+    setTargetWeight(t != null ? String(t) : "");
+    setCurrWeight(c != null ? String(c) : "");
+
+    // 🔒 lock only once, after load
+    setIsEditingTarget(t == null || t === "");
+    setIsEditingCurrent(c == null || c === "");
+  }, [dashboardState?.wd_goals]);
+
   return (
     <div
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500
@@ -1491,6 +1480,7 @@ export default function Gym() {
             <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1 flex-shrink-0">
               🎯 <span className="hidden sm:inline">Target</span>
             </span>
+
             <input
               type="number"
               step="0.1"
@@ -1498,50 +1488,53 @@ export default function Gym() {
               value={targetWeight}
               onChange={(e) => setTargetWeight(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && isEditingTarget) {
                   saveTargetWeight();
+                  setIsEditingTarget(false);
                   e.target.blur();
                 }
               }}
-              disabled={targetWeight && !isEditingTarget}
+              disabled={!isEditingTarget}
               className={`flex-1 min-w-0 px-2 py-1 rounded-lg border text-sm font-semibold text-center
-                focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent
-                placeholder:text-emerald-300/30 transition-all
-                ${
-                  targetWeight && !isEditingTarget
-                    ? "border-emerald-500/50 bg-emerald-900/20 text-emerald-200 cursor-not-allowed opacity-70"
-                    : "border-emerald-500/30 bg-black/30 text-emerald-100"
-                }`}
+      focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent
+      placeholder:text-emerald-300/30 transition-all
+      ${
+        !isEditingTarget
+          ? "border-emerald-500/50 bg-emerald-900/20 text-emerald-200 cursor-not-allowed opacity-70"
+          : "border-emerald-500/30 bg-black/30 text-emerald-100"
+      }`}
             />
+
             <button
               onClick={() => {
-                if (targetWeight && !isEditingTarget) {
-                  setIsEditingTarget(true);
+                if (!isEditingTarget) {
+                  setIsEditingTarget(true); // ✏️ enable edit
                 } else {
                   saveTargetWeight();
-                  setIsEditingTarget(false);
+                  setIsEditingTarget(false); // 🔒 lock after save
                 }
               }}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold text-white flex-shrink-0
-                transition-all duration-200 hover:scale-105 shadow-sm
-                ${
-                  targetWeight && !isEditingTarget
-                    ? "bg-orange-600/80 hover:bg-orange-500"
-                    : "bg-cyan-600/80 hover:bg-cyan-500"
-                }`}
+      transition-all duration-200 hover:scale-105 shadow-sm
+      ${
+        !isEditingTarget
+          ? "bg-orange-600/80 hover:bg-orange-500"
+          : "bg-cyan-600/80 hover:bg-cyan-500"
+      }`}
             >
-              {targetWeight && !isEditingTarget ? "Edit" : "Set"}
+              {!isEditingTarget ? "Edit" : "Set"}
             </button>
+
             <span className="text-xs text-emerald-300/70 flex-shrink-0">
               kg
             </span>
           </div>
-
           {/* Current Weight */}
           <div className="flex items-center gap-2 bg-white/5 rounded-xl p-2.5 border border-cyan-500/20 hover:border-cyan-500/40 transition-all">
             <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1 flex-shrink-0">
               ⚖️ <span className="hidden sm:inline">Curr Weight</span>
             </span>
+
             <input
               type="number"
               step="0.1"
@@ -1549,43 +1542,45 @@ export default function Gym() {
               value={currWeight}
               onChange={(e) => setCurrWeight(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && isEditingCurrent) {
                   updateCurrentWeight();
+                  setIsEditingCurrent(false); // 🔒 lock after save
                   e.target.blur();
                 }
               }}
-              disabled={currWeight && !isEditingCurrent}
+              disabled={!isEditingCurrent}
               className={`flex-1 min-w-0 px-2 py-1 rounded-lg border text-sm font-semibold text-center
-                focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent
-                placeholder:text-cyan-300/30 transition-all
-                ${
-                  currWeight && !isEditingCurrent
-                    ? "border-cyan-500/50 bg-cyan-900/20 text-cyan-200 cursor-not-allowed opacity-70"
-                    : "border-cyan-500/30 bg-black/30 text-cyan-100"
-                }`}
+      focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent
+      placeholder:text-cyan-300/30 transition-all
+      ${
+        !isEditingCurrent
+          ? "border-cyan-500/50 bg-cyan-900/20 text-cyan-200 cursor-not-allowed opacity-70"
+          : "border-cyan-500/30 bg-black/30 text-cyan-100"
+      }`}
             />
+
             <button
               onClick={() => {
-                if (currWeight && !isEditingCurrent) {
-                  setIsEditingCurrent(true);
+                if (!isEditingCurrent) {
+                  setIsEditingCurrent(true); // ✏️ enable edit
                 } else {
                   updateCurrentWeight();
-                  setIsEditingCurrent(false);
+                  setIsEditingCurrent(false); // 🔒 lock after save
                 }
               }}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold text-white flex-shrink-0
-                transition-all duration-200 hover:scale-105 shadow-sm
-                ${
-                  currWeight && !isEditingCurrent
-                    ? "bg-orange-600/80 hover:bg-orange-500"
-                    : "bg-emerald-600/80 hover:bg-emerald-500"
-                }`}
+      transition-all duration-200 hover:scale-105 shadow-sm
+      ${
+        !isEditingCurrent
+          ? "bg-orange-600/80 hover:bg-orange-500"
+          : "bg-emerald-600/80 hover:bg-emerald-500"
+      }`}
             >
-              {currWeight && !isEditingCurrent ? "Edit" : "Set"}
+              {!isEditingCurrent ? "Edit" : "Set"}
             </button>
+
             <span className="text-xs text-cyan-300/70 flex-shrink-0">kg</span>
           </div>
-
           {/* Display Current/Today's weight with trend */}
           <div className="bg-gradient-to-br from-teal-600/10 via-teal-700/5 to-teal-800/10 rounded-xl px-3 py-2.5 border border-teal-500/30 shadow-sm">
             {/* Header Row */}
@@ -1735,7 +1730,7 @@ export default function Gym() {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -1761,7 +1756,7 @@ export default function Gym() {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -1774,7 +1769,6 @@ export default function Gym() {
               </div>
             </div>
           </div>
-
           {/* Progress text */}
           <div
             className={`flex flex-col items-center justify-center rounded-xl px-3 py-2.5 border transition-all shadow-sm
@@ -2116,10 +2110,10 @@ export default function Gym() {
           doneState[dateKey]
             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
             : entry.left.every((e) => e?.done) &&
-                entry.right.every((e) => e?.done) &&
-                entry.finisher.every((e) => e?.done)
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+              entry.right.every((e) => e?.done) &&
+              entry.finisher.every((e) => e?.done)
+            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
         }
       `}
                     >
