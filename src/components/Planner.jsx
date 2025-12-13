@@ -1,53 +1,183 @@
-// Planner.jsx — v2 with unified wd_planner object
+// Planner.jsx — COMPLETE VERSION with all sections + fixed infinite loop + CSS animations
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Lottie from "lottie-react";
 import dayjs from "dayjs";
-import { syncToBackend } from "../utils/localStorage";
 
-/* Lottie imports - update paths if necessary */
-import animeSun from "../assets/weather-lottie/anime/sun.json";
-import animeCloudy from "../assets/weather-lottie/anime/cloudy.json";
-import animeRain from "../assets/weather-lottie/anime/rain.json";
-import animeNight from "../assets/weather-lottie/anime/night.json";
-import realSun from "../assets/weather-lottie/realistic/sun.json";
-import realCloudy from "../assets/weather-lottie/realistic/cloudy.json";
-import realRain from "../assets/weather-lottie/realistic/rain.json";
-import realSnow from "../assets/weather-lottie/realistic/snow.json";
-import realFog from "../assets/weather-lottie/realistic/fog.json";
-import realStorm from "../assets/weather-lottie/realistic/storm.json";
-
-/* ------------------------- Lottie mapping helpers --------------------------*/
-const LOTTIE = {
-  anime: {
-    sun: animeSun,
-    cloudy: animeCloudy,
-    rain: animeRain,
-    night: animeNight,
-  },
-  realistic: {
-    sun: realSun,
-    cloudy: realCloudy,
-    rain: realRain,
-    snow: realSnow,
-    fog: realFog,
-    storm: realStorm,
-    night: realCloudy,
-  },
-};
-
-function mapCodeToAnimationName(code, style) {
-  const isReal = style === "realistic";
-  if (code === 0) return "sun";
-  if ([1, 2, 3].includes(code)) return "cloudy";
-  if ([45, 48].includes(code)) return isReal ? "fog" : "cloudy";
-  if ([51, 53, 55, 61, 63, 65].includes(code)) return "rain";
-  if ([71, 73, 75].includes(code)) return isReal ? "snow" : "cloudy";
-  if (code === 95) return isReal ? "storm" : "rain";
-  return "sun";
+/* ------------------------- Weather Animation Components --------------------------*/
+function WeatherAnimation({ condition, isNight }) {
+  if (condition === "Clear") {
+    return isNight ? <MoonAnimation /> : <SunAnimation />;
+  }
+  if (condition === "Cloudy") {
+    return <CloudyAnimation />;
+  }
+  if (condition === "Rain" || condition === "Drizzle") {
+    return <RainAnimation />;
+  }
+  if (condition === "Snow") {
+    return <SnowAnimation />;
+  }
+  if (condition === "Thunderstorm") {
+    return <ThunderstormAnimation />;
+  }
+  if (condition === "Fog") {
+    return <FogAnimation />;
+  }
+  return <SunAnimation />;
 }
 
-function weatherCodeToMain(code) {
+function SunAnimation() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+      {/* Sun */}
+      <div className="relative">
+        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse" />
+        {/* Rays */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute top-1/2 left-1/2 w-1 h-16 bg-gradient-to-t from-yellow-400/80 to-transparent origin-bottom animate-sunray"
+            style={{
+              transform: `translate(-50%, -100%) rotate(${i * 45}deg)`,
+              animationDelay: `${i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MoonAnimation() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+      <div className="relative">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_40px_rgba(203,213,225,0.6)]" />
+        {/* Craters */}
+        <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-slate-300/40" />
+        <div className="absolute bottom-4 right-4 w-4 h-4 rounded-full bg-slate-300/30" />
+        <div className="absolute top-8 right-6 w-2 h-2 rounded-full bg-slate-300/50" />
+      </div>
+      {/* Stars */}
+      {[...Array(12)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
+          style={{
+            top: `${Math.random() * 80 + 10}%`,
+            left: `${Math.random() * 80 + 10}%`,
+            animationDelay: `${Math.random() * 2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CloudyAnimation() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute animate-float-cloud"
+          style={{
+            top: `${30 + i * 20}%`,
+            animationDelay: `${i * 2}s`,
+            animationDuration: `${8 + i * 2}s`,
+          }}
+        >
+          <div className="relative">
+            <div className="w-16 h-8 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full" />
+            <div className="absolute -top-2 left-4 w-12 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full" />
+            <div className="absolute -top-3 left-8 w-14 h-11 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RainAnimation() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <CloudyAnimation />
+      {[...Array(30)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-0.5 h-6 bg-gradient-to-b from-blue-300 to-transparent animate-rain"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `-${Math.random() * 20}%`,
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${0.5 + Math.random() * 0.5}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SnowAnimation() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <CloudyAnimation />
+      {[...Array(25)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 bg-white rounded-full animate-snow opacity-70"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `-${Math.random() * 10}%`,
+            animationDelay: `${Math.random() * 3}s`,
+            animationDuration: `${3 + Math.random() * 2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ThunderstormAnimation() {
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFlash(true);
+      setTimeout(() => setFlash(false), 150);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <RainAnimation />
+      {flash && (
+        <div className="absolute inset-0 bg-yellow-200/40 animate-flash" />
+      )}
+    </div>
+  );
+}
+
+function FogAnimation() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-full h-12 bg-gradient-to-r from-transparent via-slate-400/30 to-transparent animate-fog"
+          style={{
+            top: `${20 + i * 20}%`,
+            animationDelay: `${i * 1.5}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------- Helper functions --------------------------*/
+function mapCodeToCondition(code) {
   if (code === 0) return "Clear";
   if ([1, 2, 3].includes(code)) return "Cloudy";
   if ([45, 48].includes(code)) return "Fog";
@@ -55,7 +185,7 @@ function weatherCodeToMain(code) {
   if ([61, 63, 65].includes(code)) return "Rain";
   if ([71, 73, 75].includes(code)) return "Snow";
   if (code === 95) return "Thunderstorm";
-  return "Weather";
+  return "Clear";
 }
 
 /* ------------------------- UI helpers --------------------------*/
@@ -93,7 +223,6 @@ function taskEmoji(t) {
   return "•";
 }
 
-// NEW: internal key is simple YYYY-MM-DD, stored inside wd_planner.dayMap
 function formatDateKey(d) {
   return dayjs(d).format("YYYY-MM-DD");
 }
@@ -143,7 +272,6 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
           const k = formatDateKey(d);
           const isCurrentMonth = d.month() === base.month();
           const isSelected = dayjs(selectedDate).isSame(d, "day");
-
           const plans = dayMap?.[k] || {
             Morning: [],
             Afternoon: [],
@@ -170,14 +298,11 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
               className={`${baseClasses} ${colorClasses}`}
             >
               {isSelected && (
-                <span className="absolute inset-0 rounded-lg ring-2 ring-[#22c55e]/40 animate-pulse" />
+                <span className="absolute inset-0 rounded-lg ring-2 ring-[#22c55e]/40 animate-pulse"></span>
               )}
               <div className="relative z-10">{d.date()}</div>
               {hasTasks && (
-                <div
-                  className="relative z-10 w-1 h-1
-                  rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]"
-                />
+                <div className="relative z-10 w-1 h-1 rounded-full bg-[#4ADE80] mt-1 shadow-[0_0_6px_#4ADE80]" />
               )}
             </button>
           );
@@ -202,11 +327,8 @@ function WeatherCard({
   onSelect,
   selectedCity,
   weatherData,
-  weatherStyle,
-  setWeatherStyle,
   showSearch,
   setShowSearch,
-  lottieData,
 }) {
   const [localInput, setLocalInput] = useState(cityInput);
 
@@ -214,16 +336,17 @@ function WeatherCard({
     setLocalInput(cityInput);
   }, [cityInput]);
 
-  const condition = weatherData?.weather?.[0]?.main ?? "";
+  const condition = weatherData?.condition || "Clear";
   const temp = weatherData?.main?.temp ?? null;
+  const isNight = weatherData?.isNight || false;
 
-  const title = (() => {
-    if (!selectedCity) return "Select a city";
-    if (typeof selectedCity === "string") return selectedCity;
-    return `${selectedCity.name}${
-      selectedCity.admin1 ? `, ${selectedCity.admin1}` : ""
-    }, ${selectedCity.country}`;
-  })();
+  const title = !selectedCity
+    ? "Select a city"
+    : typeof selectedCity === "string"
+    ? selectedCity
+    : `${selectedCity.name}${
+        selectedCity.admin1 ? `, ${selectedCity.admin1}` : ""
+      }, ${selectedCity.country}`;
 
   return (
     <div className="w-full h-full relative">
@@ -235,28 +358,6 @@ function WeatherCard({
           🔍
         </button>
         <div className="text-sm text-[#CDEEE8] truncate">{title}</div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setWeatherStyle("realistic")}
-            className={`px-3 py-1 text-xs rounded border ${
-              weatherStyle === "realistic"
-                ? "bg-[#0A2B22] text-[#E8FFFA] border-[#3FA796] shadow-[0_0_8px_rgba(63,167,150,0.5)]"
-                : "bg-transparent text-[#CDEEE8] border-[#2F6B60]/40"
-            }`}
-          >
-            Real
-          </button>
-          <button
-            onClick={() => setWeatherStyle("anime")}
-            className={`px-3 py-1 text-xs rounded border ${
-              weatherStyle === "anime"
-                ? "bg-[#071A2F] text-[#E8FFFA] border-[#60A5FA] shadow-[0_0_8px_rgba(96,165,250,0.5)]"
-                : "bg-transparent text-[#CDEEE8] border-[#2F6B60]/40"
-            }`}
-          >
-            Anime
-          </button>
-        </div>
       </div>
 
       {showSearch && (
@@ -270,11 +371,7 @@ function WeatherCard({
             placeholder="Search city..."
             className="w-full bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 mb-2 text-sm text-[#E8FFFA] placeholder:text-[#7FAFA4]"
           />
-          <div
-            className="max-h-40 overflow-auto border
-            border-[#2F6B60]/40 rounded bg-black/40
-            "
-          >
+          <div className="max-h-40 overflow-auto border border-[#2F6B60]/40 rounded bg-black/40">
             {suggestions?.map((s, i) => (
               <div
                 key={i}
@@ -295,42 +392,22 @@ function WeatherCard({
         </div>
       )}
 
-      {/* Card visual */}
-      <div
-        className="relative rounded-xl overflow-hidden 
-        border border-[#2F6B60]/40 bg-black/20 h-[270px]
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-        bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] 
-        dark:to-[#0A0F1C]"
-      >
-        {/* Lottie background */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
-          {lottieData && (
-            <Lottie
-              animationData={lottieData}
-              loop
-              autoplay
-              style={{ width: "100%", height: "100%" }}
-            />
-          )}
-        </div>
+      {/* Card visual with CSS animations */}
+      <div className="relative rounded-xl overflow-hidden border border-[#2F6B60]/40 bg-black/20 h-[270px] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
+        {/* Weather animation */}
+        <WeatherAnimation condition={condition} isNight={isNight} />
 
         {/* Info panel */}
         <div className="relative z-20 p-6 flex flex-col items-center gap-2 mt-4">
-          <div className="text-2xl font-medium text-[#E8FFFA] drop-shadow">
+          <div className="text-3xl font-bold text-[#E8FFFA] drop-shadow-lg">
             {temp !== null ? `${Math.round(temp)}°C` : "--"}
           </div>
-          <div className="text-sm text-[#9FF2E8]">{condition}</div>
+          <div className="text-sm text-[#9FF2E8] font-medium">{condition}</div>
         </div>
 
         {/* stats panel at bottom */}
-        <div
-          className="absolute bottom-0 left-0 right-0 p-3
-          bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8]
-          grid grid-cols-2 gap-y-1
-          "
-        >
-          <div>Humidity: {weatherData?.main?.humidity ?? "—"}%</div>
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8] grid grid-cols-2 gap-y-1">
+          <div>Humidity: {weatherData?.main?.humidity ?? "--"}%</div>
           <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
           <div>UV: {weatherData?.meta?.uv ?? "--"}</div>
           <div>
@@ -347,50 +424,102 @@ function WeatherCard({
           </div>
         </div>
       </div>
+
+      {/* Add CSS animations */}
+      <style>{`
+        @keyframes sunray {
+          0%, 100% { opacity: 0.4; transform: translate(-50%, -100%) rotate(var(--rotation)) scale(1); }
+          50% { opacity: 0.8; transform: translate(-50%, -100%) rotate(var(--rotation)) scale(1.1); }
+        }
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+        @keyframes float-cloud {
+          0% { transform: translateX(-120%); }
+          100% { transform: translateX(120vw); }
+        }
+        @keyframes rain {
+          0% { transform: translateY(0); opacity: 1; }
+          100% { transform: translateY(300px); opacity: 0; }
+        }
+        @keyframes snow {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(400px) rotate(360deg); opacity: 0; }
+        }
+        @keyframes fog {
+          0%, 100% { transform: translateX(-100%); opacity: 0.3; }
+          50% { transform: translateX(100%); opacity: 0.6; }
+        }
+        @keyframes flash {
+          0%, 100% { opacity: 0; }
+          50% { opacity: 1; }
+        }
+        .animate-sunray { animation: sunray 2s ease-in-out infinite; }
+        .animate-twinkle { animation: twinkle 2s ease-in-out infinite; }
+        .animate-float-cloud { animation: float-cloud linear infinite; }
+        .animate-rain { animation: rain linear infinite; }
+        .animate-snow { animation: snow linear infinite; }
+        .animate-fog { animation: fog 8s ease-in-out infinite; }
+        .animate-flash { animation: flash 0.15s ease-out; }
+      `}</style>
     </div>
   );
 }
 
 /* ------------------------- Main Planner --------------------------*/
-
 export default function Planner({ dashboardState, updateDashboard }) {
-  // === 1. Build local unified planner object from dashboardState ===
+  // 1. Build local unified planner object from dashboardState
   const base = dashboardState?.wd_planner || {};
-
-  const [planner, setPlanner] = useState(() => ({
+  const [planner, setPlanner] = useState({
     tasks: base.tasks || DEFAULT_TASKS,
     dayMap: base.dayMap || {},
-    habits: base.habits || { ...defaultHabits },
+    habits: { ...defaultHabits, ...base.habits },
     pomodoroSeconds:
       typeof base.pomodoroSeconds === "number" ? base.pomodoroSeconds : 25 * 60,
     focusTask: base.focusTask || "",
     weatherCityInput: base.weatherCityInput || "",
     weatherCity: base.weatherCity || null,
-    weatherStyle: base.weatherStyle || "realistic",
     streak: base.streak || 0,
-  }));
+  });
 
-  // 🔥 Add THIS right below:
+  // ✅ FIX: Prevent infinite loop with deep comparison
+  const lastSavedPlanner = useRef(null);
+  const saveTimeoutRef = useRef(null);
+
   useEffect(() => {
-    // Save planner locally
-    localStorage.setItem("wd_planner", JSON.stringify(planner));
+    const plannerString = JSON.stringify(planner);
 
-    // Send update to backend
-    if (typeof syncToBackend === "function") {
-      syncToBackend();
-    } else {
-      console.warn("syncToBackend not found");
+    // Only save if planner actually changed
+    if (lastSavedPlanner.current === plannerString) {
+      return;
     }
-  }, [planner]);
 
-  // when dashboardState.wd_planner changes (other tab updated), resync
+    lastSavedPlanner.current = plannerString;
+
+    // Save to localStorage immediately
+    localStorage.setItem("wd_planner", plannerString);
+
+    // Debounced backend save
+    clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      if (updateDashboard) {
+        console.log("💾 Saving planner to backend...");
+        updateDashboard({ wd_planner: planner });
+      }
+    }, 1000);
+
+    return () => clearTimeout(saveTimeoutRef.current);
+  }, [planner, updateDashboard]);
+
+  // Sync when dashboardState changes (other tab updated)
   useEffect(() => {
     if (!dashboardState?.wd_planner) return;
     const p = dashboardState.wd_planner;
     setPlanner((prev) => ({
       tasks: p.tasks || prev.tasks || DEFAULT_TASKS,
       dayMap: p.dayMap || prev.dayMap || {},
-      habits: p.habits || prev.habits || { ...defaultHabits },
+      habits: { ...prev.habits, ...defaultHabits, ...p.habits },
       pomodoroSeconds:
         typeof p.pomodoroSeconds === "number"
           ? p.pomodoroSeconds
@@ -398,17 +527,14 @@ export default function Planner({ dashboardState, updateDashboard }) {
       focusTask: p.focusTask ?? prev.focusTask,
       weatherCityInput: p.weatherCityInput ?? prev.weatherCityInput,
       weatherCity: p.weatherCity ?? prev.weatherCity,
-      weatherStyle: p.weatherStyle || prev.weatherStyle || "realistic",
       streak: typeof p.streak === "number" ? p.streak : prev.streak,
     }));
   }, [dashboardState?.wd_planner]);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [weatherData, setWeatherData] = useState(null);
-  const [lottieData, setLottieData] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [toast, setToast] = useState(null);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
@@ -418,7 +544,6 @@ export default function Planner({ dashboardState, updateDashboard }) {
 
   const geoDebounce = useRef(null);
   const pomInterval = useRef(null);
-  const saveTimeoutRef = useRef(null);
 
   const dayKey = formatDateKey(selectedDate);
   const currentDay = planner.dayMap[dayKey] || {
@@ -427,33 +552,24 @@ export default function Planner({ dashboardState, updateDashboard }) {
     Evening: [],
   };
 
-  const cityInput = planner.weatherCityInput || "";
+  const cityInput = planner.weatherCityInput;
   const selectedCity = planner.weatherCity || null;
-  const weatherStyle = planner.weatherStyle;
 
   const totalPlanned =
     (currentDay.Morning?.length || 0) +
     (currentDay.Afternoon?.length || 0) +
     (currentDay.Evening?.length || 0);
 
-  // === 2. Derived template search ===
+  // 2. Derived template search
   const [query, setQuery] = useState("");
   const [inlineAdd, setInlineAdd] = useState("");
-
   const filteredTemplates = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return planner.tasks;
     return planner.tasks.filter((t) => t.toLowerCase().includes(q));
   }, [planner.tasks, query]);
 
-  useEffect(() => {
-    localStorage.setItem("wd_planner", JSON.stringify(planner));
-
-    // trigger backend sync
-    window.dispatchEvent(new Event("storage"));
-  }, [planner]);
-
-  // === 4. Pomodoro timer ===
+  // 4. Pomodoro timer
   useEffect(() => {
     if (pomodoroRunning) {
       if (pomInterval.current) clearInterval(pomInterval.current);
@@ -461,7 +577,6 @@ export default function Planner({ dashboardState, updateDashboard }) {
         setPlanner((prev) => {
           const s = (prev.pomodoroSeconds || 0) - 1;
           if (s <= 0) {
-            // reset + beep
             try {
               const beep = new Audio();
               beep.src =
@@ -483,7 +598,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
     };
   }, [pomodoroRunning]);
 
-  // === 5. Geocode suggestions ===
+  // 5. Geocode suggestions
   useEffect(() => {
     if (geoDebounce.current) clearTimeout(geoDebounce.current);
     if (!cityInput || cityInput.trim().length < 2) {
@@ -510,33 +625,29 @@ export default function Planner({ dashboardState, updateDashboard }) {
         }));
         setSuggestions(mapped);
       } catch (err) {
-        console.warn("geocode error", err);
+        console.warn("geocode error:", err);
         setSuggestions([]);
       }
     }, 350);
     return () => clearTimeout(geoDebounce.current);
   }, [cityInput]);
 
-  // === 6. Weather loading ===
+  // 6. Weather loading
   useEffect(() => {
-    async function loadWeatherForCity(city, style) {
+    async function loadWeatherForCity(city) {
       if (!city) {
         setWeatherData(null);
-        setLottieData(null);
         return;
       }
-
       try {
         const lat = city.latitude ?? city.lat;
         const lon = city.longitude ?? city.lon;
         if (!lat || !lon) {
           setWeatherData(null);
-          setLottieData(null);
           return;
         }
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,sunrise,sunset,uv_index_max&timezone=auto`;
-
         const res = await fetch(url);
         const json = await res.json();
 
@@ -549,38 +660,34 @@ export default function Planner({ dashboardState, updateDashboard }) {
         const sunsetH = sunsetStr ? new Date(sunsetStr).getHours() : 18;
         const h = new Date().getHours();
 
-        let todLocal = "day";
-        if (h < sunriseH - 1 || h > sunsetH + 2) todLocal = "night";
-
-        const animName =
-          todLocal === "night" ? "night" : mapCodeToAnimationName(code, style);
-        const anim = LOTTIE[style]?.[animName] || LOTTIE[style]?.sun;
+        const isNight = h < sunriseH - 1 || h > sunsetH + 2;
+        const condition = mapCodeToCondition(code);
 
         setWeatherData({
-          weather: [{ code, main: weatherCodeToMain(code) }],
+          condition,
+          isNight,
           main: {
             temp: json.current?.temperature_2m ?? null,
             humidity: json.current?.relative_humidity_2m ?? 0,
           },
-          wind: { speed: json.current?.wind_speed_10m ?? 0 },
+          wind: {
+            speed: json.current?.wind_speed_10m ?? 0,
+          },
           meta: {
             sunrise: sunriseStr,
             sunset: sunsetStr,
             uv: json.daily?.uv_index_max?.[0] ?? null,
           },
         });
-        setLottieData(anim);
       } catch (e) {
-        console.warn("weather fetch failed", e);
+        console.warn("weather fetch failed:", e);
         setWeatherData(null);
-        setLottieData(null);
       }
     }
+    loadWeatherForCity(selectedCity);
+  }, [selectedCity]);
 
-    loadWeatherForCity(selectedCity, weatherStyle);
-  }, [selectedCity, weatherStyle]);
-
-  // === 7. Misc small effects ===
+  // 7. Misc small effects
   useEffect(() => {
     const timer = setInterval(() => setLiveTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -604,10 +711,10 @@ export default function Planner({ dashboardState, updateDashboard }) {
     if (t > 0) setTimeout(() => setToast(null), t);
   };
 
-  // === 8. Planner mutations (all via setPlanner) ===
+  // 8. Planner mutations all via setPlanner
   const updateDay = (fn) => {
     setPlanner((prev) => {
-      const map = { ...(prev.dayMap || {}) };
+      const map = { ...prev.dayMap };
       const day = map[dayKey] || {
         Morning: [],
         Afternoon: [],
@@ -621,8 +728,11 @@ export default function Planner({ dashboardState, updateDashboard }) {
 
   const addTaskTemplate = (t) => {
     if (!t || !t.trim()) return;
-    setPlanner((p) => ({ ...p, tasks: [...p.tasks, t.trim()] }));
-    showToast("Template added");
+    setPlanner((p) => ({
+      ...p,
+      tasks: [...p.tasks, t.trim()],
+    }));
+    showToast("Template added!");
   };
 
   const deleteTemplate = (idx) => {
@@ -631,12 +741,10 @@ export default function Planner({ dashboardState, updateDashboard }) {
       next.splice(idx, 1);
       return { ...p, tasks: next };
     });
-    showToast("Template deleted");
+    showToast("Template deleted!");
   };
 
-  const duplicateTemplate = (t) => {
-    addTaskTemplate(`${t} (copy)`);
-  };
+  const duplicateTemplate = (t) => addTaskTemplate(t + " copy");
 
   const onDragStart = (e, task) => {
     try {
@@ -644,56 +752,53 @@ export default function Planner({ dashboardState, updateDashboard }) {
     } catch {}
     setDragging(true);
   };
-
   const onDragEnd = () => {
     setDragging(false);
     setActiveDrop(null);
   };
-
   const onDragOver = (slot) => (e) => {
     e.preventDefault();
     setActiveDrop(slot);
   };
-
   const onDrop = (slot) => (e) => {
     e.preventDefault();
     const task = e.dataTransfer.getData("text/plain");
     if (!task) return;
     updateDay((day) => {
-      day[slot] = [...(day[slot] || []), task];
+      day[slot] = [...day[slot], task];
       return day;
     });
     setActiveDrop(null);
     setDragging(false);
-    showToast(`Added to ${slot}`);
+    showToast(`Added to ${slot}!`);
   };
 
   const removeFrom = (slot, idx) => {
     updateDay((day) => {
-      const arr = [...(day[slot] || [])];
+      const arr = [...day[slot]];
       arr.splice(idx, 1);
       day[slot] = arr;
       return day;
     });
-    showToast("Removed");
+    showToast("Removed!");
   };
 
   const moveToNextSlot = (slot, idx) => {
     const idxSlot = SLOT_ORDER.indexOf(slot);
     const nextSlot = SLOT_ORDER[(idxSlot + 1) % SLOT_ORDER.length];
     updateDay((day) => {
-      const fromArr = [...(day[slot] || [])];
+      const fromArr = [...day[slot]];
       const t = fromArr[idx];
       fromArr.splice(idx, 1);
-      const toArr = [...(day[nextSlot] || []), t];
+      const toArr = [...day[nextSlot], t];
       day[slot] = fromArr;
       day[nextSlot] = toArr;
       return day;
     });
-    showToast(`Moved to ${nextSlot}`);
+    showToast(`Moved to ${nextSlot}!`);
   };
 
-  // === 9. Render ===
+  // 9. Render
   const selectedWeatherMeta = {
     temp:
       weatherData?.main?.temp !== null && weatherData?.main?.temp !== undefined
@@ -723,9 +828,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
             </div>
             <div className="text-lg font-medium">{planner.streak} days</div>
           </div>
-
           <div className="h-8 w-px bg-[#2F6B60]/40 hidden sm:block" />
-
           <div>
             <div className="text-[11px] text-[#7FAFA4] uppercase">Today</div>
             <div className="text-sm">{dayjs(liveTime).format("DD MMM")}</div>
@@ -733,12 +836,10 @@ export default function Planner({ dashboardState, updateDashboard }) {
           <div>
             <div className="text-[11px] text-[#7FAFA4] uppercase">Time</div>
             <div className="text-sm font-semibold text-[#9FF2E8]">
-              {dayjs(liveTime).format("hh:mm A")}
+              {dayjs(liveTime).format("h:mm A")}
             </div>
           </div>
-
           <div className="h-8 w-px bg-[#2F6B60]/40 hidden sm:block" />
-
           {selectedCity && (
             <div className="max-w-[180px]">
               <div className="text-[11px] text-[#7FAFA4] uppercase">
@@ -753,7 +854,6 @@ export default function Planner({ dashboardState, updateDashboard }) {
               </div>
             </div>
           )}
-
           {selectedWeatherMeta.temp !== null && (
             <div>
               <div className="text-[11px] text-[#7FAFA4] uppercase">Temp</div>
@@ -799,7 +899,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
               </form>
             </div>
             <div className="text-xs text-[#7FAFA4] mt-1">
-              {planner.tasks.length} templates • drag any card into a slot
+              {planner.tasks.length} templates — drag any card into a slot
             </div>
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[420px] overflow-auto pr-1">
@@ -837,7 +937,10 @@ export default function Planner({ dashboardState, updateDashboard }) {
                         </button>
                       </div>
 
-                      <div className="sm:hidden relative" data-hamburger-root>
+                      <div
+                        className="sm:hidden relative"
+                        data-hamburger-root=""
+                      >
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -845,7 +948,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                           }}
                           className="px-2 py-1 rounded bg-black/40 border border-[#2F6B60]/40 text-xs"
                         >
-                          ☰
+                          ⋮
                         </button>
                         <AnimatePresence>
                           {openMenuIndex === i && (
@@ -912,6 +1015,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
             {SLOT_ORDER.map((slot) => {
               const isActive = activeDrop === slot && dragging;
               const items = currentDay[slot] || [];
+
               return (
                 <div key={slot} className="min-w-0">
                   <div
@@ -935,11 +1039,11 @@ export default function Planner({ dashboardState, updateDashboard }) {
                         onClick={() => {
                           const preset = "Gym Workout";
                           updateDay((day) => {
-                            const arr = [...(day[slot] || []), preset];
+                            const arr = [...day[slot], preset];
                             day[slot] = arr;
                             return day;
                           });
-                          showToast(`Added preset to ${slot}`);
+                          showToast(`Added preset to ${slot}!`);
                         }}
                         className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
                       >
@@ -967,7 +1071,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                                 onClick={() => moveToNextSlot(slot, idx)}
                                 className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
                               >
-                                ➡️
+                                ▶
                               </button>
                               <button
                                 onClick={() => removeFrom(slot, idx)}
@@ -979,7 +1083,6 @@ export default function Planner({ dashboardState, updateDashboard }) {
                           </motion.div>
                         ))}
                       </AnimatePresence>
-
                       {items.length === 0 && (
                         <div className="text-sm text-[#7FAFA4] border border-dashed border-[#2F6B60]/40 rounded p-4">
                           Empty — drop a task here
@@ -992,13 +1095,11 @@ export default function Planner({ dashboardState, updateDashboard }) {
             })}
           </div>
         </div>
-      </div>;
+      </div>
 
-      {
-        /* BOTTOM ROW: Focus + Habits + Quick links */
-      }
+      {/* BOTTOM ROW: Focus, Habits, Quick links */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Focus + Pomodoro */}
+        {/* Focus & Pomodoro */}
         <div className="rounded-xl p-4 border border-[#2F6B60]/40 bg-black/20 hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -1010,7 +1111,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
             <button
               onClick={() => {
                 setPlanner((p) => ({ ...p, focusTask: "" }));
-                showToast("Focus cleared");
+                showToast("Focus cleared!");
               }}
               className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
             >
@@ -1026,7 +1127,6 @@ export default function Planner({ dashboardState, updateDashboard }) {
             placeholder="Today's focus..."
             className="w-full bg-black/30 border border-[#2F6B60]/40 px-3 py-2 rounded mb-3 text-sm"
           />
-
           {planner.focusTask && (
             <div className="text-sm text-[#CDEEE8] mb-3">
               Focus: <span className="font-medium">{planner.focusTask}</span>
@@ -1057,7 +1157,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                 }}
                 className="px-3 py-2 rounded bg-[#7A1D2B] text-white hover:shadow-[0_0_8px_rgba(214,30,54,0.6)] transition"
               >
-                ↻
+                ⏹
               </button>
             </div>
           </div>
@@ -1166,9 +1266,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
           <div className="w-full bg-black/30 rounded-full h-2 overflow-hidden border border-[#2F6B60]/40">
             <div
               className="h-2 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#22C55E] transition-all"
-              style={{
-                width: `${Math.min(100, (totalPlanned / 8) * 100)}%`,
-              }}
+              style={{ width: `${Math.min(100, (totalPlanned / 8) * 100)}%` }}
             />
           </div>
         </div>
@@ -1197,9 +1295,9 @@ export default function Planner({ dashboardState, updateDashboard }) {
             </a>
           </div>
         </div>
-      </div>;
+      </div>
 
-      {/* CALENDAR + PREVIEW + WEATHER */}
+      {/* CALENDAR PREVIEW + WEATHER */}
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-80">
           <MiniCalendar
@@ -1208,11 +1306,13 @@ export default function Planner({ dashboardState, updateDashboard }) {
             dayMap={planner.dayMap}
           />
         </div>
+
         {/* Day preview */}
         <div className="rounded-xl p-4 flex-1 border border-[#2F6B60]/40 bg-black/20 hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
           <div className="text-sm text-[#9FF2E8] mb-2">
-            {dayjs(selectedDate).format("DD MMM YYYY")} – summary
+            {dayjs(selectedDate).format("DD MMM YYYY")} summary
           </div>
+
           <div className="space-y-3 max-h-[260px] overflow-auto pr-2">
             {SLOT_ORDER.map((slot) => {
               const items = currentDay[slot] || [];
@@ -1243,7 +1343,6 @@ export default function Planner({ dashboardState, updateDashboard }) {
                         </button>
                       </div>
                     ))}
-
                     {items.length === 0 && (
                       <div className="text-xs text-[#7FAFA4]">No tasks</div>
                     )}
@@ -1252,10 +1351,9 @@ export default function Planner({ dashboardState, updateDashboard }) {
               );
             })}
           </div>
-        </div>;
-        {
-          /* Weather */
-        }
+        </div>
+
+        {/* Weather */}
         <div className="sm:w-full md:max-w-[260px] min-h-[320px]">
           <div className="rounded-xl p-4 min-h-[320px] h-full border border-[#2F6B60]/40 bg-black/20 hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
             <WeatherCard
@@ -1270,17 +1368,11 @@ export default function Planner({ dashboardState, updateDashboard }) {
               }}
               selectedCity={selectedCity}
               weatherData={weatherData}
-              weatherStyle={weatherStyle}
-              setWeatherStyle={(style) =>
-                setPlanner((p) => ({ ...p, weatherStyle: style }))
-              }
               showSearch={showSearch}
               setShowSearch={setShowSearch}
-              lottieData={lottieData}
             />
           </div>
-        </div>;
-        ;
+        </div>
       </div>
 
       {/* Toast */}
@@ -1290,7 +1382,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed right-6 bottom-6 bg-[#031715] border border-[#2F6B60]/40 px-4 py-2 rounded shadow text-[#E8FFFA] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
+            className="fixed right-6 bottom-6 bg-[#031715] border border-[#2F6B60]/40 px-4 py-2 rounded shadow text-[#E8FFFA] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition z-50"
           >
             {toast}
           </motion.div>

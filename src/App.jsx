@@ -105,27 +105,29 @@ export default function App() {
 
   const accent = "hsl(180, 100%, 50%)";
 
+  // 🔥 Load dashboard instantly from local cache (ONCE)
+  useEffect(() => {
+    const cached = localStorage.getItem("lifeos_state");
+    if (!cached) return;
+
+    try {
+      const parsed = JSON.parse(cached);
+
+      if (parsed && typeof parsed === "object") {
+        console.log("⚡ Loaded dashboard from local cache");
+        setDashboardState(parsed);
+      }
+    } catch (err) {
+      console.warn("❌ Invalid cached dashboard ignored", err);
+    }
+  }, []);
+
   function FloatingScrollControl() {
     const [atBottom, setAtBottom] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [hasAnimated, setHasAnimated] = useState(false);
 
     // ---- Load from localStorage first (instant render) ----
-    // Load cached only ONCE, not every render
-    useEffect(() => {
-      const cached = localStorage.getItem("lifeos_state");
-      if (!cached) return;
-
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed && typeof parsed === "object") {
-          console.log("⚡ Loaded syllabus instantly from local cache");
-          setDashboardState(parsed);
-        }
-      } catch (e) {
-        console.warn("Invalid cache ignored", e);
-      }
-    }, []); // <-- VERY IMPORTANT
 
     useEffect(() => {
       let ticking = false;
@@ -229,7 +231,6 @@ export default function App() {
         let state = data.state || data.dashboardState || data || {};
 
         // ---------------- SYLLABUS FIX ----------------
-        const rawTree = window?.TREE;
 
         const hasBackendSyllabus =
           state.syllabus_tree_v2 &&
@@ -237,10 +238,9 @@ export default function App() {
           Object.keys(state.syllabus_tree_v2).length > 0;
 
         if (!hasBackendSyllabus) {
-          console.warn("📌 Backend empty → Using raw TREE.");
-          state.syllabus_tree_v2 = structuredClone(rawTree);
-        } else {
-          console.log("📚 Syllabus loaded from backend.");
+          console.warn(
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
+          );
         }
 
         // 🚨 Normalize only ONCE
@@ -251,7 +251,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2),
+            structuredClone(state.syllabus_tree_v2)
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -397,14 +397,14 @@ export default function App() {
         fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state: newState }),
+          body: JSON.stringify({ newState }),
         })
           .then((r) => r.json())
           .then(() => console.log("💾 Synced to backend"))
           .catch((err) => console.error("❌ Sync failed:", err));
       }, 700);
     },
-    [dashboardState],
+    [dashboardState]
   );
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------

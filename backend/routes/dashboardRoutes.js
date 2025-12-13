@@ -16,7 +16,6 @@ function flatten(obj, prefix = '') {
   return result;
 }
 
-
 const router = express.Router();
 const USER_ID = "default";
 
@@ -42,6 +41,12 @@ router.put("/", async (req, res) => {
   try {
     const userId = USER_ID;
     let incoming = req.body;
+
+    // 🛑 PROTECT AGAINST NESTED STATE
+    if (incoming.state) {
+      console.warn("⚠️ Nested state detected, flattening");
+      incoming = incoming.state;
+    }
 
     // 🔥 Parse wd_planner if it's a string
     if (incoming.wd_planner && typeof incoming.wd_planner === "string") {
