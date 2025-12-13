@@ -191,14 +191,20 @@ function mapCodeToCondition(code) {
 /* ------------------------- UI helpers --------------------------*/
 const SLOT_ORDER = ["Morning", "Afternoon", "Evening"];
 const DEFAULT_TASKS = [
-  "Gym: Push",
-  "Gym: Pull",
-  "Gym: Legs",
-  "Code: JS 2h",
-  "DSA Practice",
-  "React Project",
-  "Meal Prep",
-  "Walk 8k steps",
+  "💪 Gym - Upper Body",
+  "💪 Gym - Lower Body",
+  "💪 Gym - Core & Cardio",
+  "🥗 Meal Prep",
+  "🚶 Walk 10k steps",
+  "💻 Code - Frontend (2h)",
+  "💻 Code - Backend (2h)",
+  "🧠 DSA Practice",
+  "📚 Learn New Framework",
+  "🐛 Debug Session",
+  "📖 Tech Reading",
+  "💼 Portfolio Work",
+  "📝 Journaling",
+  "🧘 Meditation",
 ];
 
 const defaultHabits = {
@@ -472,7 +478,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
   // 1. Build local unified planner object from dashboardState
   const base = dashboardState?.wd_planner || {};
   const [planner, setPlanner] = useState({
-    tasks: base.tasks || DEFAULT_TASKS,
+    tasks: base.tasks && base.tasks.length > 0 ? base.tasks : DEFAULT_TASKS,
     dayMap: base.dayMap || {},
     habits: { ...defaultHabits, ...base.habits },
     pomodoroSeconds:
@@ -513,11 +519,17 @@ export default function Planner({ dashboardState, updateDashboard }) {
   }, [planner, updateDashboard]);
 
   // Sync when dashboardState changes (other tab updated)
+  // Sync when dashboardState changes (other tab updated)
   useEffect(() => {
     if (!dashboardState?.wd_planner) return;
     const p = dashboardState.wd_planner;
     setPlanner((prev) => ({
-      tasks: p.tasks || prev.tasks || DEFAULT_TASKS,
+      tasks:
+        p.tasks && p.tasks.length > 0
+          ? p.tasks
+          : prev.tasks && prev.tasks.length > 0
+          ? prev.tasks
+          : DEFAULT_TASKS,
       dayMap: p.dayMap || prev.dayMap || {},
       habits: { ...prev.habits, ...defaultHabits, ...p.habits },
       pomodoroSeconds:
@@ -866,234 +878,194 @@ export default function Planner({ dashboardState, updateDashboard }) {
       </div>
 
       {/* TOP GRID: Templates + Slots */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1.1fr,1.5fr] gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-4">
         {/* TEMPLATES PANEL */}
-        <div className="flex flex-col gap-4">
-          <div className="rounded-xl p-4 border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm shadow-[0_0_12px_rgba(0,0,0,0.35)]">
-            <div className="flex flex-col md:flex-row gap-3 md:items-center">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search templates..."
-                className="flex-1 bg-black/30 border border-[#3FA796] rounded px-3 py-2 placeholder:text-[#7FAFA4] text-sm min-w-0"
-              />
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (inlineAdd.trim()) {
-                    addTaskTemplate(inlineAdd.trim());
-                    setInlineAdd("");
-                  }
-                }}
-                className="flex gap-2 items-center"
-              >
-                <input
-                  value={inlineAdd}
-                  onChange={(e) => setInlineAdd(e.target.value)}
-                  placeholder="Add new..."
-                  className="bg-black/30 border border-[#3FA796] px-3 py-2 rounded text-sm"
-                />
-                <button className="px-3 py-2 rounded bg-[#0A2B22] text-[#E8FFFA] text-sm border border-[#3FA796] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
-                  Add
-                </button>
-              </form>
+        <div className="h-[500px] rounded-xl p-4 border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm shadow-[0_0_12px_rgba(0,0,0,0.35)] flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3 flex-shrink-0">
+            <div>
+              <h2 className="text-sm font-semibold text-[#9FF2E8]">
+                📋 Templates
+              </h2>
+              <p className="text-xs text-[#7FAFA4]">
+                {planner.tasks.length} available
+              </p>
             </div>
-            <div className="text-xs text-[#7FAFA4] mt-1">
-              {planner.tasks.length} templates — drag any card into a slot
-            </div>
+          </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[420px] overflow-auto pr-1">
-              <AnimatePresence>
-                {filteredTemplates.map((t, i) => (
-                  <motion.div
-                    key={`${t}-${i}`}
-                    layout
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, t)}
-                    onDragEnd={onDragEnd}
-                    className="relative flex items-center justify-between gap-3 p-3 rounded-md border border-[#2F6B60]/30 bg-gradient-to-br from-[#081C18] to-[#0F0F0F] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition-all cursor-move"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="text-lg">{taskEmoji(t)}</div>
-                      <div className="text-sm truncate">{t}</div>
-                    </div>
+          {/* Add New */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (inlineAdd.trim()) {
+                addTaskTemplate(inlineAdd.trim());
+                setInlineAdd("");
+              }
+            }}
+            className="flex gap-2 mb-3 flex-shrink-0"
+          >
+            <input
+              value={inlineAdd}
+              onChange={(e) => setInlineAdd(e.target.value)}
+              placeholder="Add new..."
+              className="flex-1 bg-black/30 border border-[#3FA796] rounded px-3 py-2 placeholder:text-[#7FAFA4] text-sm focus:outline-none"
+            />
+            <button className="px-3 py-2 rounded bg-[#0A2B22] text-[#E8FFFA] text-sm border border-[#3FA796] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
+              Add
+            </button>
+          </form>
 
-                    <div className="flex items-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
-                      <div className="hidden sm:flex items-center gap-2">
-                        <button
-                          onClick={() => duplicateTemplate(t)}
-                          className="px-2 py-1 rounded bg-black/40 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-                        >
-                          📋
-                        </button>
-                        <button
-                          onClick={() => deleteTemplate(i)}
-                          className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs hover:shadow-[0_0_8px_rgba(214,30,54,0.6)] transition"
-                        >
-                          🗑️
-                        </button>
-                      </div>
+          {/* Templates List */}
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-2 mb-3 pr-1 scrollbar-thin scrollbar-thumb-[#2F6B60]/60 scrollbar-track-transparent">
+            <AnimatePresence>
+              {filteredTemplates.map((t, i) => (
+                <motion.div
+                  key={`${t}-${i}`}
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, t)}
+                  onDragEnd={onDragEnd}
+                  className="group flex items-center gap-2 p-2.5 rounded-md border border-[#2F6B60]/30 bg-gradient-to-br from-[#081C18] to-[#0F0F0F] hover:border-[#3FA796]/60 hover:shadow-[0_0_8px_rgba(63,167,150,0.4)] transition cursor-move"
+                >
+                  <div className="text-sm text-[#CDEEE8] truncate flex-1">
+                    {t}
+                  </div>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                    <button
+                      onClick={() => duplicateTemplate(t)}
+                      className="p-1.5 rounded bg-black/40 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_6px_rgba(63,167,150,0.6)] transition"
+                    >
+                      📋
+                    </button>
+                    <button
+                      onClick={() => deleteTemplate(i)}
+                      className="p-1.5 rounded bg-[#7A1D2B] text-white text-xs hover:shadow-[0_0_6px_rgba(214,30,54,0.6)] transition"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
 
-                      <div
-                        className="sm:hidden relative"
-                        data-hamburger-root=""
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuIndex(openMenuIndex === i ? null : i);
-                          }}
-                          className="px-2 py-1 rounded bg-black/40 border border-[#2F6B60]/40 text-xs"
-                        >
-                          ⋮
-                        </button>
-                        <AnimatePresence>
-                          {openMenuIndex === i && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -6 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -6 }}
-                              className="absolute right-0 mt-2 w-40 bg-[#0F0F0F] border border-[#2F6B60]/40 rounded shadow p-2 z-40"
-                            >
-                              <button
-                                onClick={() => {
-                                  duplicateTemplate(t);
-                                  setOpenMenuIndex(null);
-                                }}
-                                className="w-full text-left px-2 py-1 rounded hover:bg-[#071827]"
-                              >
-                                📋 Duplicate
-                              </button>
-                              <button
-                                onClick={() => {
-                                  deleteTemplate(i);
-                                  setOpenMenuIndex(null);
-                                }}
-                                className="w-full text-left px-2 py-1 rounded text-[#FF8F8F] hover:bg-[#071827]"
-                              >
-                                🗑️ Delete
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                onClick={() => addTaskTemplate("Gym Workout")}
-                className="px-3 py-1 rounded bg-black/30 border text-sm border-[#2F6B60]/40 hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-              >
-                💪 Gym
-              </button>
-              <button
-                onClick={() => addTaskTemplate("Code Focus Session")}
-                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-              >
-                💻 Code
-              </button>
-              <button
-                onClick={() => addTaskTemplate("DSA Practice")}
-                className="px-3 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-sm hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-              >
-                🧠 DSA
-              </button>
-            </div>
+          {/* Quick Add */}
+          <div className="flex gap-2 pt-2 border-t border-[#2F6B60]/30 flex-shrink-0">
+            <button
+              onClick={() => addTaskTemplate("💪 Gym Workout")}
+              className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_6px_rgba(63,167,150,0.6)] transition"
+            >
+              💪 Gym
+            </button>
+            <button
+              onClick={() => addTaskTemplate("💻 Code Focus Session")}
+              className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_6px_rgba(63,167,150,0.6)] transition"
+            >
+              💻 Code
+            </button>
+            <button
+              onClick={() => addTaskTemplate("🧠 DSA Practice")}
+              className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_6px_rgba(63,167,150,0.6)] transition"
+            >
+              🧠 DSA
+            </button>
           </div>
         </div>
 
-        {/* SLOTS PANEL */}
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {SLOT_ORDER.map((slot) => {
-              const isActive = activeDrop === slot && dragging;
-              const items = currentDay[slot] || [];
+        {/* SLOTS PANEL - REDESIGNED WITH PROPER HEIGHT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 auto-rows-[500px]">
+          {SLOT_ORDER.map((slot) => {
+            const isActive = activeDrop === slot && dragging;
+            const items = currentDay[slot] || [];
 
-              return (
-                <div key={slot} className="min-w-0">
-                  <div
-                    onDragOver={onDragOver(slot)}
-                    onDrop={onDrop(slot)}
-                    onDragEnd={onDragEnd}
-                    className={`rounded-xl p-3 max-h-[360px] overflow-auto border border-[#2F6B60]/40 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition ${
-                      isActive
-                        ? "ring-2 ring-[#3FA796] shadow-[0_0_12px_rgba(63,167,150,0.5)]"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="text-sm text-[#9FF2E8]">{slot}</div>
-                        <div className="text-xs text-[#7FAFA4]">
-                          {items.length} items
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const preset = "Gym Workout";
-                          updateDay((day) => {
-                            const arr = [...day[slot], preset];
-                            day[slot] = arr;
-                            return day;
-                          });
-                          showToast(`Added preset to ${slot}!`);
-                        }}
-                        className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-                      >
-                        ➕ Preset
-                      </button>
+            return (
+              <div
+                key={slot}
+                onDragOver={onDragOver(slot)}
+                onDrop={onDrop(slot)}
+                onDragEnd={onDragEnd}
+                className={`rounded-xl p-3 flex flex-col border border-[#2F6B60]/40 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] hover:shadow-[0_0_8px_rgba(63,167,150,0.4)] transition ${
+                  isActive
+                    ? "ring-2 ring-[#3FA796] shadow-[0_0_16px_rgba(63,167,150,0.6)]"
+                    : ""
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#2F6B60]/30 flex-shrink-0">
+                  <div>
+                    <div className="text-sm font-semibold text-[#9FF2E8]">
+                      {slot}
                     </div>
-
-                    <div className="space-y-2">
-                      <AnimatePresence>
-                        {items.map((t, idx) => (
-                          <motion.div
-                            key={`${t}-${idx}`}
-                            layout
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            className="flex items-center justify-between p-2 rounded-md border border-[#2F6B60]/30 bg-black/20"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="text-lg">{taskEmoji(t)}</div>
-                              <div className="text-sm truncate">{t}</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => moveToNextSlot(slot, idx)}
-                                className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
-                              >
-                                ▶
-                              </button>
-                              <button
-                                onClick={() => removeFrom(slot, idx)}
-                                className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs hover:shadow-[0_0_8px_rgba(214,30,54,0.6)] transition"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                      {items.length === 0 && (
-                        <div className="text-sm text-[#7FAFA4] border border-dashed border-[#2F6B60]/40 rounded p-4">
-                          Empty — drop a task here
-                        </div>
-                      )}
+                    <div className="text-xs text-[#7FAFA4]">
+                      {items.length} items
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      const preset = "💪 Gym Workout";
+                      updateDay((day) => ({
+                        ...day,
+                        [slot]: [...(day[slot] || []), preset],
+                      }));
+                      showToast(`Added preset to ${slot}!`);
+                    }}
+                    className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
+                  >
+                    + Preset
+                  </button>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Items with proper scroll */}
+                <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#2F6B60]/60 scrollbar-track-transparent">
+                  <AnimatePresence mode="wait">
+                    {items.length === 0 ? (
+                      <motion.div
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col items-center justify-center text-sm text-[#7FAFA4] border border-dashed border-[#2F6B60]/40 rounded p-4"
+                      >
+                        Empty — drop a task here
+                      </motion.div>
+                    ) : (
+                      items.map((t, idx) => (
+                        <motion.div
+                          key={`${slot}-${t}-${idx}`}
+                          layout
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          className="group flex items-center justify-between gap-2 p-2.5 rounded-md border border-[#2F6B60]/30 bg-black/20 hover:bg-black/30 hover:border-[#3FA796]/50 transition"
+                        >
+                          <div className="text-sm text-[#E8FFFA] truncate flex-1">
+                            {t}
+                          </div>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+                            <button
+                              onClick={() => moveToNextSlot(slot, idx)}
+                              className="px-2 py-1 rounded bg-black/30 border border-[#2F6B60]/40 text-xs hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition"
+                            >
+                              ▶
+                            </button>
+                            <button
+                              onClick={() => removeFrom(slot, idx)}
+                              className="px-2 py-1 rounded bg-[#7A1D2B] text-white text-xs hover:shadow-[0_0_8px_rgba(214,30,54,0.6)] transition"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
