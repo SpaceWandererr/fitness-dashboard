@@ -31,7 +31,6 @@ const DashboardStateSchema = new mongoose.Schema(
 
     // ===== Misc / Meta =====
     wd_start_weight: { type: Number, default: null },
-    wd_dark: { type: Boolean, default: false },
     wd_mern_progress: { type: Number, default: 0 },
   },
   {

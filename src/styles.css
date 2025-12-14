@@ -236,3 +236,20 @@ body {
 .animate-fadeIn {
   animation: fadeIn 200ms ease-out;
 }
+
+
+@keyframes wave-gentle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wave-gentle {
+  animation: wave-gentle 4s ease-in-out infinite;
+}

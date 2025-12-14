@@ -79,7 +79,6 @@ export default function Control() {
       wd_start_weight: localStorage.getItem("wd_start_weight"),
       wd_done: localStorage.getItem("wd_done"),
       syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
-      wd_dark: localStorage.getItem("wd_dark"),
       label: label,
     };
 
@@ -158,7 +157,6 @@ export default function Control() {
       wd_start_weight: localStorage.getItem("wd_start_weight"),
       wd_done: localStorage.getItem("wd_done"),
       syllabus_tree_v2: localStorage.getItem("syllabus_tree_v2"),
-      wd_dark: localStorage.getItem("wd_dark"),
       timestamp: new Date().toISOString(),
     };
 

@@ -208,6 +208,12 @@ export default function App() {
   }, []);
 
   // dark mode <html class="dark">
+  // derive theme from backend
+  useEffect(() => {
+    if (!dashboardState?.ui?.theme) return;
+    setDark(dashboardState.ui.theme === "dark");
+  }, [dashboardState?.ui?.theme]);
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
@@ -283,7 +289,6 @@ export default function App() {
             return state;
           });
         }
-
       } catch (err) {
         if (!cancelled) console.error("🔥 Load error:", err);
       }
@@ -506,7 +511,19 @@ export default function App() {
                 const y = rect.top + rect.height / 2 - 10;
 
                 setFlashOrigin({ x, y });
-                setDark((v) => !v);
+                setDark((prev) => {
+                  const next = !prev;
+
+                  updateDashboard({
+                    ui: {
+                      ...(dashboardState.ui || {}),
+                      theme: next ? "dark" : "light",
+                    },
+                  });
+
+                  return next;
+                });
+
                 setThemeFlash((prev) => prev + 1);
               }}
               className="relative group rounded-full w-10 h-10 flex
@@ -855,22 +872,59 @@ function VisionCarousel({ cards }) {
   return (
     <div className="relative w-full overflow-hidden">
       {/* Left / Right buttons */}
+      {/* Previous Button - Hidden on mobile */}
       <button
         onClick={prev}
-        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-black/70 border border-teal-500/50 rounded-full shadow-lg hover:bg-teal-900/70 transition"
+        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 
+    hidden sm:flex
+    p-3 sm:p-3.5 
+    bg-teal-500/10 backdrop-blur-md 
+    border border-teal-400/30 
+    rounded-full 
+    shadow-[0_0_20px_rgba(20,184,166,0.3)]
+    hover:bg-teal-500/20 hover:border-teal-400/50 hover:shadow-[0_0_30px_rgba(20,184,166,0.5)]
+    active:scale-95
+    transition-all duration-300 ease-out
+    group"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft
+          size={18}
+          className="text-teal-400 group-hover:text-teal-300 transition-colors"
+        />
       </button>
 
+      {/* Next Button - Hidden on mobile */}
       <button
         onClick={next}
-        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-black/70 border border-teal-500/50 rounded-full shadow-lg hover:bg-teal-900/70 transition"
+        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 
+    hidden sm:flex
+    p-3 sm:p-3.5 
+    bg-teal-500/10 backdrop-blur-md 
+    border border-teal-400/30 
+    rounded-full 
+    shadow-[0_0_20px_rgba(20,184,166,0.3)]
+    hover:bg-teal-500/20 hover:border-teal-400/50 hover:shadow-[0_0_30px_rgba(20,184,166,0.5)]
+    active:scale-95
+    transition-all duration-300 ease-out
+    group"
       >
-        <ChevronRight size={18} />
+        <ChevronRight
+          size={18}
+          className="text-teal-400 group-hover:text-teal-300 transition-colors"
+        />
       </button>
 
+      {/* Mobile Swipe Indicator */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 sm:hidden flex items-center gap-2 px-4 py-2 bg-teal-500/10 backdrop-blur-md border border-teal-400/30 rounded-full">
+        <ChevronLeft size={14} className="text-teal-400 animate-pulse" />
+        <span className="text-teal-300 text-sm font-medium">
+          Swipe to navigate
+        </span>
+        <ChevronRight size={14} className="text-teal-400 animate-pulse" />
+      </div>
+
       {/* Centered slide – mobile gets narrower, tablet+ uses full width of card */}
-      <div className="flex justify-center px-2 sm:px-4">
+      <div className="flex justify-center px-2 mb-16 mt-8 sm:px-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -884,7 +938,7 @@ function VisionCarousel({ cards }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -80 }}
             transition={{ duration: 0.45, ease: "easeOut" }}
-            className="w-full sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[75%]"
+            className="w-full sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[95%]"
           >
             {cards[index]}
           </motion.div>
@@ -931,8 +985,8 @@ function HomeDashboard({
         </div>
 
         {/* Central Core Ring */}
-        <div className="relative z-10 pt-24 pb-32">
-          <div className="max-w-7xl mx-auto px-6">
+        <div className="relative z-10 pt-2 pb-2">
+          <div className="max-w-6xl mx-auto px-6 pt-32 ">
             {/* Core Title + Pulse Ring */}
             <div className="relative flex flex-col items-center">
               <motion.div
@@ -945,10 +999,6 @@ function HomeDashboard({
                 transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
                 className="absolute -top-32 w-[500px] h-[500px] border border-cyan-500/10 rounded-full"
               />
-
-              <p className="text-[10px] tracking-[0.6em] text-emerald-400/60 uppercase font-light mb-4">
-                Personal Operating System v9.1
-              </p>
 
               <h1 className="relative text-8xl md:text-9xl font-black tracking-tighter">
                 <span
@@ -971,7 +1021,7 @@ function HomeDashboard({
             </div>
 
             {/* Orbital Module Ring - Floating HUD Cards */}
-            <div className="relative mt-24">
+            <div className="relative mt-40">
               {/* Invisible center point for orbit */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1" />
 
@@ -1130,7 +1180,7 @@ function HomeDashboard({
             {/* NEURAL COMMAND DECK */}
             <motion.div
               layout
-              className="mt-24 max-w-5xl mx-auto"
+              className="mt-24 max-w-6xl mx-auto"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -1223,8 +1273,8 @@ function HomeDashboard({
             </motion.div>
 
             {/* Final Horizon Line */}
-            <div className="mt-32 text-center">
-              <p className="text-emerald-600/40 text-xs tracking-[1em] uppercase font-light animate-[pulse_6s_ease-in-out_infinite]">
+            <div className="mt-8 text-center">
+              <p className="text-emerald-600 font-semibold uppercase  text-center tracking-[1em] animate-[pulse_6s_ease-in-out_infinite]">
                 ··· VISION HORIZON 2026–2027 ···
               </p>
             </div>
@@ -1236,11 +1286,7 @@ function HomeDashboard({
       {/* VISION + NZ MIGRATION + CORE DIRECTIVES */}
       {/* Same content, but cards shown via VisionCarousel */}
       {/* Vision Cards Section */}
-      <section className="w-full space-y-12 px-6">
-        <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-200/80 text-center">
-          Vision Horizon · 2026–2027
-        </h3>
-
+      <section className="space-y-4 px-2 max-w-8xl">
         <VisionCarousel
           cards={[
             /* MERN */
@@ -1522,7 +1568,7 @@ function VisionCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`relative mx-auto max-w-5xl rounded-3xl border ${border} bg-gradient-to-br ${gradient} p-10 shadow-2xl backdrop-blur-xl ${glow} min-h-screen flex flex-col justify-center snap-start`}
+      className={`relative mx-auto max-w-6xl rounded-3xl border ${border} bg-gradient-to-br ${gradient} p-10 shadow-2xl backdrop-blur-xl ${glow} min-h-screen flex flex-col justify-center snap-start`}
     >
       <div className="flex flex-col gap-6">
         {/* Header */}
@@ -1915,50 +1961,76 @@ function NZMigrationBlock() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.9, ease: "easeOut" }}
-      className="relative mx-auto max-w-5xl rounded-3xl border border-emerald-500/40 bg-gradient-to-br from-emerald-900/20 via-teal-900/20 to-cyan-900/10 p-10 shadow-2xl backdrop-blur-xl min-h-[85vh] flex flex-col justify-center snap-start"
+      className="relative mx-auto max-w-6xl 
+    rounded-2xl sm:rounded-3xl 
+    border border-emerald-500/40 
+    bg-gradient-to-br from-emerald-900/20 via-teal-900/20 to-cyan-900/10 
+    p-6 sm:p-8 md:p-10
+    shadow-2xl backdrop-blur-xl 
+    min-h-screen sm:min-h-[95vh] flex flex-col justify-center snap-start"
       style={{
         boxShadow:
           "0 0 60px rgba(16, 185, 129, 0.5), inset 0 0 40px rgba(16, 185, 129, 0.15)",
       }}
     >
-      {/* Command status bar */}
-      <div className="mb-6 grid gap-2 text-[10px] sm:grid-cols-4">
-        {stages.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-full border border-emerald-400/40 bg-black/30 px-3 py-1 flex flex-col items-start"
-          >
-            <span className="text-emerald-200 font-semibold">{s.label}</span>
-            <span className="text-[9px] text-emerald-100/80">{s.status}</span>
-          </div>
-        ))}
+      {/* Command status bar - Improved */}
+      <div className="mb-8 sm:mb-10 flex justify-end">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl w-full">
+          {stages.map((s) => (
+            <div
+              key={s.label}
+              className="rounded-lg border border-emerald-400/40 bg-black/40 backdrop-blur-sm px-3 py-2.5 flex flex-col items-start"
+            >
+              <span className="text-[10px] sm:text-xs text-emerald-200 font-bold uppercase tracking-wide">
+                {s.label}
+              </span>
+              <span className="text-[9px] sm:text-[10px] text-emerald-100/70 mt-0.5 font-medium">
+                {s.status}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="flex items-start gap-8">
-        <div className="text-5xl sm:text-7xl">🇳🇿</div>
-        <div className="flex-1 space-y-8">
+      <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-12 sm:justify-end">
+        {/* Flag - Large on desktop */}
+        <div className="hidden sm:block sm:mr-auto">
+          <div className="text-7xl lg:text-8xl opacity-80 animate-wave inline-block origin-bottom-right">
+            🇳🇿
+          </div>
+        </div>
+
+        {/* Main content - Right aligned on desktop */}
+        <div className="flex-1 sm:max-w-2xl lg:max-w-3xl space-y-8">
+          {/* Mobile header with flag */}
+          <div className="flex items-center gap-4 sm:hidden">
+            <div className="text-5xl opacity-80 animate-wave inline-block origin-bottom-right">
+              🇳🇿
+            </div>
+          </div>
+
           <div>
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-emerald-300">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-emerald-300 leading-tight">
               New Zealand Migration Protocol · 2025–2027
             </h2>
-            <p className="mt-4 text-lg font-medium text-emerald-200/90">
+            <p className="mt-4 sm:mt-5 text-base sm:text-lg font-medium text-emerald-200/90">
               Not a random dream — a structured, engineered pipeline.
             </p>
-            <p className="mt-2 text-base text-teal-100/80">
+            <p className="mt-2 text-sm sm:text-base text-teal-100/80">
               Expanded with timelines, costs, contingencies, and weekly KPIs.
             </p>
           </div>
 
-          <ol className="space-y-6 text-sm sm:text-base">
+          <ol className="space-y-5 sm:space-y-6 text-sm sm:text-base">
             {[
               {
                 step: "Align with Green List",
-                desc: "Focus on Software / Web Developer roles on NZ’s Green List. Your MERN + DSA roadmap is literally building this eligibility.",
+                desc: "Focus on Software / Web Developer roles on NZ's Green List. Your MERN + DSA roadmap is literally building this eligibility.",
                 timeline: "6–12 months to skill up",
               },
               {
                 step: "Target Accredited Employers",
-                desc: "Seek, LinkedIn, company sites. Only apply to “Accredited Employeram� companies. 10+ tailored applications/week.",
+                desc: "Seek, LinkedIn, company sites. Only apply to 'Accredited Employer' companies. 10+ tailored applications/week.",
                 timeline: "Start now → peak in Q3 2025",
               },
               {
@@ -1982,15 +2054,19 @@ function NZMigrationBlock() {
                 initial={{ opacity: 0, x: -50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.15 }}
-                className="flex gap-5"
+                className="flex gap-4 sm:gap-5"
               >
-                <span className="flex size-10 sm:size-12 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-lg sm:text-2xl font-bold text-emerald-300 ring-4 ring-emerald-500/30">
+                <span className="flex size-9 sm:size-11 md:size-12 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-lg sm:text-xl md:text-2xl font-bold text-emerald-300 ring-2 sm:ring-4 ring-emerald-500/30">
                   {i + 1}
                 </span>
-                <div className="flex-1">
-                  <p className="font-bold text-emerald-300">{item.step}</p>
-                  <p className="mt-1 text-slate-200">{item.desc}</p>
-                  <p className="mt-2 text-xs font-mono text-teal-300/80">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-emerald-300 text-sm sm:text-base">
+                    {item.step}
+                  </p>
+                  <p className="mt-1.5 text-slate-200 text-xs sm:text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
+                  <p className="mt-2 text-[10px] sm:text-xs font-mono text-teal-300/80">
                     Timeline: {item.timeline}
                   </p>
                 </div>
@@ -1998,17 +2074,17 @@ function NZMigrationBlock() {
             ))}
           </ol>
 
-          <div className="mt-10 rounded-2xl border border-emerald-500/30 bg-emerald-900/30 p-6 text-center">
-            <p className="text-xl sm:text-2xl font-bold text-emerald-100">
-              Migration isn’t escape.
+          <div className="mt-8 sm:mt-10 rounded-xl sm:rounded-2xl border border-emerald-500/30 bg-emerald-900/30 p-5 sm:p-6 text-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-100">
+              Migration isn't escape.
             </p>
-            <p className="mt-2 text-2xl sm:text-3xl font-black text-white">
-              It’s a <span className="text-emerald-400">VERSION UPGRADE</span>.
+            <p className="mt-2 text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight">
+              It's a <span className="text-emerald-400">VERSION UPGRADE</span>.
             </p>
-            <p className="mt-3 text-sm sm:text-base text-teal-200">
+            <p className="mt-3 text-xs sm:text-sm md:text-base text-teal-200">
               Current Jay config decides how strong v2.0 in New Zealand will be.
             </p>
-            <p className="mt-4 font-mono text-[10px] sm:text-xs uppercase tracking-widest text-emerald-300">
+            <p className="mt-4 font-mono text-[9px] sm:text-[10px] md:text-xs uppercase tracking-wider sm:tracking-widest text-emerald-300">
               Monitor immigration policy every quarter • No excuses • Execute
             </p>
           </div>
@@ -2043,7 +2119,7 @@ function DirectivesBlock() {
   ];
 
   return (
-    <section className="w-full max-w-7xl mx-auto mt-24 px-6 relative">
+    <section className="w-full max-w-7xl mx-auto mt-24 px-0 sm:px-6 relative">
       {/* Background glow */}
       <div
         className="absolute inset-0 rounded-3xl 

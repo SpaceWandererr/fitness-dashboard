@@ -68,8 +68,15 @@ router.put("/", async (req, res) => {
       updatedAt: new Date().toISOString(),
     };
 
+    // ❌ REMOVE MONGOOSE META
     delete mergedState._id;
     delete mergedState.__v;
+
+    // 🧹 HARD DELETE LEGACY KEYS (THIS WAS MISSING)
+    if ("wd_dark" in mergedState) {
+      console.log("🧹 Purging wd_dark from merged state");
+      delete mergedState.wd_dark;
+    }
 
     const updated = await DashboardState.findOneAndUpdate(
       { userId },
