@@ -444,8 +444,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
             transition-all duration-300 rounded-full
             ${
               index === currentPage
-                ? "w-6 h-1.5 bg-gradient-to-r from-cyan-400 to-teal-400"
-                : "w-1.5 h-1.5 bg-white/20 hover:bg-white/40"
+                ? "w-6 h-2.5 bg-gradient-to-r from-cyan-400 to-teal-400"
+                : "w-2.5 h-2.5 bg-white/20 hover:bg-white/40"
             }
           `}
             aria-label={`Go to page ${index + 1}`}
