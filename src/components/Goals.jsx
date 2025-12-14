@@ -1,5 +1,4 @@
-// Goals.jsx — Full working cleaned + dynamic wrapper version (split part 1/3)
-// UI preserved. All logic retained. All 5 sections wrapped in FadeSwiper.
+// Goals.jsx — Full working cleaned + dynamic wrapper version with FIXED responsive heights/widths
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -229,21 +228,12 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
   // Read dates from global dashboard state
-  const startISO = dashboardState?.wd_mern_start_date || todayISO;
-
-  const endISO = dashboardState?.wd_mern_end_date || DEFAULT_END;
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(START_KEY, startISO);
-    } catch {}
-  }, [startISO]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(END_KEY, endISO);
-    } catch {}
-  }, [endISO]);
+  const [startISO, setStartISO] = useState(
+    dashboardState?.wd_mern_start_date || todayISO
+  );
+  const [endISO, setEndISO] = useState(
+    dashboardState?.wd_mern_end_date || DEFAULT_END
+  );
 
   // Derived date metrics
   const startDate = useMemo(
@@ -276,6 +266,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
     console.log("DaysElapsed:", daysElapsed);
     console.log("DaysRemaining:", daysRemaining);
   }, [startISO, endISO, daysElapsed, daysRemaining]);
+
   const timeProgressPct =
     totalDays && daysElapsed !== null && totalDays > 0
       ? Math.max(0, Math.min(100, Math.round((daysElapsed / totalDays) * 100)))
@@ -299,19 +290,20 @@ export default function Goals({ dashboardState, updateDashboard }) {
       projectedFinishISO = projected.toISOString().slice(0, 10);
     }
   }
-  //Insoirational Quotes
+
+  //Inspirational Quotes
   const inspoLines = useMemo(
     () => [
       "A disciplined mind builds a limitless life — this dashboard is your daily proof.",
       "Every small step you take here shapes the man you're becoming tomorrow.",
       "Skill. Fitness. Discipline. Dreams. This is where your future self is born.",
-      "Your goals aren’t wishes — they’re blueprints for the life you’re building brick by brick.",
+      "Your goals aren't wishes — they're blueprints for the life you're building brick by brick.",
       "Focus today, freedom tomorrow. This dashboard shows the path.",
       "One man. One mission. One relentlessly evolving future.",
       "The world you want is created by the habits you choose every day.",
       "Rise sharper. Work smarter. Dream louder. Your transformation begins here.",
-      "Don’t chase motivation — build systems. This dashboard *is* your system.",
-      "The grind is temporary. The life you’re chasing through MERN, fitness and discipline is permanent.",
+      "Don't chase motivation — build systems. This dashboard *is* your system.",
+      "The grind is temporary. The life you're chasing through MERN, fitness and discipline is permanent.",
     ],
     []
   );
@@ -355,25 +347,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
   useEffect(() => setTmpEnd(endISO), [endISO]);
-
-  const saveDates = () => {
-    const s = parseISOFromDDMMYYYY(tmpStart) || new Date(tmpStart);
-    const e = parseISOFromDDMMYYYY(tmpEnd) || new Date(tmpEnd);
-    function toISODate(d) {
-      const D = new Date(d);
-      if (isNaN(D)) return null;
-      return D.toISOString().slice(0, 10);
-    }
-    const sISO = toISODate(s);
-    const eISO = toISODate(e);
-    if (!sISO || !eISO) {
-      alert("Invalid dates");
-      return;
-    }
-    setStartISO(sISO);
-    setEndISO(eISO);
-    setShowDatePopup(false);
-  };
 
   const popupRef = useRef(null);
   useEffect(() => {
@@ -429,6 +402,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
       </svg>
     );
   }
+
   // NZ progress numbers (kept as before)
   const basicsPercent = 95;
   const interPercent = 70;
@@ -456,22 +430,39 @@ export default function Goals({ dashboardState, updateDashboard }) {
   };
 
   /* --------------------------
-          Now we prepare the five "section-cards" as single-item arrays
-          so we can wrap them in FadeSwiper without removing any logic.
-          Each element is an object with a `render` function that returns the exact same UI
-          that existed before. This keeps all logic intact while making sections swipable.
-        ---------------------------*/
+   MERN WRAPPER - FIXED RESPONSIVE DIMENSIONS
+  ---------------------------*/
+
+  function SwipeDots({ currentPage, totalPages, onPageChange }) {
+    return (
+      <div className="flex items-center justify-center gap-1.5 pt-2 pb-1">
+        {Array.from({ length: totalPages }).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => onPageChange(index)}
+            className={`
+            transition-all duration-300 rounded-full
+            ${
+              index === currentPage
+                ? "w-6 h-1.5 bg-gradient-to-r from-cyan-400 to-teal-400"
+                : "w-1.5 h-1.5 bg-white/20 hover:bg-white/40"
+            }
+          `}
+            aria-label={`Go to page ${index + 1}`}
+          />
+        ))}
+      </div>
+    );
+  }
 
   const mernWrapper = [
     {
-      // render MERN full card (same markup + logic as original)
       render: () => (
         <motion.div
-          className="relative rounded-2xl h-[520px] w-[270px] md:w-[300px] lg:w-[320px] mx-auto md:mx-0 md:pl-2"
+          className="relative rounded-2xl w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleDragEnd(info)}
-          // whileHover={{ scale: 1.01 }}
           whileHover={{ y: -4 }}
           style={{
             transform: "translateZ(0)",
@@ -483,17 +474,16 @@ export default function Goals({ dashboardState, updateDashboard }) {
         >
           <div
             className="relative rounded-xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-                    backdrop-blur-md p-4 md:p-2 shadow-xl h-[500px] md:w-full"
+                  backdrop-blur-md p-4 shadow-xl min-h-[580px] sm:min-h-[540px] lg:min-h-[520px]"
             style={{
               transformStyle: "preserve-3d",
-              minHeight: 420,
-              overflow: "hidden",
+              overflow: "visible",
               boxShadow:
                 "0 0 25px rgba(0,255,210,0.08), inset 0 0 10px rgba(255,255,255,0.04)",
               position: "relative",
             }}
           >
-            {/* VERTICAL BAR + HORIZONTAL BAR + NEON corners (same as original) */}
+            {/* VERTICAL BAR + HORIZONTAL BAR + NEON corners */}
             <div
               className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
               style={{
@@ -505,7 +495,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
               }}
             />
             <div
-              className="absolute bottom-0 left-0  w-full h-[4px] "
+              className="absolute bottom-0 left-0 w-full h-[4px]"
               style={{
                 background:
                   "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
@@ -525,13 +515,14 @@ export default function Goals({ dashboardState, updateDashboard }) {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -60, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 220, damping: 28 }}
-                className="absolute inset-0 p-4 md:p-4"
+                className="h-full p-4 flex flex-col"
               >
                 {/* PAGE 0 — Main redesigned MERN Mastery */}
                 {page === 0 && (
-                  <div className="w-full h-full flex flex-col justify-around ">
-                    <div className="w-full text-center md:text-left ">
-                      <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2 justify-center md:justify-start whitespace-nowrap">
+                  <div className="w-full h-full flex flex-col justify-between gap-4">
+                    {/* Header Section */}
+                    <div className="w-full text-center md:text-left">
+                      <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2 justify-center md:justify-start">
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{
@@ -539,31 +530,122 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             duration: 8,
                             ease: "linear",
                           }}
-                          className="text-4xl text-green-400 inline-block drop-shadow-[0_0_8px_rgba(0,255,100,0.6)]"
+                          className="text-3xl text-green-400 inline-block drop-shadow-[0_0_8px_rgba(0,255,100,0.6)]"
                         >
                           💠
                         </motion.div>
-                        MERN MASTERY
+                        <span className="text-base md:text-xl">
+                          MERN MASTERY
+                        </span>
                       </h3>
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-around w-full gap-2">
-                      <div className="flex flex-col">
+                    {/* Dates + Progress Ring */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between w-full gap-3">
+                      <div className="flex flex-col gap-2">
                         <div className="text-sm opacity-80">
                           Start: {formatDDMMYYYY(startISO)}
                         </div>
                         <div className="text-sm opacity-80">
                           End: {formatDDMMYYYY(endISO)}
                         </div>
-                        <button
-                          onClick={() => setShowDatePopup((s) => !s)}
-                          className="mt-2 text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-md"
-                        >
-                          🗓 Set Dates
-                        </button>
+
+                        {/* Date Button with Dropdown */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowDatePopup(!showDatePopup)}
+                            className="mt-1 px-3 py-1.5 rounded-md text-xs bg-white/10 border border-white/15 hover:bg-white/15 transition-colors"
+                          >
+                            📅 Set Dates
+                          </button>
+
+                          {/* Date Popup - Dropdown Style */}
+                          <AnimatePresence>
+                            {showDatePopup && (
+                              <motion.div
+                                ref={popupRef}
+                                initial={{ opacity: 0, scale: 0.96, y: -8 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.96, y: -8 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute z-50 top-full mt-2 left-0 w-[240px] rounded-lg bg-[rgba(10,18,28,0.98)] border border-white/20 backdrop-blur-xl shadow-2xl p-3"
+                                style={{
+                                  boxShadow:
+                                    "0 0 30px rgba(0,240,210,0.15), inset 0 0 14px rgba(255,255,255,0.04)",
+                                }}
+                              >
+                                <div className="text-xs font-semibold text-white/90 mb-3">
+                                  Select Dates
+                                </div>
+
+                                {/* Start Date */}
+                                <div className="flex flex-col gap-1 mb-2">
+                                  <label className="text-[10px] text-white/60">
+                                    Start Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={startISO || ""}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setStartISO(val);
+                                      updateDashboard({
+                                        wd_mern_start_date: val,
+                                      });
+                                    }}
+                                    className="w-full px-2 py-1.5 rounded bg-white/8 border border-white/15 text-xs focus:outline-none focus:border-teal-400/60 transition-colors"
+                                  />
+                                </div>
+
+                                {/* End Date */}
+                                <div className="flex flex-col gap-1 mb-3">
+                                  <label className="text-[10px] text-white/60">
+                                    End Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={endISO || ""}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setEndISO(val);
+                                      updateDashboard({
+                                        wd_mern_end_date: val,
+                                      });
+                                    }}
+                                    className="w-full px-2 py-1.5 rounded bg-white/8 border border-white/15 text-xs focus:outline-none focus:border-teal-400/60 transition-colors"
+                                  />
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setShowDatePopup(false)}
+                                    className="flex-1 text-[11px] py-1.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      updateDashboard({
+                                        wd_mern_start_date: startISO,
+                                        wd_mern_end_date: endISO,
+                                      });
+                                      setShowDatePopup(false);
+                                    }}
+                                    className="flex-1 text-[11px] py-1.5 rounded bg-teal-500/30 border border-teal-400/30 text-teal-200 hover:bg-teal-500/40 font-medium transition-colors"
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
-                      <div className="w-[120px] h-[130px] md:w-[120px] md:h-[130px] flex-shrink-0 overflow-visible">
-                        <svg width="130" height="130" viewBox="0 0 200 200">
+
+                      {/* Progress Ring */}
+                      <div className="w-[110px] h-[110px] flex-shrink-0 mx-auto sm:mx-0">
+                        <svg width="110" height="110" viewBox="0 0 200 200">
                           <defs>
                             <linearGradient
                               id={ringGradientStops[0]}
@@ -579,7 +661,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                 stopColor={ringGradientStops[2]}
                               />
                             </linearGradient>
-
                             <filter
                               id="glow"
                               x="-50%"
@@ -628,10 +709,10 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             </text>
                             <text
                               x="0"
-                              y="26"
+                              y="20"
                               textAnchor="middle"
                               fill="white"
-                              className="mt-2 text-xl opacity-70"
+                              className="text-base opacity-70"
                             >
                               MERN
                             </text>
@@ -640,11 +721,12 @@ export default function Goals({ dashboardState, updateDashboard }) {
                       </div>
                     </div>
 
+                    {/* Timeline Section */}
                     <div className="w-full">
                       <div className="text-sm opacity-80 mb-2">Timeline</div>
-                      <div className="w-full h-3 bg-white/5 rounded-full md:h-3 relative overflow-hidden">
+                      <div className="w-full h-2.5 bg-white/5 rounded-full relative overflow-hidden">
                         <div
-                          className="h-3 absolute top-0 left-0 rounded-full"
+                          className="h-2.5 absolute top-0 left-0 rounded-full"
                           style={{
                             width: `${timeProgressPct}%`,
                             background: `linear-gradient(90deg, ${ringGradientStops[1]}, ${ringGradientStops[2]})`,
@@ -653,40 +735,45 @@ export default function Goals({ dashboardState, updateDashboard }) {
                           }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs opacity-70 mt-2">
+                      <div className="flex justify-between text-xs opacity-70 mt-1.5">
                         <div>Elapsed: {timeProgressPct}%</div>
-                        <div>Remaining: {100 - timeProgressPct}%</div>
+                        <div>Left: {100 - timeProgressPct}%</div>
                       </div>
                     </div>
 
-                    <div className="w-full rounded-xl p-2 backdrop-blur border border-white/10">
+                    {/* Snapshot Section - IMPROVED */}
+                    <div className="w-full rounded-xl p-3 backdrop-blur border border-white/10">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Left Column */}
                         <div className="flex flex-col gap-1">
-                          <div className="text-sm opacity-70">Snapshot</div>
-                          <div className="text-base font-semibold">
+                          <div className="text-xs opacity-70 mb-1">
+                            Snapshot
+                          </div>
+                          <div className="text-sm font-semibold">
                             Topics: {doneTopics} / {totalTopics || "—"}
                           </div>
-                          <div className="text-xs opacity-70 mt-1 whitespace-nowrap">
-                            Pace needed: {paceRequired} / day
+                          <div className="text-xs opacity-70">
+                            Pace: {paceRequired}/day
                           </div>
                           <div className="text-xs opacity-70">
-                            Projected finish:{" "}
+                            Finish:{" "}
                             {projectedFinishISO
                               ? formatDDMMYYYY(projectedFinishISO)
                               : "—"}
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-center justify-center text-center">
-                          <div className="text-sm opacity-80">
-                            Days Remaining
+                        {/* Right Column - Days Remaining */}
+                        <div className="flex flex-col items-center justify-center text-center bg-white/5 rounded-lg p-2">
+                          <div className="text-xs opacity-70 mb-1">
+                            Days Left
                           </div>
-                          <div className="text-4xl font-bold leading-none my-2">
-                            {totalDays ?? "—"}
+                          <div className="text-3xl font-bold leading-none">
+                            {daysRemaining ?? "—"}
                           </div>
-                          <div className="text-xs opacity-70 whitespace-nowrap">
-                            Weeks: {Math.ceil((daysRemaining || 0) / 7)} •
-                            Months: {Math.ceil((daysRemaining || 0) / 30)}
+                          <div className="text-[10px] opacity-60 mt-1">
+                            ~{Math.ceil((daysRemaining || 0) / 7)}w •{" "}
+                            {Math.ceil((daysRemaining || 0) / 30)}m
                           </div>
                         </div>
                       </div>
@@ -697,10 +784,9 @@ export default function Goals({ dashboardState, updateDashboard }) {
                 {/* PAGE 1 — Basics */}
                 {page === 1 && (
                   <motion.div
-                    className="w-full h-full  relative flex flex-col p-3"
+                    className="w-full h-full relative flex flex-col p-3"
                     variants={tiltVariants}
                     initial="initial"
-                    // whileHover="hover"
                     whileHover={{ y: -4 }}
                   >
                     <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-teal-300 via-cyan-300 to-purple-400 opacity-60 blur-none rounded-xl mr-2" />
@@ -754,7 +840,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
                     className="w-full h-full relative flex flex-col p-3"
                     variants={tiltVariants}
                     initial="initial"
-                    // whileHover="hover"
                     whileHover={{ y: -4 }}
                   >
                     <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-purple-400 via-indigo-400 to-blue-400 opacity-60 blur-none rounded mr-2" />
@@ -810,7 +895,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
                     className="w-full h-full relative flex flex-col p-3"
                     variants={tiltVariants}
                     initial="initial"
-                    // whileHover="hover"
                     whileHover={{ y: -4 }}
                   >
                     <div className="absolute left-0 top-0 h-full w-[4px] bg-gradient-to-b from-red-400 via-orange-400 to-yellow-400 opacity-60 blur-none rounded mr-2" />
@@ -857,68 +941,14 @@ export default function Goals({ dashboardState, updateDashboard }) {
                     </div>
                   </motion.div>
                 )}
-              </motion.div>
-            </AnimatePresence>
 
-            {/* Date Popup (retained) */}
-            <AnimatePresence>
-              {showDatePopup && (
-                <motion.div
-                  ref={popupRef}
-                  initial={{ opacity: 0, scale: 0.98, y: 6 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: 6 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute left-2/2 -translate-x-1/2 bottom-6 z-50 w-[260px] p-4 rounded-xl bg-[rgba(10,18,28,0.92)] border border-white/10 backdrop-blur"
-                >
-                  <div className="text-xs text-white/70 mb-3">
-                    Select Start & End Date
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[11px] opacity-70">
-                        Start Date
-                      </label>
-                      <input
-                        type="date"
-                        value={startISO || ""}
-                        onChange={(e) => {
-                          const val = e.target.value; // always YYYY-MM-DD
-                          console.log("New Start:", val);
-                          setStartISO(val);
-                          localStorage.setItem("wd_mern_start_date", val);
-                        }}
-                        className="w-full px-2 py-2 rounded-md bg-white/5 border border-white/10 text-xs focus:outline-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[11px] opacity-70">End Date</label>
-                      <input
-                        type="date"
-                        value={endISO}
-                        onChange={(e) => setEndISO(e.target.value)}
-                        className="w-full px-2 py-2 rounded-md bg-white/5 border border-white/10 text-xs focus:outline-none"
-                      />
-                    </div>
-                    <div className="flex justify-between mt-2">
-                      <button
-                        onClick={() => setShowDatePopup(false)}
-                        className="text-xs px-3 py-1 rounded-md bg-white/5 border border-white/10"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          saveDates();
-                        }}
-                        className="text-xs px-3 py-1 rounded-md bg-teal-500/20 border border-teal-400/20 text-teal-300"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+                {/* ADD THIS - Swipe Dots */}
+                <SwipeDots
+                  currentPage={page}
+                  totalPages={4}
+                  onPageChange={setPage}
+                />
+              </motion.div>
             </AnimatePresence>
           </div>
         </motion.div>
@@ -991,9 +1021,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleNZDrag(info)}
-          // whileHover={{ scale: 1.01 }}
           whileHover={{ y: -4 }}
-          className="w-[270px] md:w-full rounded-xl lg:p-5 p-4 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
+          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full rounded-xl p-4 lg:p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
           style={{
             transform: "translateZ(0)",
             willChange: "transform, opacity",
@@ -1005,8 +1034,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
           }}
         >
           <div
-            className="absolute left-0 top-0 h-full w-[4px] lg:rounded-r-lg border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-                    backdrop-blur-md "
+            className="absolute left-0 top-0 h-full w-[4px] lg:rounded-r-lg"
             style={{
               background:
                 "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
@@ -1016,7 +1044,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
             }}
           />
           <div
-            className="absolute bottom-0 left-0  w-full h-[4px] "
+            className="absolute bottom-0 left-0 w-full h-[4px]"
             style={{
               background:
                 "linear-gradient(to bottom, rgb(147,197,253), rgb(34,211,238), rgb(134,239,172))",
@@ -1071,11 +1099,10 @@ export default function Goals({ dashboardState, updateDashboard }) {
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          // whileHover={{ scale: 1.02 }}
           whileHover={{ y: -4 }}
-          className="w-[270px] md:w-full min-h-[230px] relative rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg overflow-hidden"
+          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full min-h-[230px] relative rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg overflow-hidden"
         >
-          {/* soft NZ-style holo bars (50% softer glow) */}
+          {/* soft NZ-style holo bars */}
           <div
             className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
             style={{
@@ -1102,52 +1129,44 @@ export default function Goals({ dashboardState, updateDashboard }) {
           </h4>
 
           {(() => {
-            // original gym logic from your provided file (kept intact)
-            // Read everything from App.jsx dashboard state (single source of truth)
-            const gymLogs = dashboardState?.wd_gym_logs || {};
-            const weightOverrides = dashboardState?.wd_weight_overrides || {};
-            const bmiLogs = dashboardState?.bmi_logs || [];
+            const logs = dashboardState?.wd_gym_logs || {};
             const goals = dashboardState?.wd_goals || {};
 
-            const target = Number(goals?.targetWeight || 0);
-            const start = Number(dashboardState?.wd_start_weight ?? null);
+            const target = Number(goals?.targetWeight);
+            const baseline = Number(goals?.currentWeight);
 
-            const today = new Date();
-            const dateKey = today.toISOString().slice(0, 10);
+            // latest logged weight
+            const dates = Object.keys(logs)
+              .filter((k) => logs[k]?.weight != null)
+              .sort();
 
-            // renamed sources (from dashboardState)
-            const todayLog = gymLogs[dateKey] || {};
+            const latestLog =
+              dates.length > 0 ? logs[dates[dates.length - 1]] : null;
 
-            const recentWeights = bmiLogs
-              .map((e) => e?.weight)
-              .filter((w) => typeof w === "number");
+            const curWeight = Number.isFinite(Number(latestLog?.weight))
+              ? Number(latestLog.weight)
+              : Number.isFinite(baseline)
+              ? baseline
+              : null;
 
-            // infer starting weight
-            const inferredStart = recentWeights.length
-              ? Math.max(...recentWeights.slice(-30))
-              : todayLog.weight ?? target;
+            const start = Number.isFinite(baseline) ? baseline : curWeight;
 
-            // final start weight
-            const effectiveStart = start ?? inferredStart;
-
-            // current weight resolution order
-            const curWeight =
-              weightOverrides[dateKey] ??
-              todayLog.weight ??
-              recentWeights.slice().reverse()[0] ??
-              effectiveStart;
-
-            // constants
             const height = 1.7678;
 
-            // BMI
-            const bmi = curWeight
-              ? (curWeight / (height * height)).toFixed(1)
-              : "—";
+            const bmi =
+              curWeight && height
+                ? (curWeight / (height * height)).toFixed(1)
+                : "—";
 
-            // progress
-            const totalNeeded = effectiveStart - target;
-            const lost = effectiveStart - curWeight;
+            const totalNeeded =
+              Number.isFinite(start) && Number.isFinite(target)
+                ? Math.max(0, start - target)
+                : 0;
+
+            const lost =
+              Number.isFinite(start) && Number.isFinite(curWeight)
+                ? Math.max(0, start - curWeight)
+                : 0;
 
             const pct =
               totalNeeded > 0
@@ -1157,13 +1176,14 @@ export default function Goals({ dashboardState, updateDashboard }) {
             return (
               <div className="space-y-3">
                 <div className="text-sm opacity-75">
-                  Current weight, target weight & BMI
+                  Latest gym log • progress toward target
                 </div>
 
                 <div>
                   <div className="text-xs opacity-70">
                     Lost {lost.toFixed(1)}kg / {totalNeeded.toFixed(1)}kg
                   </div>
+
                   <div className="h-3 bg-white/5 rounded-full mt-1 overflow-hidden">
                     <div
                       className="h-3 rounded-full"
@@ -1176,20 +1196,27 @@ export default function Goals({ dashboardState, updateDashboard }) {
                       }}
                     />
                   </div>
+
                   <div className="text-xs opacity-60 mt-1">
-                    {pct}% done <span className="pl-6">6x / Week</span>
+                    {pct}% done <span className="pl-6">6× / Week</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1 text-center mt-1 ">
+                <div className="grid grid-cols-3 gap-1 text-center mt-1">
                   <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                    <div className="text-sm font-semibold">{curWeight}kg</div>
+                    <div className="text-sm font-semibold">
+                      {curWeight ?? "—"}kg
+                    </div>
                     <div className="text-[10px] opacity-70">Current</div>
                   </div>
+
                   <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                    <div className="text-sm font-semibold">{target}kg</div>
+                    <div className="text-sm font-semibold">
+                      {Number.isFinite(target) ? target : "—"}kg
+                    </div>
                     <div className="text-[10px] opacity-70">Target</div>
                   </div>
+
                   <div className="bg-white/5 p-2 rounded-lg border border-white/10">
                     <div className="text-sm font-semibold">{bmi}</div>
                     <div className="text-[10px] opacity-70">BMI</div>
@@ -1209,9 +1236,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          // whileHover={{ scale: 1.02 }}
           whileHover={{ y: -4 }}
-          className="w-[270px] md:w-full min-h-[260px] rounded-xl p-5 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full min-h-[260px] rounded-xl p-4 lg:p-5 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
           {/* soft NZ-style holo bars */}
           <div
@@ -1289,10 +1315,9 @@ export default function Goals({ dashboardState, updateDashboard }) {
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          // whileHover={{ scale: 1.02 }}
           whileHover={{ y: -4 }}
           transition={{ duration: 0 }}
-          className="w-[270px] md:w-full min-h-[200px] rounded-xl pl-4 p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full min-h-[200px] rounded-xl pl-4 p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
           {/* soft NZ-style holo bars */}
           <div
@@ -1357,35 +1382,31 @@ export default function Goals({ dashboardState, updateDashboard }) {
   ];
 
   /* --------------------------
-          Now render the layout, replacing original sections
-          with FadeSwiper wrappers while preserving all logic/UI.
-        ---------------------------*/
+   RENDER LAYOUT
+  ---------------------------*/
 
   return (
-    <div
-      className="w-full
-            relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl "
-    >
+    <div className="w-full relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl">
       {/* subtle background holographic grid */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgba(6,30,26,0.18)] via-[rgba(6,18,30,0.12)] to-[rgba(112,14,30,0.06)]" />
         <div className="absolute inset-0 animate-grid move-grid" />
       </div>
 
-      <header className="mb-2 max-w-6xl mx-auto px-6 pb-2 flex items-center justify-between">
+      <header className="mb-2 max-w-6xl mx-auto px-4 sm:px-6 pb-2 flex items-center justify-between">
         <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-emerald-400 tracking-tight whitespace-nowrap hover:tracking-wider transition-all duration-300">
           JAY SINH THAKUR
         </div>
       </header>
 
       {/* Main Content Section */}
-      <main className="max-w-6xl mx-auto px-2 pb-1">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pb-1">
         <section
           className="mb-4 transform-gpu"
           style={{ transform: `translateZ(40px)` }}
         >
           <h1
-            className="text-4xl md:text-5xl font-extrabold leading-snug text-center"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-snug text-center px-2"
             style={{
               textShadow:
                 "0 6px 30px rgba(0,0,0,0.6), 0 0 18px rgba(40,200,180,0.06)",
@@ -1396,7 +1417,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
             </span>
           </h1>
           {/*QuotesSection*/}
-          <div className="mt-1 max-w-2xl mx-auto">
+          <div className="mt-1 max-w-2xl mx-auto px-2">
             <div className="rounded-2xl p-0 bg-[rgba(255,255,255,0.01)] text-center">
               <FadeSwiper
                 data={inspoLines}
@@ -1411,16 +1432,16 @@ export default function Goals({ dashboardState, updateDashboard }) {
           </div>
         </section>
 
-        {/* Page One */}
+        {/* Page One - FIXED RESPONSIVE GRID */}
         <section className="min-h-[calc(60vh-var(--nav-height))] w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 justify-items-center lg:justify-items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 justify-items-center lg:justify-items-stretch">
             {/* LEFT: MERN (tall) */}
-            <div className="space-y-3">
+            <div className="w-full flex justify-center lg:justify-start">
               <FadeSwiper data={mernWrapper} render={(it) => it.render()} />
             </div>
 
             {/* MIDDLE: NZ (tall) + Fitness (short) */}
-            <div className="space-y-3">
+            <div className="w-full space-y-3 flex flex-col items-center lg:items-stretch">
               <FadeSwiper
                 data={nzWrapper}
                 innerDrag={false}
@@ -1435,7 +1456,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
             </div>
 
             {/* RIGHT: Routine + Dream (shorter) */}
-            <div className="space-y-3">
+            <div className="w-full space-y-3 flex flex-col items-center lg:items-stretch">
               <FadeSwiper data={routineWrapper} render={(it) => it.render()} />
 
               <FadeSwiper
@@ -1447,26 +1468,18 @@ export default function Goals({ dashboardState, updateDashboard }) {
           </div>
         </section>
 
-        {/* Page Two */}
-        {/* =====================================================
-                  NZ MIGRATION — TIMELINE ROADMAP + CHAPTER DETAILS
-                   (Your requested Style 1 layout + Chapter content)
-                   ===================================================== */}
-
-        <section
-          className="relative min-h-screen w-full
-          py-16 px-4 sm:px-6 md:px-10"
-        >
+        {/* Page Two - Migration Roadmap */}
+        <section className="relative min-h-screen w-full py-12 sm:py-16 px-4 sm:px-6 md:px-10">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(6,20,26,0.15)] to-[rgba(0,0,0,0.2)] opacity-50 pointer-events-none" />
 
-          <div className="relative text-center mb-20">
-            <h2 className="text-5xl font-extrabold text-cyan-300 drop-shadow-[0_0_18px_rgba(34,211,238,0.5)]">
+          <div className="relative text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-cyan-300 drop-shadow-[0_0_18px_rgba(34,211,238,0.5)]">
               <span className="inline-block animate-flag">🇳🇿</span>&nbsp;
               Migration Roadmap
             </h2>
-            <p className="text-sm opacity-70 mt-3 max-w-xl mx-auto">
-              Style 1 layout — but with your full Chapter content.
+            <p className="text-sm opacity-70 mt-3 max-w-xl mx-auto px-4">
+              Your complete journey from skills to settlement in New Zealand
             </p>
           </div>
 
@@ -1474,18 +1487,15 @@ export default function Goals({ dashboardState, updateDashboard }) {
             {/* Vertical glowing line */}
             <div className="absolute left-1/2 top-0 bottom-0 w-[3px] -ml-[1.5px] bg-cyan-300/40 shadow-[0_0_12px_rgba(34,211,238,0.6)] pointer-events-none" />
 
-            {/* ===========================================
-                  CHAPTER 01 — Skills Foundation
-                   ============================================ */}
-            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
+            {/* CHAPTER 01 — Skills Foundation */}
+            <div className="relative mb-20 sm:mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
               {/* Left Text */}
               <div className="w-full md:w-1/2 md:pr-10 text-left md:text-right">
-                {/* Glow Line */}
                 <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent mb-5" />
 
-                <h3 className="text-3xl font-bold text-emerald-300">
+                <h3 className="text-2xl sm:text-3xl font-bold text-emerald-300">
                   CHAPTER 01 — Skills Foundation
                 </h3>
                 <p className="text-sm opacity-85 mt-4">
@@ -1506,10 +1516,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
               <div className="hidden md:block md:w-1/2" />
             </div>
 
-            {/* ===========================================
-                   CHAPTER 02 — Documentation
-                    ============================================ */}
-            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
+            {/* CHAPTER 02 — Documentation */}
+            <div className="relative mb-20 sm:mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
               <div className="hidden md:block md:w-1/2" />
@@ -1517,7 +1525,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
               <div className="w-full md:w-1/2 md:pl-10">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
-                <h3 className="text-3xl font-bold text-cyan-300">
+                <h3 className="text-2xl sm:text-3xl font-bold text-cyan-300">
                   CHAPTER 02 — Documentation
                 </h3>
                 <p className="text-sm opacity-85 mt-4">
@@ -1534,16 +1542,14 @@ export default function Goals({ dashboardState, updateDashboard }) {
               </div>
             </div>
 
-            {/* ===========================================
-                      CHAPTER 03 — Job Preparation
-                    ============================================ */}
-            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
+            {/* CHAPTER 03 — Job Preparation */}
+            <div className="relative mb-20 sm:mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
               <div className="w-full md:w-1/2 md:pr-10 text-left md:text-right">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
-                <h3 className="text-3xl font-bold text-blue-300">
+                <h3 className="text-2xl sm:text-3xl font-bold text-blue-300">
                   CHAPTER 03 — Job Preparation
                 </h3>
                 <p className="text-sm opacity-85 mt-4">
@@ -1563,10 +1569,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
               <div className="hidden md:block md:w-1/2" />
             </div>
 
-            {/* ===========================================
-                    CHAPTER 04 — Finance
-                    ============================================ */}
-            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
+            {/* CHAPTER 04 — Finance */}
+            <div className="relative mb-20 sm:mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
               <div className="hidden md:block md:w-1/2" />
@@ -1574,7 +1578,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
               <div className="w-full md:w-1/2 md:pl-10">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
-                <h3 className="text-3xl font-bold text-purple-300">
+                <h3 className="text-2xl sm:text-3xl font-bold text-purple-300">
                   CHAPTER 04 — Financial Readiness
                 </h3>
                 <p className="text-sm opacity-85 mt-4">
@@ -1591,16 +1595,14 @@ export default function Goals({ dashboardState, updateDashboard }) {
               </div>
             </div>
 
-            {/* ===========================================
-                    CHAPTER 05 — Visa Process
-                    ============================================ */}
-            <div className="relative mb-28 flex flex-col md:flex-row items-start gap-6">
+            {/* CHAPTER 05 — Visa Process */}
+            <div className="relative mb-20 sm:mb-28 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
               <div className="w-full md:w-1/2 md:pr-10 text-left md:text-right">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
-                <h3 className="text-3xl font-bold text-pink-300">
+                <h3 className="text-2xl sm:text-3xl font-bold text-pink-300">
                   CHAPTER 05 — Visa Process
                 </h3>
                 <p className="text-sm opacity-85 mt-4">
@@ -1619,9 +1621,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
               <div className="hidden md:block md:w-1/2" />
             </div>
 
-            {/* ===========================================
-                     CHAPTER 06 — Arrival & Settlement
-                      ============================================ */}
+            {/* CHAPTER 06 — Arrival & Settlement */}
             <div className="relative mb-10 flex flex-col md:flex-row items-start gap-6">
               <div className="absolute left-1/2 -ml-4 w-8 h-8 bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,1)] rounded-full" />
 
@@ -1630,7 +1630,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
               <div className="w-full md:w-1/2 md:pl-10">
                 <div className="w-full h-[1px] bg-white/10 mb-5" />
 
-                <h3 className="text-3xl font-bold text-yellow-300">
+                <h3 className="text-2xl sm:text-3xl font-bold text-yellow-300">
                   CHAPTER 06 — Arrival & Settlement
                 </h3>
                 <p className="text-sm opacity-85 mt-4">
@@ -1649,18 +1649,18 @@ export default function Goals({ dashboardState, updateDashboard }) {
           </div>
         </section>
 
-        {/* Footer CTA (unchanged) */}
-        <section className="mt-1 ">
-          <div className="rounded-2xl p-6 border border-[rgba(255,255,255,0.02)] bg-[linear-gradient(90deg,rgba(255,255,255,0.01),rgba(255,255,255,0.00))] backdrop-blur-lg">
+        {/* Footer CTA */}
+        <section className="mt-1 px-2">
+          <div className="rounded-2xl p-4 sm:p-6 border border-[rgba(255,255,255,0.02)] bg-[linear-gradient(90deg,rgba(255,255,255,0.01),rgba(255,255,255,0.00))] backdrop-blur-lg">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <div className="text-sm opacity-80">Need help? I can:</div>
-                <div className="text-lg font-semibold">
+                <div className="text-base sm:text-lg font-semibold">
                   Generate a detailed MERN study plan, NZ job application pack,
                   or migration checklist.
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap justify-center">
                 <button className="px-4 py-2 rounded-lg border bg-[rgba(0,240,210,0.04)] hover:scale-105">
                   Create MERN Plan
                 </button>
@@ -1673,7 +1673,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
         </section>
       </main>
 
-      {/* Styles (kept same) */}
+      {/* Styles */}
       <style>
         {`
               .animate-grid {
