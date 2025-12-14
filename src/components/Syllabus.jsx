@@ -4418,6 +4418,26 @@ const LOCAL_KEY = "wd_dashboard_state";
    // This is now the final stable syllabus tree for the UI.
    const tree = treeRef.current;
 
+   useEffect(() => {
+     if (
+       dashboardState?.syllabus_tree_v2 &&
+       typeof dashboardState.syllabus_tree_v2 === "object" &&
+       Object.keys(dashboardState.syllabus_tree_v2).length > 0
+     ) {
+       treeRef.current = structuredClone(dashboardState.syllabus_tree_v2);
+     }
+   }, [dashboardState?.syllabus_tree_v2]);
+
+   useEffect(() => {
+     if (
+       dashboardState?.syllabus_tree_v2 &&
+       typeof dashboardState.syllabus_tree_v2 === "object"
+     ) {
+       treeRef.current = structuredClone(dashboardState.syllabus_tree_v2);
+       forceRender((v) => v + 1);
+     }
+   }, [dashboardState?.syllabus_tree_v2]);
+
    // this creates a dummy state update function to force redraw
    const [, forceRender] = useState(0);
 

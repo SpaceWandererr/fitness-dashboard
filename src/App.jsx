@@ -264,14 +264,26 @@ export default function App() {
         // Prevent unnecessary rerenders
         if (!cancelled) {
           setDashboardState((prev) => {
-            if (JSON.stringify(prev) === JSON.stringify(state)) {
-              console.log("🛑 No state change.");
+            const prevUpdated = prev?.updatedAt;
+            const nextUpdated = state?.updatedAt;
+
+            // If backend did not send updatedAt, trust backend anyway
+            if (!nextUpdated) {
+              console.log("⚠️ No updatedAt from backend → applying state");
+              return state;
+            }
+
+            // Skip update only if versions match
+            if (prevUpdated === nextUpdated) {
+              console.log("🛑 State already up to date (updatedAt match)");
               return prev;
             }
-            console.log("✅ Applying restored dashboard state.");
+
+            console.log("✅ Applying newer backend state");
             return state;
           });
         }
+
       } catch (err) {
         if (!cancelled) console.error("🔥 Load error:", err);
       }

@@ -1,20 +1,15 @@
 import mongoose from "mongoose";
 
-if (mongoose.models.DashboardState) {
-  delete mongoose.models.DashboardState;
-  delete mongoose.modelSchemas.DashboardState;
-}
-
 const DashboardStateSchema = new mongoose.Schema(
   {
-    userId: { type: String, default: "default" },
+    userId: { type: String, default: "default", index: true },
 
-    // 🆕 Unified Planner Container
+    // 🧠 Unified Planner Container
     wd_planner: {
       type: Object,
       default: {
         tasks: [],
-        dayMap: {}, // dynamic days
+        dayMap: {},
         habits: { water: 0, meditate: false, reading: 0 },
         pomodoroSeconds: 1500,
         focusTask: "",
@@ -25,7 +20,7 @@ const DashboardStateSchema = new mongoose.Schema(
       },
     },
 
-    // ===== Existing Dashboard Keys =====
+    // ===== Core Dashboard State =====
     wd_weight_current: { type: Number, default: null },
     wd_weight_history: { type: Object, default: {} },
     wd_gym_logs: { type: Object, default: {} },
@@ -34,16 +29,18 @@ const DashboardStateSchema = new mongoose.Schema(
     syllabus_tree_v2: { type: Object, default: {} },
     wd_projects: { type: Object, default: {} },
 
-    // Misc
-    wd_start_weight: Number,
-    wd_dark: String,
-    wd_mern_progress: Number,
+    // ===== Misc / Meta =====
+    wd_start_weight: { type: Number, default: null },
+    wd_dark: { type: Boolean, default: false },
+    wd_mern_progress: { type: Number, default: 0 },
   },
   {
-    timestamps: true,
-    strict: false, // allows growth / new dynamic fields
-    minimize: false, // keeps empty {} instead of deleting
+    timestamps: true, // ✅ creates updatedAt automatically
+    strict: false, // allow future dynamic keys
+    minimize: false, // keep empty objects
   }
 );
 
-export default mongoose.model("DashboardState", DashboardStateSchema);
+// ✅ SAFE model export (serverless-friendly)
+export default mongoose.models.DashboardState ||
+  mongoose.model("DashboardState", DashboardStateSchema);

@@ -5,44 +5,113 @@ import dayjs from "dayjs";
 
 /* ------------------------- Weather Animation Components --------------------------*/
 function WeatherAnimation({ condition, isNight }) {
-  if (condition === "Clear") {
-    return isNight ? <MoonAnimation /> : <SunAnimation />;
-  }
-  if (condition === "Cloudy") {
-    return <CloudyAnimation />;
-  }
-  if (condition === "Rain" || condition === "Drizzle") {
-    return <RainAnimation />;
-  }
-  if (condition === "Snow") {
-    return <SnowAnimation />;
-  }
-  if (condition === "Thunderstorm") {
+  const conditionLower = condition?.toLowerCase() || "";
+
+  // Thunderstorm
+  if (conditionLower.includes("thunder") || conditionLower.includes("storm")) {
     return <ThunderstormAnimation />;
   }
-  if (condition === "Fog") {
+
+  // Rainy
+  if (conditionLower.includes("rain") || conditionLower.includes("drizzle")) {
+    return <RainAnimation />;
+  }
+
+  // Snowy
+  if (conditionLower.includes("snow") || conditionLower.includes("sleet")) {
+    return <SnowAnimation />;
+  }
+
+  // Cloudy
+  if (conditionLower.includes("cloud") || conditionLower.includes("overcast")) {
+    return <CloudyAnimation />;
+  }
+
+  // Foggy/Misty
+  if (
+    conditionLower.includes("fog") ||
+    conditionLower.includes("mist") ||
+    conditionLower.includes("haze")
+  ) {
     return <FogAnimation />;
   }
-  return <SunAnimation />;
+
+  // Clear sky - sun or moon
+  if (conditionLower.includes("clear")) {
+    return isNight ? <MoonAnimation /> : <SunAnimation />;
+  }
+
+  // Default - clear animation based on time
+  return isNight ? <MoonAnimation /> : <SunAnimation />;
 }
 
+// Now SunAnimation is being used!
 function SunAnimation() {
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-      {/* Sun */}
-      <div className="relative">
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 shadow-[0_0_60px_rgba(251,191,36,0.8)] animate-pulse" />
-        {/* Rays */}
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute top-1/2 left-1/2 w-1 h-16 bg-gradient-to-t from-yellow-400/80 to-transparent origin-bottom animate-sunray"
-            style={{
-              transform: `translate(-50%, -100%) rotate(${i * 45}deg)`,
-              animationDelay: `${i * 0.1}s`,
-            }}
-          />
-        ))}
+      <div className="relative w-24 h-24">
+        {/* Outer atmospheric glow - pulsing */}
+        <div className="absolute -inset-12 rounded-full bg-yellow-400/20 blur-3xl animate-sun-breathe" />
+        <div
+          className="absolute -inset-8 rounded-full bg-orange-400/30 blur-2xl animate-sun-breathe"
+          style={{ animationDelay: "1s" }}
+        />
+
+        {/* Rotating rays container */}
+        <div className="absolute inset-0 animate-sun-rotate">
+          {/* Primary rays - longer */}
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={`primary-${i}`}
+              className="absolute top-1/2 left-1/2 w-1 origin-bottom"
+              style={{
+                height: "60px",
+                transform: `translate(-50%, -100%) rotate(${i * 30}deg)`,
+              }}
+            >
+              <div className="w-full h-full bg-gradient-to-t from-yellow-400/80 via-yellow-300/50 to-transparent rounded-full" />
+            </div>
+          ))}
+
+          {/* Secondary rays - shorter, offset */}
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={`secondary-${i}`}
+              className="absolute top-1/2 left-1/2 w-0.5 origin-bottom"
+              style={{
+                height: "45px",
+                transform: `translate(-50%, -100%) rotate(${i * 30 + 15}deg)`,
+              }}
+            >
+              <div className="w-full h-full bg-gradient-to-t from-orange-400/60 via-yellow-200/40 to-transparent rounded-full" />
+            </div>
+          ))}
+        </div>
+
+        {/* Main sun body with layers */}
+        <div className="absolute inset-0 rounded-full overflow-hidden animate-sun-pulse">
+          {/* Core gradient */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-500" />
+
+          {/* Surface texture */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-200/70 via-transparent to-orange-400/40" />
+
+          {/* Top highlight */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/40 via-transparent to-transparent" />
+
+          {/* Bottom shadow */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-t from-orange-600/30 via-transparent to-transparent" />
+        </div>
+
+        {/* Inner glow around sun */}
+        <div
+          className="absolute -inset-2 rounded-full blur-md animate-sun-pulse"
+          style={{
+            animationDelay: "0.5s",
+            background:
+              "radial-gradient(circle, rgba(253, 224, 71, 0.4) 0%, transparent 70%)",
+          }}
+        />
       </div>
     </div>
   );
@@ -51,25 +120,67 @@ function SunAnimation() {
 function MoonAnimation() {
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-      <div className="relative">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[0_0_40px_rgba(203,213,225,0.6)]" />
-        {/* Craters */}
-        <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-slate-300/40" />
-        <div className="absolute bottom-4 right-4 w-4 h-4 rounded-full bg-slate-300/30" />
-        <div className="absolute top-8 right-6 w-2 h-2 rounded-full bg-slate-300/50" />
-      </div>
-      {/* Stars */}
-      {[...Array(12)].map((_, i) => (
+      <div className="relative w-20 h-20">
+        {/* Moon glow layers */}
+        <div className="absolute -inset-8 rounded-full bg-slate-300/20 blur-3xl animate-moon-glow" />
         <div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
-          style={{
-            top: `${Math.random() * 80 + 10}%`,
-            left: `${Math.random() * 80 + 10}%`,
-            animationDelay: `${Math.random() * 2}s`,
-          }}
+          className="absolute -inset-4 rounded-full bg-slate-200/30 blur-2xl animate-moon-glow"
+          style={{ animationDelay: "0.5s" }}
         />
-      ))}
+
+        {/* Main moon body */}
+        <div className="absolute inset-0 rounded-full overflow-hidden animate-moon-glow">
+          {/* Base gradient */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-400" />
+
+          {/* Surface texture overlay */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-slate-50/60 via-transparent to-slate-500/40" />
+
+          {/* Top shine */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 via-transparent to-transparent" />
+
+          {/* Bottom shadow for depth */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-t from-slate-600/40 via-transparent to-transparent" />
+        </div>
+
+        {/* Craters - more realistic */}
+        <div className="absolute top-3 left-3 w-3 h-3 rounded-full bg-slate-400/50 shadow-inner" />
+        <div className="absolute top-2 right-5 w-2 h-2 rounded-full bg-slate-400/40 shadow-inner" />
+        <div className="absolute bottom-4 right-4 w-4 h-4 rounded-full bg-slate-400/60 shadow-inner" />
+        <div className="absolute top-8 right-6 w-2 h-2 rounded-full bg-slate-400/45 shadow-inner" />
+        <div className="absolute bottom-7 left-5 w-2.5 h-2.5 rounded-full bg-slate-400/50 shadow-inner" />
+
+        {/* Smaller crater details */}
+        <div className="absolute top-12 left-8 w-1 h-1 rounded-full bg-slate-400/35" />
+        <div className="absolute top-6 left-12 w-1 h-1 rounded-full bg-slate-400/30" />
+      </div>
+
+      {/* Realistic twinkling stars */}
+      {[...Array(15)].map((_, i) => {
+        const size = Math.random() > 0.7 ? "w-1.5 h-1.5" : "w-1 h-1";
+        return (
+          <div
+            key={i}
+            className={`absolute ${size} bg-white rounded-full animate-star-twinkle`}
+            style={{
+              top: `${Math.random() * 80 + 10}%`,
+              left: `${Math.random() * 80 + 10}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+            }}
+          />
+        );
+      })}
+
+      {/* Shooting star (occasional) */}
+      <div
+        className="absolute w-16 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 animate-shooting-star"
+        style={{
+          top: "20%",
+          left: "60%",
+          transform: "rotate(-30deg)",
+        }}
+      />
     </div>
   );
 }
@@ -77,83 +188,408 @@ function MoonAnimation() {
 function CloudyAnimation() {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {[...Array(3)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute animate-float-cloud"
-          style={{
-            top: `${30 + i * 20}%`,
-            animationDelay: `${i * 2}s`,
-            animationDuration: `${8 + i * 2}s`,
-          }}
-        >
-          <div className="relative">
-            <div className="w-16 h-8 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full" />
-            <div className="absolute -top-2 left-4 w-12 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full" />
-            <div className="absolute -top-3 left-8 w-14 h-11 bg-gradient-to-br from-slate-300 to-slate-400 rounded-full" />
+      {/* Multiple cloud layers for depth */}
+      {[...Array(4)].map((_, i) => {
+        const sizes = [
+          { w: "w-24", h: "h-12", top1: "w-16 h-14", top2: "w-20 h-16" },
+          { w: "w-20", h: "h-10", top1: "w-14 h-12", top2: "w-16 h-13" },
+          { w: "w-28", h: "h-14", top1: "w-18 h-16", top2: "w-22 h-18" },
+          { w: "w-22", h: "h-11", top1: "w-15 h-13", top2: "w-18 h-15" },
+        ];
+
+        const cloudSize = sizes[i];
+
+        return (
+          <div
+            key={i}
+            className="absolute animate-cloud-drift"
+            style={{
+              top: `${15 + i * 18}%`,
+              animationDelay: `${i * 3}s`,
+              animationDuration: `${20 + i * 5}s`,
+            }}
+          >
+            <div className="relative animate-cloud-morph">
+              {/* Base cloud puff */}
+              <div
+                className={`${cloudSize.w} ${cloudSize.h} bg-gradient-to-br from-white/40 via-slate-200/50 to-slate-300/60 rounded-full blur-sm`}
+              />
+
+              {/* Top left puff */}
+              <div
+                className={`absolute -top-2 left-4 ${cloudSize.top1} bg-gradient-to-br from-white/50 via-slate-100/60 to-slate-200/70 rounded-full blur-sm`}
+              />
+
+              {/* Top right puff */}
+              <div
+                className={`absolute -top-3 left-8 ${cloudSize.top2} bg-gradient-to-br from-slate-100/50 via-slate-200/60 to-slate-300/70 rounded-full blur-sm`}
+              />
+
+              {/* Bottom detail puff */}
+              <div
+                className={`absolute top-2 left-6 w-10 h-8 bg-gradient-to-br from-white/30 to-slate-200/50 rounded-full blur-sm`}
+              />
+
+              {/* Cloud shadow/depth */}
+              <div
+                className={`absolute bottom-0 left-2 right-2 h-3 bg-slate-400/20 rounded-full blur-md`}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
+
+      {/* Subtle sun glow behind clouds */}
+      <div
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-yellow-200/30 blur-3xl"
+        style={{ zIndex: -1 }}
+      />
     </div>
   );
 }
 
 function RainAnimation() {
+  const [showLightning, setShowLightning] = React.useState(false);
+
+  React.useEffect(() => {
+    const lightningInterval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        setShowLightning(true);
+        setTimeout(() => setShowLightning(false), 200);
+      }
+    }, 3000);
+
+    return () => clearInterval(lightningInterval);
+  }, []);
+
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <CloudyAnimation />
-      {[...Array(30)].map((_, i) => (
+      {/* Dark storm clouds */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-slate-800/60 via-slate-700/40 to-transparent blur-2xl" />
+
+      {/* Lightning flash */}
+      {showLightning && (
+        <div className="absolute inset-0 bg-white/40 animate-lightning-flash pointer-events-none" />
+      )}
+
+      {/* Heavy rain */}
+      {[...Array(45)].map((_, i) => (
         <div
           key={i}
-          className="absolute w-0.5 h-6 bg-gradient-to-b from-blue-300 to-transparent animate-rain"
+          className="absolute w-0.5 bg-gradient-to-b from-blue-100/80 via-blue-200/60 to-transparent animate-rain-fall"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `-${Math.random() * 20}%`,
-            animationDelay: `${Math.random() * 2}s`,
-            animationDuration: `${0.5 + Math.random() * 0.5}s`,
+            left: `${(i * 2.2) % 100}%`,
+            top: "-100px",
+            height: `${20 + (i % 5) * 3}px`,
+            animationDelay: `${(i * 0.06) % 1.5}s`,
+            animationDuration: `${0.5 + (i % 4) * 0.1}s`,
           }}
         />
       ))}
+
+      {/* Rain mist */}
+      <div className="absolute inset-0 bg-slate-700/10 pointer-events-none" />
     </div>
   );
 }
 
 function SnowAnimation() {
+  const [snowLevel, setSnowLevel] = useState(0);
+  const [showPlow, setShowPlow] = useState(false);
+  const [plowPosition, setPlowPosition] = useState(0);
+  const maxSnowLevel = 25;
+
+  // Slower snow accumulation
+  useEffect(() => {
+    if (showPlow) return;
+
+    const snowAccumulation = setInterval(() => {
+      setSnowLevel((prev) => {
+        if (prev >= maxSnowLevel) {
+          return maxSnowLevel;
+        }
+        return prev + 0.15; // Much slower - was 0.3
+      });
+    }, 400); // Slower interval - was 250ms
+
+    return () => clearInterval(snowAccumulation);
+  }, [showPlow]);
+
+  // Trigger plow when snow reaches 25%
+  useEffect(() => {
+    if (snowLevel >= maxSnowLevel && !showPlow) {
+      setShowPlow(true);
+      setPlowPosition(0);
+    }
+  }, [snowLevel, showPlow]);
+
+  // Plow movement - RIGHT TO LEFT
+  useEffect(() => {
+    if (!showPlow) return;
+
+    const plowSpeed = 35;
+    const plowInterval = setInterval(() => {
+      setPlowPosition((prev) => {
+        const newPosition = prev + 1;
+
+        // Calculate snow clearing
+        const progressPercent = (newPosition / 120) * 100;
+        const remainingSnow = maxSnowLevel * (1 - progressPercent / 100);
+        setSnowLevel(Math.max(0, remainingSnow));
+
+        if (newPosition >= 120) {
+          setShowPlow(false);
+          setSnowLevel(0);
+          setPlowPosition(0);
+          return 0;
+        }
+
+        return newPosition;
+      });
+    }, plowSpeed);
+
+    return () => clearInterval(plowInterval);
+  }, [showPlow]);
+
+  // Generate random bumpy snow surface
+  const getSnowPath = () => {
+    const points = [];
+    for (let i = 0; i <= 10; i++) {
+      const x = i * 10;
+      const y = 2 + Math.sin(i * 0.8) * 2 + Math.random() * 2;
+      points.push(`${x},${y}`);
+    }
+    return `M0,${points[0].split(",")[1]} ${points
+      .map((p, i) =>
+        i === 0
+          ? ""
+          : `Q${p.split(",")[0]},${p.split(",")[1]} ${
+              parseInt(p.split(",")[0]) + (i < 10 ? 5 : 0)
+            },${points[i + 1] ? points[i + 1].split(",")[1] : p.split(",")[1]}`
+      )
+      .join(" ")} L100,20 L0,20 Z`;
+  };
+
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <CloudyAnimation />
-      {[...Array(25)].map((_, i) => (
+      {/* Snowy sky */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-200/20 to-transparent" />
+
+      {/* Light clouds */}
+      <div className="absolute inset-0">
+        {[...Array(2)].map((_, i) => (
+          <div
+            key={`cloud-${i}`}
+            className="absolute animate-cloud-drift animate-cloud-morph"
+            style={{
+              top: `${5 + i * 12}%`,
+              animationDelay: `${i * 5}s`,
+              animationDuration: `${28 + i * 4}s`,
+              opacity: 0.4,
+            }}
+          >
+            <div className="relative">
+              <div className="w-28 h-14 bg-gradient-to-br from-slate-200/40 to-slate-300/50 rounded-full blur-2xl" />
+              <div className="absolute -top-3 left-10 w-20 h-16 bg-gradient-to-br from-slate-100/50 to-slate-200/60 rounded-full blur-2xl" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Falling snowflakes */}
+      {[...Array(30)].map((_, i) => {
+        const sizes = ["w-1.5 h-1.5", "w-2 h-2", "w-2.5 h-2.5"];
+        const size = sizes[i % 3];
+        const speed = 4 + (i % 5) * 0.5;
+
+        return (
+          <div
+            key={i}
+            className={`absolute ${size} bg-white rounded-full animate-snow-fall opacity-90 shadow-sm`}
+            style={{
+              left: `${(i * 3.3) % 100}%`,
+              top: "-50px",
+              animationDelay: `${(i * 0.3) % 5}s`,
+              animationDuration: `${speed}s`,
+            }}
+          />
+        );
+      })}
+
+      {/* Snow accumulation - BUMPY SURFACE */}
+      <div
+        className="absolute bottom-0 left-0 right-0 transition-all duration-200 ease-linear"
+        style={{ height: `${snowLevel}%` }}
+      >
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Bumpy snow surface using multiple layers */}
+          <div className="absolute top-0 left-0 right-0 h-6">
+            {/* Create irregular bumps */}
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute bg-white rounded-full"
+                style={{
+                  left: `${i * 13}%`,
+                  top: `${Math.sin(i) * 3}px`,
+                  width: `${15 + Math.random() * 10}%`,
+                  height: "12px",
+                  filter: "blur(2px)",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Main snow body */}
+          <div
+            className="absolute inset-0 bg-white"
+            style={{ marginTop: "4px" }}
+          >
+            {/* Snow texture gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-50/30 via-white to-white" />
+
+            {/* Add some depth with shadows */}
+            <div
+              className="absolute inset-0 bg-gradient-to-b from-slate-100/20 to-transparent"
+              style={{ height: "30%" }}
+            />
+          </div>
+
+          {/* Sparkles */}
+          {snowLevel > 8 &&
+            [...Array(12)].map((_, i) => (
+              <div
+                key={`sparkle-${i}`}
+                className="absolute w-1 h-1 bg-white rounded-full opacity-70 shadow-sm"
+                style={{
+                  top: `${8 + (i % 4) * 8}%`,
+                  left: `${(i * 8.5) % 100}%`,
+                }}
+              />
+            ))}
+        </div>
+      </div>
+
+      {/* Snow Plow - FIXED DIRECTION (Right to Left) */}
+      {showPlow && (
         <div
-          key={i}
-          className="absolute w-2 h-2 bg-white rounded-full animate-snow opacity-70"
+          className="absolute bottom-0 z-50"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `-${Math.random() * 10}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${3 + Math.random() * 2}s`,
+            left: `${100 - (plowPosition / 120) * 100}%`, // Changed from 'right' to 'left' with inverted calculation
+            transform: "translateX(-50%)",
           }}
-        />
-      ))}
+        >
+          <div className="relative">
+            {/* Snow spray - now in front (left side) */}
+            <div
+              className="absolute -left-20 bottom-0 w-32 h-20 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse at left bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 35%, transparent 65%)",
+              }}
+            >
+              {[...Array(10)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 bg-white rounded-full opacity-80"
+                  style={{
+                    left: `${i * 8}%`,
+                    bottom: `${25 + Math.random() * 35}%`,
+                    animation: `snow-spray ${
+                      0.7 + i * 0.06
+                    }s ease-out infinite`,
+                    animationDelay: `${i * 0.07}s`,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Plow blade - angled for right-to-left movement */}
+            <div className="relative w-16 h-20 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-l-2xl shadow-2xl transform skew-x-6 border-l-2 border-yellow-600">
+              <div className="absolute inset-2 bg-gradient-to-br from-yellow-300/60 to-transparent rounded-l-xl" />
+              <div className="absolute left-0 top-3 bottom-3 w-2 bg-gradient-to-r from-gray-800 to-gray-700 rounded-l-lg shadow-inner" />
+              <div className="absolute top-6 left-3 w-8 h-0.5 bg-yellow-600/50 rounded" />
+              <div className="absolute top-10 left-3 w-8 h-0.5 bg-yellow-600/50 rounded" />
+              <div className="absolute top-14 left-3 w-8 h-0.5 bg-yellow-600/50 rounded" />
+            </div>
+
+            {/* Truck cabin - on the right side */}
+            <div className="absolute -right-12 top-2 w-14 h-16 bg-gradient-to-br from-red-500 via-red-600 to-red-800 rounded-xl shadow-2xl border-2 border-red-700">
+              <div className="absolute top-1 left-1 right-1 h-6 bg-gradient-to-br from-sky-200/60 to-sky-300/50 rounded-lg backdrop-blur-sm border border-sky-300/30">
+                <div className="absolute top-0 left-0 w-4 h-3 bg-white/40 rounded-tl-lg" />
+              </div>
+              <div className="absolute bottom-2 left-1 right-1 h-7 bg-red-700/60 rounded border-t border-red-800/50" />
+              <div className="absolute top-8 left-0 right-0 h-px bg-red-800/60" />
+              <div className="absolute top-4 -right-1 w-2 h-1.5 bg-gray-800 rounded-sm" />
+            </div>
+
+            {/* Front wheel */}
+            <div className="absolute -right-8 -bottom-3 w-5 h-5 bg-gray-900 rounded-full border-2 border-gray-800 shadow-xl">
+              <div className="absolute inset-0.5 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full" />
+              <div className="absolute inset-1.5 bg-gray-600 rounded-full" />
+            </div>
+
+            {/* Back wheel */}
+            <div className="absolute -right-3 -bottom-3 w-5 h-5 bg-gray-900 rounded-full border-2 border-gray-800 shadow-xl">
+              <div className="absolute inset-0.5 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full" />
+              <div className="absolute inset-1.5 bg-gray-600 rounded-full" />
+            </div>
+
+            {/* Exhaust - on right side */}
+            <div className="absolute -right-14 top-8 w-6 h-6 bg-gray-400/40 rounded-full blur-md animate-pulse" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function ThunderstormAnimation() {
   const [flash, setFlash] = useState(false);
+  const [boltPosition, setBoltPosition] = useState({ x: 50, y: 20 });
 
   useEffect(() => {
     const interval = setInterval(() => {
+      // Random lightning position
+      setBoltPosition({
+        x: 30 + Math.random() * 40,
+        y: 10 + Math.random() * 20,
+      });
+
       setFlash(true);
       setTimeout(() => setFlash(false), 150);
-    }, 3000);
+    }, 3000 + Math.random() * 2000); // Random interval 3-5s
+
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
       <RainAnimation />
+
+      {/* Lightning flash */}
       {flash && (
-        <div className="absolute inset-0 bg-yellow-200/40 animate-flash" />
+        <>
+          {/* Screen flash */}
+          <div className="absolute inset-0 bg-white/60 animate-lightning-flash pointer-events-none" />
+
+          {/* Lightning bolt */}
+          <div
+            className="absolute w-1 h-24 bg-gradient-to-b from-yellow-100 via-white to-transparent animate-lightning-flash blur-sm"
+            style={{
+              left: `${boltPosition.x}%`,
+              top: `${boltPosition.y}%`,
+              boxShadow: "0 0 20px rgba(255, 255, 255, 0.8)",
+            }}
+          />
+          <div
+            className="absolute w-0.5 h-20 bg-white animate-lightning-flash"
+            style={{
+              left: `${boltPosition.x}%`,
+              top: `${boltPosition.y + 2}%`,
+            }}
+          />
+        </>
       )}
     </div>
   );
@@ -355,122 +791,539 @@ function WeatherCard({
       }, ${selectedCity.country}`;
 
   return (
-    <div className="w-full h-full relative">
-      <div className="flex items-center justify-between mb-2 w-full">
+    <div className="w-full h-full flex flex-col">
+      {/* Compact header */}
+      <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => setShowSearch((s) => !s)}
-          className="px-2 py-1 rounded bg-transparent border border-[#2F6B60]/40 text-xs text-[#9FF2E8]"
+          className="px-2.5 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all"
         >
-          🔍
+          <span className="text-sm">🔍</span>
         </button>
-        <div className="text-sm text-[#CDEEE8] truncate">{title}</div>
+        <h3 className="text-xs font-medium text-white/80 truncate flex-1 text-right px-2">
+          {title}
+        </h3>
       </div>
 
-      {showSearch && (
-        <div className="mb-3">
-          <input
-            value={localInput}
-            onChange={(e) => {
-              setLocalInput(e.target.value);
-              setCityInput(e.target.value);
-            }}
-            placeholder="Search city..."
-            className="w-full bg-black/20 border border-[#2F6B60]/40 rounded px-3 py-2 mb-2 text-sm text-[#E8FFFA] placeholder:text-[#7FAFA4]"
-          />
-          <div className="max-h-40 overflow-auto border border-[#2F6B60]/40 rounded bg-black/40">
-            {suggestions?.map((s, i) => (
+      {/* Search (collapsed by default) */}
+      <div
+        className={`transition-all duration-300 ${
+          showSearch ? "max-h-64 mb-3 opacity-100" : "max-h-0 opacity-0"
+        } overflow-hidden`}
+      >
+        <input
+          value={localInput}
+          onChange={(e) => {
+            setLocalInput(e.target.value);
+            setCityInput(e.target.value);
+          }}
+          placeholder="Search city..."
+          className="w-full bg-black/30 border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40"
+        />
+        {suggestions?.length > 0 && (
+          <div className="mt-2 max-h-36 overflow-auto rounded-lg bg-black/40 backdrop-blur-sm">
+            {suggestions.map((s, i) => (
               <div
                 key={i}
                 onClick={() => onSelect(s)}
-                className="px-3 py-2 hover:bg-[#0F1622] cursor-pointer"
+                className="px-3 py-2 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0"
               >
-                <div className="font-medium text-[#E8FFFA]">
+                <div className="text-sm text-white font-medium">
                   {s.name}
-                  {s.admin1 ? `, ${s.admin1}` : ""}
+                  {s.admin1 && `, ${s.admin1}`}
                 </div>
-                <div className="text-xs text-[#7FAFA4]">
-                  {s.country} ({s.latitude?.toFixed(2)},{" "}
-                  {s.longitude?.toFixed(2)})
-                </div>
+                <div className="text-xs text-white/50">{s.country}</div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Card visual with CSS animations */}
-      <div className="relative rounded-xl overflow-hidden border border-[#2F6B60]/40 bg-black/20 h-[270px] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
+      {/* Compact weather card - FIXED HEIGHT */}
+      <div className="relative rounded-3xl overflow-hidden backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-transparent border border-white/20 shadow-xl h-[280px] flex flex-col">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-yellow-500/20 to-blue-500/10" />
+
         {/* Weather animation */}
-        <WeatherAnimation condition={condition} isNight={isNight} />
-
-        {/* Info panel */}
-        <div className="relative z-20 p-6 flex flex-col items-center gap-2 mt-4">
-          <div className="text-3xl font-bold text-[#E8FFFA] drop-shadow-lg">
-            {temp !== null ? `${Math.round(temp)}°C` : "--"}
-          </div>
-          <div className="text-sm text-[#9FF2E8] font-medium">{condition}</div>
+        <div className="absolute inset-0">
+          <WeatherAnimation condition={condition} isNight={isNight} />
         </div>
 
-        {/* stats panel at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#071119]/90 backdrop-blur-sm z-30 text-xs text-[#CDEEE8] grid grid-cols-2 gap-y-1">
-          <div>Humidity: {weatherData?.main?.humidity ?? "--"}%</div>
-          <div>Wind: {Math.round(weatherData?.wind?.speed ?? 0)} m/s</div>
-          <div>UV: {weatherData?.meta?.uv ?? "--"}</div>
-          <div>
-            Sunrise:{" "}
-            {weatherData?.meta?.sunrise
-              ? dayjs(weatherData.meta.sunrise).format("h:mm A")
-              : "--"}
+        {/* Top gradient overlay for depth */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/10 to-transparent" />
+
+        {/* Main content - temperature */}
+        <div className="relative z-20 flex-1 flex flex-col items-center justify-center">
+          <div className="text-6xl font-black text-white drop-shadow-2xl mb-1">
+            {temp !== null ? `${Math.round(temp)}°` : "--"}
           </div>
-          <div>
-            Sunset:{" "}
-            {weatherData?.meta?.sunset
-              ? dayjs(weatherData.meta.sunset).format("h:mm A")
-              : "--"}
+          <div className="text-base text-white/90 font-medium capitalize">
+            {condition || "Loading..."}
+          </div>
+        </div>
+
+        {/* Compact stats - 2x2 grid */}
+        <div className="relative z-30 backdrop-blur-md bg-black/40 border-t border-white/10">
+          <div className="grid grid-cols-2 gap-2 p-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-blue-500/30 flex items-center justify-center text-sm">
+                💧
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[9px] text-white/50 uppercase tracking-wide">
+                  Humidity
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {weatherData?.main?.humidity ?? "--"}%
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-cyan-500/30 flex items-center justify-center text-sm">
+                💨
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[9px] text-white/50 uppercase tracking-wide">
+                  Wind
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {Math.round(weatherData?.wind?.speed ?? 0)} m/s
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-orange-500/30 flex items-center justify-center text-sm">
+                🌅
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[9px] text-white/50 uppercase tracking-wide">
+                  Sunrise
+                </span>
+                <span className="text-xs font-semibold text-white truncate">
+                  {weatherData?.meta?.sunrise
+                    ? dayjs(weatherData.meta.sunrise).format("h:mm A")
+                    : "--"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-purple-500/30 flex items-center justify-center text-sm">
+                🌇
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[9px] text-white/50 uppercase tracking-wide">
+                  Sunset
+                </span>
+                <span className="text-xs font-semibold text-white truncate">
+                  {weatherData?.meta?.sunset
+                    ? dayjs(weatherData.meta.sunset).format("h:mm A")
+                    : "--"}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Add CSS animations */}
+      {/* Minimal CSS */}
       <style>{`
-        @keyframes sunray {
-          0%, 100% { opacity: 0.4; transform: translate(-50%, -100%) rotate(var(--rotation)) scale(1); }
-          50% { opacity: 0.8; transform: translate(-50%, -100%) rotate(var(--rotation)) scale(1.1); }
-        }
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-        @keyframes float-cloud {
-          0% { transform: translateX(-120%); }
-          100% { transform: translateX(120vw); }
-        }
-        @keyframes rain {
-          0% { transform: translateY(0); opacity: 1; }
-          100% { transform: translateY(300px); opacity: 0; }
-        }
-        @keyframes snow {
-          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(400px) rotate(360deg); opacity: 0; }
-        }
-        @keyframes fog {
-          0%, 100% { transform: translateX(-100%); opacity: 0.3; }
-          50% { transform: translateX(100%); opacity: 0.6; }
-        }
-        @keyframes flash {
-          0%, 100% { opacity: 0; }
-          50% { opacity: 1; }
-        }
-        .animate-sunray { animation: sunray 2s ease-in-out infinite; }
-        .animate-twinkle { animation: twinkle 2s ease-in-out infinite; }
-        .animate-float-cloud { animation: float-cloud linear infinite; }
-        .animate-rain { animation: rain linear infinite; }
-        .animate-snow { animation: snow linear infinite; }
-        .animate-fog { animation: fog 8s ease-in-out infinite; }
-        .animate-flash { animation: flash 0.15s ease-out; }
-      `}</style>
+      /* Snow spray particles */
+@keyframes snow-spray {
+  0% {
+    opacity: 0.8;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-8px) translateY(-4px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-16px) translateY(-8px) scale(0.6);
+  }
+}
+
+.animate-snow-spray {
+  animation: snow-spray 0.8s ease-out infinite;
+}
+
+      /* Snow plow animation - moves from right to left */
+@keyframes snow-plow {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(-100vw - 100px));
+    opacity: 0;
+  }
+}
+
+.animate-snow-plow {
+  animation: snow-plow 3s linear forwards;
+}
+
+
+      /* Shooting star animation */
+@keyframes shooting-star {
+  0% {
+    transform: translateX(0) translateY(0) rotate(-30deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-200px) translateY(100px) rotate(-30deg);
+    opacity: 0;
+  }
+}
+
+.animate-shooting-star {
+  animation: shooting-star 2s ease-in 3s infinite;
+}
+
+  /* ===== SUN ANIMATIONS ===== */
+  
+  /* Smooth ray rotation */
+  @keyframes sun-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Breathing glow effect */
+  @keyframes sun-breathe {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 0.9;
+    }
+  }
+
+  /* Gentle pulsing for sun body */
+  @keyframes sun-pulse {
+    0%, 100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.03);
+      filter: brightness(1.1);
+    }
+  }
+
+  /* Twinkling sparkles */
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* ===== RAIN ANIMATIONS ===== */
+  
+  /* Realistic rain drops with acceleration */
+  @keyframes rain-fall {
+    0% {
+      transform: translateY(-100px);
+      opacity: 0.8;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(400px);
+      opacity: 0;
+    }
+  }
+
+  /* Rain splash effect on ground */
+  @keyframes rain-splash {
+    0% {
+      transform: scale(0) translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2) translateY(10px);
+      opacity: 0;
+    }
+  }
+
+  /* ===== SNOW ANIMATIONS ===== */
+  
+  /* Realistic snow falling with drift */
+  @keyframes snow-fall {
+    0% {
+      transform: translateY(-100px) translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    25% {
+      transform: translateY(100px) translateX(10px) rotate(90deg);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(200px) translateX(-5px) rotate(180deg);
+      opacity: 0.8;
+    }
+    75% {
+      transform: translateY(300px) translateX(15px) rotate(270deg);
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateY(400px) translateX(0) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  /* Gentle swaying for snowflakes */
+  @keyframes snow-sway {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(20px);
+    }
+  }
+
+  /* ===== CLOUD ANIMATIONS ===== */
+  
+  /* Smooth cloud drift */
+  @keyframes cloud-drift {
+    0% {
+      transform: translateX(-150%);
+    }
+    100% {
+      transform: translateX(150%);
+    }
+  }
+
+  /* Cloud morphing effect */
+  @keyframes cloud-morph {
+    0%, 100% {
+      border-radius: 50% 60% 50% 60%;
+      transform: scale(1);
+    }
+    50% {
+      border-radius: 60% 50% 60% 50%;
+      transform: scale(1.05);
+    }
+  }
+
+  /* ===== THUNDER/LIGHTNING ANIMATIONS ===== */
+  
+  /* Lightning flash */
+  @keyframes lightning-flash {
+    0%, 10%, 20%, 100% {
+      opacity: 0;
+    }
+    5%, 15% {
+      opacity: 1;
+    }
+  }
+
+  /* Thunder rumble effect */
+  @keyframes thunder-rumble {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-2px);
+    }
+    75% {
+      transform: translateX(2px);
+    }
+  }
+
+  /* ===== WIND/FOG ANIMATIONS ===== */
+  
+  /* Wind blowing effect */
+  @keyframes wind-blow {
+    0%, 100% {
+      transform: translateX(-30%) skewX(-3deg);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateX(30%) skewX(3deg);
+      opacity: 0.7;
+    }
+  }
+
+  /* Fog rolling in */
+  @keyframes fog-roll {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0.2;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0.2;
+    }
+  }
+
+  /* ===== MOON ANIMATIONS ===== */
+  
+  /* Moon glow pulse */
+  @keyframes moon-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(200, 200, 255, 0.4),
+                  0 0 40px rgba(200, 200, 255, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(200, 200, 255, 0.6),
+                  0 0 60px rgba(200, 200, 255, 0.3);
+    }
+  }
+
+  /* Stars twinkling */
+  @keyframes star-twinkle {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+
+  /* ===== APPLY ANIMATIONS ===== */
+  
+  .animate-sun-rotate {
+    animation: sun-rotate 20s linear infinite;
+  }
+
+  .animate-sun-breathe {
+    animation: sun-breathe 4s ease-in-out infinite;
+  }
+
+  .animate-sun-pulse {
+    animation: sun-pulse 3s ease-in-out infinite;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 2s ease-in-out infinite;
+  }
+
+  .animate-rain-fall {
+    animation: rain-fall 0.8s linear infinite;
+  }
+
+  .animate-rain-splash {
+    animation: rain-splash 0.4s ease-out forwards;
+  }
+
+  .animate-snow-fall {
+    animation: snow-fall 5s linear infinite;
+  }
+
+  .animate-snow-sway {
+    animation: snow-sway 3s ease-in-out infinite;
+  }
+
+  .animate-cloud-drift {
+    animation: cloud-drift 25s linear infinite;
+  }
+
+  .animate-cloud-morph {
+    animation: cloud-morph 8s ease-in-out infinite;
+  }
+
+  .animate-lightning-flash {
+    animation: lightning-flash 1.5s ease-in-out;
+  }
+
+  .animate-thunder-rumble {
+    animation: thunder-rumble 0.3s ease-in-out;
+  }
+
+  .animate-wind-blow {
+    animation: wind-blow 6s ease-in-out infinite;
+  }
+
+  .animate-fog-roll {
+    animation: fog-roll 12s ease-in-out infinite;
+  }
+
+  .animate-moon-glow {
+    animation: moon-glow 4s ease-in-out infinite;
+  }
+
+  .animate-star-twinkle {
+    animation: star-twinkle 3s ease-in-out infinite;
+  }
+
+  /* ===== UTILITY ANIMATIONS ===== */
+  
+  /* Smooth fade in */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+`}</style>
     </div>
   );
+
+  // Helper function for weather icons
+  function getWeatherIcon(condition, isNight) {
+    const iconClass = "text-4xl filter drop-shadow-lg";
+
+    if (condition?.toLowerCase().includes("clear")) {
+      return (
+        <div className={`${iconClass} animate-sun-glow`}>
+          {isNight ? "🌙" : "☀️"}
+        </div>
+      );
+    }
+    if (condition?.toLowerCase().includes("cloud")) {
+      return <div className={iconClass}>☁️</div>;
+    }
+    if (condition?.toLowerCase().includes("rain")) {
+      return <div className={iconClass}>🌧️</div>;
+    }
+    if (condition?.toLowerCase().includes("snow")) {
+      return <div className={iconClass}>❄️</div>;
+    }
+    if (condition?.toLowerCase().includes("thunder")) {
+      return <div className={iconClass}>⚡</div>;
+    }
+    return <div className={iconClass}>🌤️</div>;
+  }
 }
 
 /* ------------------------- Main Planner --------------------------*/
@@ -1382,8 +2235,9 @@ export default function Planner({ dashboardState, updateDashboard }) {
         </div>
 
         {/* Weather */}
-        <div className="sm:w-full md:max-w-[260px] min-h-[320px]">
-          <div className="rounded-xl p-4 min-h-[320px] h-full border border-[#2F6B60]/40 bg-black/20 hover:shadow-[0_0_8px_rgba(63,167,150,0.6)] transition">
+        {/* Parent container with improved responsive sizing */}
+        <div className="w-full sm:max-w-[280px] lg:max-w-[300px]">
+          <div className="rounded-xl p-4 border border-[#2F6B60]/40 bg-black/20 hover:shadow-[0_0_12px_rgba(63,167,150,0.5)] hover:border-[#2F6B60]/60 transition-all duration-300">
             <WeatherCard
               cityInput={cityInput}
               setCityInput={(val) =>
