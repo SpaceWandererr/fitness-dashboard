@@ -783,7 +783,10 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Goals />
+                  <Goals
+                    dashboardState={dashboardState}
+                    updateDashboard={updateDashboard}
+                  />
                 </motion.div>
               }
             />

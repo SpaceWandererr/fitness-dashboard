@@ -209,30 +209,9 @@ function FadeSwiper({ data = [], render, noDrag = false, innerDrag = true }) {
 /* --------------------------
         MAIN COMPONENT
       ---------------------------*/
-export default function Goals() {
-  // Read syllabus totals live
-  const [syllabusTree, setSyllabusTree] = useState(
-    () => safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
-  );
-
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (!e || e.key === SYLLABUS_KEY) {
-        setSyllabusTree(
-          safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {}
-        );
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    // poll for same-tab updates (keeps in sync)
-    const poll = setInterval(() => {
-      setSyllabusTree(safeJSONParse(localStorage.getItem(SYLLABUS_KEY)) || {});
-    }, 1500);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      clearInterval(poll);
-    };
-  }, []);
+export default function Goals({ dashboardState, updateDashboard }) {
+  // Read syllabus totals from App.jsx (single source of truth)
+  const syllabusTree = dashboardState?.syllabus_tree_v2 || {};
 
   const totals = useMemo(() => computeTotals(syllabusTree), [syllabusTree]);
   const { total: totalTopics, done: doneTopics } = totals;
@@ -249,12 +228,10 @@ export default function Goals() {
 
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
-  const [startISO, setStartISO] = useState(
-    () => localStorage.getItem(START_KEY) || todayISO
-  );
-  const [endISO, setEndISO] = useState(
-    () => localStorage.getItem(END_KEY) || DEFAULT_END
-  );
+  // Read dates from global dashboard state
+  const startISO = dashboardState?.wd_mern_start_date || todayISO;
+
+  const endISO = dashboardState?.wd_mern_end_date || DEFAULT_END;
 
   useEffect(() => {
     try {
@@ -1126,40 +1103,52 @@ export default function Goals() {
 
           {(() => {
             // original gym logic from your provided file (kept intact)
-            const logs = JSON.parse(
-              localStorage.getItem("wd_gym_logs") || "{}"
-            );
-            const overrides = JSON.parse(
-              localStorage.getItem("wd_weight_overrides") || "{}"
-            );
-            const bmiLogs = JSON.parse(
-              localStorage.getItem("bmi_logs") || "[]"
-            );
-            const goals = JSON.parse(localStorage.getItem("wd_goals") || "{}");
+            // Read everything from App.jsx dashboard state (single source of truth)
+            const gymLogs = dashboardState?.wd_gym_logs || {};
+            const weightOverrides = dashboardState?.wd_weight_overrides || {};
+            const bmiLogs = dashboardState?.bmi_logs || [];
+            const goals = dashboardState?.wd_goals || {};
+
             const target = Number(goals?.targetWeight || 0);
-            const start =
-              Number(localStorage.getItem("wd_start_weight")) || null;
+            const start = Number(dashboardState?.wd_start_weight ?? null);
+
             const today = new Date();
             const dateKey = today.toISOString().slice(0, 10);
-            const todayLog = logs[dateKey] || {};
+
+            // renamed sources (from dashboardState)
+            const todayLog = gymLogs[dateKey] || {};
+
             const recentWeights = bmiLogs
               .map((e) => e?.weight)
               .filter((w) => typeof w === "number");
+
+            // infer starting weight
             const inferredStart = recentWeights.length
               ? Math.max(...recentWeights.slice(-30))
               : todayLog.weight ?? target;
+
+            // final start weight
             const effectiveStart = start ?? inferredStart;
+
+            // current weight resolution order
             const curWeight =
-              overrides[dateKey] ??
+              weightOverrides[dateKey] ??
               todayLog.weight ??
               recentWeights.slice().reverse()[0] ??
               effectiveStart;
+
+            // constants
             const height = 1.7678;
+
+            // BMI
             const bmi = curWeight
               ? (curWeight / (height * height)).toFixed(1)
               : "—";
+
+            // progress
             const totalNeeded = effectiveStart - target;
             const lost = effectiveStart - curWeight;
+
             const pct =
               totalNeeded > 0
                 ? Math.min(100, ((lost / totalNeeded) * 100).toFixed(1))
