@@ -757,7 +757,14 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Calendar dashboardState={dashboardState} />
+                  <Calendar
+                    syllabus_tree_v2={dashboardState.syllabus_tree_v2}
+                    gymLogs={dashboardState.wd_gym_logs}
+                    doneMap={dashboardState.wd_done}
+                    notesMap={dashboardState.wd_notes_v1}
+                    bmiLogs={dashboardState.bmi_logs}
+                    updateDashboard={updateDashboard}
+                  />
                 </motion.div>
               }
             />

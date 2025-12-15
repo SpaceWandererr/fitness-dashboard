@@ -11,14 +11,9 @@ import {
   Legend,
 } from "recharts";
 // Backend API base
-const API = "https://fitness-backend-laoe.onrender.com/api/state";
- // change this
-
-
 // Updated Calendar — with: selected glow (neon blue), today highlight,
 // compact "no exercises" handling, light-theme color fixes, monthly stats,
 // hover popup, smooth animations, and Quote replaced with Today's Stats.
-
 
 function todayISO() {
   return dayjs().format("YYYY-MM-DD");
@@ -34,8 +29,6 @@ function combinedExercisesForDate(iso, gymLogsState) {
 
   return [...extract(g.left), ...extract(g.right), ...extract(g.finisher)];
 }
-
-
 
 function renderExercises(iso, gymLogsState) {
   const entry = gymLogsState?.[iso];
@@ -67,44 +60,18 @@ function renderExercises(iso, gymLogsState) {
   );
 }
 
-export default function CalendarFullDarkUpdated() {
+export default function CalendarFullDarkUpdated({
+  syllabus_tree_v2 = {},
+  gymLogs = {},
+  doneMap = {},
+  notesMap = {},
+  bmiLogs = [],
+  updateDashboard,
+}) {
   const [month, setMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState(todayISO());
-  const [syllabus_tree_v2, setSyllabusTree] = useState({});
-  const [gymLogs, setGymLogs] = useState({});
-  const [doneMap, setDoneMap] = useState({});
-  const [notesMap, setNotesMap] = useState({});
-  const [bmiLogs, setBmiLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [view, setView] = useState("calendar");
   const [compareDates, setCompareDates] = useState([null, null]);
-  const [hoveredDate, setHoveredDate] = useState(null);
-  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
-  const hoverRef = useRef(null);
-
-  useEffect(() => {
-    async function fetchState() {
-      try {
-        const res = await fetch(`${API}`);
-        const data = await res.json();
-
-        setSyllabusTree(data.syllabus_tree_v2 || {});
-        setGymLogs(data.wd_gym_logs || {});
-        setDoneMap(data.wd_done || {});
-        setNotesMap(data.wd_notes_v1 || {});
-        setBmiLogs(data.bmi_logs || []);
-
-        setSelectedDate(todayISO());
-      } catch (err) {
-        console.error("Failed to load dashboard", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchState();
-  }, []);
 
   const studyMap = useMemo(() => {
     const out = {};
@@ -223,15 +190,12 @@ export default function CalendarFullDarkUpdated() {
 
   function saveNoteForDate(date, text) {
     const next = { ...notesMap, [date]: text };
-    setNotesMap(next);
-    syncToBackend({
-      wd_notes_v1: next,
-    });
+    updateDashboard({ wd_notes_v1: next });
   }
 
   function exportAll() {
     const payload = {
-      syllabus: syllabus || {},
+      syllabus: syllabus_tree_v2 || {},
       gymLogs: gymLogs || {},
       doneMap: doneMap || {},
       bmiLogs: bmiLogs || [],
@@ -292,7 +256,7 @@ export default function CalendarFullDarkUpdated() {
   async function resetGymProgress() {
     if (
       !confirm(
-        "Reset all gym logs and wd_done calendar marks? This cannot be undone."
+        "Reset all gym logs and wd_done calendar marks? This cannot be undone.",
       )
     )
       return;
@@ -319,18 +283,6 @@ export default function CalendarFullDarkUpdated() {
     } catch (err) {
       console.error("Reset failed", err);
       alert("Failed to reset.");
-    }
-  }
-
-  async function syncToBackend(newState) {
-    try {
-      await fetch(`${API}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newState),
-      });
-    } catch (e) {
-      console.error("Sync to backend failed:", e);
     }
   }
 
@@ -767,10 +719,10 @@ export default function CalendarFullDarkUpdated() {
               status === "both"
                 ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
                 : status === "study"
-                ? "bg-[#0A2B22] text-[#9FF2E8]"
-                : status === "gym"
-                ? "bg-[#071A2F] text-[#9FCAFF]"
-                : "bg-[#081C18] text-[#B6E5DC]";
+                  ? "bg-[#0A2B22] text-[#9FF2E8]"
+                  : status === "gym"
+                    ? "bg-[#071A2F] text-[#9FCAFF]"
+                    : "bg-[#081C18] text-[#B6E5DC]";
 
             const selectedClass = isSelected
               ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105"
@@ -787,10 +739,10 @@ export default function CalendarFullDarkUpdated() {
                   status === "both"
                     ? "Study + Gym"
                     : status === "study"
-                    ? "Study"
-                    : status === "gym"
-                    ? "Gym"
-                    : "No activity"
+                      ? "Study"
+                      : status === "gym"
+                        ? "Gym"
+                        : "No activity"
                 }`}
               >
                 {/* Today glow ring */}
@@ -882,9 +834,7 @@ export default function CalendarFullDarkUpdated() {
                       ? {
                           studyCount: (studyMap[iso] || []).length,
                           gymDone: !!gymLogs[iso],
-                          exercises: combinedExercisesForDateWrapper(
-                            iso                
-                          ),
+                          exercises: combinedExercisesForDateWrapper(iso),
                           notes: notesMap[iso] || "",
                         }
                       : null;
