@@ -28,19 +28,6 @@ app.use(
   }),
 );
 
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") return res.sendStatus(200);
-  next();
-});
-
 // ------------------------------------------------------
 // Body Parsing
 // ------------------------------------------------------
@@ -109,6 +96,11 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const server = http.createServer(app);
+
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI is missing");
+  process.exit(1);
+}
 
 mongoose
   .connect(MONGO_URI, { family: 4 })
