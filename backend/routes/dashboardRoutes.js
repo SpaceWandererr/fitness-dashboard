@@ -2,20 +2,6 @@ import express from "express";
 import DashboardState from "../models/DashboardState.js";
 import StateSnapshot from "../models/StateSnapshot.js";
 
-// Add this function at the top of dashboardRoutes.js, after imports
-function flatten(obj, prefix = '') {
-  const result = {};
-  for (const key in obj) {
-    const fullKey = prefix ? `${prefix}.${key}` : key;
-    if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-      Object.assign(result, flatten(obj[key], fullKey));
-    } else {
-      result[fullKey] = obj[key];
-    }
-  }
-  return result;
-}
-
 const router = express.Router();
 const USER_ID = "default";
 
@@ -65,6 +51,10 @@ router.put("/", async (req, res) => {
     const mergedState = {
       ...existing,
       ...incoming,
+      wd_planner: {
+        ...(existing.wd_planner || {}),
+        ...(incoming.wd_planner || {}),
+      },
       updatedAt: new Date().toISOString(),
     };
 
@@ -81,7 +71,7 @@ router.put("/", async (req, res) => {
     const updated = await DashboardState.findOneAndUpdate(
       { userId },
       { $set: mergedState },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     console.log("✅ Saved:", updated);
@@ -108,7 +98,7 @@ router.get("/", async (req, res) => {
     return res.json(newDoc);
   }
 
-  res.json(doc);
+  res.json(doc.toObject());
 });
 
 export default router;
