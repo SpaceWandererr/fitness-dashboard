@@ -228,12 +228,18 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
   // Read dates from global dashboard state
-  const [startISO, setStartISO] = useState(
-    dashboardState?.wd_mern_start_date || todayISO
-  );
-  const [endISO, setEndISO] = useState(
-    dashboardState?.wd_mern_end_date || DEFAULT_END
-  );
+  const [startISO, setStartISO] = useState("");
+  const [endISO, setEndISO] = useState("");
+
+  useEffect(() => {
+    if (!dashboardState) return;
+
+    setStartISO(
+      dashboardState.wd_mern_start_date || new Date().toISOString().slice(0, 10)
+    );
+
+    setEndISO(dashboardState.wd_mern_end_date || DEFAULT_END);
+  }, [dashboardState]);
 
   // Derived date metrics
   const startDate = useMemo(
@@ -281,8 +287,9 @@ export default function Goals({ dashboardState, updateDashboard }) {
 
   // projected finish
   let projectedFinishISO = null;
-  if (daysElapsed > 0 && doneTopics > 0) {
-    const speed = doneTopics / daysElapsed; // topics per day
+  if (doneTopics > 0 && paceRequired !== "—") {
+    const speed =
+      daysElapsed > 0 ? doneTopics / daysElapsed : parseFloat(paceRequired);
     if (speed > 0) {
       const daysToFinish = remainingTopics / speed;
       const projected = new Date();
@@ -540,26 +547,51 @@ export default function Goals({ dashboardState, updateDashboard }) {
                       </h3>
                     </div>
 
-                    {/* Dates + Progress Ring */}
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between w-full gap-3">
-                      <div className="flex flex-col gap-2">
-                        <div className="text-sm opacity-80">
-                          Start: {formatDDMMYYYY(startISO)}
-                        </div>
-                        <div className="text-sm opacity-80">
-                          End: {formatDDMMYYYY(endISO)}
+                    {/* Dates + Progress Ring - REDESIGNED */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between w-full gap-4">
+                      {/* Left: Date Cards */}
+                      <div className="flex flex-col gap-2 flex-1">
+                        {/* Start Date Card */}
+                        <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-400/20 rounded-lg px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🚀</span>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-blue-300/60 uppercase tracking-wide">
+                                Start
+                              </span>
+                              <span className="text-sm font-semibold text-blue-200">
+                                {formatDDMMYYYY(startISO)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Date Button with Dropdown */}
-                        <div className="relative">
+                        {/* End Date Card */}
+                        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-400/20 rounded-lg px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🎯</span>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-purple-300/60 uppercase tracking-wide">
+                                Target
+                              </span>
+                              <span className="text-sm font-semibold text-purple-200">
+                                {formatDDMMYYYY(endISO)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Date Button - More Prominent */}
+                        <div className="relative mt-1">
                           <button
                             onClick={() => setShowDatePopup(!showDatePopup)}
-                            className="mt-1 px-3 py-1.5 rounded-md text-xs bg-white/10 border border-white/15 hover:bg-white/15 transition-colors"
+                            className="w-full px-3 py-2 rounded-lg text-xs bg-gradient-to-r from-teal-500/20 to-emerald-500/20 border border-teal-400/30 hover:from-teal-500/30 hover:to-emerald-500/30 transition-all flex items-center justify-center gap-2 font-medium"
                           >
-                            📅 Set Dates
+                            <span>📅</span>
+                            <span>Adjust Dates</span>
                           </button>
 
-                          {/* Date Popup - Dropdown Style */}
+                          {/* Date Popup remains the same */}
                           <AnimatePresence>
                             {showDatePopup && (
                               <motion.div
@@ -568,7 +600,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.96, y: -8 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute z-50 top-full mt-2 left-0 w-[240px] rounded-lg bg-[rgba(10,18,28,0.98)] border border-white/20 backdrop-blur-xl shadow-2xl p-3"
+                                className="absolute z-50 top-full mt-2 left-0 w-full rounded-lg bg-[rgba(10,18,28,0.98)] border border-white/20 backdrop-blur-xl shadow-2xl p-3"
                                 style={{
                                   boxShadow:
                                     "0 0 30px rgba(0,240,210,0.15), inset 0 0 14px rgba(255,255,255,0.04)",
@@ -578,7 +610,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                   Select Dates
                                 </div>
 
-                                {/* Start Date */}
                                 <div className="flex flex-col gap-1 mb-2">
                                   <label className="text-[10px] text-white/60">
                                     Start Date
@@ -597,7 +628,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                   />
                                 </div>
 
-                                {/* End Date */}
                                 <div className="flex flex-col gap-1 mb-3">
                                   <label className="text-[10px] text-white/60">
                                     End Date
@@ -616,7 +646,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                   />
                                 </div>
 
-                                {/* Action Buttons */}
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => setShowDatePopup(false)}
@@ -643,50 +672,129 @@ export default function Goals({ dashboardState, updateDashboard }) {
                         </div>
                       </div>
 
-                      {/* Progress Ring */}
-                      <div className="w-[110px] h-[110px] flex-shrink-0 mx-auto sm:mx-0">
-                        <svg width="110" height="110" viewBox="0 0 200 200">
+                      {/* Right: Progress Ring - REDESIGNED */}
+                      <div className="relative w-[150px] h-[150px] flex-shrink-0 mx-auto sm:mx-0">
+                        {/* Animated background pulse */}
+                        <motion.div
+                          animate={{
+                            scale: [1, 1.15, 1],
+                            opacity: [0.15, 0.25, 0.15],
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                          className="absolute inset-0 rounded-full blur-xl"
+                          style={{
+                            background: `linear-gradient(135deg, ${ringGradientStops[1]}, ${ringGradientStops[2]})`,
+                          }}
+                        />
+
+                        {/* Main SVG Ring */}
+                        <svg
+                          width="150"
+                          height="150"
+                          viewBox="0 0 200 200"
+                          className="relative z-10"
+                        >
                           <defs>
+                            {/* Enhanced gradient with multiple stops */}
                             <linearGradient
-                              id={ringGradientStops[0]}
-                              x1="0"
-                              x2="1"
+                              id={`${ringGradientStops[0]}_enhanced`}
+                              x1="0%"
+                              y1="0%"
+                              x2="100%"
+                              y2="100%"
                             >
                               <stop
                                 offset="0%"
                                 stopColor={ringGradientStops[1]}
                               />
+                              <stop offset="50%" stopColor="#56ccff" />
                               <stop
                                 offset="100%"
                                 stopColor={ringGradientStops[2]}
                               />
                             </linearGradient>
+
+                            {/* Enhanced glow filter */}
                             <filter
-                              id="glow"
+                              id="enhanced_glow"
                               x="-50%"
                               y="-50%"
                               width="200%"
                               height="200%"
                             >
-                              <feGaussianBlur stdDeviation="6" result="blur" />
+                              <feGaussianBlur stdDeviation="8" result="blur1" />
+                              <feGaussianBlur stdDeviation="4" result="blur2" />
                               <feMerge>
-                                <feMergeNode in="blur" />
+                                <feMergeNode in="blur1" />
+                                <feMergeNode in="blur2" />
                                 <feMergeNode in="SourceGraphic" />
                               </feMerge>
                             </filter>
+
+                            {/* Shine effect */}
+                            <linearGradient
+                              id="shine"
+                              x1="0%"
+                              y1="0%"
+                              x2="0%"
+                              y2="100%"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor="white"
+                                stopOpacity="0.3"
+                              />
+                              <stop
+                                offset="50%"
+                                stopColor="white"
+                                stopOpacity="0.1"
+                              />
+                              <stop
+                                offset="100%"
+                                stopColor="white"
+                                stopOpacity="0"
+                              />
+                            </linearGradient>
                           </defs>
+
                           <g transform="translate(100,100)">
+                            {/* Background track with subtle gradient */}
                             <circle
                               r={R}
                               fill="transparent"
-                              stroke="rgba(255,255,255,0.08)"
-                              strokeWidth="8"
+                              stroke="rgba(255,255,255,0.06)"
+                              strokeWidth="10"
                             />
+
+                            {/* Secondary glow circle */}
                             <circle
                               r={R}
                               fill="transparent"
-                              stroke={`url(#${ringGradientStops[0]})`}
-                              strokeWidth="8"
+                              stroke={`url(#${ringGradientStops[0]}_enhanced)`}
+                              strokeWidth="12"
+                              strokeDasharray={`${C} ${C}`}
+                              strokeDashoffset={
+                                C - Math.round((merPercent / 100) * C)
+                              }
+                              strokeLinecap="round"
+                              transform="rotate(-90)"
+                              opacity="0.3"
+                              style={{
+                                filter: "blur(4px)",
+                                transition: "stroke-dashoffset 1s ease-out",
+                              }}
+                            />
+
+                            {/* Main progress circle */}
+                            <circle
+                              r={R}
+                              fill="transparent"
+                              stroke={`url(#${ringGradientStops[0]}_enhanced)`}
+                              strokeWidth="10"
                               strokeDasharray={`${C} ${C}`}
                               strokeDashoffset={
                                 C - Math.round((merPercent / 100) * C)
@@ -694,86 +802,267 @@ export default function Goals({ dashboardState, updateDashboard }) {
                               strokeLinecap="round"
                               transform="rotate(-90)"
                               style={{
-                                filter: "url(#glow)",
-                                transition: "stroke-dashoffset .8s",
+                                filter: "url(#enhanced_glow)",
+                                transition:
+                                  "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)",
                               }}
                             />
+
+                            {/* Shine overlay */}
+                            <circle
+                              r={R}
+                              fill="transparent"
+                              stroke="url(#shine)"
+                              strokeWidth="10"
+                              strokeDasharray={`${C} ${C}`}
+                              strokeDashoffset={
+                                C - Math.round((merPercent / 100) * C)
+                              }
+                              strokeLinecap="round"
+                              transform="rotate(-90)"
+                              pointerEvents="none"
+                            />
+
+                            {/* Center content with gradient background */}
+                            <circle
+                              r={R - 15}
+                              fill="rgba(10, 20, 30, 0.5)"
+                              stroke="rgba(255,255,255,0.05)"
+                              strokeWidth="1"
+                            />
+
+                            {/* Percentage text with gradient */}
                             <text
                               x="0"
-                              y="-6"
+                              y="-8"
                               textAnchor="middle"
-                              fill="white"
-                              className="text-xl font-bold"
+                              fill="url(#shine)"
+                              className="text-2xl font-bold"
+                              style={{
+                                filter:
+                                  "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                              }}
                             >
                               {merPercent}%
                             </text>
+
+                            {/* Label with icon */}
                             <text
                               x="0"
-                              y="20"
+                              y="18"
                               textAnchor="middle"
                               fill="white"
-                              className="text-base opacity-70"
+                              className="text-sm opacity-80 font-medium"
+                              style={{ letterSpacing: "0.05em" }}
                             >
                               MERN
                             </text>
+
+                            {/* Progress status emoji */}
+                            <text
+                              x="0"
+                              y="38"
+                              textAnchor="middle"
+                              className="text-base"
+                            >
+                              {merPercent < 25
+                                ? "🌱"
+                                : merPercent < 50
+                                ? "🚀"
+                                : merPercent < 75
+                                ? "⚡"
+                                : "🔥"}
+                            </text>
                           </g>
                         </svg>
+
+                        {/* Decorative corner accents */}
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gradient-to-br from-cyan-400 to-transparent opacity-60" />
+                        <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full bg-gradient-to-tr from-purple-400 to-transparent opacity-60" />
                       </div>
                     </div>
 
-                    {/* Timeline Section */}
+                    {/* Timeline Section - COMPACT VERSION */}
                     <div className="w-full">
-                      <div className="text-sm opacity-80 mb-2">Timeline</div>
-                      <div className="w-full h-2.5 bg-white/5 rounded-full relative overflow-hidden">
-                        <div
-                          className="h-2.5 absolute top-0 left-0 rounded-full"
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs">📈</span>
+                          <span className="text-xs font-semibold opacity-80">
+                            Timeline
+                          </span>
+                        </div>
+                        <span className="text-[10px] opacity-60">
+                          {timeProgressPct}% Complete
+                        </span>
+                      </div>
+
+                      {/* Compact Progress Bar */}
+                      <div className="relative w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                        {/* Progress Fill */}
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${timeProgressPct}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="h-3 rounded-full"
                           style={{
-                            width: `${timeProgressPct}%`,
                             background: `linear-gradient(90deg, ${ringGradientStops[1]}, ${ringGradientStops[2]})`,
-                            transition: "width .7s",
-                            boxShadow: `0 0 8px ${ringGradientStops[1]}, 0 0 16px ${ringGradientStops[2]}`,
+                            boxShadow: `0 0 8px ${ringGradientStops[1]}`,
                           }}
                         />
+
+                        {/* Milestone dots */}
+                        {[25, 50, 75].map((milestone) => (
+                          <div
+                            key={milestone}
+                            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/30"
+                            style={{ left: `${milestone}%` }}
+                          />
+                        ))}
                       </div>
-                      <div className="flex justify-between text-xs opacity-70 mt-1.5">
-                        <div>Elapsed: {timeProgressPct}%</div>
-                        <div>Left: {100 - timeProgressPct}%</div>
+
+                      {/* Inline Stats - Single Row */}
+                      <div className="flex items-center justify-between text-[10px] opacity-70 mt-1.5">
+                        <div className="flex items-center gap-1">
+                          <span>⏱️</span>
+                          <span>
+                            {timeProgressPct}% ({daysElapsed || 0}d)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span>
+                            {timeProgressPct < 25
+                              ? "🌱"
+                              : timeProgressPct < 50
+                              ? "🚀"
+                              : timeProgressPct < 75
+                              ? "⚡"
+                              : "🔥"}
+                          </span>
+                          <span>
+                            {timeProgressPct < 25
+                              ? "Starting"
+                              : timeProgressPct < 50
+                              ? "Building"
+                              : timeProgressPct < 75
+                              ? "Pushing"
+                              : "Finishing"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span>⌛</span>
+                          <span>{daysRemaining || 0}d left</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Snapshot Section - IMPROVED */}
-                    <div className="w-full rounded-xl p-3 backdrop-blur border border-white/10">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Left Column */}
-                        <div className="flex flex-col gap-1">
-                          <div className="text-xs opacity-70 mb-1">
-                            Snapshot
+                    {/* Snapshot Section - ULTRA COMPACT */}
+                    <div className="w-full rounded-lg border border-white/10 overflow-hidden">
+                      {/* Header - Thinner */}
+                      <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-b border-white/10">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">📊</span>
+                          <span className="text-xs font-semibold opacity-90">
+                            Progress Snapshot
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content - Reduced padding */}
+                      <div className="p-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Left: Compact Stats */}
+                        <div className="flex flex-col gap-2">
+                          {/* Topics - Smaller */}
+                          <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-md px-2.5 py-1.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col">
+                                <span className="text-[9px] text-cyan-300/60 uppercase">
+                                  Topics
+                                </span>
+                                <span className="text-sm font-bold text-cyan-200">
+                                  {doneTopics}{" "}
+                                  <span className="text-xs font-normal opacity-60">
+                                    / {totalTopics}
+                                  </span>
+                                </span>
+                              </div>
+                              <div className="text-lg">✅</div>
+                            </div>
+                            {/* Mini Progress Bar */}
+                            <div className="w-full h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                              <div
+                                className="h-1 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${
+                                    totalTopics
+                                      ? (doneTopics / totalTopics) * 100
+                                      : 0
+                                  }%`,
+                                }}
+                              />
+                            </div>
                           </div>
-                          <div className="text-sm font-semibold">
-                            Topics: {doneTopics} / {totalTopics || "—"}
-                          </div>
-                          <div className="text-xs opacity-70">
-                            Pace: {paceRequired}/day
-                          </div>
-                          <div className="text-xs opacity-70">
-                            Finish:{" "}
-                            {projectedFinishISO
-                              ? formatDDMMYYYY(projectedFinishISO)
-                              : "—"}
+
+                          {/* Pace & Finish Cards Row - FIXED */}
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Pace Card */}
+                            <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-400/20 rounded-lg px-1.5 py-2">
+                              <div className="flex flex-col items-center text-center">
+                                <span className="text-lg mb-0.5">⚡</span>
+                                <span className="text-[9px] text-emerald-300/60 uppercase">
+                                  Pace
+                                </span>
+                                <span className="text-xs font-bold text-emerald-200">
+                                  {paceRequired}/day
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Projected Finish Card - SHORT YEAR */}
+                            <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-400/20 rounded-lg px-2 py-2">
+                              <div className="flex flex-col items-center text-center">
+                                <span className="text-lg mb-0.5">🏁</span>
+                                <span className="text-[9px] text-orange-300/60 uppercase">
+                                  Finish
+                                </span>
+                                <span className="text-[10px] font-bold text-orange-200 leading-tight">
+                                  {projectedFinishISO
+                                    ? projectedFinishISO
+                                        .split("-")
+                                        .reverse()
+                                        .map((v, i) =>
+                                          i === 2 ? v.slice(-2) : v
+                                        )
+                                        .join("/")
+                                    : "—"}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Right Column - Days Remaining */}
-                        <div className="flex flex-col items-center justify-center text-center bg-white/5 rounded-lg p-2">
-                          <div className="text-xs opacity-70 mb-1">
-                            Days Left
+                        {/* Right: Days Remaining - Smaller */}
+                        <div className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-rose-500/10 border border-purple-400/20 rounded-md p-2.5">
+                          <div className="text-[10px] opacity-70 mb-0.5 flex items-center gap-1">
+                            <span>⏳</span>
+                            <span>Days Remaining</span>
                           </div>
-                          <div className="text-3xl font-bold leading-none">
+                          <div className="text-3xl font-bold leading-none mb-1.5 bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
                             {daysRemaining ?? "—"}
                           </div>
-                          <div className="text-[10px] opacity-60 mt-1">
-                            ~{Math.ceil((daysRemaining || 0) / 7)}w •{" "}
-                            {Math.ceil((daysRemaining || 0) / 30)}m
+                          <div className="flex items-center gap-1.5 text-[9px] opacity-70">
+                            <span className="px-1.5 py-0.5 bg-white/10 rounded-full">
+                              ~{Math.ceil((daysRemaining || 0) / 7)}w
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-white/10 rounded-full">
+                              ~{Math.ceil((daysRemaining || 0) / 30)}m
+                            </span>
+                          </div>
+                          <div className="mt-1.5 px-2 py-0.5 bg-white/10 border border-white/20 rounded text-[9px] font-medium">
+                            {daysRemaining > 200
+                              ? "🌱 Long Journey"
+                              : daysRemaining > 100
+                              ? "🔥 Stay Consistent"
+                              : "🚀 Final Push!"}
                           </div>
                         </div>
                       </div>
@@ -1175,51 +1464,109 @@ export default function Goals({ dashboardState, updateDashboard }) {
 
             return (
               <div className="space-y-3">
-                <div className="text-sm opacity-75">
-                  Latest gym log • progress toward target
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎯</span>
+                  <span className="text-xs font-semibold opacity-90">
+                    Weight Progress
+                  </span>
                 </div>
 
-                <div>
-                  <div className="text-xs opacity-70">
-                    Lost {lost.toFixed(1)}kg / {totalNeeded.toFixed(1)}kg
+                {/* Progress Section - Redesigned */}
+                <div className="rounded-lg border border-white/10 overflow-hidden backdrop-blur">
+                  {/* Progress Header */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border-b border-white/10">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] opacity-70">
+                        Lost {lost.toFixed(1)}kg / {totalNeeded.toFixed(1)}kg
+                      </span>
+                      <span className="text-[10px] opacity-70">
+                        {pct}% Complete
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="h-3 bg-white/5 rounded-full mt-1 overflow-hidden">
-                    <div
-                      className="h-3 rounded-full"
-                      style={{
-                        width: `${pct}%`,
-                        background:
-                          "linear-gradient(90deg,#00ffd1,#56ccff,#a13bff)",
-                        boxShadow: "0 0 8px #00ffd1",
-                        transition: "width .4s",
-                      }}
-                    />
-                  </div>
+                  {/* Progress Bar */}
+                  <div className="p-3">
+                    <div className="relative h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="h-3 rounded-full"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #00ffd1, #56ccff, #a13bff)",
+                          boxShadow: "0 0 12px #00ffd1, 0 0 24px #56ccff",
+                        }}
+                      >
+                        {/* Shine effect */}
+                        <motion.div
+                          animate={{
+                            x: ["-100%", "200%"],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            repeatDelay: 1,
+                          }}
+                          className="absolute inset-0 w-1/2"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+                          }}
+                        />
+                      </motion.div>
+                    </div>
 
-                  <div className="text-xs opacity-60 mt-1">
-                    {pct}% done <span className="pl-6">6× / Week</span>
+                    {/* Bottom Stats */}
+                    <div className="flex items-center justify-between mt-2 text-[10px] opacity-60">
+                      <span>🏋️ 6× / Week</span>
+                      <span>{(totalNeeded - lost).toFixed(1)}kg to go</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1 text-center mt-1">
-                  <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                    <div className="text-sm font-semibold">
-                      {curWeight ?? "—"}kg
+                {/* Stats Cards - Redesigned to match MERN style */}
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Current Weight */}
+                  <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-lg px-2 py-2">
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-lg mb-0.5">⚖️</span>
+                      <span className="text-[9px] text-cyan-300/60 uppercase">
+                        Current
+                      </span>
+                      <span className="text-sm font-bold text-cyan-200">
+                        {curWeight ?? "—"}kg
+                      </span>
                     </div>
-                    <div className="text-[10px] opacity-70">Current</div>
                   </div>
 
-                  <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                    <div className="text-sm font-semibold">
-                      {Number.isFinite(target) ? target : "—"}kg
+                  {/* Target Weight */}
+                  <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-400/20 rounded-lg px-2 py-2">
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-lg mb-0.5">🎯</span>
+                      <span className="text-[9px] text-emerald-300/60 uppercase">
+                        Target
+                      </span>
+                      <span className="text-sm font-bold text-emerald-200">
+                        {Number.isFinite(target) ? target : "—"}kg
+                      </span>
                     </div>
-                    <div className="text-[10px] opacity-70">Target</div>
                   </div>
 
-                  <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                    <div className="text-sm font-semibold">{bmi}</div>
-                    <div className="text-[10px] opacity-70">BMI</div>
+                  {/* BMI */}
+                  <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-400/20 rounded-lg px-2 py-2">
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-lg mb-0.5">📊</span>
+                      <span className="text-[9px] text-purple-300/60 uppercase">
+                        BMI
+                      </span>
+                      <span className="text-sm font-bold text-purple-200">
+                        {bmi}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1237,9 +1584,9 @@ export default function Goals({ dashboardState, updateDashboard }) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           whileHover={{ y: -4 }}
-          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full min-h-[260px] rounded-xl p-4 lg:p-5 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
-          {/* soft NZ-style holo bars */}
+          {/* Vertical & Horizontal bars */}
           <div
             className="absolute left-0 top-0 h-full w-[4px] rounded-r-lg"
             style={{
@@ -1261,9 +1608,17 @@ export default function Goals({ dashboardState, updateDashboard }) {
             }}
           />
 
-          <h4 className="relative z-10 text-lg font-bold mb-2 flex items-center gap-2">
-            <span className="inline-block animate-flag">⏱</span> Daily Routine
-          </h4>
+          {/* Header */}
+          <div className="relative z-10 flex items-center gap-2 mb-3">
+            <motion.span
+              animate={{ rotate: [0, -15, 15, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="text-2xl"
+            >
+              ⏱
+            </motion.span>
+            <h4 className="text-lg font-bold">Daily Routine</h4>
+          </div>
 
           <FadeSwiper
             data={[
@@ -1280,25 +1635,81 @@ export default function Goals({ dashboardState, updateDashboard }) {
               },
             ]}
             render={(card) => (
-              <div className="relative z-10 text-sm opacity-80 leading-relaxed">
-                {card.morning.map((m, i) => (
-                  <div key={`m${i}`}>{m}</div>
-                ))}
-                {card.night.map((n, j) => (
-                  <div key={`n${j}`}>{n}</div>
-                ))}
-                <div className="relative z-10 mt-4 grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
-                    Morning Focus
+              <div className="relative z-10 space-y-3">
+                {/* Morning Schedule Card */}
+                <div className="rounded-lg border border-white/10 overflow-hidden backdrop-blur">
+                  <div className="px-3 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">🌅</span>
+                      <span className="text-xs font-semibold opacity-90">
+                        Morning Routine
+                      </span>
+                    </div>
                   </div>
-                  <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
-                    Night Deep Work
+                  <div className="p-2.5 space-y-1.5">
+                    {card.morning.map((m, i) => (
+                      <div
+                        key={`m${i}`}
+                        className="flex items-center gap-2 text-xs opacity-80"
+                      >
+                        <span className="w-1 h-1 rounded-full bg-amber-400/60 flex-shrink-0" />
+                        <span>{m}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
-                    Weekly Review
+                </div>
+
+                {/* Night Schedule Card */}
+                <div className="rounded-lg border border-white/10 overflow-hidden backdrop-blur">
+                  <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">🌙</span>
+                      <span className="text-xs font-semibold opacity-90">
+                        Night Deep Work
+                      </span>
+                    </div>
                   </div>
-                  <div className="rounded-md p-2 bg-white/5 border border-white/10 text-center">
-                    Portfolio Sprint
+                  <div className="p-2.5 space-y-1.5">
+                    {card.night.map((n, j) => (
+                      <div
+                        key={`n${j}`}
+                        className="flex items-center gap-2 text-xs opacity-80"
+                      >
+                        <span className="w-1 h-1 rounded-full bg-indigo-400/60 flex-shrink-0" />
+                        <span>{n}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Focus Areas - Redesigned Grid */}
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-400/20 rounded-lg px-2.5 py-2 text-center">
+                    <div className="text-lg mb-0.5">💪</div>
+                    <div className="text-[10px] font-semibold text-emerald-200">
+                      Morning Focus
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 rounded-lg px-2.5 py-2 text-center">
+                    <div className="text-lg mb-0.5">💻</div>
+                    <div className="text-[10px] font-semibold text-blue-200">
+                      Deep Work
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-400/20 rounded-lg px-2.5 py-2 text-center">
+                    <div className="text-lg mb-0.5">📊</div>
+                    <div className="text-[10px] font-semibold text-purple-200">
+                      Weekly Review
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-400/20 rounded-lg px-2.5 py-2 text-center">
+                    <div className="text-lg mb-0.5">🚀</div>
+                    <div className="text-[10px] font-semibold text-orange-200">
+                      Portfolio Sprint
+                    </div>
                   </div>
                 </div>
               </div>
