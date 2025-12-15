@@ -247,7 +247,7 @@ export default function App() {
 
         if (!hasBackendSyllabus) {
           console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)",
           );
         }
 
@@ -259,7 +259,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2)
+            structuredClone(state.syllabus_tree_v2),
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -280,7 +280,7 @@ export default function App() {
             }
 
             // Skip update only if versions match
-            if (prevUpdated === nextUpdated) {
+            if (prevUpdated && nextUpdated && prevUpdated === nextUpdated) {
               console.log("🛑 State already up to date (updatedAt match)");
               return prev;
             }
@@ -416,14 +416,14 @@ export default function App() {
         fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newState),
+          body: JSON.stringify(resolvedUpdates), // ✅ send ONLY updates
         })
           .then((r) => r.json())
           .then(() => console.log("💾 Synced to backend"))
           .catch((err) => console.error("❌ Sync failed:", err));
       }, 700);
     },
-    [dashboardState]
+    [dashboardState],
   );
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
@@ -1075,10 +1075,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1722,10 +1722,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>
