@@ -806,7 +806,11 @@ export default function App() {
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  <Control />
+                  <Control
+                    dashboardState={dashboardState}
+                    setDashboardState={setDashboardState}
+                    updateDashboard={updateDashboard}
+                  />
                 </motion.div>
               }
             />
