@@ -59,7 +59,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
             ts: Date.now(),
             text: txt,
             source: "api",
-          })
+          }),
         );
       } catch {}
     }
@@ -200,7 +200,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0
+    0,
   );
 
   const MUSCLES = {
@@ -255,8 +255,8 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-      ? "Great job! Keep pushing! 💪"
-      : "You showed up. That's what matters. 🚀";
+        ? "Great job! Keep pushing! 💪"
+        : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
@@ -384,7 +384,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           <span className="text-emerald-400">✓</span>
                           <span>{ex}</span>
                         </div>
-                      ) : null
+                      ) : null,
                     )}
                   </div>
                 ) : (
@@ -580,8 +580,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                        ? `↘️ ${weightTrend}kg`
-                        : "→ 0kg"
+                          ? `↘️ ${weightTrend}kg`
+                          : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -591,8 +591,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                        ? "text-emerald-300"
-                        : "text-gray-300"
+                          ? "text-emerald-300"
+                          : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -642,7 +642,7 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length
+          : (i - 1 + modes.length) % modes.length,
       );
     }
   };
@@ -764,7 +764,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   // Modal inputs + editing states
@@ -783,35 +783,22 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [editRight, setEditRight] = useState([]);
   const [editFinisher, setEditFinisher] = useState([]);
 
-  // fetch initial state from backend on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(
-          "https://fitness-backend-laoe.onrender.com/api/state"
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data.wd_gym_logs || {});
-          setDoneState(data.wd_done || {});
-          setCurrWeight(
-            data.wd_goals?.currentWeight != null
-              ? data.wd_goals.currentWeight
-              : ""
-          );
-          setTargetWeight(
-            data.wd_goals?.targetWeight != null
-              ? data.wd_goals.targetWeight
-              : ""
-          );
-        } else {
-          console.error("Failed to fetch state:", res.status);
-        }
-      } catch (err) {
-        console.error("Error fetching state:", err);
-      }
-    })();
-  }, []);
+    if (!dashboardState) return;
+
+    setLogs(dashboardState.wd_gym_logs || {});
+    setDoneState(dashboardState.wd_done || {});
+    setCurrWeight(
+      dashboardState.wd_goals?.currentWeight != null
+        ? String(dashboardState.wd_goals.currentWeight)
+        : "",
+    );
+    setTargetWeight(
+      dashboardState.wd_goals?.targetWeight != null
+        ? String(dashboardState.wd_goals.targetWeight)
+        : "",
+    );
+  }, [dashboardState]);
 
   // sync date -> weekday
   useEffect(() => {
@@ -842,7 +829,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger."
+            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
           );
         });
     }
@@ -891,7 +878,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const updated = {
       ...entry,
       [section]: entry[section].map((item, i) =>
-        i === idx ? { ...item, done: !item.done } : item
+        i === idx ? { ...item, done: !item.done } : item,
       ),
     };
 
@@ -959,11 +946,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : existing.weight ?? null;
+      : (existing.weight ?? null);
 
     const newBmi = weightVal
       ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-      : existing.bmi ?? null;
+      : (existing.bmi ?? null);
 
     const updatedEntry = {
       weekday: existing.weekday || weekday,
@@ -1702,7 +1689,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -1728,7 +1715,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -1807,7 +1794,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 16px)`,
             }}
           >
@@ -1932,13 +1919,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
                             : entry.left.filter((e) => e?.done).length) +
                             (Array.isArray(entry.right) &&
                             entry.right.every(
-                              (item) => typeof item === "boolean"
+                              (item) => typeof item === "boolean",
                             )
                               ? entry.right.filter(Boolean).length
                               : entry.right.filter((e) => e?.done).length) +
                             (Array.isArray(entry.finisher) &&
                             entry.finisher.every(
-                              (item) => typeof item === "boolean"
+                              (item) => typeof item === "boolean",
                             )
                               ? entry.finisher.filter(Boolean).length
                               : entry.finisher.filter((e) => e?.done).length)}
@@ -1953,19 +1940,19 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           {Math.round(
                             (((Array.isArray(entry.left) &&
                             entry.left.every(
-                              (item) => typeof item === "boolean"
+                              (item) => typeof item === "boolean",
                             )
                               ? entry.left.filter(Boolean).length
                               : entry.left.filter((e) => e?.done).length) +
                               (Array.isArray(entry.right) &&
                               entry.right.every(
-                                (item) => typeof item === "boolean"
+                                (item) => typeof item === "boolean",
                               )
                                 ? entry.right.filter(Boolean).length
                                 : entry.right.filter((e) => e?.done).length) +
                               (Array.isArray(entry.finisher) &&
                               entry.finisher.every(
-                                (item) => typeof item === "boolean"
+                                (item) => typeof item === "boolean",
                               )
                                 ? entry.finisher.filter(Boolean).length
                                 : entry.finisher.filter((e) => e?.done)
@@ -1973,7 +1960,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                               (dayPlan.left.length +
                                 dayPlan.right.length +
                                 dayPlan.finisher.length)) *
-                              100
+                              100,
                           )}
                           %
                         </p>
@@ -1993,13 +1980,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
                             : entry.left.filter((e) => e?.done).length) +
                             (Array.isArray(entry.right) &&
                             entry.right.every(
-                              (item) => typeof item === "boolean"
+                              (item) => typeof item === "boolean",
                             )
                               ? entry.right.filter(Boolean).length
                               : entry.right.filter((e) => e?.done).length) +
                             (Array.isArray(entry.finisher) &&
                             entry.finisher.every(
-                              (item) => typeof item === "boolean"
+                              (item) => typeof item === "boolean",
                             )
                               ? entry.finisher.filter(Boolean).length
                               : entry.finisher.filter((e) => e?.done).length)) /
@@ -2079,10 +2066,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
           doneState[dateKey]
             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
             : entry.left.every((e) => e?.done) &&
-              entry.right.every((e) => e?.done) &&
-              entry.finisher.every((e) => e?.done)
-            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+                entry.right.every((e) => e?.done) &&
+                entry.finisher.every((e) => e?.done)
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
         }
       `}
                     >
@@ -2574,7 +2561,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>
+              </div>,
             );
           }
 
@@ -2679,7 +2666,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>
+              </div>,
             );
           }
 
@@ -2716,8 +2703,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                        ? "bg-yellow-500/60"
-                        : "bg-gray-700"
+                          ? "bg-yellow-500/60"
+                          : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -2737,7 +2724,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             <div className="text-lg sm:text-xl font-bold text-emerald-300">
               {
                 Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM"))
+                  k.startsWith(today.format("YYYY-MM")),
                 ).length
               }
               <span className="text-sm text-emerald-300/60">
@@ -2775,7 +2762,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               {(() => {
                 const totalDays = today.daysInMonth();
                 const done = Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM"))
+                  k.startsWith(today.format("YYYY-MM")),
                 ).length;
                 return Math.round((done / totalDays) * 100);
               })()}
