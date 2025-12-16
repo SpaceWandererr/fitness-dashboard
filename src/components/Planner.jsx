@@ -365,7 +365,7 @@ function SnowAnimation() {
           ? ""
           : `Q${p.split(",")[0]},${p.split(",")[1]} ${
               parseInt(p.split(",")[0]) + (i < 10 ? 5 : 0)
-            },${points[i + 1] ? points[i + 1].split(",")[1] : p.split(",")[1]}`
+            },${points[i + 1] ? points[i + 1].split(",")[1] : p.split(",")[1]}`,
       )
       .join(" ")} L100,20 L0,20 Z`;
   };
@@ -549,16 +549,19 @@ function ThunderstormAnimation() {
   const [boltPosition, setBoltPosition] = useState({ x: 50, y: 20 });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Random lightning position
-      setBoltPosition({
-        x: 30 + Math.random() * 40,
-        y: 10 + Math.random() * 20,
-      });
+    const interval = setInterval(
+      () => {
+        // Random lightning position
+        setBoltPosition({
+          x: 30 + Math.random() * 40,
+          y: 10 + Math.random() * 20,
+        });
 
-      setFlash(true);
-      setTimeout(() => setFlash(false), 150);
-    }, 3000 + Math.random() * 2000); // Random interval 3-5s
+        setFlash(true);
+        setTimeout(() => setFlash(false), 150);
+      },
+      3000 + Math.random() * 2000,
+    ); // Random interval 3-5s
 
     return () => clearInterval(interval);
   }, []);
@@ -887,10 +890,10 @@ function WeatherCard({
   const title = !selectedCity
     ? "Select a city"
     : typeof selectedCity === "string"
-    ? selectedCity
-    : `${selectedCity.name}${
-        selectedCity.admin1 ? `, ${selectedCity.admin1}` : ""
-      }, ${selectedCity.country}`;
+      ? selectedCity
+      : `${selectedCity.name}${
+          selectedCity.admin1 ? `, ${selectedCity.admin1}` : ""
+        }, ${selectedCity.country}`;
 
   // Helper function for weather icons
   function getWeatherIcon(condition, isNight) {
@@ -1129,19 +1132,19 @@ function WeatherCard({
                         weatherData.meta.uv <= 2
                           ? "bg-green-500/30 text-green-200 border border-green-400/30"
                           : weatherData.meta.uv <= 5
-                          ? "bg-yellow-500/30 text-yellow-200 border border-yellow-400/30"
-                          : weatherData.meta.uv <= 7
-                          ? "bg-orange-500/30 text-orange-200 border border-orange-400/30"
-                          : "bg-red-500/30 text-red-200 border border-red-400/30"
+                            ? "bg-yellow-500/30 text-yellow-200 border border-yellow-400/30"
+                            : weatherData.meta.uv <= 7
+                              ? "bg-orange-500/30 text-orange-200 border border-orange-400/30"
+                              : "bg-red-500/30 text-red-200 border border-red-400/30"
                       }`}
                     >
                       {weatherData.meta.uv <= 2
                         ? "Low"
                         : weatherData.meta.uv <= 5
-                        ? "Moderate"
-                        : weatherData.meta.uv <= 7
-                        ? "High"
-                        : "Very High"}
+                          ? "Moderate"
+                          : weatherData.meta.uv <= 7
+                            ? "High"
+                            : "Very High"}
                     </span>
                   </div>
                 </div>
@@ -1213,8 +1216,8 @@ export default function Planner({ dashboardState, updateDashboard }) {
         p.tasks && p.tasks.length > 0
           ? p.tasks
           : prev.tasks && prev.tasks.length > 0
-          ? prev.tasks
-          : DEFAULT_TASKS,
+            ? prev.tasks
+            : DEFAULT_TASKS,
       dayMap: p.dayMap || prev.dayMap || {},
       habits: { ...prev.habits, ...defaultHabits, ...p.habits },
       pomodoroSeconds:
@@ -1306,7 +1309,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
       try {
         const q = encodeURIComponent(cityInput.trim());
         const res = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=6`
+          `https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=6`,
         );
         const json = await res.json();
         if (!json || !json.results) {
@@ -2072,7 +2075,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                   const taskScore = totalPlanned; // 0-8 points (morning + afternoon + evening tasks)
                   const waterScore = Math.min(
                     1,
-                    (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                    (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                   ); // 0-1 point
                   const meditateScore = planner.dayMap?.[dayKey]?.habits
                     ?.meditate
@@ -2080,7 +2083,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     : 0; // 0-1 point
                   const readingScore = Math.min(
                     1,
-                    (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                    (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                   ); // 0-1 point
                   const total =
                     taskScore + waterScore + meditateScore + readingScore;
@@ -2122,7 +2125,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                             ...prevDay.habits,
                             water: Math.max(
                               0,
-                              (prevDay.habits?.water || 0) - 1
+                              (prevDay.habits?.water || 0) - 1,
                             ),
                           },
                         };
@@ -2159,7 +2162,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                             ...prevDay.habits,
                             water: Math.min(
                               12,
-                              (prevDay.habits?.water || 0) + 1
+                              (prevDay.habits?.water || 0) + 1,
                             ),
                           },
                         };
@@ -2308,7 +2311,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     width: `${Math.min(
                       100,
                       ((planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30) *
-                        100
+                        100,
                     )}%`,
                   }}
                   transition={{ duration: 0.5 }}
@@ -2334,7 +2337,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     const taskScore = totalPlanned; // 0-8
                     const waterScore = Math.min(
                       1,
-                      (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                      (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                     ); // 0-1
                     const meditateScore = planner.dayMap?.[dayKey]?.habits
                       ?.meditate
@@ -2342,7 +2345,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                       : 0; // 0-1
                     const readingScore = Math.min(
                       1,
-                      (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                      (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                     ); // 0-1
                     const total =
                       taskScore + waterScore + meditateScore + readingScore;
@@ -2358,7 +2361,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                       const taskScore = totalPlanned; // 0-8
                       const waterScore = Math.min(
                         1,
-                        (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                        (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                       );
                       const meditateScore = planner.dayMap?.[dayKey]?.habits
                         ?.meditate
@@ -2366,7 +2369,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                         : 0;
                       const readingScore = Math.min(
                         1,
-                        (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                        (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                       );
                       const total =
                         taskScore + waterScore + meditateScore + readingScore;
@@ -2402,14 +2405,14 @@ export default function Planner({ dashboardState, updateDashboard }) {
                 Tasks ({totalPlanned}/8) + Water (
                 {Math.min(
                   1,
-                  (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                  (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                 ).toFixed(1)}
                 ) + Meditation (
                 {planner.dayMap?.[dayKey]?.habits?.meditate ? 1 : 0}) + Reading
                 (
                 {Math.min(
                   1,
-                  (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                  (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                 ).toFixed(1)}
                 )
               </div>
@@ -2596,22 +2599,24 @@ export default function Planner({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </div>
-       {
-        /* CALENDAR PREVIEW + WEATHER */
-      }
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-80">
-          <MiniCalendar
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            dayMap={planner.dayMap}
-          />
+
+      {/* CALENDAR PREVIEW + WEATHER */}
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_300px] gap-6 items-stretch">
+        {/* ================= LEFT: MINI CALENDAR ================= */}
+        <div className="h-full">
+          <div className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3">
+            <MiniCalendar
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              dayMap={planner.dayMap}
+            />
+          </div>
         </div>
 
-        {/* Day preview */}
-        <div className="rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden hover:shadow-[0_0_12px_rgba(63,167,150,0.4)] transition-all flex-1">
+        {/* ================= CENTER: DAY SUMMARY ================= */}
+        <div className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-b border-[#2F6B60]/30">
+          <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-b border-[#2F6B60]/30 shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg">📋</span>
@@ -2625,12 +2630,11 @@ export default function Planner({ dashboardState, updateDashboard }) {
             </div>
           </div>
 
-          {/* Scrollable Content */}
-          <div className="p-3 space-y-2 max-h-[380px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#2F6B60]/60 scrollbar-track-transparent flex flex-col gap-2">
+          {/* Scroll area takes remaining height */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-[#2F6B60]/60 scrollbar-track-transparent">
             {SLOT_ORDER.map((slot) => {
               const items = currentDay[slot] || [];
 
-              // Determine gradient color based on slot
               const slotColors = {
                 Morning: {
                   gradient: "from-amber-500/10 to-orange-500/10",
@@ -2652,56 +2656,34 @@ export default function Planner({ dashboardState, updateDashboard }) {
                 },
               };
 
-              const colors = slotColors[slot] || slotColors.Morning;
+              const colors = slotColors[slot];
 
               return (
                 <div
                   key={slot}
-                  className={`rounded-lg border ${colors.border} bg-gradient-to-br ${colors.gradient} overflow-hidden`}
+                  className={`rounded-lg border ${colors.border} bg-gradient-to-br ${colors.gradient}`}
                 >
-                  {/* Slot Header */}
-                  <div className="px-3 py-2 bg-black/20 border-b border-white/5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">{colors.emoji}</span>
-                        <span
-                          className={`text-sm font-semibold ${colors.text}`}
-                        >
-                          {slot}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-white/60">
-                        {items.length} {items.length === 1 ? "task" : "tasks"}
-                      </div>
-                    </div>
+                  <div className="px-3 py-2 border-b border-white/5 flex justify-between items-center">
+                    <span className={`text-sm font-semibold ${colors.text}`}>
+                      {colors.emoji} {slot}
+                    </span>
+                    <span className="text-[10px] text-white/50">
+                      {items.length} tasks
+                    </span>
                   </div>
 
-                  {/* Tasks List */}
-                  <div className="p-2 space-y-1.5">
-                    {items.length > 0 ? (
+                  <div className="p-2">
+                    {items.length ? (
                       items.map((t, i) => (
                         <div
-                          key={`${t}-${i}`}
-                          className="group flex items-center justify-between p-2 rounded-lg bg-black/30 border border-white/10 hover:border-white/20 hover:bg-black/40 transition-all"
+                          key={i}
+                          className="text-xs text-white/80 p-2 rounded bg-black/30 mb-1"
                         >
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="text-xs opacity-60">
-                              {taskEmoji(t)}
-                            </span>
-                            <div className="truncate text-xs text-white/90">
-                              {t}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeFrom(slot, i)}
-                            className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-md bg-rose-500/20 border border-rose-400/30 text-rose-200 text-[10px] hover:bg-rose-500/30 hover:border-rose-400/50 hover:shadow-[0_0_8px_rgba(244,63,94,0.4)] transition-all"
-                          >
-                            Remove
-                          </button>
+                          {t}
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-3 text-xs text-white/40">
+                      <div className="text-xs text-white/40 text-center py-3">
                         No tasks scheduled
                       </div>
                     )}
@@ -2712,10 +2694,9 @@ export default function Planner({ dashboardState, updateDashboard }) {
           </div>
         </div>
 
-        {/* Weather */}
-        {/* Parent container with improved responsive sizing */}
-        <div className="w-full sm:max-w-[280px] lg:max-w-[300px]">
-          <div className="rounded-xl p-4 border border-[#2F6B60]/40 bg-black/20 hover:shadow-[0_0_12px_rgba(63,167,150,0.5)] hover:border-[#2F6B60]/60 transition-all duration-300">
+        {/* ================= RIGHT: WEATHER ================= */}
+        <div className="h-full">
+          <div className="h-full rounded-xl p-4 border border-[#2F6B60]/40 bg-black/20 flex flex-col">
             <WeatherCard
               cityInput={cityInput}
               setCityInput={(val) =>
@@ -2734,6 +2715,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </div>
+
       {/* Toast */}
       <AnimatePresence>
         {toast && (
