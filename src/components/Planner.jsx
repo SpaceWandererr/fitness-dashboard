@@ -737,12 +737,22 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
               Morning: [],
               Afternoon: [],
               Evening: [],
+              habits: {},
             };
-            const hasTasks =
+
+            const habits = plans.habits || {};
+
+            const taskCount =
               (plans.Morning?.length || 0) +
-                (plans.Afternoon?.length || 0) +
-                (plans.Evening?.length || 0) >
-              0;
+              (plans.Afternoon?.length || 0) +
+              (plans.Evening?.length || 0);
+
+            const hasTasks = taskCount > 0;
+
+            const hasHabits =
+              habits.meditate === true ||
+              (habits.water || 0) > 0 ||
+              (habits.reading || 0) > 0;
 
             const baseClasses =
               "relative p-2 rounded-lg text-xs h-10 flex items-center justify-center flex-col transition-all cursor-pointer";
@@ -781,9 +791,18 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
                 <div className="relative z-10 font-semibold">{d.date()}</div>
 
                 {/* Task indicator */}
-                {hasTasks && (
+                {/* Activity indicators */}
+                {(hasTasks || hasHabits) && (
                   <div className="relative z-10 flex gap-0.5 mt-0.5">
-                    <div className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.8)]" />
+                    {/* Tasks → Green */}
+                    {hasTasks && (
+                      <div className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.9)]" />
+                    )}
+
+                    {/* Habits → Blue */}
+                    {hasHabits && (
+                      <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(34,211,238,0.9)]" />
+                    )}
                   </div>
                 )}
               </button>
