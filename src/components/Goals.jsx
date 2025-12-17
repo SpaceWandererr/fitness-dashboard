@@ -549,6 +549,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
 
                     {/* Dates + Progress Ring - REDESIGNED */}
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between w-full gap-4">
+                      
                       {/* Left: Date Cards */}
                       <div className="flex flex-col gap-2 flex-1">
                         {/* Start Date Card */}

@@ -617,9 +617,6 @@ export default function StudyProjectsAdvanced({
 
             {/* ACTION BUTTONS */}
             <div className="flex flex-wrap lg:flex-nowrap gap-2 w-full lg:w-auto">
-              <button className="p-2 px-3 rounded-xl border border-border bg-blue-500/20 hover:bg-blue-500/30 transition-colors w-full lg:w-auto text-xs lg:text-sm whitespace-nowrap">
-                Saved locally + backend
-              </button>
               {/* EXPORT JSON */}
               <button
                 className="px-3 py-2 rounded-xl border border-border bg-emerald-500/20 hover:bg-emerald-500/30 transition-colors w-full lg:w-auto text-xs lg:text-sm whitespace-nowrap"
@@ -819,7 +816,7 @@ export default function StudyProjectsAdvanced({
                                     {remaining === "Expired"
                                       ? `Expired: ${formatDate(deadline)}`
                                       : `Due: ${formatDate(
-                                          deadline,
+                                          deadline
                                         )} (${remaining})`}
                                   </div>
                                 )}
@@ -1020,7 +1017,7 @@ export default function StudyProjectsAdvanced({
                               </span>
                               <span className="opacity-70">{date}</span>
                             </div>
-                          ),
+                          )
                         )
                       )}
                     </div>

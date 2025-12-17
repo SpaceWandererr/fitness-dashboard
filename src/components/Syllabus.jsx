@@ -4335,6 +4335,36 @@ function totalsOf(node, visited = new WeakSet()) {
 // keep for compatibility but delegate to normalized version
 const normalizeWholeTree = (src) => normalizeTree(src);
 
+
+function resetSyllabusProgress() {
+  // 1️⃣ Clone current syllabus from state
+  const cloned = structuredClone(dashboardState.syllabus_tree_v2);
+
+  // 2️⃣ Walk and reset progress
+  const walk = (node) => {
+    if (Array.isArray(node)) {
+      node.forEach((item) => {
+        item.done = false;
+        item.deadline = "";
+        item.completedOn = "";
+      });
+      return;
+    }
+
+    if (node && typeof node === "object") {
+      Object.values(node).forEach(walk);
+    }
+  };
+
+  walk(cloned);
+
+  // 3️⃣ Save back to state
+  setDashboardState((prev) => ({
+    ...prev,
+    syllabus_tree_v2: cloned,
+  }));
+}
+
 /* ======================= MAIN ======================= */
 export default function Syllabus({ dashboardState, setDashboardState }) {
   // ---------------- MONGO CONFIG ----------------
@@ -4540,7 +4570,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         return newState;
       });
     },
-    [API_URL],
+    [API_URL]
   );
 
   /* ======================= CLEANUP TIMEOUT ======================= */
@@ -4574,12 +4604,9 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(
-      () => {
-        setShowLastStudied(false);
-      },
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
-    );
+    const timer = setTimeout(() => {
+      setShowLastStudied(false);
+    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4600,7 +4627,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   const grand = useMemo(
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2],
+    [dashboardState?.syllabus_tree_v2]
   );
 
   // Add this after your useState declarations
@@ -4614,7 +4641,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log("✅ Loaded from backend:", data);
+          // console.log("✅ Loaded from backend:", data);
 
           // Update state with backend data
           setDashboardState(data);
@@ -4678,7 +4705,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         return newState;
       });
     },
-    [API_URL],
+    [API_URL]
   );
 
   // alias for Section header click
@@ -4920,7 +4947,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         updateDashboard({ syllabus_notes: newNR });
       }
     },
-    [updateDashboard, API_URL],
+    [updateDashboard, API_URL]
   );
 
   /* ======================= EXPORT ======================= */
@@ -4997,7 +5024,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q),
+          (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
@@ -5135,38 +5162,83 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               </button>
               {/* Reset */}
               <button
-                onClick={() => {
-                  if (!confirm("Reset ALL syllabus progress?")) return;
+                onClick={async () => {
+                  if (
+                    !confirm(
+                      "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
+                    )
+                  )
+                    return;
 
-                  const resetTree = normalizeTree(TREE);
+                  try {
+                    // Step 1: Create completely fresh tree - USE TREE DIRECTLY
+                    const resetTree = structuredClone(TREE);
 
-                  const updates = {
-                    syllabus_tree_v2: resetTree,
-                    syllabus_meta: {},
-                    syllabus_notes: {},
-                    syllabus_streak: [],
-                    syllabus_lastStudied: "",
-                  };
+                    // Step 2: Read current backend state
+                    const getResponse = await fetch(API_URL, {
+                      method: "GET",
+                      headers: { "Content-Type": "application/json" },
+                    });
 
-                  updateDashboard(updates);
+                    const currentBackend = await getResponse.json();
+                    console.log("📥 Current backend:", currentBackend);
 
-                  // Optional: clear old local storage keys
-                  localStorage.removeItem(K_TREE);
-                  localStorage.removeItem(K_META);
-                  localStorage.removeItem(K_NOTES);
-                  localStorage.removeItem(K_STREAK);
-                  localStorage.removeItem("K_LAST_STUDIED");
+                    // Step 3: Build new state keeping only gym data
+                    const newState = {
+                      ...currentBackend,
+                      syllabus_tree_v2: resetTree,
+                      syllabus_meta: {},
+                      syllabus_notes: {},
+                      syllabus_nr: {},
+                      syllabus_streak: [],
+                      syllabus_lastStudied: "",
+                    };
 
-                  window.location.reload();
+                    console.log("📤 Sending to backend:", newState);
+
+                    // Step 4: Send to backend with PUT
+                    const putResponse = await fetch(API_URL, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(newState),
+                    });
+
+                    if (!putResponse.ok) {
+                      throw new Error(`Backend returned ${putResponse.status}`);
+                    }
+
+                    console.log("✅ Backend updated successfully");
+
+                    // Step 5: Verify it saved
+                    const verifyResponse = await fetch(API_URL, {
+                      method: "GET",
+                      headers: { "Content-Type": "application/json" },
+                    });
+                    const verified = await verifyResponse.json();
+                    console.log("✅ Verified backend:", verified);
+
+                    // Step 6: Clear ALL localStorage
+                    localStorage.clear();
+
+                    // Step 7: Show success and reload
+                    alert("✅ RESET COMPLETE! Page will reload now.");
+
+                    // Hard reload bypassing cache
+                    window.location.href =
+                      window.location.href + "?t=" + Date.now();
+                  } catch (err) {
+                    console.error("❌ Reset failed:", err);
+                    alert(
+                      "Reset failed! Check console for details.\n\nError: " +
+                        err.message
+                    );
+                  }
                 }}
-                className="
-            px-3 py-1.5 rounded-xl text-sm
-            bg-[#B82132] text-white
-            shadow-md hover:bg-[#a51b2a] transition
-          "
+                className="px-3 py-1.5 rounded-xl text-sm bg-[#B82132] text-white shadow-md hover:bg-[#a51b2a] transition"
               >
                 Reset
               </button>
+
               {/* Export */}
               <button
                 onClick={exportProgress}
@@ -5230,10 +5302,10 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               grand.pct < 25
                 ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
                 : grand.pct < 50
-                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                  : grand.pct < 75
-                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                : grand.pct < 75
+                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
             }
           `}
                 style={{
@@ -5674,32 +5746,32 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               <div className="flex items-center gap-1 flex-wrap">
                 <span>✅</span>
                 <span className="text-emerald-400 dark:text-emerald-300">
-                  Completed on {new Date(completedDate).toLocaleDateString()}
+                  Completed on {formatDateDDMMYYYY(completedDate)}
                 </span>
 
                 {/* Show days difference if deadline exists */}
                 {deadline && daysDiff !== null && (
                   <span
                     className={`
-                      ml-1 font-semibold
-                      ${
-                        daysDiff > 0
-                          ? "text-green-400"
-                          : daysDiff < 0
-                            ? "text-red-400"
-                            : "text-yellow-400"
-                      }
-                    `}
+          ml-1 font-semibold
+          ${
+            daysDiff > 0
+              ? "text-green-400"
+              : daysDiff < 0
+              ? "text-red-400"
+              : "text-yellow-400"
+          }
+        `}
                   >
                     {daysDiff > 0
                       ? `(${daysDiff} day${
                           daysDiff !== 1 ? "s" : ""
                         } before deadline)`
                       : daysDiff < 0
-                        ? `(${Math.abs(daysDiff)} day${
-                            Math.abs(daysDiff) !== 1 ? "s" : ""
-                          } after deadline)`
-                        : "(on deadline day)"}
+                      ? `(${Math.abs(daysDiff)} day${
+                          Math.abs(daysDiff) !== 1 ? "s" : ""
+                        } after deadline)`
+                      : "(on deadline day)"}
                   </span>
                 )}
               </div>
@@ -5791,7 +5863,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
