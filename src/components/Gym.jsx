@@ -11,7 +11,6 @@ const WEEK = [
   "Saturday",
   "Sunday",
 ];
-const fmtISO = (d) => dayjs(d).format("YYYY-MM-DD");
 const fmtDisp = (d) => dayjs(d).format("DD-MM-YYYY");
 
 // Sunday Quote Fetcher
@@ -172,7 +171,8 @@ const DEFAULT_PLAN = {
 
 /* -------------------- MERGED DAILY SUMMARY ------------------- */
 function DailySummaryMerged({ date, logs, mode }) {
-  const dateKey = fmtISO(date);
+  const dateKey = dayjs(date).format("YYYY-MM-DD");
+
   const entry = logs[dateKey];
 
   const wd = entry?.weekday || dayjs(date).format("dddd");
@@ -245,6 +245,7 @@ function DailySummaryMerged({ date, logs, mode }) {
     caloriesLogged != null ? caloriesLogged - CAL_GOAL : null;
 
   const yesterdayKey = dayjs(date).subtract(1, "day").format("YYYY-MM-DD");
+
   const yesterdayWeight = logs[yesterdayKey]?.weight ?? null;
   const weightTrend =
     entry?.weight != null && yesterdayWeight != null
@@ -754,7 +755,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const defaultDay = WEEK.includes(todayName) ? todayName : "Monday";
 
   // Date + weekday
-  const [date, setDate] = useState(todayIso);
+  const [date, setDate] = useState(dayjs());
   const [weekday, setWeekday] = useState(defaultDay);
   const userChangedWeekday = useRef(false);
 
@@ -786,13 +787,24 @@ export default function Gym({ dashboardState, updateDashboard }) {
   useEffect(() => {
     if (!dashboardState) return;
 
-    setLogs(dashboardState.wd_gym_logs || {});
-    setDoneState(dashboardState.wd_done || {});
+    // ✅ MERGE — never overwrite local unsaved days
+    setLogs((prev) => ({
+      ...prev,
+      ...(dashboardState.wd_gym_logs || {}),
+    }));
+
+    setDoneState((prev) => ({
+      ...prev,
+      ...(dashboardState.wd_done || {}),
+    }));
+
+    // These are scalar values → safe to replace
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
         : "",
     );
+
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
@@ -823,9 +835,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
     if (!userChangedWeekday.current) return;
     const currentDate = dayjs();
     const startOfWeek = currentDate.startOf("week").add(1, "day"); // Monday as start
-    const newDate = startOfWeek
-      .add(WEEK.indexOf(weekday), "day")
-      .format("YYYY-MM-DD");
+    const newDate = startOfWeek.add(WEEK.indexOf(weekday), "day");
+
     setDate(newDate);
     userChangedWeekday.current = false;
   }, [weekday]);
@@ -849,7 +860,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   /* -------------------- Helper: normalizer / getEntry -------------------- */
   const getEntry = (dateKey) => {
-    const plan = DEFAULT_PLAN[weekday] || { left: [], right: [], finisher: [] };
+    const entryWeekday = dayjs(dateKey).format("dddd");
+    const plan = DEFAULT_PLAN[entryWeekday] || {
+      left: [],
+      right: [],
+      finisher: [],
+    };
+
     const existing = logs[dateKey] || {};
 
     const normalize = (planList = [], savedList = []) => {
@@ -868,7 +885,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     };
 
     return {
-      weekday: existing.weekday || weekday,
+      weekday: existing.weekday || entryWeekday,
       left: normalize(plan.left || [], existing.left || []),
       right: normalize(plan.right || [], existing.right || []),
       finisher: normalize(plan.finisher || [], existing.finisher || []),
@@ -882,37 +899,60 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* -------------------- Toggle single exercise (click in UI) -------------------- */
-  const toggle = (section, idx, dateKey) => {
-    // don't toggle if already marked done (finalized)
-    if (doneState[dateKey]) return;
+  const toggle = (section, index, dateKey) => {
+    setLogs((prev) => {
+      const base = prev[dateKey] || getEntry(dateKey);
 
-    const entry = logs[dateKey] || getEntry(dateKey);
-    const updated = {
-      ...entry,
-      [section]: entry[section].map((item, i) =>
-        i === idx ? { ...item, done: !item.done } : item,
-      ),
-    };
+      const left = Array.isArray(base.left) ? [...base.left] : [];
+      const right = Array.isArray(base.right) ? [...base.right] : [];
+      const finisher = Array.isArray(base.finisher) ? [...base.finisher] : [];
 
-    setLogs((prev) => ({ ...prev, [dateKey]: updated }));
+      const map = { left, right, finisher };
+      const arr = map[section];
+
+      if (!arr || !arr[index]) return prev;
+
+      arr[index] = { ...arr[index], done: !arr[index].done };
+
+      const updated = {
+        ...base,
+        left,
+        right,
+        finisher,
+        done: base.done, // 🔑 FIX
+      };
+
+      return {
+        ...prev,
+        [dateKey]: updated,
+      };
+    });
   };
 
   /* -------------------- Toggle mark all / unmark all (DRAFT ONLY) -------------------- */
   const toggleMarkAll = (dateKey) => {
-    const entry = logs[dateKey] || getEntry(dateKey);
+    // Always start from a safe entry
+    const base = logs?.[dateKey] || getEntry(dateKey);
 
+    // Normalize arrays (VERY IMPORTANT)
+    const left = Array.isArray(base.left) ? base.left : [];
+    const right = Array.isArray(base.right) ? base.right : [];
+    const finisher = Array.isArray(base.finisher) ? base.finisher : [];
+
+    // Safe "all done" check (NO .every)
     const allDone =
-      entry.left.every((e) => e?.done) &&
-      entry.right.every((e) => e?.done) &&
-      entry.finisher.every((e) => e?.done);
+      left.length > 0 &&
+      countDone(left) === left.length &&
+      countDone(right) === right.length &&
+      countDone(finisher) === finisher.length;
 
     const val = !allDone;
 
     const updatedEntry = {
-      ...entry,
-      left: entry.left.map((e) => ({ ...e, done: val })),
-      right: entry.right.map((e) => ({ ...e, done: val })),
-      finisher: entry.finisher.map((e) => ({ ...e, done: val })),
+      ...base,
+      left: left.map((e) => ({ ...e, done: val })),
+      right: right.map((e) => ({ ...e, done: val })),
+      finisher: finisher.map((e) => ({ ...e, done: val })),
       done: false, // 🔒 NEVER finalize here
     };
 
@@ -921,8 +961,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
       ...prev,
       [dateKey]: updatedEntry,
     }));
-
-    // ❌ DO NOT touch doneState here
   };
 
   /* -------------------- Modal open (preload modal inputs) -------------------- */
@@ -931,7 +969,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
       alert("🚫 Can't complete future workouts");
       return;
     }
-    const dateKey = fmtISO(date);
+    const dateKey = dayjs(date).format("YYYY-MM-DD");
+
     const entry = logs[dateKey] || getEntry(dateKey);
 
     // load inputs (strings for inputs)
@@ -951,57 +990,55 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   /* -------------------- Save workout (from modal) -------------------- */
   const saveWorkout = () => {
-    const dateKey = fmtISO(date);
+    const dateKey = dayjs(date).format("YYYY-MM-DD");
+
     const existing = logs[dateKey] || getEntry(dateKey);
 
-    const caloriesVal = Number(caloriesInput) || 0;
+    const caloriesVal = caloriesInput === "" ? null : Number(caloriesInput);
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
       : (existing.weight ?? null);
 
-    const newBmi = weightVal
-      ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-      : (existing.bmi ?? null);
+    const newBmi =
+      weightVal != null
+        ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
+        : (existing.bmi ?? null);
 
-    const updatedEntry = {
-      weekday: existing.weekday || weekday,
-      left: editLeft.length ? editLeft : existing.left,
-      right: editRight.length ? editRight : existing.right,
-      finisher: editFinisher.length ? editFinisher : existing.finisher,
-      calories: caloriesVal,
-      weight: weightVal,
-      bmi: newBmi,
-      done: true,
-      duration: {
-        hours: Number(durationHours) || 0,
-        minutes: Number(durationMinutes) || 0,
-      },
-      mood: moodInput,
-    };
-
-    /* ---------- BUILD UPDATED STATE SNAPSHOT ---------- */
+    const isDone =
+      editLeft.some((e) => e.done) ||
+      editRight.some((e) => e.done) ||
+      editFinisher.some((e) => e.done) ||
+      caloriesVal != null ||
+      weightVal != null ||
+      (Number(durationHours) || 0) > 0 ||
+      (Number(durationMinutes) || 0) > 0 ||
+      moodInput !== "🙂";
 
     const updatedLogs = {
       ...logs,
-      [dateKey]: updatedEntry,
+      [dateKey]: {
+        weekday: existing.weekday || weekday,
+        left: editLeft.length ? editLeft : existing.left,
+        right: editRight.length ? editRight : existing.right,
+        finisher: editFinisher.length ? editFinisher : existing.finisher,
+        calories: caloriesVal,
+        weight: weightVal,
+        bmi: newBmi,
+        done: isDone,
+        duration: {
+          hours: Number(durationHours) || 0,
+          minutes: Number(durationMinutes) || 0,
+        },
+        mood: moodInput,
+      },
     };
-
-    const updatedDone = {
-      ...doneState,
-      [dateKey]: true,
-    };
-
-    /* ---------- UPDATE UI (INSTANT) ---------- */
 
     setLogs(updatedLogs);
-    setDoneState(updatedDone);
     setShowModal(false);
 
-    /* ---------- SINGLE SOURCE OF TRUTH ---------- */
     updateDashboard({
       wd_gym_logs: updatedLogs,
-      wd_done: updatedDone,
       wd_goals: {
         targetWeight,
         currentWeight: currWeight,
@@ -1011,7 +1048,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   /* -------------------- Edit existing workout (open modal with values) -------------------- */
   const editWorkout = () => {
-    const dateKey = fmtISO(date);
+    const dateKey = dayjs(date).format("YYYY-MM-DD");
+
     const entry = logs[dateKey];
 
     if (entry) {
@@ -1137,10 +1175,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* --------------- Derived values (entry/dayPlan/completion) --------------- */
-  const dateKey = fmtISO(date);
+  const dateKey = dayjs(date).format("YYYY-MM-DD");
+
   const entry = logs[dateKey] || getEntry(dateKey);
-  const dayPlan = DEFAULT_PLAN[weekday] || {
-    title: `${weekday} — No Plan`,
+  const dayWeekday = dayjs(date).format("dddd");
+
+  const dayPlan = DEFAULT_PLAN[dayWeekday] || {
+    title: `${dayWeekday} — No Plan`,
     left: [],
     right: [],
     finisher: [],
@@ -1181,7 +1222,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   if (entry?.weight != null) {
     current = entry.weight;
   } else {
-    const yesterdayKey = dayjs(dateKey).subtract(1, "day").format("YYYY-MM-DD");
+    const yesterdayKey = dayjs(date).subtract(1, "day").format("YYYY-MM-DD");
 
     if (logs[yesterdayKey]?.weight != null) {
       current = logs[yesterdayKey].weight;
@@ -1302,7 +1343,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
               <li
                 key={i}
                 onClick={() =>
-                  !doneState[dateKey] && toggle(section, i, dateKey)
+                  !logs?.[dateKey]?.done && toggle(section, i, dateKey)
                 }
                 className={`
                 cursor-pointer flex items-center gap-3 p-2 rounded-lg transition-all duration-200
@@ -1350,6 +1391,27 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setIsEditingTarget(t == null || t === "");
     setIsEditingCurrent(c == null || c === "");
   }, [dashboardState?.wd_goals]);
+
+  // ✅ PUT IT HERE (DERIVED LOGIC SECTION)
+  const allDone =
+    Array.isArray(entry.left) &&
+    entry.left.length > 0 &&
+    countDone(entry.left) === entry.left.length &&
+    countDone(entry.right) === entry.right.length &&
+    countDone(entry.finisher) === entry.finisher.length;
+
+  // 🔓 FIX: unlock ghost-locked days like yesterday
+  useEffect(() => {
+    const key = dayjs(date).format("YYYY-MM-DD");
+
+    if (doneState?.[key] && !logs?.[key]) {
+      setDoneState((prev) => {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      });
+    }
+  }, [date, doneState, logs]);
 
   return (
     <div
@@ -1415,8 +1477,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
               {/* Date Input */}
               <input
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={dayjs(date).format("YYYY-MM-DD")}
+                onChange={(e) => setDate(dayjs(e.target.value))}
                 className="w-full sm:w-[145px] px-3 py-2.5 rounded-xl border border-emerald-700/50 
       bg-[#07201f]/90 text-emerald-100 text-sm font-medium shadow-lg shadow-black/20
       focus:outline-none focus:ring-2 focus:ring-emerald-400/60 hover:border-emerald-600/60 
@@ -2042,33 +2104,23 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     {/* MARK ALL / UNMARK ALL */}
                     <button
                       onClick={() =>
-                        !doneState[dateKey] && toggleMarkAll(dateKey)
+                        !logs?.[dateKey]?.done && toggleMarkAll(dateKey)
                       }
-                      disabled={doneState[dateKey]}
+                      disabled={doneState[dateKey] && logs?.[dateKey]}
                       className={`
                         w-full rounded-xl px-4 py-3 font-semibold text-sm
                         flex items-center justify-center gap-2
                         transition-all duration-300
                         ${
-                          doneState[dateKey]
+                          doneState[dateKey] && logs?.[dateKey]
                             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
-                            : countDone(entry.left) ===
-                                  (entry.left?.length || 0) &&
-                                countDone(entry.right) ===
-                                  (entry.right?.length || 0) &&
-                                countDone(entry.finisher) ===
-                                  (entry.finisher?.length || 0)
+                            : allDone
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
                               : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
                         }
                       `}
                     >
-                      {countDone(entry.left) === (entry.left?.length || 0) &&
-                      countDone(entry.right) === (entry.right?.length || 0) &&
-                      countDone(entry.finisher) ===
-                        (entry.finisher?.length || 0)
-                        ? "❌ Unmark All"
-                        : "✔️ Mark All"}
+                      {allDone ? "❌ Unmark All" : "✔️ Mark All"}
                     </button>
 
                     {/* MAIN DONE BUTTON OR EDIT/DELETE */}
