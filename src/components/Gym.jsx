@@ -1227,11 +1227,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const countDone = (arr) => {
     if (!Array.isArray(arr)) return 0;
 
-    return arr.filter((item) =>
-      typeof item === "boolean" ? item : item?.done
-    ).length;
+    return arr.filter((item) => (typeof item === "boolean" ? item : item?.done))
+      .length;
   };
-
 
   function ExerciseColumn({
     title,
@@ -1289,11 +1287,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
           <span
             className={`text-xs ${tagBg} px-2 py-1 rounded-full font-medium`}
           >
-            {Array.isArray(items)
-              ? items.filter((e) => (typeof e === "boolean" ? e : e?.done))
-                  .length
-              : 0}
-            /{planLength}
+            {countDone(items)}
           </span>
         </div>
 
@@ -1937,9 +1931,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           Done
                         </p>
                         <p className="text-lg font-black text-teal-100">
-                          countDone(entry.left) +
-                          countDone(entry.right) +
-                          countDone(entry.finisher)
+                          {countDone(entry.left) +
+                            countDone(entry.right) +
+                            countDone(entry.finisher)}
                         </p>
                       </div>
 
@@ -1949,28 +1943,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
                         </p>
                         <p className="text-lg font-black text-cyan-100">
                           {Math.round(
-                            (((Array.isArray(entry.left) &&
-                            entry.left.every(
-                              (item) => typeof item === "boolean",
-                            )
-                              ? entry.left.filter(Boolean).length
-                              : entry.left.filter((e) => e?.done).length) +
-                              (Array.isArray(entry.right) &&
-                              entry.right.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.right.filter(Boolean).length
-                                : entry.right.filter((e) => e?.done).length) +
-                              (Array.isArray(entry.finisher) &&
-                              entry.finisher.every(
-                                (item) => typeof item === "boolean",
-                              )
-                                ? entry.finisher.filter(Boolean).length
-                                : entry.finisher.filter((e) => e?.done)
-                                    .length)) /
-                              (dayPlan.left.length +
-                                dayPlan.right.length +
-                                dayPlan.finisher.length)) *
+                            ((countDone(entry.left) +
+                              countDone(entry.right) +
+                              countDone(entry.finisher)) /
+                              Math.max(
+                                1,
+                                (dayPlan.left?.length || 0) +
+                                  (dayPlan.right?.length || 0) +
+                                  (dayPlan.finisher?.length || 0),
+                              )) *
                               100,
                           )}
                           %
@@ -1984,28 +1965,21 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     <div
                       className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-700 ease-out shadow-lg shadow-emerald-500/50"
                       style={{
-                        width: `${
-                          (((Array.isArray(entry.left) &&
-                          entry.left.every((item) => typeof item === "boolean")
-                            ? entry.left.filter(Boolean).length
-                            : entry.left.filter((e) => e?.done).length) +
-                            (Array.isArray(entry.right) &&
-                            entry.right.every(
-                              (item) => typeof item === "boolean",
-                            )
-                              ? entry.right.filter(Boolean).length
-                              : entry.right.filter((e) => e?.done).length) +
-                            (Array.isArray(entry.finisher) &&
-                            entry.finisher.every(
-                              (item) => typeof item === "boolean",
-                            )
-                              ? entry.finisher.filter(Boolean).length
-                              : entry.finisher.filter((e) => e?.done).length)) /
-                            (dayPlan.left.length +
-                              dayPlan.right.length +
-                              dayPlan.finisher.length)) *
-                          100
-                        }%`,
+                        width: `${Math.min(
+                          100,
+                          Math.round(
+                            ((countDone(entry.left) +
+                              countDone(entry.right) +
+                              countDone(entry.finisher)) /
+                              Math.max(
+                                1,
+                                (dayPlan.left?.length || 0) +
+                                  (dayPlan.right?.length || 0) +
+                                  (dayPlan.finisher?.length || 0),
+                              )) *
+                              100,
+                          ),
+                        )}%`,
                       }}
                     ></div>
                   </div>
@@ -2072,21 +2046,27 @@ export default function Gym({ dashboardState, updateDashboard }) {
                       }
                       disabled={doneState[dateKey]}
                       className={`
-        w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300
-        ${
-          doneState[dateKey]
-            ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
-            : entry.left.every((e) => e?.done) &&
-                entry.right.every((e) => e?.done) &&
-                entry.finisher.every((e) => e?.done)
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
-        }
-      `}
+                        w-full rounded-xl px-4 py-3 font-semibold text-sm
+                        flex items-center justify-center gap-2
+                        transition-all duration-300
+                        ${
+                          doneState[dateKey]
+                            ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
+                            : countDone(entry.left) ===
+                                  (entry.left?.length || 0) &&
+                                countDone(entry.right) ===
+                                  (entry.right?.length || 0) &&
+                                countDone(entry.finisher) ===
+                                  (entry.finisher?.length || 0)
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+                              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+                        }
+                      `}
                     >
-                      {entry.left.every((e) => e?.done) &&
-                      entry.right.every((e) => e?.done) &&
-                      entry.finisher.every((e) => e?.done)
+                      {countDone(entry.left) === (entry.left?.length || 0) &&
+                      countDone(entry.right) === (entry.right?.length || 0) &&
+                      countDone(entry.finisher) ===
+                        (entry.finisher?.length || 0)
                         ? "❌ Unmark All"
                         : "✔️ Mark All"}
                     </button>
@@ -2097,17 +2077,17 @@ export default function Gym({ dashboardState, updateDashboard }) {
                         onClick={openModal}
                         disabled={
                           !(
-                            entry.left.some((e) => e?.done) ||
-                            entry.right.some((e) => e?.done) ||
-                            entry.finisher.some((e) => e?.done)
+                            countDone(entry.left) > 0 ||
+                            countDone(entry.right) > 0 ||
+                            countDone(entry.finisher) > 0
                           )
                         }
                         className={`
           w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300
           ${
-            entry.left.some((e) => e?.done) ||
-            entry.right.some((e) => e?.done) ||
-            entry.finisher.some((e) => e?.done)
+            countDone(entry.left) > 0 ||
+            countDone(entry.right) > 0 ||
+            countDone(entry.finisher) > 0
               ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.02] shadow-md shadow-emerald-600/30"
               : "bg-gray-600/30 text-gray-500 cursor-not-allowed"
           }
