@@ -787,18 +787,27 @@ export default function Gym({ dashboardState, updateDashboard }) {
   useEffect(() => {
     if (!dashboardState) return;
 
-    // ✅ MERGE — never overwrite local unsaved days
-    setLogs((prev) => ({
-      ...prev,
-      ...(dashboardState.wd_gym_logs || {}),
-    }));
+    // ✅ SMART MERGE — Only update if backend has newer/different data
+    setLogs((prev) => {
+      const incoming = dashboardState.wd_gym_logs || {};
+      const merged = {};
+
+      // Get all unique date keys
+      const allKeys = new Set([...Object.keys(prev), ...Object.keys(incoming)]);
+
+      allKeys.forEach((dateKey) => {
+        // Keep local version if it exists, otherwise use backend
+        merged[dateKey] = prev[dateKey] || incoming[dateKey];
+      });
+
+      return merged;
+    });
 
     setDoneState((prev) => ({
       ...prev,
       ...(dashboardState.wd_done || {}),
     }));
 
-    // These are scalar values → safe to replace
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
@@ -1401,15 +1410,39 @@ export default function Gym({ dashboardState, updateDashboard }) {
     countDone(entry.finisher) === entry.finisher.length;
 
   // 🔓 FIX: unlock ghost-locked days like yesterday
+  // 🔓 FIX: unlock ghost-locked days like Nov 16
   useEffect(() => {
     const key = dayjs(date).format("YYYY-MM-DD");
 
-    if (doneState?.[key] && !logs?.[key]) {
-      setDoneState((prev) => {
-        const copy = { ...prev };
-        delete copy[key];
-        return copy;
-      });
+    // If doneState says it's done but logs don't exist or have no exercises marked
+    if (doneState?.[key]) {
+      const logEntry = logs?.[key];
+
+      // No log entry at all - clear ghost lock
+      if (!logEntry) {
+        console.log(`Clearing ghost lock for ${key} - no log entry`);
+        setDoneState((prev) => {
+          const copy = { ...prev };
+          delete copy[key];
+          return copy;
+        });
+        return;
+      }
+
+      // Log exists but has no actual done exercises - also ghost lock
+      const hasDoneExercises =
+        (logEntry.left || []).some((e) => e?.done) ||
+        (logEntry.right || []).some((e) => e?.done) ||
+        (logEntry.finisher || []).some((e) => e?.done);
+
+      if (!hasDoneExercises && !logEntry.done) {
+        console.log(`Clearing ghost lock for ${key} - no completed exercises`);
+        setDoneState((prev) => {
+          const copy = { ...prev };
+          delete copy[key];
+          return copy;
+        });
+      }
     }
   }, [date, doneState, logs]);
 
