@@ -7076,21 +7076,6 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         ) : (
           plan.map((item, i) => {
             const now = new Date();
-
-            // DEBUG: Log the values
-            console.log("=== Task", i, "===");
-            console.log("Title:", item.title);
-            console.log("Deadline:", item.deadline);
-            console.log(
-              "Deadline Date:",
-              item.deadline ? new Date(item.deadline) : "NO DEADLINE"
-            );
-            console.log("Now:", now);
-            console.log(
-              "Is overdue?",
-              item.deadline && new Date(item.deadline) < now
-            );
-
             // Calculate urgency ONCE
             const urgency =
               item.deadline && new Date(item.deadline) < now
@@ -7114,9 +7099,6 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                     border: "border-emerald-600/50",
                     barColor: "bg-emerald-500", // For vertical bar
                   };
-
-            console.log("Urgency barColor:", urgency.barColor);
-
             const countdown = daysLeft(item.deadline);
 
             return (
