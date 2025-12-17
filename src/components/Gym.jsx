@@ -800,6 +800,18 @@ export default function Gym({ dashboardState, updateDashboard }) {
     );
   }, [dashboardState]);
 
+  useEffect(() => {
+    setLogs((prev) => {
+      const cleaned = {};
+      for (const [k, v] of Object.entries(prev || {})) {
+        if (v && typeof v === "object") {
+          cleaned[k] = v;
+        }
+      }
+      return cleaned;
+    });
+  }, []);
+
   // sync date -> weekday
   useEffect(() => {
     const wd = dayjs(date).format("dddd");
@@ -857,12 +869,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
     return {
       weekday: existing.weekday || weekday,
-      left: normalize(plan.left, existing.left),
-      right: normalize(plan.right, existing.right),
-      finisher: normalize(plan.finisher, existing.finisher),
-      calories: existing.calories,
-      weight: existing.weight,
-      bmi: existing.bmi,
+      left: normalize(plan.left || [], existing.left || []),
+      right: normalize(plan.right || [], existing.right || []),
+      finisher: normalize(plan.finisher || [], existing.finisher || []),
+      calories: existing.calories ?? null,
+      weight: existing.weight ?? null,
+      bmi: existing.bmi ?? null,
       done: existing.done || false,
       duration: existing.duration || null,
       mood: existing.mood || null,
@@ -1128,7 +1140,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const dateKey = fmtISO(date);
   const entry = logs[dateKey] || getEntry(dateKey);
   const dayPlan = DEFAULT_PLAN[weekday] || {
-    title: `${weekday || "Unknown"} — No Plan`,
+    title: `${weekday} — No Plan`,
     left: [],
     right: [],
     finisher: [],
@@ -1138,10 +1150,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
     (dayPlan.left?.length || 0) +
     (dayPlan.right?.length || 0) +
     (dayPlan.finisher?.length || 0);
+
   const completedExercises =
-    (entry.left?.filter(Boolean).length || 0) +
-    (entry.right?.filter(Boolean).length || 0) +
-    (entry.finisher?.filter(Boolean).length || 0);
+    (entry.left ?? []).filter((e) => e?.done).length +
+    (entry.right ?? []).filter((e) => e?.done).length +
+    (entry.finisher ?? []).filter((e) => e?.done).length;
+
   let canComplete = totalExercises > 0 && completedExercises > 0;
   if (!canComplete && !dayjs(date).isSame(dayjs(), "day")) {
     canComplete = true;
@@ -1210,6 +1224,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
   // Clean, Safe, Tailwind-Compatible Column Component
   // ============================================
 
+  const countDone = (arr) => {
+    if (!Array.isArray(arr)) return 0;
+
+    return arr.filter((item) =>
+      typeof item === "boolean" ? item : item?.done
+    ).length;
+  };
+
+
   function ExerciseColumn({
     title,
     items = [],
@@ -1266,9 +1289,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
           <span
             className={`text-xs ${tagBg} px-2 py-1 rounded-full font-medium`}
           >
-            {isBooleanArray
-              ? items.filter(Boolean).length
-              : items.filter((e) => e?.done).length}
+            {Array.isArray(items)
+              ? items.filter((e) => (typeof e === "boolean" ? e : e?.done))
+                  .length
+              : 0}
             /{planLength}
           </span>
         </div>
@@ -1913,22 +1937,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           Done
                         </p>
                         <p className="text-lg font-black text-teal-100">
-                          {(Array.isArray(entry.left) &&
-                          entry.left.every((item) => typeof item === "boolean")
-                            ? entry.left.filter(Boolean).length
-                            : entry.left.filter((e) => e?.done).length) +
-                            (Array.isArray(entry.right) &&
-                            entry.right.every(
-                              (item) => typeof item === "boolean",
-                            )
-                              ? entry.right.filter(Boolean).length
-                              : entry.right.filter((e) => e?.done).length) +
-                            (Array.isArray(entry.finisher) &&
-                            entry.finisher.every(
-                              (item) => typeof item === "boolean",
-                            )
-                              ? entry.finisher.filter(Boolean).length
-                              : entry.finisher.filter((e) => e?.done).length)}
+                          countDone(entry.left) +
+                          countDone(entry.right) +
+                          countDone(entry.finisher)
                         </p>
                       </div>
 
