@@ -5044,23 +5044,29 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   const generateSmartPlan = (availableMins) => {
     const leaves = [];
 
-    function walk(node) {
+    function walk(node, path = []) {
       if (Array.isArray(node)) {
-        node.forEach((it) => {
+        node.forEach((it, idx) => {
           if (!it.done) {
+            // Create itemKey to look up deadline in notes
+            const itemK = itemKey(path, idx);
+            const noteData = nr[itemK]; // Get note data with deadline
+
             leaves.push({
               title: it.title,
-              deadline: it.deadline || "",
+              deadline: noteData?.deadline || null, // ✅ Get deadline from notes
               estimate: 0.5,
             });
           }
         });
         return;
       }
-      for (const v of Object.values(node || {})) walk(v);
+      for (const [key, v] of Object.entries(node || {})) {
+        walk(v, [...path, key]); // ✅ Pass path for itemKey
+      }
     }
 
-    walk(tree);
+    walk(tree, []); // ✅ Start with empty path
 
     const sorted = leaves.sort((a, b) => {
       const da = a.deadline ? Date.parse(a.deadline) : Infinity;
@@ -5389,9 +5395,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
            "
           >
             <h2 className="font-semibold mb-2">🗓️ Daily Auto Planner</h2>
-            <p className="text-sm opacity-80 mb-3">
-              Closest-deadline topics not yet done.
-            </p>
+
             <DailyPlanner tree={tree} nr={nr} />
           </div>
 
@@ -5905,7 +5909,7 @@ function SectionCard({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5914,7 +5918,7 @@ function SectionCard({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -6019,10 +6023,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                      : totals.pct < 75
-                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
+                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6238,7 +6242,7 @@ function SectionCard({
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6373,7 +6377,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -6382,7 +6386,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -6632,7 +6636,7 @@ function SubNode({
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6698,18 +6702,39 @@ function DailyPlanner({ tree, nr }) {
 
   return (
     <div className="w-full">
+      {/* Header with stats on right */}
+      <div className="flex items-start justify-between mb-3">
+        {/* Small subtitle on left */}
+        <p className="text-sm opacity-80 mb-3">
+          Closest-deadline topics not yet done.
+        </p>
+
+        {/* Task count on right */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-lg">🎯</span>
+          <div>
+            <p className="text-sm font-bold text-emerald-300">
+              {toShow.length} {toShow.length === 1 ? "Task" : "Tasks"}
+            </p>
+            <p className="text-[9px] text-gray-400">Sorted by deadline</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Compact Task List */}
       <ul className="space-y-1.5">
         {toShow.map((item, idx) => {
           const deadline = item.deadline ? new Date(item.deadline) : null;
           const today = new Date();
           today.setHours(0, 0, 0, 0);
 
-          let urgencyLabel = "Normal";
           let urgencyIcon = "📅";
           let urgencyBadge =
             "bg-emerald-900/30 text-emerald-300 border-emerald-700/40";
           let cardBg = "from-[#0B5134]/10 to-black/20";
           let borderColor = "border-emerald-700/30";
+          let glowColor = "shadow-emerald-900/0";
+          let progressColor = "bg-emerald-500";
           let daysLeft = null;
 
           if (deadline) {
@@ -6717,27 +6742,30 @@ function DailyPlanner({ tree, nr }) {
             const daysRemaining = Math.ceil(diff / (24 * 60 * 60 * 1000));
 
             if (diff < 0) {
-              urgencyLabel = "Overdue";
-              urgencyIcon = "🔴";
+              urgencyIcon = "⏰";
               urgencyBadge = "bg-red-900/40 text-red-300 border-red-600/50";
               cardBg = "from-red-950/20 to-black/30";
               borderColor = "border-red-700/40";
+              glowColor = "shadow-red-900/20";
+              progressColor = "bg-red-500";
               daysLeft = `${Math.abs(daysRemaining)}d late`;
             } else if (diff === 0) {
-              urgencyLabel = "Today";
               urgencyIcon = "⚡";
               urgencyBadge =
                 "bg-yellow-900/40 text-yellow-300 border-yellow-600/50";
               cardBg = "from-yellow-950/20 to-black/30";
               borderColor = "border-yellow-700/40";
-              daysLeft = "Due now";
+              glowColor = "shadow-yellow-900/30";
+              progressColor = "bg-yellow-500";
+              daysLeft = "Today";
             } else if (diff < 3 * 24 * 60 * 60 * 1000) {
-              urgencyLabel = "Soon";
               urgencyIcon = "⏰";
               urgencyBadge =
                 "bg-orange-900/40 text-orange-300 border-orange-600/50";
               cardBg = "from-orange-950/20 to-black/30";
               borderColor = "border-orange-700/40";
+              glowColor = "shadow-orange-900/20";
+              progressColor = "bg-orange-500";
               daysLeft = `${daysRemaining}d left`;
             } else {
               daysLeft = `${daysRemaining}d left`;
@@ -6748,67 +6776,105 @@ function DailyPlanner({ tree, nr }) {
             <li
               key={idx}
               className={`
-            group
-            bg-gradient-to-br ${cardBg}
-            hover:brightness-110
-            rounded-lg
-            border ${borderColor}
-            overflow-hidden
-            transition-all duration-200
-            hover:shadow-md hover:shadow-black/20
-          `}
+              group relative
+              bg-gradient-to-br ${cardBg}
+              hover:brightness-110
+              rounded-lg
+              border ${borderColor}
+              overflow-hidden
+              transition-all duration-200
+              hover:shadow-md ${glowColor}
+              cursor-pointer
+            `}
             >
-              <div className="p-2">
-                {/* Row 1: Title + Priority badge */}
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <span className="text-xs sm:text-sm text-[#d9ebe5] font-medium break-words flex-1 leading-snug">
-                    {item.title}
-                  </span>
+              {/* Thin Accent Bar */}
+              <div
+                className={`absolute left-0 top-0 bottom-0 w-0.5 ${progressColor} opacity-60 group-hover:opacity-100 transition-opacity`}
+              />
 
-                  {deadline && (
-                    <span
-                      className={`
-                  flex items-center gap-0.5
-                  text-[9px] font-bold uppercase tracking-wide
-                  px-1.5 py-0.5 rounded
-                  border ${urgencyBadge}
-                  whitespace-nowrap
-                  shrink-0
-                `}
-                    >
-                      <span className="text-[10px]">{urgencyIcon}</span>
-                      {urgencyLabel}
+              <div className="p-2 pl-2.5">
+                {/* Single Row: Icon + Title + Date + Badge */}
+                <div className="flex items-center justify-between gap-2">
+                  {/* Left: Icon + Title */}
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <span className="text-sm shrink-0">{urgencyIcon}</span>
+                    <span className="text-xs text-[#d9ebe5] font-medium truncate group-hover:text-white transition-colors">
+                      {item.title}
                     </span>
+                  </div>
+
+                  {/* Right: Date + Days Badge */}
+                  {deadline && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Date */}
+                      <div className="flex items-center gap-0.5 opacity-70">
+                        <span className="text-[9px]">📆</span>
+                        <span className="text-[9px] text-gray-300 font-medium hidden sm:inline">
+                          {formatDateDDMMYYYY(item.deadline)}
+                        </span>
+                      </div>
+
+                      {/* Days Badge */}
+                      {daysLeft && (
+                        <span
+                          className={`
+                          text-[9px] font-bold px-1.5 py-0.5 rounded
+                          border ${urgencyBadge}
+                          whitespace-nowrap
+                          ${urgencyBadge.includes("red") ? "animate-pulse" : ""}
+                        `}
+                        >
+                          {daysLeft}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* Row 2: Deadline date + Days left */}
-                {deadline && (
-                  <div className="flex items-center justify-between text-[10px] sm:text-xs opacity-75">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[9px]">📆</span>
-                      <span>{formatDateDDMMYYYY(item.deadline)}</span>
+                {/* Thin Progress Bar (optional, only for normal tasks) */}
+                {deadline &&
+                  daysLeft &&
+                  !daysLeft.includes("late") &&
+                  !daysLeft.includes("Today") &&
+                  parseInt(daysLeft) < 30 && (
+                    <div className="mt-1.5 ml-6">
+                      <div className="h-0.5 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${progressColor} rounded-full transition-all duration-500`}
+                          style={{
+                            width: `${(() => {
+                              const daysRemaining = parseInt(daysLeft);
+                              const maxDays = 30;
+                              const progress = Math.min(
+                                95,
+                                Math.max(
+                                  5,
+                                  ((maxDays - daysRemaining) / maxDays) * 100
+                                )
+                              );
+                              return progress;
+                            })()}%`,
+                          }}
+                        />
+                      </div>
                     </div>
-
-                    {daysLeft && (
-                      <span
-                        className={`
-                    font-semibold
-                    ${urgencyBadge.includes("red") ? "text-red-400" : ""}
-                    ${urgencyBadge.includes("yellow") ? "text-yellow-400" : ""}
-                    ${urgencyBadge.includes("orange") ? "text-orange-400" : ""}
-                  `}
-                      >
-                        {daysLeft}
-                      </span>
-                    )}
-                  </div>
-                )}
+                  )}
               </div>
+
+              {/* Hover effect overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </li>
           );
         })}
       </ul>
+
+      {/* Empty state */}
+      {toShow.length === 0 && (
+        <div className="text-center py-6">
+          <span className="text-3xl mb-1 block">🎉</span>
+          <p className="text-xs text-emerald-300 font-medium">All caught up!</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -6834,7 +6900,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      }),
+      })
     );
   }, [tree]);
 
@@ -6900,92 +6966,156 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
       dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
       dark:border-[#00D1FF33]
-      p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]
+      p-5 shadow-[0_0_20px_rgba(0,0,0,0.2)]
       transition-all duration-300
+      hover:shadow-[0_0_30px_rgba(255,143,143,0.15)]
     "
     >
-      {/* ===== Header ===== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-        <h3 className="font-semibold flex items-center gap-2 text-base">
-          🤖 Smart Suggest
-        </h3>
+      {/* ===== Modern Header ===== */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF8F8F] to-[#ff6f6f] dark:from-[#451013] dark:to-[#5A1418] flex items-center justify-center shadow-lg">
+            <span className="text-xl">🤖</span>
+          </div>
+          <div>
+            <h3 className="font-bold text-base text-white">Smart Suggest</h3>
+            <p className="text-[10px] text-gray-400">
+              AI-powered study planner
+            </p>
+          </div>
+        </div>
 
         <span
           className="
-            text-[11px] px-3 py-1 rounded-full
-            bg-[#FF8F8F] text-black font-semibold
-            dark:bg-[#451013] dark:text-[#FFD1D1]
-            border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
-            whitespace-nowrap sm:ml-auto
-            transition-all duration-200
-            hover:bg-[#ff6f6f] dark:hover:bg-[#5A1418]
-          "
+          text-[10px] px-3 py-1.5 rounded-full
+          bg-gradient-to-r from-[#FF8F8F] to-[#ff6f6f] text-black font-bold
+          dark:from-[#451013] dark:to-[#5A1418] dark:text-[#FFD1D1]
+          border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
+          whitespace-nowrap
+          transition-all duration-200
+          hover:scale-105 hover:shadow-lg
+          cursor-default
+        "
         >
-          AI Study Planner
+          ✨ AI Powered
         </span>
       </div>
 
-      {/* ===== Time Input ===== */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <label className="text-xs font-medium whitespace-nowrap">
-          Minutes:
+      {/* ===== Modern Input Section ===== */}
+      <div className="mb-4">
+        <label className="text-xs font-semibold text-gray-300 mb-2 block">
+          Available Study Time
         </label>
 
-        <input
-          type="number"
-          value={minutes}
-          onChange={(e) => setMinutes(Number(e.target.value))}
-          className="
-            flex-1 px-2 py-1 text-sm rounded-md border 
-            bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
-            dark:border-[#00D1FF33] 
-            border-[#0B5134] outline-none text-white
-            min-w-[70px]
-          "
-        />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <input
+              type="number"
+              value={minutes}
+              onChange={(e) => setMinutes(Number(e.target.value))}
+              placeholder="120"
+              className="
+              w-full px-4 py-2.5 text-sm rounded-xl border 
+              bg-white/5 dark:bg-black/30
+              dark:border-[#00D1FF33] 
+              border-[#0B5134] outline-none text-white
+              focus:ring-2 focus:ring-[#FF8F8F]/50 dark:focus:ring-[#451013]
+              transition-all duration-200
+              placeholder:text-gray-500
+            "
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+              minutes
+            </span>
+          </div>
 
-        <button
-          onClick={handleSuggest}
-          className="
-            px-3 py-1.5 rounded-md 
-            bg-[#FF8F8F] text-black font-semibold text-xs
+          <button
+            onClick={handleSuggest}
+            className="
+            px-5 py-2.5 rounded-xl 
+            bg-gradient-to-r from-[#FF8F8F] to-[#ff6f6f] text-black font-bold text-sm
+            dark:from-[#451013] dark:to-[#5A1418] dark:text-[#FFD1D1]
             border border-[#FF8F8F]/40
-            shadow-sm
+            shadow-lg
             transition-all duration-200
-            hover:bg-[#ff6f6f] hover:shadow-[0_0_6px_rgba(255,143,143,0.5)]
-            active:scale-[0.97]
-            dark:bg-[#451013] dark:text-[#FFD1D1]
-            dark:hover:bg-[#5A1418]
+            hover:scale-105 hover:shadow-[0_0_15px_rgba(255,143,143,0.5)]
+            active:scale-95
+            whitespace-nowrap
+            flex items-center gap-2
           "
-        >
-          Suggest
-        </button>
+          >
+            <span>Generate</span>
+            <span className="text-base">✨</span>
+          </button>
+        </div>
       </div>
 
       {/* ===== Motivation Summary ===== */}
       {summary && (
-        <p className="text-xs italic mb-3 text-white/60 dark:text-gray-300">
-          {summary}
-        </p>
+        <div className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10">
+          <p className="text-xs italic text-white/80 dark:text-gray-300">
+            💡 {summary}
+          </p>
+        </div>
       )}
 
-      {/* ===== Suggestions ===== */}
-      <div className="space-y-2">
+      {/* ===== Modern Suggestions List ===== */}
+      <div className="space-y-2.5">
         {plan.length === 0 ? (
-          <p className="text-xs opacity-70 italic">No topics suggested yet.</p>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white/5 flex items-center justify-center">
+              <span className="text-3xl">📚</span>
+            </div>
+            <p className="text-sm font-medium text-gray-400 mb-1">
+              No suggestions yet
+            </p>
+            <p className="text-xs text-gray-500">
+              Enter your available time to get started
+            </p>
+          </div>
         ) : (
           plan.map((item, i) => {
             const now = new Date();
 
-            // Deadline urgency styling
+            // DEBUG: Log the values
+            console.log("=== Task", i, "===");
+            console.log("Title:", item.title);
+            console.log("Deadline:", item.deadline);
+            console.log(
+              "Deadline Date:",
+              item.deadline ? new Date(item.deadline) : "NO DEADLINE"
+            );
+            console.log("Now:", now);
+            console.log(
+              "Is overdue?",
+              item.deadline && new Date(item.deadline) < now
+            );
+
+            // Calculate urgency ONCE
             const urgency =
               item.deadline && new Date(item.deadline) < now
-                ? "bg-red-500/15 text-red-400"
+                ? {
+                    bg: "bg-red-500/20",
+                    text: "text-red-400",
+                    border: "border-red-600/50",
+                    barColor: "bg-red-500", // For vertical bar
+                  }
                 : item.deadline &&
-                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                  ? "bg-yellow-500/10 text-yellow-300"
-                  : "bg-green-500/10 text-green-400";
+                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                ? {
+                    bg: "bg-yellow-500/20",
+                    text: "text-yellow-300",
+                    border: "border-yellow-600/50",
+                    barColor: "bg-yellow-500", // For vertical bar
+                  }
+                : {
+                    bg: "bg-emerald-500/20",
+                    text: "text-emerald-400",
+                    border: "border-emerald-600/50",
+                    barColor: "bg-emerald-500", // For vertical bar
+                  };
+
+            console.log("Urgency barColor:", urgency.barColor);
 
             const countdown = daysLeft(item.deadline);
 
@@ -6993,33 +7123,55 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               <div
                 key={i}
                 className={`
-                  rounded-lg border border-[#0B5134] 
-                  dark:border-gray-800 p-2 text-sm transition-all duration-300 
-                  hover:bg-[#FF8F8F]/5
-                  ${item.done ? "opacity-60 line-through" : ""}
-                `}
+        group relative
+        rounded-xl border overflow-hidden
+        dark:border-gray-800 p-3 text-sm
+        transition-all duration-300 
+        hover:scale-[1.02] hover:shadow-lg
+        ${item.done ? "opacity-50 line-through" : "bg-white/5"}
+        ${urgency.border}
+      `}
               >
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-                  <span className="font-medium text-[#d9ebe5]">
-                    • {item.title}
-                  </span>
+                {/* Accent indicator - USE urgency.barColor */}
+                <div
+                  className={`absolute left-0 top-0 bottom-0 w-1 ${urgency.barColor}`}
+                />
 
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 pl-3">
+                  <div className="flex-1">
+                    <div className="flex items-start gap-2 mb-1">
+                      <span className="text-base mt-0.5">📖</span>
+                      <span className="font-semibold text-[#d9ebe5] group-hover:text-white transition-colors">
+                        {item.title}
+                      </span>
+                    </div>
+
+                    {/* Time Estimate with icon */}
+                    <div className="flex items-center gap-2 pl-7">
+                      <span
+                        className={`text-xs ${
+                          item.done ? "opacity-40" : "opacity-70"
+                        } flex items-center gap-1`}
+                      >
+                        <span>⏱</span>
+                        <span>~{Math.round(item.estimate * 60)} minutes</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Countdown Badge */}
                   {countdown && (
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full ${urgency}`}
+                      className={`
+              text-[10px] font-bold px-2.5 py-1 rounded-lg 
+              ${urgency.bg} ${urgency.text} border ${urgency.border}
+              whitespace-nowrap shrink-0
+              group-hover:scale-105 transition-transform
+            `}
                     >
                       {countdown}
                     </span>
                   )}
-                </div>
-
-                {/* Time Estimate */}
-                <div
-                  className={`text-xs mt-1 ${
-                    item.done ? "opacity-40" : "opacity-80"
-                  }`}
-                >
-                  ⏱ ~{Math.round(item.estimate * 60)} mins
                 </div>
               </div>
             );
@@ -7027,23 +7179,39 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         )}
       </div>
 
-      {/* ===== Footer ===== */}
+      {/* ===== Modern Footer ===== */}
       <div
         className="
-        mt-4 text-xs text-white/60 dark:text-gray-400 
-        border-t border-[#0B5134] dark:border-gray-800 pt-2 
-        flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2
+        mt-5 pt-4
+        border-t border-[#0B5134]/60 dark:border-gray-800 
+        flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3
       "
       >
-        <span>
-          {plan.length > 0
-            ? `Remaining buffer: ${remaining} mins`
-            : "Enter available time to get a plan!"}
-        </span>
+        <div className="flex items-center gap-2 text-xs text-white/70 dark:text-gray-400">
+          <span className="text-base">⏳</span>
+          <span className="font-medium">
+            {plan.length > 0
+              ? `Buffer remaining: ${remaining} mins`
+              : "Ready to plan your study session"}
+          </span>
+        </div>
 
         {plan.length > 0 && (
-          <button className="text-[#FF8F8F] font-medium hover:underline text-xs whitespace-nowrap">
-            Start Focus Mode 🚀
+          <button
+            className="
+          px-4 py-2 rounded-xl
+          bg-gradient-to-r from-emerald-600 to-emerald-500
+          text-white font-bold text-xs
+          shadow-lg
+          transition-all duration-200
+          hover:scale-105 hover:shadow-emerald-500/30
+          active:scale-95
+          flex items-center gap-2
+          whitespace-nowrap
+        "
+          >
+            <span>Start Focus Mode</span>
+            <span>🚀</span>
           </button>
         )}
       </div>
