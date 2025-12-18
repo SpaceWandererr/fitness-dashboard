@@ -1484,11 +1484,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
-      <header
-        className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/30 
-        bg-gradient-to-br from-[#0F766E]/20 via-[#183D3D]/30 to-[#0F0F0F]/20 
-        backdrop-blur-xl p-5 shadow-xl shadow-black/40"
-      >
+      <header className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-0F766E/20 via-183D3D/30 to-0F0F0F/20 backdrop-blur-xl p-5 shadow-xl shadow-black/40 transform-gpu will-change-transform">
         {/* Gradient Accent Border */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 -z-10" />
 

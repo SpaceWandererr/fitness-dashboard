@@ -510,116 +510,184 @@ export default function StudyProjectsAdvanced({
     <div className="min-h-[calc(60vh-var(--nav-height))] rounded-2xl px-6 py-6 transition-all duration-300 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9] dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000] text-foreground">
       <div className="max-w-6xl mx-auto">
         {/* PAGE HEADER */}
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-4xl font-extrabold flex items-center gap-3">
-              <Code className="w-7 h-7 text-cyan-300" />
-              MERN Project Roadmap
-            </h1>
-            <p className="text-sm opacity-80 mt-1">
-              70 projects • XP system • Saved locally + backend
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-xl border border-border bg-black/20">
-              <Award className="w-5 h-5 text-yellow-300" />
-              <div>
-                <div className="text-sm font-semibold">Level {level}</div>
-                <div className="text-xs opacity-70">{xp} XP</div>
-              </div>
+        <header className="relative mb-2 overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-0F766E/20 via-183D3D/30 to-0F0F0F/20 backdrop-blur-xl p-5 sm:p-6 shadow-xl shadow-black/40">
+          {/* Main Content Container */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Left: Title Section */}
+            <div className="flex flex-col gap-2 flex-shrink-0">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(0,255,200,0.15)] flex items-center gap-3">
+                <Code className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.4)]" />
+                MERN Project Roadmap
+              </h1>
+              <p className="text-xs sm:text-sm text-emerald-200/70 font-medium tracking-wide flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  70 projects
+                </span>
+                <span className="text-emerald-400/40">•</span>
+                <span>XP system</span>
+                <span className="text-emerald-400/40">•</span>
+                <span>Cloud synced</span>
+              </p>
             </div>
-            <div className="px-3 py-2 rounded-xl border border-border bg-black/20 flex items-center gap-3">
-              <div className="text-xs opacity-70">Overall</div>
-              <div className="w-28 h-2 bg-black/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-400"
-                  style={{ width: `${overallProgress}%` }}
-                />
+
+            {/* Right: Stats Cards */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+              {/* Level Card */}
+              <div className="group relative overflow-hidden rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-600/10 via-amber-600/5 to-orange-600/10 px-4 py-3 hover:border-yellow-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Award className="w-6 h-6 text-yellow-300 group-hover:scale-110 transition-transform duration-300" />
+                    <div className="absolute inset-0 blur-md bg-yellow-400/30 group-hover:bg-yellow-400/50 transition-all" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-yellow-100">
+                      Level {level}
+                    </div>
+                    <div className="text-xs text-yellow-200/60">{xp} XP</div>
+                  </div>
+                </div>
               </div>
-              <div className="text-xs opacity-70 w-8 text-right">
-                {overallProgress}%
+
+              {/* Progress Card */}
+              <div className="group relative overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-600/10 via-teal-600/5 to-cyan-600/10 px-4 py-3 hover:border-emerald-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 min-w-[220px]">
+                <div className="flex items-center gap-3">
+                  <div className="text-xs font-semibold text-emerald-200/80 uppercase tracking-wider min-w-[50px]">
+                    Overall
+                  </div>
+                  <div className="flex-1 h-2.5 bg-black/30 rounded-full overflow-hidden border border-emerald-500/20">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                      style={{ width: `${overallProgress}%` }}
+                    />
+                  </div>
+                  <div className="text-sm font-bold text-emerald-100 min-w-[42px] text-right">
+                    {overallProgress}%
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* FILTERS */}
-        <div className="flex flex-col flex-wrap lg:flex-row lg:items-center justify-center gap-3 mb-6 w-full">
-          {/* SEARCH BAR */}
-          <div className="flex items-center gap-2 border border-border rounded-xl px-3 py-2 bg-black/10 w-full lg:w-auto">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search projects..."
-              className="bg-transparent outline-none text-sm w-full lg:w-auto"
-            />
-            <button
-              onClick={() => setQuery("")}
-              className="text-sm opacity-70 whitespace-nowrap"
-            >
-              Clear
-            </button>
+        {/* FILTERS & CONTROLS */}
+        <div className="mb-6 space-y-3">
+          {/* Search Bar - Full Width */}
+          <div className="relative group">
+            <div className="flex items-center gap-2 border border-emerald-500/30 rounded-xl px-4 py-2.5 bg-gradient-to-r from-black/20 to-black/10 backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300 shadow-lg shadow-black/20">
+              <svg
+                className="w-4 h-4 text-emerald-300/70"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search projects..."
+                className="bg-transparent outline-none text-sm flex-1 text-emerald-100 placeholder:text-emerald-200/40 font-medium"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full lg:w-auto">
-            {/* DIFFICULTY FILTER */}
-            <select
-              value={filterDifficulty}
-              onChange={(e) => setFilterDifficulty(e.target.value)}
-              className="px-2 lg:px-3 py-2 rounded-xl border border-border bg-[#0C9A7B]/20 hover:bg-[#0C9A7B]/30 transition-colors text-xs lg:text-sm w-full lg:w-auto"
-            >
-              <option className="bg-[#0C9A7B]">All</option>
-              <option className="bg-[#0C9A7B]">Beginner</option>
-              <option className="bg-[#0C9A7B]">Intermediate</option>
-              <option className="bg-[#0C9A7B]">Advanced</option>
-            </select>
+          {/* Controls Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* LEFT: Difficulty Filter */}
+            <div className="relative flex-1 sm:flex-initial">
+              <select
+                value={filterDifficulty}
+                onChange={(e) => setFilterDifficulty(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-600/10 to-teal-600/10 hover:border-emerald-400/50 transition-all text-sm font-medium text-emerald-100 shadow-lg shadow-black/20 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 cursor-pointer appearance-none pr-10"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(16,185,129,0.7)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 0.75rem center",
+                  backgroundSize: "1.25rem",
+                }}
+              >
+                <option className="bg-[#0F1622] text-emerald-100">
+                  All Levels
+                </option>
+                <option className="bg-[#0F1622] text-emerald-100">
+                  Beginner
+                </option>
+                <option className="bg-[#0F1622] text-emerald-100">
+                  Intermediate
+                </option>
+                <option className="bg-[#0F1622] text-emerald-100">
+                  Advanced
+                </option>
+              </select>
+            </div>
 
-            {/* VIEW SWITCH */}
-            <div className="flex items-center gap-1 rounded-xl overflow-hidden border border-border bg-black/10 w-full lg:w-auto">
+            {/* CENTER: View Switch */}
+            <div className="flex items-center gap-1 rounded-xl overflow-hidden border border-emerald-500/30 bg-black/20 shadow-lg shadow-black/20 p-1">
               <button
                 onClick={() => setView("sections")}
-                className={`px-2 lg:px-3 py-2 text-xs lg:text-sm w-full lg:w-auto flex justify-center ${
-                  view === "sections" ? "bg-black/20" : ""
+                className={`group relative px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                  view === "sections"
+                    ? "bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-100 shadow-lg shadow-emerald-500/20"
+                    : "text-emerald-200/60 hover:text-emerald-100 hover:bg-white/5"
                 }`}
               >
-                <List className="inline w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                Sections
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sections</span>
               </button>
               <button
                 onClick={() => setView("roadmap")}
-                className={`px-2 lg:px-3 py-2 text-xs lg:text-sm w-full lg:w-auto flex justify-center ${
-                  view === "roadmap" ? "bg-black/20" : ""
+                className={`group relative px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                  view === "roadmap"
+                    ? "bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-100 shadow-lg shadow-emerald-500/20"
+                    : "text-emerald-200/60 hover:text-emerald-100 hover:bg-white/5"
                 }`}
               >
-                <Layers className="inline w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                Roadmap
+                <Layers className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Roadmap</span>
               </button>
               <button
                 onClick={() => setView("top10")}
-                className={`px-2 lg:px-3 py-2 text-xs lg:text-sm w-full lg:w-auto flex justify-center ${
-                  view === "top10" ? "bg-black/20" : ""
+                className={`group relative px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                  view === "top10"
+                    ? "bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-100 shadow-lg shadow-emerald-500/20"
+                    : "text-emerald-200/60 hover:text-emerald-100 hover:bg-white/5"
                 }`}
               >
-                <Terminal className="inline w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                Top10
+                <Terminal className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Top10</span>
               </button>
               <button
                 onClick={() => setView("timeline")}
-                className={`px-2 lg:px-3 py-2 text-xs lg:text-sm w-full lg:w-auto flex justify-center ${
-                  view === "timeline" ? "bg-black/20" : ""
+                className={`group relative px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                  view === "timeline"
+                    ? "bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-100 shadow-lg shadow-emerald-500/20"
+                    : "text-emerald-200/60 hover:text-emerald-100 hover:bg-white/5"
                 }`}
               >
-                <Clock className="inline w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                Timeline
+                <Clock className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Timeline</span>
               </button>
             </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="flex flex-wrap lg:flex-nowrap gap-2 w-full lg:w-auto">
-              {/* EXPORT JSON */}
+            {/* RIGHT: Action Buttons */}
+            <div className="flex gap-2 ml-auto">
+              {/* EXPORT */}
               <button
-                className="px-3 py-2 rounded-xl border border-border bg-emerald-500/20 hover:bg-emerald-500/30 transition-colors w-full lg:w-auto text-xs lg:text-sm whitespace-nowrap"
+                className="group relative overflow-hidden px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-600/20 to-teal-600/10 hover:from-emerald-500/30 hover:to-teal-500/20 transition-all duration-300 text-xs font-semibold text-emerald-100 shadow-lg shadow-black/20 hover:shadow-emerald-500/20 hover:scale-105 flex items-center gap-2"
                 onClick={() => {
                   const data = { progress, xp, level, bonusGiven };
                   const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -633,12 +701,28 @@ export default function StudyProjectsAdvanced({
                   URL.revokeObjectURL(url);
                 }}
               >
-                Export JSON
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Export</span>
               </button>
-              {/* RESET ALL */}
+
+              {/* RESET */}
               <button
-                className="px-3 py-2 rounded-xl border border-border bg-red-500/20 hover:bg-red-500/30 transition-colors w-full lg:w-auto text-xs lg:text-sm whitespace-nowrap"
+                className="group relative overflow-hidden px-4 py-2.5 rounded-xl border border-red-500/30 bg-gradient-to-br from-red-600/20 to-orange-600/10 hover:from-red-500/30 hover:to-orange-500/20 transition-all duration-300 text-xs font-semibold text-red-100 shadow-lg shadow-black/20 hover:shadow-red-500/20 hover:scale-105 flex items-center gap-2"
                 onClick={() => {
+                  if (!confirm("Reset ALL progress? This cannot be undone!"))
+                    return;
                   localStorage.removeItem(STORE.PROGRESS);
                   localStorage.removeItem(STORE.XP);
                   localStorage.removeItem(STORE.LEVEL);
@@ -650,7 +734,20 @@ export default function StudyProjectsAdvanced({
                   syncAll({}, 0, {});
                 }}
               >
-                Reset All
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Reset</span>
               </button>
             </div>
           </div>
@@ -873,104 +970,414 @@ export default function StudyProjectsAdvanced({
           </div>
         )}
 
-        {/* ROADMAP VIEW */}
+        {/* ROADMAP VIEW - Minimal & Feature-Full */}
         {view === "roadmap" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Recommended Roadmap</h3>
-            <div className="border border-border rounded-xl p-4 bg-black/20">
-              <ol className="space-y-4">
-                {[
-                  {
-                    step: 1,
-                    title: "HTML Foundations",
-                    section: "HTML",
-                    note: "Basics, responsive",
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold text-emerald-100 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                  />
+                </svg>
+                Learning Roadmap
+              </h3>
+              <span className="text-xs text-emerald-200/60">
+                7 steps to MERN mastery
+              </span>
+            </div>
+
+            {/* Roadmap Cards */}
+            <div className="grid gap-3">
+              {[
+                {
+                  step: 1,
+                  title: "HTML Foundations",
+                  section: "HTML",
+                  note: "Semantic markup & responsive design",
+                  icon: "📄",
+                  color: "orange",
+                },
+                {
+                  step: 2,
+                  title: "CSS Mastery",
+                  section: "CSS",
+                  note: "Layouts, animations & styling",
+                  icon: "🎨",
+                  color: "blue",
+                },
+                {
+                  step: 3,
+                  title: "Tailwind UI",
+                  section: "TAILWIND",
+                  note: "Utility-first components",
+                  icon: "🎯",
+                  color: "cyan",
+                },
+                {
+                  step: 4,
+                  title: "JavaScript",
+                  section: "JAVASCRIPT",
+                  note: "DOM, APIs & async patterns",
+                  icon: "⚡",
+                  color: "yellow",
+                },
+                {
+                  step: 5,
+                  title: "React",
+                  section: "REACT",
+                  note: "Components, hooks & state",
+                  icon: "⚛️",
+                  color: "purple",
+                },
+                {
+                  step: 6,
+                  title: "Node + Mongo",
+                  section: "NODEMONGO",
+                  note: "Backend APIs & database",
+                  icon: "🗄️",
+                  color: "green",
+                },
+                {
+                  step: 7,
+                  title: "MERN Apps",
+                  section: "MERN",
+                  note: "Full-stack applications",
+                  icon: "🚀",
+                  color: "emerald",
+                },
+              ].map((r) => {
+                // Calculate real progress from your data
+                const sectionKey = r.section;
+                const sectionData = progress?.[sectionKey] || {};
+
+                // Count completed items (handle both object {done: true} and boolean format)
+                let completedCount = 0;
+                let totalCount = 0;
+
+                // Count from progress state
+                Object.entries(sectionData).forEach(([key, value]) => {
+                  if (key === "completionDates" || key === "deadlineDates")
+                    return; // Skip meta keys
+                  totalCount++;
+                  if (typeof value === "object" && value?.done) {
+                    completedCount++;
+                  } else if (value === true) {
+                    completedCount++;
+                  }
+                });
+
+                const stepProgress =
+                  totalCount > 0
+                    ? Math.round((completedCount / totalCount) * 100)
+                    : 0;
+
+                // Color mappings
+                const colorMap = {
+                  orange: {
+                    border: "border-orange-500/30",
+                    bg: "from-orange-500/10 to-red-500/5",
+                    text: "text-orange-300",
+                    progress: "from-orange-400 to-red-400",
                   },
-                  {
-                    step: 2,
-                    title: "CSS Mastery",
-                    section: "CSS",
-                    note: "Layout, animations",
+                  blue: {
+                    border: "border-blue-500/30",
+                    bg: "from-blue-500/10 to-indigo-500/5",
+                    text: "text-blue-300",
+                    progress: "from-blue-400 to-indigo-400",
                   },
-                  {
-                    step: 3,
-                    title: "Tailwind Components",
-                    section: "TAILWIND",
-                    note: "Utility-first UI",
+                  cyan: {
+                    border: "border-cyan-500/30",
+                    bg: "from-cyan-500/10 to-teal-500/5",
+                    text: "text-cyan-300",
+                    progress: "from-cyan-400 to-teal-400",
                   },
-                  {
-                    step: 4,
-                    title: "Vanilla JS Power",
-                    section: "JAVASCRIPT",
-                    note: "DOM, APIs, logic",
+                  yellow: {
+                    border: "border-yellow-500/30",
+                    bg: "from-yellow-500/10 to-amber-500/5",
+                    text: "text-yellow-300",
+                    progress: "from-yellow-400 to-amber-400",
                   },
-                  {
-                    step: 5,
-                    title: "React Fundamentals",
-                    section: "REACT",
-                    note: "Components + hooks",
+                  purple: {
+                    border: "border-purple-500/30",
+                    bg: "from-purple-500/10 to-pink-500/5",
+                    text: "text-purple-300",
+                    progress: "from-purple-400 to-pink-400",
                   },
-                  {
-                    step: 6,
-                    title: "Node + Mongo",
-                    section: "NODE+MONGO",
-                    note: "APIs + DB",
+                  green: {
+                    border: "border-green-500/30",
+                    bg: "from-green-500/10 to-emerald-500/5",
+                    text: "text-green-300",
+                    progress: "from-green-400 to-emerald-400",
                   },
-                  {
-                    step: 7,
-                    title: "MERN Full Apps",
-                    section: "MERN",
-                    note: "End-to-end apps",
+                  emerald: {
+                    border: "border-emerald-500/30",
+                    bg: "from-emerald-500/10 to-teal-500/5",
+                    text: "text-emerald-300",
+                    progress: "from-emerald-400 to-teal-400",
                   },
-                ].map((r) => (
-                  <li key={r.step} className="flex gap-4 items-start">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center border border-border bg-black/30">
-                      <div className="font-semibold">{r.step}</div>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <div className="font-semibold">{r.title}</div>
-                        <div className="text-xs opacity-70">{r.section}</div>
+                };
+
+                const colors = colorMap[r.color];
+
+                return (
+                  <div
+                    key={r.step}
+                    className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-gradient-to-br ${colors.bg} p-4 hover:border-opacity-60 transition-all duration-300 hover:scale-[1.01]`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Step Badge */}
+                      <div className="flex-shrink-0">
+                        <div
+                          className={`relative w-12 h-12 rounded-full border-2 ${colors.border} bg-black/30 flex items-center justify-center`}
+                        >
+                          <span className="text-xl">{r.icon}</span>
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black/80 border border-white/20 flex items-center justify-center">
+                            <span className="text-xs font-bold text-emerald-300">
+                              {r.step}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm opacity-70">{r.note}</div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Title Row */}
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className={`text-base font-bold ${colors.text}`}>
+                            {r.title}
+                          </h4>
+                          <span className="text-xs font-bold text-emerald-100 min-w-[45px] text-right">
+                            {stepProgress}%
+                          </span>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-xs text-emerald-100/60 mb-2">
+                          {r.note}
+                        </p>
+
+                        {/* Progress Bar */}
+                        <div className="h-1.5 bg-black/30 rounded-full overflow-hidden border border-white/10">
+                          <div
+                            className={`h-full bg-gradient-to-r ${colors.progress} transition-all duration-700 ease-out`}
+                            style={{ width: `${stepProgress}%` }}
+                          />
+                        </div>
+
+                        {/* Stats */}
+                        <div className="flex items-center justify-between mt-2 text-xs text-emerald-200/50">
+                          <span className="uppercase tracking-wide font-medium">
+                            {r.section}
+                          </span>
+                          <span>
+                            {completedCount} / {totalCount} completed
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </li>
-                ))}
-              </ol>
-              <div className="mt-4 text-sm opacity-70">
-                Follow steps 1→7 for a smooth MERN learning path.
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer Tip */}
+            <div className="mt-4 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+              <div className="flex items-start gap-2">
+                <span className="text-sm">💡</span>
+                <p className="text-xs text-emerald-100/70 leading-relaxed">
+                  <span className="font-semibold text-emerald-200">
+                    Pro Tip:
+                  </span>{" "}
+                  Follow steps sequentially for best results. Each builds on the
+                  previous one.
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* TOP 10 VIEW */}
+        {/* TOP 10 VIEW - Minimal & Feature-Full */}
         {view === "top10" && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3">
-              Top 10 (career-focused projects)
-            </h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {TOP_10.map((t, i) => (
-                <motion.div
-                  key={t}
-                  whileHover={{ scale: 1.02 }}
-                  className="p-4 rounded-xl border border-border bg-black/20"
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold text-emerald-100 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-yellow-300"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">{t}</h4>
-                      <p className="text-xs opacity-70 mt-1">
-                        High-impact project — about 1 full week each
-                      </p>
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                Career-First Projects
+              </h3>
+              <span className="text-xs text-yellow-200/60">
+                10 portfolio essentials
+              </span>
+            </div>
+
+            {/* Top 10 Grid */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              {TOP_10.map((t, i) => {
+                // Medal colors for top 3
+                const medalColors = {
+                  0: {
+                    border: "border-yellow-500/40",
+                    bg: "from-yellow-500/15 to-amber-500/10",
+                    badge: "bg-gradient-to-br from-yellow-400 to-amber-500",
+                    icon: "🥇",
+                    glow: "shadow-yellow-500/20",
+                  },
+                  1: {
+                    border: "border-gray-400/40",
+                    bg: "from-gray-500/15 to-slate-500/10",
+                    badge: "bg-gradient-to-br from-gray-300 to-slate-400",
+                    icon: "🥈",
+                    glow: "shadow-gray-500/20",
+                  },
+                  2: {
+                    border: "border-orange-500/40",
+                    bg: "from-orange-500/15 to-red-500/10",
+                    badge: "bg-gradient-to-br from-orange-400 to-red-500",
+                    icon: "🥉",
+                    glow: "shadow-orange-500/20",
+                  },
+                };
+
+                const isTopThree = i < 3;
+                const colors = isTopThree
+                  ? medalColors[i]
+                  : {
+                      border: "border-emerald-500/30",
+                      bg: "from-emerald-500/10 to-teal-500/5",
+                      badge:
+                        "bg-gradient-to-br from-emerald-500/80 to-teal-500/60",
+                      icon: "⭐",
+                      glow: "shadow-emerald-500/10",
+                    };
+
+                return (
+                  <motion.div
+                    key={t}
+                    whileHover={{ scale: 1.02 }}
+                    className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-gradient-to-br ${colors.bg} p-4 hover:border-opacity-60 transition-all duration-300 ${colors.glow} hover:shadow-lg`}
+                  >
+                    {/* Rank Badge */}
+                    <div className="absolute top-3 right-3">
+                      <div
+                        className={`${colors.badge} w-8 h-8 rounded-lg flex items-center justify-center shadow-lg border border-white/20`}
+                      >
+                        <span className="text-sm font-black text-white">
+                          {isTopThree ? colors.icon : `#${i + 1}`}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-xs opacity-60">#{i + 1}</div>
-                  </div>
-                  <div className="mt-3 text-sm opacity-70">
-                    Builds portfolio + skills employers care about.
-                  </div>
-                </motion.div>
-              ))}
+
+                    {/* Content */}
+                    <div className="pr-10">
+                      {/* Project Title */}
+                      <h4 className="text-base font-bold text-emerald-100 group-hover:text-emerald-50 transition-colors mb-2 leading-tight">
+                        {t}
+                      </h4>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/10 text-xs font-medium text-yellow-200">
+                          Portfolio Ready
+                        </span>
+                        {isTopThree && (
+                          <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-400/30 text-xs font-medium text-yellow-100">
+                            Priority
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-xs text-emerald-100/60 mb-2 leading-relaxed">
+                        High-impact project that showcases real-world skills
+                      </p>
+
+                      {/* Stats Row */}
+                      <div className="flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-1 text-emerald-200/70">
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span>~1 week</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-emerald-200/70">
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                          <span>Career boost</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hover gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Footer Cards */}
+            <div className="grid sm:grid-cols-2 gap-3 mt-4">
+              {/* Why These Projects */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border border-blue-500/20">
+                <div className="flex items-start gap-2 mb-2">
+                  <span className="text-lg">🎯</span>
+                  <h4 className="font-bold text-blue-100 text-sm">
+                    Why These Projects?
+                  </h4>
+                </div>
+                <p className="text-xs text-blue-100/70 leading-relaxed">
+                  Hand-picked to demonstrate full-stack skills, problem-solving,
+                  and production-ready code quality.
+                </p>
+              </div>
+
+              {/* Pro Tip */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20">
+                <div className="flex items-start gap-2 mb-2">
+                  <span className="text-lg">💡</span>
+                  <h4 className="font-bold text-purple-100 text-sm">Pro Tip</h4>
+                </div>
+                <p className="text-xs text-purple-100/70 leading-relaxed">
+                  Complete these with clean code, documentation, and deploy
+                  them. Perfect for job interviews.
+                </p>
+              </div>
             </div>
           </div>
         )}

@@ -1598,6 +1598,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
           )}
         </div>
       </div>
+      
       {/* TOP GRID: Templates + Slots */}
       <div className="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-4">
         {/* TEMPLATES PANEL */}
