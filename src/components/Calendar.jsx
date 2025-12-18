@@ -1066,7 +1066,8 @@ export default function CalendarFullDarkUpdated({
         className="xl:col-span-1 relative rounded-2xl border p-3
        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-       space-y-3 w-full min-h-[400px] md:min-h-[600px]"
+       space-y-3 w-full min-h-[400px] md:min-h-[600px]
+        border-green-600/40 dark:border-gray-700 transition-colors"
       >
         <div className="text-sm text-white font-bold mb-2">
           {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
@@ -1074,13 +1075,14 @@ export default function CalendarFullDarkUpdated({
 
         {/* Selected date stats */}
         <div
-          className="rounded-2xl p-3 border
+          className="rounded-2xl p-2 border
          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
-         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] dark:border-gray-700 transition-colors
+         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+          border-green-600/40 dark:border-gray-700 transition-colors
          "
         >
           <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
-          <div className="grid grid-cols-5 text-center mt-2 min-h-[70px]">
+          <div className="grid grid-cols-5 text-center mt-0 min-h-[20px]">
             <div>
               <p className="text-[#38bdf8] font-semibold">
                 {(studyMap[selectedDate] || []).length}
