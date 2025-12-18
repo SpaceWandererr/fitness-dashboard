@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { load, save } from "../utils/localStorage";
 import { useNavigate } from "react-router-dom";
 import "react-day-picker/dist/style.css";
 import "../styles/animations.css"; // MUST come after
@@ -219,11 +218,11 @@ export default function Goals({ dashboardState, updateDashboard }) {
     : 0;
 
   // Persist shared progress key for cross-page sync
-  useEffect(() => {
-    try {
-      save("wd_mern_progress", merPercent);
-    } catch {}
-  }, [merPercent]);
+  // useEffect(() => {
+  //   try {
+  //     save("wd_mern_progress", merPercent);
+  //   } catch {}
+  // }, [merPercent]);
 
   // Date settings (defaults)
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -235,8 +234,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
     if (!dashboardState) return;
 
     setStartISO(
-      dashboardState.wd_mern_start_date ||
-        new Date().toISOString().slice(0, 10),
+      dashboardState.wd_mern_start_date || new Date().toISOString().slice(0, 10)
     );
 
     setEndISO(dashboardState.wd_mern_end_date || DEFAULT_END);
@@ -245,7 +243,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Derived date metrics
   const startDate = useMemo(
     () => (startISO ? new Date(startISO) : null),
-    [startISO],
+    [startISO]
   );
   const endDate = useMemo(() => (endISO ? new Date(endISO) : null), [endISO]);
   const now = new Date();
@@ -313,7 +311,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
       "Don't chase motivation — build systems. This dashboard *is* your system.",
       "The grind is temporary. The life you're chasing through MERN, fitness and discipline is permanent.",
     ],
-    [],
+    []
   );
 
   // MERN internal page swipe (keeps original 4-page behavior)
@@ -350,7 +348,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Date popup & tmp state
   const [showDatePopup, setShowDatePopup] = useState(false);
   const [tmpStart, setTmpStart] = useState(() =>
-    startISO ? startISO : todayISO,
+    startISO ? startISO : todayISO
   );
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
@@ -869,10 +867,10 @@ export default function Goals({ dashboardState, updateDashboard }) {
                               {merPercent < 25
                                 ? "🌱"
                                 : merPercent < 50
-                                  ? "🚀"
-                                  : merPercent < 75
-                                    ? "⚡"
-                                    : "🔥"}
+                                ? "🚀"
+                                : merPercent < 75
+                                ? "⚡"
+                                : "🔥"}
                             </text>
                           </g>
                         </svg>
@@ -934,19 +932,19 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             {timeProgressPct < 25
                               ? "🌱"
                               : timeProgressPct < 50
-                                ? "🚀"
-                                : timeProgressPct < 75
-                                  ? "⚡"
-                                  : "🔥"}
+                              ? "🚀"
+                              : timeProgressPct < 75
+                              ? "⚡"
+                              : "🔥"}
                           </span>
                           <span>
                             {timeProgressPct < 25
                               ? "Starting"
                               : timeProgressPct < 50
-                                ? "Building"
-                                : timeProgressPct < 75
-                                  ? "Pushing"
-                                  : "Finishing"}
+                              ? "Building"
+                              : timeProgressPct < 75
+                              ? "Pushing"
+                              : "Finishing"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -1031,7 +1029,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                         .split("-")
                                         .reverse()
                                         .map((v, i) =>
-                                          i === 2 ? v.slice(-2) : v,
+                                          i === 2 ? v.slice(-2) : v
                                         )
                                         .join("/")
                                     : "—"}
@@ -1062,8 +1060,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             {daysRemaining > 200
                               ? "🌱 Long Journey"
                               : daysRemaining > 100
-                                ? "🔥 Stay Consistent"
-                                : "🚀 Final Push!"}
+                              ? "🔥 Stay Consistent"
+                              : "🚀 Final Push!"}
                           </div>
                         </div>
                       </div>
@@ -1301,7 +1299,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
         items: ["Work visa", "Move to NZ", "Apply for residency"],
       },
     ],
-    [],
+    []
   );
 
   const nzWrapper = [
@@ -1436,8 +1434,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
             const curWeight = Number.isFinite(Number(latestLog?.weight))
               ? Number(latestLog.weight)
               : Number.isFinite(baseline)
-                ? baseline
-                : null;
+              ? baseline
+              : null;
 
             const start = Number.isFinite(baseline) ? baseline : curWeight;
 

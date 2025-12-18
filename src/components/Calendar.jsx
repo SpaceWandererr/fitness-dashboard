@@ -431,119 +431,254 @@ export default function CalendarFullDarkUpdated({
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* 🔥 Enhanced Streak Card */}
           <div
-            className=" 
-            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
-            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-             rounded-xl p-4
-             bg-black/30
-             border border-[#2F6B60]/40
-             backdrop-blur-sm
-             shadow-[0_0_12px_rgba(0,0,0,0.35)]
-             transition-all duration-300
-             text-[#E8FFFA]
-           "
+            className="
+      bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      rounded-xl p-4
+      border border-[#2F6B60]/40
+      backdrop-blur-sm
+      shadow-[0_0_12px_rgba(0,0,0,0.35)]
+      hover:shadow-[0_0_20px_rgba(47,107,96,0.25)]
+      transition-all duration-300
+      text-[#E8FFFA]
+      relative overflow-hidden
+    "
           >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-2          ">
-              <div className="text-sm font-medium text-[#FF8F8F] flex items-center gap-1">
-                🔥 <span>Streak</span>
+            {/* Subtle background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-orange-500/5 opacity-50" />
+
+            {/* Content */}
+            <div className="relative z-10">
+              {/* Header with Icon & Number */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="relative">
+                    <span
+                      className={`text-2xl ${
+                        streakInfo.current > 0 ? "animate-pulse" : ""
+                      }`}
+                    >
+                      {streakInfo.current > 0 ? "🔥" : "💤"}
+                    </span>
+                    {/* Milestone badge */}
+                    {streakInfo.current >= 7 && (
+                      <span className="absolute -top-1 -right-1 text-xs">
+                        {streakInfo.current >= 30
+                          ? "🏆"
+                          : streakInfo.current >= 14
+                          ? "⭐"
+                          : "✨"}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-[#FF8F8F]">
+                      Current Streak
+                    </div>
+                    <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                      {streakInfo.current === 0 ? "Start Today" : "Keep Going!"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Large Counter */}
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black bg-gradient-to-r from-emerald-300 to-teal-400 bg-clip-text text-transparent">
+                    {streakInfo.current}
+                  </span>
+                  <span className="text-sm text-[#7FAFA4] font-medium">
+                    {streakInfo.current === 1 ? "day" : "days"}
+                  </span>
+                </div>
               </div>
-              <div className="text-xs text-[#9FF2E8] font-semibold">
-                {streakInfo.current} days
+
+              {/* Enhanced Progress Bar */}
+              <div className="relative w-full h-2.5 bg-[#081C18] rounded-full overflow-hidden border border-[#2F6B60]/30 mb-3 shadow-inner">
+                {/* Progress fill with dynamic color */}
+                <div
+                  className={`
+            h-full rounded-full transition-all duration-700 relative
+            ${
+              streakInfo.percent < 50
+                ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
+                : streakInfo.percent < 80
+                ? "bg-gradient-to-r from-[#F59E0B] to-[#FB923C] shadow-[0_0_8px_#FB923C]"
+                : "bg-gradient-to-r from-[#EF4444] to-[#FF8F8F] shadow-[0_0_8px_#EF4444]"
+            }
+          `}
+                  style={{ width: `${Math.max(3, streakInfo.percent)}%` }}
+                >
+                  {/* Inner highlight for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
+                </div>
               </div>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="relative w-full h-2.5 bg-[#081C18] rounded-full overflow-hidden border border-[#2F6B60]/30">
-              {/* Subtle background glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+              {/* Compact Stats Row */}
+              <div className="flex justify-between items-center text-xs mb-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-[#7FAFA4]">Best:</span>
+                  <span className="font-bold text-[#CDEEE8]">
+                    {streakInfo.longest}d
+                  </span>
+                </div>
+                <div className="px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="font-bold text-[#9FF2E8]">
+                    {streakInfo.percent}%
+                  </span>
+                  <span className="text-[#7FAFA4] ml-1">of best</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[#7FAFA4]">Need:</span>
+                  <span className="font-bold text-[#FF8F8F]">
+                    {Math.max(0, streakInfo.longest - streakInfo.current + 1)}d
+                  </span>
+                </div>
+              </div>
 
-              {/* Fill */}
-              <div
-                className={`
-        h-full rounded-full transition-all duration-700
-        ${
-          streakInfo.percent < 50
-            ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
-            : "bg-gradient-to-r from-[#7A1D2B] to-[#FF8F8F] shadow-[0_0_8px_#FF8F8F]"
-        }
-      `}
-                style={{ width: `${streakInfo.percent}%` }}
-              />
-            </div>
-
-            {/* Footer Info */}
-            <div className="mt-2 text-xs text-[#7FAFA4] flex justify-between">
-              <span>
-                Longest: <b className="text-[#CDEEE8]">{streakInfo.longest}d</b>
-              </span>
-              <span>
-                <b className="text-[#9FF2E8]">{streakInfo.percent}%</b> of
-                longest
-              </span>
+              {/* Motivational Message */}
+              <div className="pt-3 border-t border-[#2F6B60]/30 text-center">
+                <p className="text-xs text-[#CDEEE8] font-medium">
+                  {streakInfo.current === 0 && "💪 Start your streak today!"}
+                  {streakInfo.current >= 1 &&
+                    streakInfo.current < 7 &&
+                    "🚀 Building momentum!"}
+                  {streakInfo.current >= 7 &&
+                    streakInfo.current < 14 &&
+                    "🔥 One week strong!"}
+                  {streakInfo.current >= 14 &&
+                    streakInfo.current < 30 &&
+                    "⚡ Unstoppable force!"}
+                  {streakInfo.current >= 30 && "🏆 Legendary discipline!"}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Today's Stats (replaces quote) */}
+          {/* 📊 Enhanced Today's Stats Card */}
           <div
             className="
-            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
-            dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-    rounded-xl p-4
-    bg-black/30
-    border border-[#2F6B60]/40
-    backdrop-blur-sm
-    shadow-[0_0_12px_rgba(0,0,0,0.35)]
-    transition-all duration-300
-    text-[#E8FFFA]
-  "
+      bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
+      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+      rounded-xl p-4
+      border border-[#2F6B60]/40
+      backdrop-blur-sm
+      shadow-[0_0_12px_rgba(0,0,0,0.35)]
+      hover:shadow-[0_0_20px_rgba(47,107,96,0.25)]
+      transition-all duration-300
+      text-[#E8FFFA]
+      relative overflow-hidden
+    "
           >
-            {/* Title */}
-            <div className="text-sm font-semibold text-[#9FF2E8] tracking-wide flex items-center gap-1 mb-2">
-              📊 <span>Today’s Stats</span>
-            </div>
+            {/* Subtle background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 opacity-50" />
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-5 text-center mt-3 gap-y-2">
-              {/* Topics */}
-              <div>
-                <p className="text-[#4ADE80] font-semibold text-lg">
-                  {todayStats.topics}
-                </p>
-                <p className="text-xs text-[#7FAFA4]">Topics</p>
+            {/* Content */}
+            <div className="relative z-10">
+              {/* Header with Icon */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">📊</span>
+                  <div>
+                    <div className="text-sm font-semibold text-[#9FF2E8]">
+                      Today's Stats
+                    </div>
+                    <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                      {dayjs().format("MMM DD, YYYY")}
+                    </div>
+                  </div>
+                </div>
+                {/* Quick indicator if workout done */}
+                {(todayStats.exercises > 0 || todayStats.topics > 0) && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    ✓ Active
+                  </span>
+                )}
               </div>
 
-              {/* Exercises */}
-              <div>
-                <p className="text-[#22C55E] font-semibold text-lg">
-                  {todayStats.exercises}
-                </p>
-                <p className="text-xs text-[#7FAFA4]">Exercises</p>
+              {/* Stats Grid - Cleaner Layout */}
+              <div className="grid grid-cols-5 gap-2">
+                {/* Topics */}
+                <div className="bg-black/30 rounded-lg p-2 border border-emerald-500/20 hover:border-emerald-500/40 transition-all">
+                  <div className="text-xl font-black text-[#4ADE80] mb-0.5">
+                    {todayStats.topics}
+                  </div>
+                  <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                    Topics
+                  </div>
+                </div>
+
+                {/* Exercises */}
+                <div className="bg-black/30 rounded-lg p-2 border border-teal-500/20 hover:border-teal-500/40 transition-all">
+                  <div className="text-xl font-black text-[#22C55E] mb-0.5">
+                    {todayStats.exercises}
+                  </div>
+                  <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                    Exercises
+                  </div>
+                </div>
+
+                {/* Calories */}
+                <div className="bg-black/30 rounded-lg p-2 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+                  <div className="text-xl font-black text-[#F59E0B] mb-0.5">
+                    {todayStats.calories}
+                  </div>
+                  <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                    Calories
+                  </div>
+                </div>
+
+                {/* Weight */}
+                <div className="bg-black/30 rounded-lg p-2 border border-red-500/20 hover:border-red-500/40 transition-all">
+                  <div className="text-xl font-black text-[#FF8F8F] mb-0.5">
+                    {todayStats.weight}
+                  </div>
+                  <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                    Weight
+                  </div>
+                </div>
+
+                {/* BMI */}
+                <div className="bg-black/30 rounded-lg p-2 border border-cyan-500/20 hover:border-cyan-500/40 transition-all">
+                  <div className="text-xl font-black text-[#9FF2E8] mb-0.5">
+                    {todayStats.bmi}
+                  </div>
+                  <div className="text-[9px] text-[#7FAFA4] uppercase tracking-wider">
+                    BMI
+                  </div>
+                </div>
               </div>
 
-              {/* Calories */}
-              <div>
-                <p className="text-[#F59E0B] font-semibold text-lg">
-                  {todayStats.calories}
-                </p>
-                <p className="text-xs text-[#7FAFA4]">Calories</p>
-              </div>
-
-              {/* Weight */}
-              <div>
-                <p className="text-[#FF8F8F] font-semibold text-lg">
-                  {todayStats.weight}
-                </p>
-                <p className="text-xs text-[#7FAFA4]">Weight</p>
-              </div>
-
-              {/* BMI */}
-              <div>
-                <p className="text-[#9FF2E8] font-semibold text-lg">
-                  {todayStats.bmi}
-                </p>
-                <p className="text-xs text-[#7FAFA4]">BMI</p>
+              {/* Summary Row */}
+              <div className="mt-3 pt-3 border-t border-[#2F6B60]/30 flex justify-between items-center text-xs">
+                <span className="text-[#7FAFA4]">Daily Goal Progress</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-20 h-1.5 bg-[#081C18] rounded-full overflow-hidden border border-[#2F6B60]/30">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-700"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          (todayStats.exercises > 0 ? 25 : 0) +
+                            (todayStats.topics > 0 ? 25 : 0) +
+                            (todayStats.calories > 0 ? 25 : 0) +
+                            (todayStats.weight > 0 ? 25 : 0)
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="font-bold text-[#9FF2E8]">
+                    {Math.min(
+                      100,
+                      (todayStats.exercises > 0 ? 25 : 0) +
+                        (todayStats.topics > 0 ? 25 : 0) +
+                        (todayStats.calories > 0 ? 25 : 0) +
+                        (todayStats.weight > 0 ? 25 : 0)
+                    )}
+                    %
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -860,10 +995,10 @@ export default function CalendarFullDarkUpdated({
               status === "both"
                 ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
                 : status === "study"
-                  ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
-                  : status === "gym"
-                    ? "bg-[#071A2F] text-[#9FCAFF] border border-[#3b82f6]/20"
-                    : "bg-[#081C18]/60 text-[#B6E5DC] border border-[#2F6B60]/20";
+                ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
+                : status === "gym"
+                ? "bg-[#071A2F] text-[#9FCAFF] border border-[#3b82f6]/20"
+                : "bg-[#081C18]/60 text-[#B6E5DC] border border-[#2F6B60]/20";
 
             const selectedClass = isSelected
               ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105 z-10"
@@ -885,10 +1020,10 @@ export default function CalendarFullDarkUpdated({
                   status === "both"
                     ? "Study + Gym"
                     : status === "study"
-                      ? "Study"
-                      : status === "gym"
-                        ? "Gym"
-                        : "No activity"
+                    ? "Study"
+                    : status === "gym"
+                    ? "Gym"
+                    : "No activity"
                 }`}
               >
                 {/* Date */}
@@ -1283,7 +1418,7 @@ export default function CalendarFullDarkUpdated({
                             const sets = ex.match(/(\d+)\s*×/);
                             return sum + (sets ? parseInt(sets[1]) : 0);
                           },
-                          0,
+                          0
                         )}
                       </div>
                     </div>
@@ -1299,7 +1434,7 @@ export default function CalendarFullDarkUpdated({
                             const reps = ex.match(/×\s*(\d+)/);
                             return sum + (reps ? parseInt(reps[1]) : 0);
                           },
-                          0,
+                          0
                         )}
                       </div>
                     </div>
