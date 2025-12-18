@@ -2245,7 +2245,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 type="number"
                 value={caloriesInput}
                 onChange={(e) => setCaloriesInput(e.target.value)}
-                className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                className="w-full bg-emerald-900/40
                      border border-emerald-400/30 rounded-xl p-2.5 
                      text-emerald-100 placeholder:text-emerald-300/40
                      outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
@@ -2264,7 +2264,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 step="0.1"
                 value={weightInput}
                 onChange={(e) => setWeightInput(e.target.value)}
-                className="w-full bg-gradient-to-br from-[#183D3D]/30 via-[#0F2A2A]/20 to-[#0A1F1F]/30 
+                className="w-full bg-cyan-900/40
                      border border-cyan-400/30 rounded-xl p-2.5 
                      text-cyan-100 placeholder:text-cyan-300/40
                      outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400
@@ -2289,7 +2289,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     max="5"
                     value={durationHours}
                     onChange={(e) => setDurationHours(Number(e.target.value))}
-                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                    className="w-full bg-teal-900/40
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-100 placeholder:text-teal-300/40
                          outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
@@ -2311,7 +2311,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     max="59"
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                    className="w-full bg-teal-900/40
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-100 placeholder:text-teal-300/40
                          outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
