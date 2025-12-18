@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -69,7 +69,7 @@ export default function Control({
     localStorage.getItem("wd_auto_backup_enabled") !== "false",
   );
   const [autoBackupFrequency, setAutoBackupFrequency] = useState(
-    localStorage.getItem("wd_auto_backup_frequency") || "daily",
+    localStorage.getItem("wd_auto_backup_frequency") || "weekly",
   );
 
   const showNotification = (message, type = "success") => {
@@ -296,42 +296,77 @@ export default function Control({
     e.target.value = "";
   }
 
+  // COMPLETELY FIXED: Auto-backup logic - runs ONLY ONCE on mount
   useEffect(() => {
+    // Load backups first
     refreshBackups();
 
-    if (!autoBackupEnabled) return;
+    // Check if we should create an auto-backup
+    if (!autoBackupEnabled || !dashboardState) {
+      console.log("Auto-backup disabled or no dashboard state");
+      return;
+    }
 
     const now = new Date();
     const lastAuto = localStorage.getItem("wd_last_auto_backup");
-    const lastAutoDate = lastAuto ? new Date(lastAuto) : null;
+
     let shouldBackup = false;
 
-    switch (autoBackupFrequency) {
-      case "hourly":
-        if (!lastAutoDate || now - lastAutoDate >= 60 * 60 * 1000) {
-          shouldBackup = true;
-        }
-        break;
-      case "daily":
-        if (!lastAuto || lastAuto !== now.toDateString()) {
-          shouldBackup = true;
-        }
-        break;
-      case "weekly":
-        const isSunday = now.getDay() === 0;
-        if (isSunday && lastAuto !== now.toDateString()) {
-          shouldBackup = true;
-        }
-        break;
-      default:
-        break;
+    if (!lastAuto) {
+      // First time - create backup
+      console.log("🆕 First auto-backup");
+      shouldBackup = true;
+    } else {
+      const lastAutoDate = new Date(lastAuto);
+
+      switch (autoBackupFrequency) {
+        case "hourly":
+          const hoursDiff = (now - lastAutoDate) / (1000 * 60 * 60);
+          if (hoursDiff >= 1) {
+            console.log(
+              `⏰ Hourly backup due (${hoursDiff.toFixed(1)} hours since last)`,
+            );
+            shouldBackup = true;
+          }
+          break;
+
+        case "daily":
+          const lastDateStr = lastAutoDate.toDateString();
+          const nowDateStr = now.toDateString();
+          if (lastDateStr !== nowDateStr) {
+            console.log(
+              `📅 Daily backup due (last: ${lastDateStr}, now: ${nowDateStr})`,
+            );
+            shouldBackup = true;
+          }
+          break;
+
+        case "weekly":
+          const isSunday = now.getDay() === 0;
+          const lastWasToday =
+            lastAutoDate.toDateString() === now.toDateString();
+          if (isSunday && !lastWasToday) {
+            console.log(
+              `📅 Weekly backup due (Sunday, last: ${lastAutoDate.toDateString()})`,
+            );
+            shouldBackup = true;
+          }
+          break;
+      }
     }
 
     if (shouldBackup) {
+      console.log(`✅ Creating ${autoBackupFrequency} auto-backup now`);
       createBackup(false, "auto");
       localStorage.setItem("wd_last_auto_backup", now.toISOString());
+    } else {
+      console.log(
+        `⏭️ Auto-backup not needed yet (frequency: ${autoBackupFrequency})`,
+      );
     }
-  }, []);
+
+    // CRITICAL: Empty dependency array = run only once on mount
+  }, []); // ← This is the key fix!
 
   function toggleAutoBackup() {
     const newState = !autoBackupEnabled;
@@ -346,6 +381,10 @@ export default function Control({
   function changeAutoBackupFrequency(frequency) {
     setAutoBackupFrequency(frequency);
     localStorage.setItem("wd_auto_backup_frequency", frequency);
+
+    // Clear last backup timestamp so new frequency takes effect immediately on next check
+    localStorage.removeItem("wd_last_auto_backup");
+
     showNotification(`Auto-backup frequency set to ${frequency}`, "success");
   }
 

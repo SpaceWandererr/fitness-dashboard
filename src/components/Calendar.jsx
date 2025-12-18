@@ -325,6 +325,10 @@ export default function CalendarFullDarkUpdated({
     };
   }, [studyMap, gymLogs]);
 
+  // Add these state declarations at the top with your other useState hooks
+  const [hoveredDate, setHoveredDate] = useState(null);
+  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+
   // Hover popup content
   function handleMouseEnterDate(e, iso) {
     setHoveredDate(iso);
@@ -583,116 +587,148 @@ export default function CalendarFullDarkUpdated({
 
       {/* Calendar Section */}
       <div
-        className="xl:col-span-1 rounded-2xl border p-3 space-y-6 
+        className="xl:col-span-1 rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3 
         w-full min-h-[400px] md:min-h-[600px]
         bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+        shadow-2xl"
       >
-        <div className="flex flex-wrap items-center justify-center sm:justify-between">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between">
+          {/* Month Navigation */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMonth((m) => m.subtract(1, "month"))}
-              className="
-    px-2.5 py-1 rounded-md
-    bg-transparent
-    text-[#9FF2E8]
-    border border-[#2F6B60]/50
-    backdrop-blur-sm
-    shadow-[0_0_6px_rgba(0,0,0,0.3)]
-    transition-all duration-200
-    hover:border-[#4ade80] hover:text-[#CFFFF7]
-    hover:shadow-[0_0_8px_#4ade80]
-    active:scale-95
-  "
+              className="w-8 h-8 rounded-lg flex items-center justify-center
+              bg-black/20 backdrop-blur-sm
+              text-[#9FF2E8]
+              border border-[#2F6B60]/40
+              transition-all duration-200
+              hover:border-[#4ade80] hover:text-[#CFFFF7]
+              hover:shadow-[0_0_8px_#4ade80]
+              active:scale-95"
             >
-              ◀
+              ←
             </button>
 
             <h2
-              className="
-  px-4 py-1.5
-  rounded-md
-  text-sm sm:text-lg font-semibold tracking-wide
-  text-[#9FF2E8]
-  border border-[#2F6B60]/40
-  shadow-[0_0_6px_rgba(0,0,0,0.3)]
-  bg-black/20
-  backdrop-blur-sm
-  transition-all duration-200
-"
+              className="px-3 py-1.5 rounded-lg
+              text-sm sm:text-base font-semibold
+              text-[#9FF2E8]
+              border border-[#2F6B60]/40
+              bg-black/20 backdrop-blur-sm"
             >
               {month.format("MMMM YYYY")}
             </h2>
 
             <button
               onClick={() => setMonth((m) => m.add(1, "month"))}
-              className="
-    px-2.5 py-1 rounded-md
-    bg-transparent
-    text-[#9FF2E8]
-    border border-[#2F6B60]/50
-    backdrop-blur-sm
-    shadow-[0_0_6px_rgba(0,0,0,0.3)]
-    transition-all duration-200
-    hover:border-[#4ade80] hover:text-[#CFFFF7]
-    hover:shadow-[0_0_8px_#4ade80]
-    active:scale-95
-  "
+              className="w-8 h-8 rounded-lg flex items-center justify-center
+              bg-black/20 backdrop-blur-sm
+              text-[#9FF2E8]
+              border border-[#2F6B60]/40
+              transition-all duration-200
+              hover:border-[#4ade80] hover:text-[#CFFFF7]
+              hover:shadow-[0_0_8px_#4ade80]
+              active:scale-95"
             >
-              ▶
+              →
             </button>
           </div>
-          <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
-            {/* Today Button */}
+
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 const today = dayjs();
-                setMonth(today); // move calendar to current month
-                setSelectedDate(today.format("YYYY-MM-DD")); // highlight today date
+                setMonth(today);
+                setSelectedDate(today.format("YYYY-MM-DD"));
               }}
-              className="
-               px-3 py-1.5 rounded-md
-               bg-transparent
-               text-[#9FF2E8] text-sm font-medium
-               border border-[#2F6B60]/50
-               shadow-[0_0_6px_rgba(0,0,0,0.3)]
-               transition-all duration-200
-               hover:border-[#4ade80] hover:text-[#CFFFF7]
-               hover:shadow-[0_0_8px_#4ade80]
-               active:scale-95"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium
+              bg-black/20 text-[#9FF2E8]
+              border border-[#2F6B60]/40
+              transition-all duration-200
+              hover:border-[#4ade80] hover:text-[#CFFFF7]
+              hover:shadow-[0_0_8px_#4ade80]
+              active:scale-95"
             >
               Today
             </button>
 
-            {/* Monthly Stats Panel */}
-            <div
-              className="
-      px-3 py-1.5 rounded-md
-      bg-black/30
-      border border-[#2F6B60]/40
-      backdrop-blur-sm
-      text-sm text-[#CDEEE8]
-      shadow-[0_0_6px_rgba(0,0,0,0.25)]
-      max-w-full truncate
-      flex items-center gap-1
-    "
-            >
-              <span className="text-[#9FF2E8]">Monthly:</span>
-
-              <span className="font-semibold text-[#4ADE80]">
-                {monthlyStats.topics} T
-              </span>
-
-              <span className="text-[#5a6f6a]">/</span>
-
-              <span className="font-semibold text-[#FF8F8F]">
-                {monthlyStats.exercises} E
-              </span>
+            {/* Quick Jump - With Date Display on Hover */}
+            <div className="relative group">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  const newDate = dayjs(e.target.value);
+                  setMonth(newDate);
+                  setSelectedDate(e.target.value);
+                }}
+                className="
+                  peer
+                  w-9 h-8 rounded-lg
+                  bg-black/20 backdrop-blur-sm 
+                  text-transparent
+                  border border-[#2F6B60]/40 
+                  cursor-pointer
+                  transition-all duration-200
+                  hover:w-32
+                  hover:border-[#4ade80] 
+                  hover:shadow-[0_0_8px_#4ade80]
+                  hover:text-[#9FF2E8]
+                  focus:w-32
+                  focus:text-[#9FF2E8]
+                  active:scale-95
+                  [color-scheme:dark]
+                  px-2
+                "
+                title="Jump to date"
+              />
+              {/* Icon - Hidden on Hover/Focus */}
+              <div className="absolute left-2.5 top-2 pointer-events-none peer-hover:opacity-0 peer-focus:opacity-0 transition-opacity">
+                <svg
+                  className="w-4 h-4 text-[#9FF2E8]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-5 sm:grid-cols-7 gap-2 mt-3">
+        {/* Inline Stats - More Compact */}
+        <div
+          className="flex items-center justify-center gap-4 px-3 py-1.5 rounded-lg
+          bg-black/20 backdrop-blur-sm border border-[#2F6B60]/30"
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+            <span className="text-xs font-semibold text-[#4ADE80]">
+              {monthlyStats.topics}
+            </span>
+            <span className="text-xs text-[#9FF2E8]/60">topics</span>
+          </div>
+          <div className="w-px h-3 bg-[#2F6B60]/40" />
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
+            <span className="text-xs font-semibold text-[#60A5FA]">
+              {monthlyStats.exercises}
+            </span>
+            <span className="text-xs text-[#9FF2E8]/60">exercises</span>
+          </div>
+        </div>
+
+        {/* Calendar Grid - Compact */}
+        <div className="grid grid-cols-5 sm:grid-cols-7 gap-1.5 sm:gap-2">
           {days.map((d) => {
             const iso = d.format("YYYY-MM-DD");
             const status = getDayStatusStr(iso);
@@ -701,17 +737,15 @@ export default function CalendarFullDarkUpdated({
             const isSelected = iso === selectedDate;
 
             const base = `
-          aspect-square 
-          w-full 
-          min-w-[32px] 
-          max-w-[56px]
-          rounded-xl 
-          flex items-center justify-center 
-          font-medium text-xs sm:text-sm
-          transition-all duration-200
-          relative overflow-hidden
-          select-none
-        `;
+              aspect-square w-full 
+              min-w-[32px] max-w-[56px]
+              rounded-xl 
+              flex items-center justify-center 
+              font-medium text-xs sm:text-sm
+              transition-all duration-200
+              relative overflow-hidden
+              select-none cursor-pointer
+            `;
 
             const notCur = !isCurMonth ? "opacity-30" : "";
 
@@ -719,14 +753,19 @@ export default function CalendarFullDarkUpdated({
               status === "both"
                 ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
                 : status === "study"
-                  ? "bg-[#0A2B22] text-[#9FF2E8]"
+                  ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
                   : status === "gym"
-                    ? "bg-[#071A2F] text-[#9FCAFF]"
-                    : "bg-[#081C18] text-[#B6E5DC]";
+                    ? "bg-[#071A2F] text-[#9FCAFF] border border-[#3b82f6]/20"
+                    : "bg-[#081C18]/60 text-[#B6E5DC] border border-[#2F6B60]/20";
 
             const selectedClass = isSelected
-              ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105"
+              ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105 z-10"
               : "hover:scale-105 hover:shadow-[0_0_8px_rgba(63,167,150,0.2)]";
+
+            const todayClass =
+              isToday && !isSelected
+                ? "ring-2 ring-[#fbbf24]/50 animate-pulse"
+                : "";
 
             return (
               <button
@@ -734,7 +773,7 @@ export default function CalendarFullDarkUpdated({
                 onClick={() => openDay(d)}
                 onMouseEnter={(e) => handleMouseEnterDate(e, iso)}
                 onMouseLeave={handleMouseLeaveDate}
-                className={`${base} ${notCur} ${bgClass} ${selectedClass}`}
+                className={`${base} ${notCur} ${bgClass} ${selectedClass} ${todayClass}`}
                 title={`${d.format("ddd, DD MMM YYYY")} — ${
                   status === "both"
                     ? "Study + Gym"
@@ -745,65 +784,90 @@ export default function CalendarFullDarkUpdated({
                         : "No activity"
                 }`}
               >
-                {/* Today glow ring */}
-                {isToday && (
-                  <span className="absolute inset-1 rounded-lg ring-2 ring-[#22c55e]/40 animate-pulse"></span>
-                )}
-
                 {/* Date */}
                 <span className="z-10">{d.date()}</span>
 
-                {/* Bottom dots */}
-                <div className="absolute bottom-1.5 flex gap-1">
-                  {(status === "study" || status === "both") && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
-                  )}
-                  {(status === "gym" || status === "both") && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
-                  )}
-                </div>
+                {/* Activity dots */}
+                {(status === "study" ||
+                  status === "gym" ||
+                  status === "both") && (
+                  <div className="absolute bottom-1 flex gap-0.5">
+                    {(status === "study" || status === "both") && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+                    )}
+                    {(status === "gym" || status === "both") && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
+                    )}
+                  </div>
+                )}
               </button>
             );
           })}
         </div>
 
-        {/* Notes */}
+        {/* Compact Notes with Character Counter */}
         <div
-          className="rounded-xl p-3 border bg-[#071227] transition-all    
-        duration-3000 text-white    
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+          className="rounded-xl p-2.5 border border-[#2F6B60]/30
+          bg-gradient-to-br from-[#B82132]/20 via-[#183D3D]/20 to-[#0F0F0F]/20 
+          dark:from-[#0F1622]/40 dark:via-[#132033]/40 dark:to-[#0A0F1C]/40
+          backdrop-blur-sm"
         >
-          <h4 className="font-semibold text-[#00e5ff] mb-2">📝 Notes</h4>
+          <div className="flex items-center justify-between mb-1.5">
+            <h4 className="font-semibold text-[#00e5ff] text-xs flex items-center gap-1.5">
+              📝 {selectedDate ? dayjs(selectedDate).format("MMM DD") : "Notes"}
+            </h4>
+            <span className="text-[10px] text-[#9FF2E8]/50">
+              {selectedNote.length}/200
+            </span>
+          </div>
           <textarea
             value={selectedNote}
             onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
-            placeholder="Write a short note about today..."
-            className="w-full min-h-[70px] p-2 border rounded 
-             bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
-             dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-            text-[#cfefff] border-[#233446]"
+            maxLength={200}
+            placeholder="Quick note for today..."
+            className="w-full min-h-[60px] p-2 border rounded-lg text-sm
+              bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
+              dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+              text-[#cfefff] border-[#233446]
+              focus:border-[#4ade80]/50 focus:outline-none
+              placeholder:text-[#9FF2E8]/30 resize-none"
           />
         </div>
 
-        <div className="space-y-4">
+        {/* Compact Charts */}
+        <div className="space-y-3">
           {view === "weekly" && (
-            <div className="rounded-xl p-4 border bg-[#071827] transition-colors text-[#dbeafe]">
-              <div className="h-44">
+            <div
+              className="rounded-xl p-2.5 border border-[#2F6B60]/30
+              bg-[#071827]/60 backdrop-blur-sm"
+            >
+              <div className="h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#122236" />
-                    <XAxis dataKey="date" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
+                    <YAxis stroke="#94a3b8" fontSize={10} />
                     <Tooltip
-                      wrapperStyle={{
+                      contentStyle={{
                         backgroundColor: "#071425",
                         border: "1px solid #263249",
+                        borderRadius: "8px",
+                        fontSize: "12px",
                       }}
                     />
-                    <Legend />
-                    <Bar dataKey="study" stackId="a" />
-                    <Bar dataKey="gym" stackId="a" />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Bar
+                      dataKey="study"
+                      stackId="a"
+                      fill="#4ADE80"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="gym"
+                      stackId="a"
+                      fill="#60A5FA"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -811,23 +875,32 @@ export default function CalendarFullDarkUpdated({
           )}
 
           {view === "compare" && (
-            <div className="rounded-xl p-4 border bg-[#071827] transition-colors text-[#dbeafe]">
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex gap-2 mb-2">
+            <div
+              className="rounded-xl p-2.5 border border-[#2F6B60]/30
+              bg-[#071827]/60 backdrop-blur-sm"
+            >
+              <div className="space-y-2">
+                <div className="flex gap-2">
                   <input
                     type="date"
                     value={compareDates[0] || ""}
                     onChange={(e) => setCompareSlot(0, e.target.value)}
-                    className="border rounded px-2 py-1 bg-[#02061a] text-white"
+                    className="flex-1 px-2 py-1 rounded-lg text-xs
+                    bg-[#02061a] text-white border border-[#2F6B60]/40
+                    focus:border-[#4ade80]/50 focus:outline-none
+                    [color-scheme:dark]"
                   />
                   <input
                     type="date"
                     value={compareDates[1] || ""}
                     onChange={(e) => setCompareSlot(1, e.target.value)}
-                    className="border rounded px-2 py-1 bg-[#02061a] text-white"
+                    className="flex-1 px-2 py-1 rounded-lg text-xs
+                    bg-[#02061a] text-white border border-[#2F6B60]/40
+                    focus:border-[#4ade80]/50 focus:outline-none
+                    [color-scheme:dark]"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {[0, 1].map((i) => {
                     const iso = compareDates[i];
                     const info = iso
@@ -839,18 +912,38 @@ export default function CalendarFullDarkUpdated({
                         }
                       : null;
                     return (
-                      <div className="p-2 border rounded bg-[#071323]">
-                        <div className="text-xs opacity-70">{iso || "—"}</div>
-                        <div>Study: {info ? info.studyCount : "—"}</div>
-                        <div>
-                          Gym: {info ? (info.gymDone ? "Yes" : "No") : "—"}
+                      <div
+                        key={i}
+                        className="p-2 rounded-lg bg-[#071323]/80 border border-[#2F6B60]/30"
+                      >
+                        <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
+                          {iso ? dayjs(iso).format("MMM DD") : "—"}
                         </div>
-                        <div>
-                          Exercises: {info ? info.exercises.length : "—"}
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-[#9FF2E8]/70">Study</span>
+                            <span className="text-[#4ADE80] font-semibold">
+                              {info ? info.studyCount : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[#9FF2E8]/70">Gym</span>
+                            <span className="text-[#60A5FA] font-semibold">
+                              {info ? (info.gymDone ? "✓" : "✗") : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[#9FF2E8]/70">Ex.</span>
+                            <span className="text-[#E0F2F1] font-semibold">
+                              {info ? info.exercises.length : "—"}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-sm opacity-70 mt-1">
-                          {info?.notes}
-                        </div>
+                        {info?.notes && (
+                          <p className="text-[10px] text-[#9FF2E8]/60 mt-1.5 line-clamp-1">
+                            {info.notes}
+                          </p>
+                        )}
                       </div>
                     );
                   })}

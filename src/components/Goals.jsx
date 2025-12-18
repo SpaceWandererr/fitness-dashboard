@@ -235,7 +235,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
     if (!dashboardState) return;
 
     setStartISO(
-      dashboardState.wd_mern_start_date || new Date().toISOString().slice(0, 10)
+      dashboardState.wd_mern_start_date ||
+        new Date().toISOString().slice(0, 10),
     );
 
     setEndISO(dashboardState.wd_mern_end_date || DEFAULT_END);
@@ -244,7 +245,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Derived date metrics
   const startDate = useMemo(
     () => (startISO ? new Date(startISO) : null),
-    [startISO]
+    [startISO],
   );
   const endDate = useMemo(() => (endISO ? new Date(endISO) : null), [endISO]);
   const now = new Date();
@@ -263,15 +264,15 @@ export default function Goals({ dashboardState, updateDashboard }) {
       ? Math.max(0, totalDays - daysElapsed)
       : null;
 
-  useEffect(() => {
-    console.log("👇 DATE STATE");
-    console.log("StartISO:", startISO);
-    console.log("EndISO:", endISO);
-    console.log("Today:", today);
-    console.log("TotalDays:", totalDays);
-    console.log("DaysElapsed:", daysElapsed);
-    console.log("DaysRemaining:", daysRemaining);
-  }, [startISO, endISO, daysElapsed, daysRemaining]);
+  // useEffect(() => {
+  //   console.log("👇 DATE STATE");
+  //   console.log("StartISO:", startISO);
+  //   console.log("EndISO:", endISO);
+  //   console.log("Today:", today);
+  //   console.log("TotalDays:", totalDays);
+  //   console.log("DaysElapsed:", daysElapsed);
+  //   console.log("DaysRemaining:", daysRemaining);
+  // }, [startISO, endISO, daysElapsed, daysRemaining]);
 
   const timeProgressPct =
     totalDays && daysElapsed !== null && totalDays > 0
@@ -312,7 +313,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
       "Don't chase motivation — build systems. This dashboard *is* your system.",
       "The grind is temporary. The life you're chasing through MERN, fitness and discipline is permanent.",
     ],
-    []
+    [],
   );
 
   // MERN internal page swipe (keeps original 4-page behavior)
@@ -349,7 +350,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Date popup & tmp state
   const [showDatePopup, setShowDatePopup] = useState(false);
   const [tmpStart, setTmpStart] = useState(() =>
-    startISO ? startISO : todayISO
+    startISO ? startISO : todayISO,
   );
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
@@ -549,7 +550,6 @@ export default function Goals({ dashboardState, updateDashboard }) {
 
                     {/* Dates + Progress Ring - REDESIGNED */}
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between w-full gap-4">
-                      
                       {/* Left: Date Cards */}
                       <div className="flex flex-col gap-2 flex-1">
                         {/* Start Date Card */}
@@ -869,10 +869,10 @@ export default function Goals({ dashboardState, updateDashboard }) {
                               {merPercent < 25
                                 ? "🌱"
                                 : merPercent < 50
-                                ? "🚀"
-                                : merPercent < 75
-                                ? "⚡"
-                                : "🔥"}
+                                  ? "🚀"
+                                  : merPercent < 75
+                                    ? "⚡"
+                                    : "🔥"}
                             </text>
                           </g>
                         </svg>
@@ -934,19 +934,19 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             {timeProgressPct < 25
                               ? "🌱"
                               : timeProgressPct < 50
-                              ? "🚀"
-                              : timeProgressPct < 75
-                              ? "⚡"
-                              : "🔥"}
+                                ? "🚀"
+                                : timeProgressPct < 75
+                                  ? "⚡"
+                                  : "🔥"}
                           </span>
                           <span>
                             {timeProgressPct < 25
                               ? "Starting"
                               : timeProgressPct < 50
-                              ? "Building"
-                              : timeProgressPct < 75
-                              ? "Pushing"
-                              : "Finishing"}
+                                ? "Building"
+                                : timeProgressPct < 75
+                                  ? "Pushing"
+                                  : "Finishing"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -1031,7 +1031,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                         .split("-")
                                         .reverse()
                                         .map((v, i) =>
-                                          i === 2 ? v.slice(-2) : v
+                                          i === 2 ? v.slice(-2) : v,
                                         )
                                         .join("/")
                                     : "—"}
@@ -1062,8 +1062,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             {daysRemaining > 200
                               ? "🌱 Long Journey"
                               : daysRemaining > 100
-                              ? "🔥 Stay Consistent"
-                              : "🚀 Final Push!"}
+                                ? "🔥 Stay Consistent"
+                                : "🚀 Final Push!"}
                           </div>
                         </div>
                       </div>
@@ -1301,7 +1301,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
         items: ["Work visa", "Move to NZ", "Apply for residency"],
       },
     ],
-    []
+    [],
   );
 
   const nzWrapper = [
@@ -1436,8 +1436,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
             const curWeight = Number.isFinite(Number(latestLog?.weight))
               ? Number(latestLog.weight)
               : Number.isFinite(baseline)
-              ? baseline
-              : null;
+                ? baseline
+                : null;
 
             const start = Number.isFinite(baseline) ? baseline : curWeight;
 
