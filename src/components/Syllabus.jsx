@@ -5332,7 +5332,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="🔍 Search syllabus topics..."
+              placeholder=" Search syllabus topics..."
               className="
                 w-full px-4 py-3 pl-12 rounded-xl
                 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]

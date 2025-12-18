@@ -200,7 +200,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0,
+    0
   );
 
   const MUSCLES = {
@@ -256,12 +256,11 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-        ? "Great job! Keep pushing! 💪"
-        : "You showed up. That's what matters. 🚀";
+      ? "Great job! Keep pushing! 💪"
+      : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
-  const cardClass =
-    "rounded-xl p-3 sm:rounded-2xl sm:p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
+  const cardClass = "p-0 h-full text-[#E8FFFA] flex flex-col justify-between";
 
   return (
     <div className={`${cardClass}`}>
@@ -385,7 +384,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           <span className="text-emerald-400">✓</span>
                           <span>{ex}</span>
                         </div>
-                      ) : null,
+                      ) : null
                     )}
                   </div>
                 ) : (
@@ -581,8 +580,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                          ? `↘️ ${weightTrend}kg`
-                          : "→ 0kg"
+                        ? `↘️ ${weightTrend}kg`
+                        : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -592,8 +591,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                          ? "text-emerald-300"
-                          : "text-gray-300"
+                        ? "text-emerald-300"
+                        : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -643,71 +642,84 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length,
+          : (i - 1 + modes.length) % modes.length
       );
     }
   };
 
   return (
-    <div className="relative" ref={containerRef}>
-      {/* LEFT BUTTON */}
-      <button
-        onClick={() => setIndex((i) => (i - 1 + modes.length) % modes.length)}
-        className="absolute left-0 rounded-r top-1/2 -translate-y-1/2 z-20
-    bg-gradient-to-r from-transparent to-[#0F766E]/60 
-    border-r border-emerald-400/40 
-    px-2 py-1.5 text-emerald-300 
-    hover:to-emerald-500/80 hover:text-emerald-200
-    transition-all duration-200 hover:px-3
-    text-sm font-medium"
-      >
-        ‹
-      </button>
-
-      {/* RIGHT BUTTON */}
-      <button
-        onClick={() => setIndex((i) => (i + 1) % modes.length)}
-        className="absolute right-0 rounded-l top-1/2 -translate-y-1/2 z-20
-    bg-gradient-to-l from-transparent to-[#0F766E]/60 
-    border-l border-emerald-400/40 
-    px-2 py-1.5 text-emerald-300 
-    hover:to-emerald-500/80 hover:text-emerald-200
-    transition-all duration-200 hover:px-3
-    text-sm font-medium"
-      >
-        ›
-      </button>
-
-      {/* Carousel Slides */}
-      <div
-        className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
-        onTouchStart={handleStart}
-        onTouchEnd={handleEnd}
-      >
-        <div
-          className="flex transition-transform duration-500"
-          style={{ transform: `translateX(-${index * 100}%)` }}
+    <section
+      className="
+        border border-emerald-500/30 rounded-3xl 
+        px-3 py-3 sm:px-5 sm:py-2.5
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+        dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+        text-[#FAFAFA] shadow-xl shadow-black/40
+        max-w-full overflow-hidden mx-auto sm:mx-0
+        h-[650px] sm:h-[570px]
+        flex flex-col
+      "
+    >
+      <div className="relative h-full" ref={containerRef}>
+        {/* LEFT BUTTON */}
+        <button
+          onClick={() => setIndex((i) => (i - 1 + modes.length) % modes.length)}
+          className="absolute left-0 rounded-r top-1/2 -translate-y-1/2 z-20
+            bg-gradient-to-r from-transparent to-[#0F766E]/60 
+            border-r border-emerald-400/40 
+            px-2 py-1.5 text-emerald-300 
+            hover:to-emerald-500/80 hover:text-emerald-200
+            transition-all duration-200 hover:px-3
+            text-sm font-medium"
         >
-          {modes.map((mode, idx) => (
-            <div key={idx} className="w-full flex-shrink-0">
-              <DailySummaryMerged mode={mode} date={date} logs={logs} />
-            </div>
-          ))}
-        </div>
+          ‹
+        </button>
 
-        {/* Dots */}
-        <div className="flex justify-center gap-2 pb-2">
-          {modes.map((_, i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                index === i ? "bg-emerald-400" : "bg-emerald-400/30"
-              }`}
-            />
-          ))}
+        {/* RIGHT BUTTON */}
+        <button
+          onClick={() => setIndex((i) => (i + 1) % modes.length)}
+          className="absolute right-0 rounded-l top-1/2 -translate-y-1/2 z-20
+            bg-gradient-to-l from-transparent to-[#0F766E]/60 
+            border-l border-emerald-400/40 
+            px-2 py-1.5 text-emerald-300 
+            hover:to-emerald-500/80 hover:text-emerald-200
+            transition-all duration-200 hover:px-3
+            text-sm font-medium"
+        >
+          ›
+        </button>
+
+        {/* Carousel Slides */}
+        <div
+          className="overflow-hidden rounded-2xl"
+          onTouchStart={handleStart}
+          onTouchEnd={handleEnd}
+        >
+          <div
+            className="flex transition-transform duration-500"
+            style={{ transform: `translateX(-${index * 100}%)` }}
+          >
+            {modes.map((mode, idx) => (
+              <div key={idx} className="w-full flex-shrink-0">
+                <DailySummaryMerged mode={mode} date={date} logs={logs} />
+              </div>
+            ))}
+          </div>
+
+          {/* Dots */}
+          <div className="flex justify-center gap-2 pb-2 pt-3">
+            {modes.map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full ${
+                  index === i ? "bg-emerald-400" : "bg-emerald-400/30"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -765,7 +777,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   // Modal inputs + editing states
@@ -811,13 +823,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
-        : "",
+        : ""
     );
 
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
-        : "",
+        : ""
     );
   }, [dashboardState]);
 
@@ -861,7 +873,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
+            "Recovery is just as important as training. Rest, recharge, and come back stronger."
           );
         });
     }
@@ -1007,12 +1019,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : (existing.weight ?? null);
+      : existing.weight ?? null;
 
     const newBmi =
       weightVal != null
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-        : (existing.bmi ?? null);
+        : existing.bmi ?? null;
 
     // ✅ REAL completion logic = exercises OR any meaningful data
     const hasExercisesDone =
@@ -1428,7 +1440,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
     countDone(entry.finisher) === entry.finisher.length;
 
   // 🔓 FIX: unlock ghost-locked days like yesterday
-  // 🔓 FIX: unlock ghost-locked days like Nov 16
   useEffect(() => {
     const key = dayjs(date).format("YYYY-MM-DD");
 
@@ -1820,7 +1831,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -1846,7 +1857,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -1925,7 +1936,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
+                Math.abs(pctToGoal)
               )}% - 16px)`,
             }}
           >
@@ -1951,7 +1962,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
 
-        <div className="w-full flex">
+        <div className="w-full flex ">
           <div className="w-full">
             <DailySummaryCarousel date={date} logs={logs} />
           </div>
@@ -2063,9 +2074,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0),
+                                  (dayPlan.finisher?.length || 0)
                               )) *
-                              100,
+                              100
                           )}
                           %
                         </p>
@@ -2088,10 +2099,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0),
+                                  (dayPlan.finisher?.length || 0)
                               )) *
-                              100,
-                          ),
+                              100
+                          )
                         )}%`,
                       }}
                     ></div>
@@ -2166,8 +2177,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           doneState[dateKey] && logs?.[dateKey]
                             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
                             : allDone
-                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-                              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+                            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
                         }
                       `}
                     >
@@ -2573,13 +2584,15 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
   return (
     <section
       className="
-    border border-emerald-500/30 rounded-3xl 
-    px-3 py-3 sm:px-5 sm:py-2.5
-    bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-    dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-    text-[#FAFAFA] shadow-xl shadow-black/40
-    max-w-full overflow-hidden mx-auto sm:mx-0
-  "
+        border border-emerald-500/30 rounded-3xl 
+        px-3 py-3 sm:px-5 sm:py-2.5
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+        dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+        text-[#FAFAFA] shadow-xl shadow-black/40
+        max-w-full overflow-hidden mx-auto sm:mx-0
+        h-[650px] sm:h-[570px]
+        flex flex-col
+      "
     >
       {/* Header - Matching Calendar Style */}
       <div className="mb-4">
@@ -2673,7 +2686,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>,
+              </div>
             );
           }
 
@@ -2723,7 +2736,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             if (entry) {
               const countDone = (arr = []) =>
                 arr.filter((e) =>
-                  typeof e === "boolean" ? e : e?.done === true,
+                  typeof e === "boolean" ? e : e?.done === true
                 ).length;
 
               const doneByExercises =
@@ -2787,7 +2800,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>,
+              </div>
             );
           }
 
@@ -2824,8 +2837,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                          ? "bg-yellow-500/60"
-                          : "bg-gray-700"
+                        ? "bg-yellow-500/60"
+                        : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -2845,7 +2858,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             <div className="text-lg sm:text-xl font-bold text-emerald-300">
               {
                 Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM")),
+                  k.startsWith(today.format("YYYY-MM"))
                 ).length
               }
               <span className="text-sm text-emerald-300/60">
@@ -2883,7 +2896,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               {(() => {
                 const totalDays = today.daysInMonth();
                 const done = Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM")),
+                  k.startsWith(today.format("YYYY-MM"))
                 ).length;
                 return Math.round((done / totalDays) * 100);
               })()}
