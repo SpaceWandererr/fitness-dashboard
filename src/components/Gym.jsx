@@ -1014,15 +1014,20 @@ export default function Gym({ dashboardState, updateDashboard }) {
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
         : (existing.bmi ?? null);
 
-    const isDone =
+    // ✅ REAL completion logic = exercises OR any meaningful data
+    const hasExercisesDone =
       editLeft.some((e) => e.done) ||
       editRight.some((e) => e.done) ||
-      editFinisher.some((e) => e.done) ||
+      editFinisher.some((e) => e.done);
+
+    const hasMeta =
       caloriesVal != null ||
       weightVal != null ||
-      (Number(durationHours) || 0) > 0 ||
-      (Number(durationMinutes) || 0) > 0 ||
+      Number(durationHours) > 0 ||
+      Number(durationMinutes) > 0 ||
       moodInput !== "🙂";
+
+    const isDone = hasExercisesDone || hasMeta;
 
     const updatedLogs = {
       ...logs,
@@ -1043,11 +1048,24 @@ export default function Gym({ dashboardState, updateDashboard }) {
       },
     };
 
+    // ✅ UPDATE LOCAL UI STATE
     setLogs(updatedLogs);
+
+    // ✅ CRITICAL: sync doneState (calendar + locking logic)
+    setDoneState((prev) => ({
+      ...prev,
+      ...(isDone ? { [dateKey]: true } : {}),
+    }));
+
     setShowModal(false);
 
+    // ✅ SINGLE SOURCE OF TRUTH (backend / localStorage)
     updateDashboard({
       wd_gym_logs: updatedLogs,
+      wd_done: {
+        ...doneState,
+        ...(isDone ? { [dateKey]: true } : {}),
+      },
       wd_goals: {
         targetWeight,
         currentWeight: currWeight,
@@ -2525,14 +2543,32 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
   const today = dayjs();
 
   useEffect(() => {
-    // Auto-update viewMonth to today when the actual day changes
-    setViewMonth(dayjs());
-  }, [dayjs().format("YYYY-MM-DD")]);
+    const id = setInterval(() => {
+      setViewMonth(dayjs());
+    }, 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
-  const monthStart = viewMonth.startOf("month");
-  const weekdayIndex = (monthStart.day() + 6) % 7; // Monday=0
-  const start = monthStart.subtract(weekdayIndex, "day");
-  const cells = Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
+  // ✅ SAFE helper (single source)
+  const countDone = (arr = []) =>
+    arr.filter((e) => (typeof e === "boolean" ? e : e?.done === true)).length;
+
+  const isEntryDone = (entry) => {
+    if (!entry) return false;
+
+    const exercisesDone =
+      countDone(entry.left) +
+        countDone(entry.right) +
+        countDone(entry.finisher) >
+      0;
+
+    return (
+      exercisesDone ||
+      entry.calories != null ||
+      entry.weight != null ||
+      entry.done === true
+    );
+  };
 
   return (
     <section
@@ -2681,17 +2717,21 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             }
 
             const entry = logs?.[key];
-            const doneByState = doneState?.[key] === true;
+            const doneByState = Boolean(doneState?.[key]);
 
             let doneByExercises = false;
             if (entry) {
-              const checkArray = (arr) => {
-                if (!Array.isArray(arr)) return false;
-                if (arr.every((item) => typeof item === "boolean")) {
-                  return arr.some(Boolean);
-                }
-                return arr.some((e) => e?.done === true);
-              };
+              const countDone = (arr = []) =>
+                arr.filter((e) =>
+                  typeof e === "boolean" ? e : e?.done === true,
+                ).length;
+
+              const doneByExercises =
+                entry &&
+                countDone(entry.left) +
+                  countDone(entry.right) +
+                  countDone(entry.finisher) >
+                  0;
 
               doneByExercises =
                 checkArray(entry.left) ||
@@ -2699,7 +2739,12 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 checkArray(entry.finisher);
             }
 
-            const isDone = doneByState || doneByExercises;
+            const isDone =
+              doneByState ||
+              doneByExercises ||
+              entry?.calories != null ||
+              entry?.weight != null;
+
             const hasCalories = entry?.calories != null;
             const hasWeight = entry?.weight != null;
 
