@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 
-/**
- * ===============================
- * ENHANCED CONTROL PANEL v2.0 (No Dependencies)
- * ===============================
- */
-
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://fitness-backend-laoe.onrender.com/api/state";
 const BACKUP_INDEX_KEY = "wd_state_backups";
 const MAX_BACKUPS = 8;
 const STORAGE_WARNING_MB = 4;
@@ -32,7 +29,6 @@ function getLocalStorageSize() {
   return (total / 1024 / 1024).toFixed(2);
 }
 
-// Simple icon components
 const Icon = ({ type, className = "" }) => {
   const icons = {
     download: "⬇️",
@@ -46,6 +42,9 @@ const Icon = ({ type, className = "" }) => {
     search: "🔍",
     calendar: "📅",
     settings: "⚙️",
+    reset: "🔴",
+    shield: "🛡️",
+    cloud: "☁️",
   };
   return <span className={className}>{icons[type] || "•"}</span>;
 };
@@ -61,11 +60,16 @@ export default function Control({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const [storageUsed, setStorageUsed] = useState(0);
   const [notification, setNotification] = useState(null);
   const [filterTag, setFilterTag] = useState("all");
+  const [isResetting, setIsResetting] = useState(false);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(
     localStorage.getItem("wd_auto_backup_enabled") !== "false",
+  );
+  const [autoBackupFrequency, setAutoBackupFrequency] = useState(
+    localStorage.getItem("wd_auto_backup_frequency") || "daily",
   );
 
   const showNotification = (message, type = "success") => {
@@ -102,7 +106,9 @@ export default function Control({
 
     const snapshot = {
       id: crypto.randomUUID(),
-      label: label || (isManual ? "Manual Backup" : "Auto Backup (Sunday)"),
+      label:
+        label ||
+        (isManual ? "Manual Backup" : `Auto Backup (${autoBackupFrequency})`),
       tag: isManual ? "manual" : "auto",
       createdAt: new Date().toISOString(),
       state: dashboardState,
@@ -161,6 +167,48 @@ export default function Control({
     saveBackupIndex([]);
     setBackups([]);
     showNotification("All backups deleted", "success");
+  }
+
+  async function globalReset() {
+    setShowResetModal(false);
+    setIsResetting(true);
+
+    try {
+      // Step 1: Clear localStorage
+      showNotification("Clearing localStorage...", "success");
+      localStorage.clear();
+
+      // Step 2: Delete MongoDB Atlas data via backend
+      showNotification("Clearing MongoDB Atlas...", "success");
+
+      const response = await fetch(API_URL, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        showNotification("✅ All data cleared successfully!", "success");
+      } else {
+        const error = await response.json();
+        console.error("Backend delete error:", error);
+        showNotification(
+          "⚠️ Atlas clear failed, but localStorage cleared",
+          "error",
+        );
+      }
+    } catch (error) {
+      console.error("Global reset error:", error);
+      showNotification("⚠️ Error connecting to server", "error");
+    } finally {
+      setIsResetting(false);
+
+      // Reload page after 2 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
   }
 
   function exportBackup(snapshot) {
@@ -253,13 +301,35 @@ export default function Control({
 
     if (!autoBackupEnabled) return;
 
-    const today = new Date();
-    const isSunday = today.getDay() === 0;
+    const now = new Date();
     const lastAuto = localStorage.getItem("wd_last_auto_backup");
+    const lastAutoDate = lastAuto ? new Date(lastAuto) : null;
+    let shouldBackup = false;
 
-    if (isSunday && lastAuto !== today.toDateString()) {
+    switch (autoBackupFrequency) {
+      case "hourly":
+        if (!lastAutoDate || now - lastAutoDate >= 60 * 60 * 1000) {
+          shouldBackup = true;
+        }
+        break;
+      case "daily":
+        if (!lastAuto || lastAuto !== now.toDateString()) {
+          shouldBackup = true;
+        }
+        break;
+      case "weekly":
+        const isSunday = now.getDay() === 0;
+        if (isSunday && lastAuto !== now.toDateString()) {
+          shouldBackup = true;
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (shouldBackup) {
       createBackup(false, "auto");
-      localStorage.setItem("wd_last_auto_backup", today.toDateString());
+      localStorage.setItem("wd_last_auto_backup", now.toISOString());
     }
   }, []);
 
@@ -271,6 +341,12 @@ export default function Control({
       `Auto-backup ${newState ? "enabled" : "disabled"}`,
       "success",
     );
+  }
+
+  function changeAutoBackupFrequency(frequency) {
+    setAutoBackupFrequency(frequency);
+    localStorage.setItem("wd_auto_backup_frequency", frequency);
+    showNotification(`Auto-backup frequency set to ${frequency}`, "success");
   }
 
   function openPreview(backup) {
@@ -297,14 +373,26 @@ export default function Control({
       )}
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-[#9FF2E8] flex items-center gap-3">
-          <Icon type="settings" className="text-2xl" />
-          Control Panel
-        </h1>
-        <p className="text-[#7FAFA4]">
-          Manage backups, restore states, and monitor storage
-        </p>
+      <div className="mb-8 flex justify-between items-start flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 text-[#9FF2E8] flex items-center gap-3">
+            <Icon type="settings" className="text-2xl" />
+            Control Panel
+          </h1>
+          <p className="text-[#7FAFA4]">
+            Manage backups, restore states, and monitor storage
+          </p>
+        </div>
+
+        {/* Global Reset Button */}
+        <button
+          onClick={() => setShowResetModal(true)}
+          disabled={isResetting}
+          className="px-5 py-2.5 bg-gradient-to-r from-red-900 to-red-700 border-2 border-red-500 rounded-lg hover:from-red-800 hover:to-red-600 transition-all flex items-center gap-2 font-semibold shadow-lg hover:shadow-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Icon type="reset" />
+          {isResetting ? "Resetting..." : "Global Reset"}
+        </button>
       </div>
 
       {/* Storage Monitor */}
@@ -377,11 +465,11 @@ export default function Control({
           <div className="p-5 border border-[#2F6B60] rounded-xl bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-sm">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Icon type="calendar" />
-              Auto-Backup
+              Auto-Backup Settings
             </h2>
 
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-[#7FAFA4]">Weekly on Sunday</span>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-[#7FAFA4]">Enable Auto-Backup</span>
               <button
                 onClick={toggleAutoBackup}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -396,9 +484,26 @@ export default function Control({
               </button>
             </div>
 
+            {autoBackupEnabled && (
+              <div className="mb-3">
+                <label className="block text-xs text-[#7FAFA4] mb-2">
+                  Backup Frequency
+                </label>
+                <select
+                  value={autoBackupFrequency}
+                  onChange={(e) => changeAutoBackupFrequency(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-black/60 border border-[#2F6B60] focus:border-[#3FA796] focus:outline-none text-sm"
+                >
+                  <option value="hourly">Every Hour</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly (Sunday)</option>
+                </select>
+              </div>
+            )}
+
             <p className="text-xs text-[#7FAFA4]">
               {autoBackupEnabled
-                ? "Automatic backups will be created every Sunday"
+                ? `Automatic backups will run ${autoBackupFrequency === "hourly" ? "every hour" : autoBackupFrequency === "daily" ? "daily" : "every Sunday"}`
                 : "Automatic backups are currently disabled"}
             </p>
           </div>
@@ -481,6 +586,13 @@ export default function Control({
                 >
                   <Icon type="trash" />
                   Delete All
+                </button>
+                <button
+                  onClick={refreshBackups}
+                  className="px-3 py-2 border border-cyan-500 text-cyan-400 rounded-lg hover:bg-cyan-900/20 transition-all text-sm flex items-center gap-2"
+                >
+                  <Icon type="refresh" />
+                  Refresh
                 </button>
               </div>
             )}
@@ -569,6 +681,86 @@ export default function Control({
           </div>
         </div>
       </div>
+
+      {/* Global Reset Modal */}
+      {showResetModal && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowResetModal(false)}
+        >
+          <div
+            className="bg-[#0a1f1a] border-2 border-red-500 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl shadow-red-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-red-500/30 bg-gradient-to-r from-red-900/40 to-red-800/20">
+              <div className="flex items-center gap-3 mb-2">
+                <Icon type="alert" className="text-3xl" />
+                <h3 className="text-2xl font-bold text-red-400">
+                  Global Reset
+                </h3>
+              </div>
+              <p className="text-sm text-red-200/70">
+                <Icon type="shield" /> This will clear ALL data from
+                localStorage AND MongoDB Atlas
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <h4 className="font-semibold text-red-300 mb-2 flex items-center gap-2">
+                  <Icon type="alert" />
+                  What will be permanently deleted:
+                </h4>
+                <ul className="text-sm text-[#7FAFA4] space-y-1.5 ml-6 list-disc">
+                  <li>All workout logs and fitness data</li>
+                  <li>Weight history and progress tracking</li>
+                  <li>All study topics and syllabus progress</li>
+                  <li>Projects, goals, and planner data</li>
+                  <li>All created backups (localStorage only)</li>
+                  <li>Application preferences and settings</li>
+                  <li>
+                    <Icon type="cloud" /> MongoDB Atlas database (server-side
+                    data)
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-300 mb-2 flex items-center gap-2">
+                  <Icon type="alert" />
+                  Warning:
+                </h4>
+                <p className="text-sm text-[#7FAFA4]">
+                  NO automatic backup will be created. Export your data manually
+                  before proceeding if you want to keep it.
+                </p>
+              </div>
+
+              <p className="text-xs text-[#7FAFA4] text-center italic">
+                ⚠️ This action is PERMANENT and cannot be undone!
+              </p>
+            </div>
+
+            <div className="p-6 border-t border-red-500/30 flex gap-3 bg-black/40">
+              <button
+                onClick={globalReset}
+                disabled={isResetting}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-900 to-red-700 border border-red-500 rounded-lg hover:from-red-800 hover:to-red-600 transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon type="reset" />
+                {isResetting ? "Resetting..." : "Yes, Reset Everything"}
+              </button>
+              <button
+                onClick={() => setShowResetModal(false)}
+                disabled={isResetting}
+                className="px-6 py-3 border border-[#2F6B60] rounded-lg hover:bg-black/60 transition-all font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {showPreview && selectedBackup && (

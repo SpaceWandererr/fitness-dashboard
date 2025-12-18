@@ -897,12 +897,6 @@ function WeatherCard({
     const sunrise = dayjs(weatherData.meta.sunrise);
     const sunset = dayjs(weatherData.meta.sunset);
 
-    console.log("🌙 Night Check:");
-    console.log("  Now:", now.format("MM/DD/YYYY, hh:mm:ss A"));
-    console.log("  Sunrise:", sunrise.format("MM/DD/YYYY, hh:mm:ss A"));
-    console.log("  Sunset:", sunset.format("MM/DD/YYYY, hh:mm:ss A"));
-    console.log("  Result:", now.isBefore(sunrise) || now.isAfter(sunset));
-
     return now.isBefore(sunrise) || now.isAfter(sunset);
   })();
 
