@@ -104,22 +104,22 @@ export default function App() {
 
   const accent = "hsl(180, 100%, 50%)";
 
-  // 🔥 Load dashboard instantly from local cache (ONCE)
-  useEffect(() => {
-    const cached = localStorage.getItem("lifeos_state");
-    if (!cached) return;
+  // // 🔥 Load dashboard instantly from local cache (ONCE)
+  // useEffect(() => {
+  //   const cached = localStorage.getItem("lifeos_state");
+  //   if (!cached) return;
 
-    try {
-      const parsed = JSON.parse(cached);
+  //   try {
+  //     const parsed = JSON.parse(cached);
 
-      if (parsed && typeof parsed === "object") {
-        console.log("⚡ Loaded dashboard from local cache");
-        setDashboardState(parsed);
-      }
-    } catch (err) {
-      console.warn("❌ Invalid cached dashboard ignored", err);
-    }
-  }, []);
+  //     if (parsed && typeof parsed === "object") {
+  //       console.log("⚡ Loaded dashboard from local cache");
+  //       setDashboardState(parsed);
+  //     }
+  //   } catch (err) {
+  //     console.warn("❌ Invalid cached dashboard ignored", err);
+  //   }
+  // }, []);
 
   // In App.jsx - Replace your FloatingScrollControl with this:
   function FloatingScrollControl({ scrollRef }) {
@@ -247,7 +247,7 @@ export default function App() {
 
         if (!hasBackendSyllabus) {
           console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)",
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
           );
         }
 
@@ -259,7 +259,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2),
+            structuredClone(state.syllabus_tree_v2)
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -409,7 +409,7 @@ export default function App() {
       const newState = { ...dashboardState, ...resolvedUpdates };
 
       setDashboardState(newState);
-      localStorage.setItem("lifeos_state", JSON.stringify(newState));
+      // localStorage.setItem("lifeos_state", JSON.stringify(newState));
 
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
@@ -423,7 +423,7 @@ export default function App() {
           .catch((err) => console.error("❌ Sync failed:", err));
       }, 700);
     },
-    [dashboardState],
+    [dashboardState]
   );
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
