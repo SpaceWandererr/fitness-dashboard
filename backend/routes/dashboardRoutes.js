@@ -89,16 +89,62 @@ router.put("/", async (req, res) => {
  * GET STATE
  ***************************************/
 router.get("/", async (req, res) => {
-  const userId = USER_ID;
-  const doc = await DashboardState.findOne({ userId });
+  try {
+    const userId = USER_ID;
+    const doc = await DashboardState.findOne({ userId });
 
-  if (!doc) {
-    console.log("🆕 Creating new DB state");
-    const newDoc = await DashboardState.create({ userId });
-    return res.json(newDoc);
+    if (!doc) {
+      console.log("🆕 Creating new DB state");
+      const newDoc = await DashboardState.create({ userId });
+      return res.json(newDoc);
+    }
+
+    res.json(doc.toObject());
+  } catch (err) {
+    console.error("🔥 GET ERROR:", err);
+    res.status(500).json({
+      message: "Error fetching state",
+      error: err.message,
+    });
   }
+});
 
-  res.json(doc.toObject());
+/***************************************
+ * 🔴 DELETE STATE (GLOBAL RESET)
+ ***************************************/
+router.delete("/", async (req, res) => {
+  try {
+    const userId = USER_ID;
+
+    // Delete the main dashboard state
+    const dashboardResult = await DashboardState.deleteMany({ userId });
+
+    // Also delete any snapshots/backups stored in MongoDB (optional)
+    const snapshotResult = await StateSnapshot.deleteMany({ userId });
+
+    console.log(`✅ Global Reset Complete:`);
+    console.log(
+      `   - Dashboard states deleted: ${dashboardResult.deletedCount}`,
+    );
+    console.log(`   - Snapshots deleted: ${snapshotResult.deletedCount}`);
+
+    res.status(200).json({
+      success: true,
+      message: "All data cleared from MongoDB Atlas",
+      deleted: {
+        dashboardStates: dashboardResult.deletedCount,
+        snapshots: snapshotResult.deletedCount,
+        total: dashboardResult.deletedCount + snapshotResult.deletedCount,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error clearing Atlas data:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to clear database",
+      details: error.message,
+    });
+  }
 });
 
 export default router;
