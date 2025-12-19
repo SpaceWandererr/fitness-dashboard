@@ -65,11 +65,15 @@ export default function Control({
   const [notification, setNotification] = useState(null);
   const [filterTag, setFilterTag] = useState("all");
   const [isResetting, setIsResetting] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [backupToRestore, setBackupToRestore] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(
-    localStorage.getItem("wd_auto_backup_enabled") !== "false",
+    localStorage.getItem("wd_auto_backup_enabled") !== "false"
   );
   const [autoBackupFrequency, setAutoBackupFrequency] = useState(
-    localStorage.getItem("wd_auto_backup_frequency") || "weekly",
+    localStorage.getItem("wd_auto_backup_frequency") || "weekly"
   );
 
   const showNotification = (message, type = "success") => {
@@ -86,7 +90,7 @@ export default function Control({
 
   useEffect(() => {
     let filtered = backups.filter((b) =>
-      b.label.toLowerCase().includes(searchTerm.toLowerCase()),
+      b.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (filterTag !== "all") {
@@ -127,24 +131,55 @@ export default function Control({
     }
   }
 
-  function restoreBackup(snapshot) {
-    if (
-      !window.confirm(
-        `⚠️ This will overwrite your current state.\n\nRestore "${snapshot.label}"?\n\nCreated: ${new Date(snapshot.createdAt).toLocaleString()}`,
-      )
-    )
-      return;
+  // Trigger restore modal
+  function initiateRestore(snapshot) {
+    setBackupToRestore(snapshot);
+    setShowRestoreModal(true);
+  }
 
-    window.__DISABLE_AUTOSYNC__ = true;
-    setDashboardState(snapshot.state);
-    updateDashboard(snapshot.state);
+  // Actual restore function
+  async function restoreBackup() {
+    if (!backupToRestore) return;
 
-    showNotification("Backup restored successfully", "success");
+    setIsRestoring(true);
 
-    setTimeout(() => {
+    try {
+      window.__DISABLE_AUTOSYNC__ = true;
+
+      showNotification("Restoring backup...", "success");
+
+      // Step 1: Update local state
+      setDashboardState(backupToRestore.state);
+      updateDashboard(backupToRestore.state);
+
+      // Step 2: Sync to MongoDB Atlas
+      showNotification("Syncing to MongoDB Atlas...", "success");
+
+      const response = await fetch(API_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(backupToRestore.state),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sync with MongoDB Atlas");
+      }
+
+      showNotification("✅ Backup restored successfully!", "success");
+
+      // Step 3: Reload page
+      setTimeout(() => {
+        window.__DISABLE_AUTOSYNC__ = false;
+        window.location.reload();
+      }, 800);
+    } catch (error) {
+      console.error("Restore error:", error);
+      showNotification("⚠️ Restore failed. Please try again.", "error");
       window.__DISABLE_AUTOSYNC__ = false;
-      window.location.reload();
-    }, 600);
+      setIsRestoring(false);
+    }
   }
 
   function deleteBackup(id) {
@@ -153,19 +188,21 @@ export default function Control({
     const next = backups.filter((b) => b.id !== id);
     saveBackupIndex(next);
     setBackups(next);
+    setFilteredBackups(next); // ✅ Also update filtered list
     showNotification("Backup deleted", "success");
   }
 
   function deleteAllBackups() {
     if (
       !window.confirm(
-        "⚠️ Delete ALL backups?\n\nThis action is permanent and cannot be undone!",
+        "⚠️ Delete ALL backups?\n\nThis action is permanent and cannot be undone!"
       )
     )
       return;
 
     saveBackupIndex([]);
     setBackups([]);
+    setFilteredBackups([]); // ✅ Also update filtered list
     showNotification("All backups deleted", "success");
   }
 
@@ -174,11 +211,44 @@ export default function Control({
     setIsResetting(true);
 
     try {
-      // Step 1: Clear localStorage
+      // Step 1: Create emergency backup in SEPARATE localStorage key
+      if (dashboardState && Object.keys(dashboardState).length > 0) {
+        showNotification("Creating emergency backup...", "success");
+
+        const emergencyBackup = {
+          id: crypto.randomUUID(),
+          label: "Emergency Pre-Reset Backup",
+          tag: "emergency",
+          createdAt: new Date().toISOString(),
+          state: dashboardState,
+          size: JSON.stringify(dashboardState).length,
+          itemCount: Object.keys(dashboardState).length,
+        };
+
+        // Store in DIFFERENT key that won't be cleared
+        sessionStorage.setItem(
+          "wd_emergency_backup",
+          JSON.stringify(emergencyBackup)
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+
+      // Step 2: Clear localStorage
       showNotification("Clearing localStorage...", "success");
       localStorage.clear();
 
-      // Step 2: Delete MongoDB Atlas data via backend
+      // Step 3: Restore emergency backup to backups list
+      const emergencyBackup = sessionStorage.getItem("wd_emergency_backup");
+      if (emergencyBackup) {
+        const backup = JSON.parse(emergencyBackup);
+        const backups = [backup];
+        localStorage.setItem(BACKUP_INDEX_KEY, JSON.stringify(backups));
+        sessionStorage.removeItem("wd_emergency_backup"); // Clean up
+        showNotification("Emergency backup preserved!", "success");
+      }
+
+      // Step 4: Delete MongoDB Atlas data via backend
       showNotification("Clearing MongoDB Atlas...", "success");
 
       const response = await fetch(API_URL, {
@@ -195,7 +265,7 @@ export default function Control({
         console.error("Backend delete error:", error);
         showNotification(
           "⚠️ Atlas clear failed, but localStorage cleared",
-          "error",
+          "error"
         );
       }
     } catch (error) {
@@ -225,16 +295,19 @@ export default function Control({
             snapshot,
           },
           null,
-          2,
+          2
         ),
       ],
-      { type: "application/json" },
+      { type: "application/json" }
     );
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `lifeos-${snapshot.label.replace(/\s+/g, "-")}-${Date.now()}.json`;
+    a.download = `lifeos-${snapshot.label.replace(
+      /\s+/g,
+      "-"
+    )}-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showNotification("Backup exported", "success");
@@ -251,10 +324,10 @@ export default function Control({
         JSON.stringify(
           { backups, exportedAt: new Date().toISOString() },
           null,
-          2,
+          2
         ),
       ],
-      { type: "application/json" },
+      { type: "application/json" }
     );
 
     const url = URL.createObjectURL(blob);
@@ -276,14 +349,14 @@ export default function Control({
         const json = JSON.parse(reader.result);
 
         if (json.snapshot?.state) {
-          restoreBackup(json.snapshot);
+          initiateRestore(json.snapshot);
         } else if (json.backups && Array.isArray(json.backups)) {
           const merged = [...json.backups, ...backups].slice(0, MAX_BACKUPS);
           saveBackupIndex(merged);
           refreshBackups();
           showNotification(
             `Imported ${json.backups.length} backups`,
-            "success",
+            "success"
           );
         } else {
           throw new Error("Invalid format");
@@ -324,7 +397,7 @@ export default function Control({
           const hoursDiff = (now - lastAutoDate) / (1000 * 60 * 60);
           if (hoursDiff >= 1) {
             console.log(
-              `⏰ Hourly backup due (${hoursDiff.toFixed(1)} hours since last)`,
+              `⏰ Hourly backup due (${hoursDiff.toFixed(1)} hours since last)`
             );
             shouldBackup = true;
           }
@@ -335,7 +408,7 @@ export default function Control({
           const nowDateStr = now.toDateString();
           if (lastDateStr !== nowDateStr) {
             console.log(
-              `📅 Daily backup due (last: ${lastDateStr}, now: ${nowDateStr})`,
+              `📅 Daily backup due (last: ${lastDateStr}, now: ${nowDateStr})`
             );
             shouldBackup = true;
           }
@@ -347,7 +420,7 @@ export default function Control({
             lastAutoDate.toDateString() === now.toDateString();
           if (isSunday && !lastWasToday) {
             console.log(
-              `📅 Weekly backup due (Sunday, last: ${lastAutoDate.toDateString()})`,
+              `📅 Weekly backup due (Sunday, last: ${lastAutoDate.toDateString()})`
             );
             shouldBackup = true;
           }
@@ -361,12 +434,12 @@ export default function Control({
       localStorage.setItem("wd_last_auto_backup", now.toISOString());
     } else {
       console.log(
-        `⏭️ Auto-backup not needed yet (frequency: ${autoBackupFrequency})`,
+        `⏭️ Auto-backup not needed yet (frequency: ${autoBackupFrequency})`
       );
     }
 
-    // CRITICAL: Empty dependency array = run only once on mount
-  }, []); // ← This is the key fix!
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - run once on mount when dashboardState is available
 
   function toggleAutoBackup() {
     const newState = !autoBackupEnabled;
@@ -374,7 +447,7 @@ export default function Control({
     localStorage.setItem("wd_auto_backup_enabled", newState.toString());
     showNotification(
       `Auto-backup ${newState ? "enabled" : "disabled"}`,
-      "success",
+      "success"
     );
   }
 
@@ -393,7 +466,7 @@ export default function Control({
     setShowPreview(true);
   }
 
-  const availableTags = ["all", "manual", "auto"];
+  const availableTags = ["all", "manual", "auto", "emergency"]; // ✅ All tags included
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8 text-[#E8FFFA]">
@@ -542,7 +615,13 @@ export default function Control({
 
             <p className="text-xs text-[#7FAFA4]">
               {autoBackupEnabled
-                ? `Automatic backups will run ${autoBackupFrequency === "hourly" ? "every hour" : autoBackupFrequency === "daily" ? "daily" : "every Sunday"}`
+                ? `Automatic backups will run ${
+                    autoBackupFrequency === "hourly"
+                      ? "every hour"
+                      : autoBackupFrequency === "daily"
+                      ? "daily"
+                      : "every Sunday"
+                  }`
                 : "Automatic backups are currently disabled"}
             </p>
           </div>
@@ -692,12 +771,14 @@ export default function Control({
                           👁️ Preview
                         </button>
                         <button
-                          onClick={() => restoreBackup(b)}
-                          className="px-3 py-1.5 border border-amber-500 text-amber-400 rounded-lg hover:bg-amber-900/20 transition-all text-sm flex items-center gap-1"
+                          onClick={() => initiateRestore(b)} // Changed from restoreBackup(b)
+                          disabled={isRestoring}
+                          className="px-3 py-1.5 border border-amber-500 text-amber-400 rounded-lg hover:bg-amber-900/20 transition-all text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Icon type="refresh" />
-                          Restore
+                          {isRestoring ? "Restoring..." : "Restore"}
                         </button>
+
                         <button
                           onClick={() => exportBackup(b)}
                           className="px-3 py-1.5 border border-blue-500 text-blue-400 rounded-lg hover:bg-blue-900/20 transition-all text-sm flex items-center gap-1"
@@ -769,9 +850,9 @@ export default function Control({
                   <Icon type="alert" />
                   Warning:
                 </h4>
-                <p className="text-sm text-[#7FAFA4]">
-                  NO automatic backup will be created. Export your data manually
-                  before proceeding if you want to keep it.
+                <p className="text-sm text-red-200/70">
+                  <Icon type="shield" /> An emergency backup will be created
+                  before reset
                 </p>
               </div>
 
@@ -850,18 +931,145 @@ export default function Control({
             <div className="p-5 border-t border-[#2F6B60] flex gap-3">
               <button
                 onClick={() => {
-                  restoreBackup(selectedBackup);
+                  initiateRestore(selectedBackup);
                   setShowPreview(false);
                 }}
-                className="flex-1 px-4 py-2 bg-[#064E3B] border border-[#3FA796] rounded-lg hover:bg-[#0c7660] transition-all"
+                disabled={isRestoring}
+                className="flex-1 px-4 py-2 bg-[#064E3B] border border-[#3FA796] rounded-lg hover:bg-[#0c7660] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Restore This Backup
+                <Icon type="refresh" />
+                {isRestoring ? "Restoring..." : "Restore This Backup"}
               </button>
+
               <button
                 onClick={() => setShowPreview(false)}
                 className="px-4 py-2 border border-[#2F6B60] rounded-lg hover:bg-black/40 transition-all"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Restore Confirmation Modal */}
+      {showRestoreModal && backupToRestore && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => !isRestoring && setShowRestoreModal(false)}
+        >
+          <div
+            className="bg-[#0a1f1a] border-2 border-amber-500 rounded-xl max-w-md w-full overflow-hidden shadow-2xl shadow-amber-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-amber-500/30 bg-gradient-to-r from-amber-900/40 to-amber-800/20">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Icon type="alert" className="text-3xl" />
+                  <h3 className="text-2xl font-bold text-amber-400">
+                    Restore Backup
+                  </h3>
+                </div>
+                {/* Add close button */}
+                {!isRestoring && (
+                  <button
+                    onClick={() => setShowRestoreModal(false)}
+                    className="text-[#7FAFA4] hover:text-[#E8FFFA] text-2xl leading-none"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <p className="text-sm text-amber-200/70">
+                This will overwrite your current state
+              </p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Backup Info Card */}
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-semibold text-amber-300 mb-1">
+                        {backupToRestore.label}
+                      </p>
+                      <div className="space-y-1 text-xs text-[#7FAFA4]">
+                        <p className="flex items-center gap-2">
+                          <Icon type="clock" />
+                          {new Date(backupToRestore.createdAt).toLocaleString(
+                            "en-IN",
+                            {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            }
+                          )}
+                        </p>
+                        <p>
+                          {backupToRestore.itemCount || 0} items •{" "}
+                          {((backupToRestore.size || 0) / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        backupToRestore.tag === "auto"
+                          ? "bg-blue-900/50 text-blue-300 border border-blue-500/30"
+                          : backupToRestore.tag === "emergency"
+                          ? "bg-red-900/50 text-red-300 border border-red-500/30"
+                          : "bg-emerald-900/50 text-emerald-300 border border-emerald-500/30"
+                      }`}
+                    >
+                      {backupToRestore.tag}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Box */}
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <h4 className="font-semibold text-red-300 mb-2 flex items-center gap-2">
+                  <Icon type="alert" />
+                  Warning:
+                </h4>
+                <ul className="text-sm text-[#7FAFA4] space-y-1 ml-6 list-disc">
+                  <li>Current state will be overwritten</li>
+                  <li>This action cannot be undone</li>
+                  <li>All unsaved changes will be lost</li>
+                  <li>MongoDB Atlas will be updated</li>
+                </ul>
+              </div>
+
+              {isRestoring && (
+                <div className="bg-emerald-900/20 border border-emerald-500/30 rounded-lg p-3">
+                  <p className="text-sm text-emerald-300 flex items-center gap-2">
+                    <Icon type="refresh" />
+                    <span className="animate-pulse">
+                      Restoring backup and syncing to cloud...
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="p-6 border-t border-amber-500/30 flex gap-3 bg-black/40">
+              <button
+                onClick={restoreBackup}
+                disabled={isRestoring}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-900 to-amber-700 border border-amber-500 rounded-lg hover:from-amber-800 hover:to-amber-600 transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon type="refresh" />
+                {isRestoring ? "Restoring..." : "Yes, Restore Backup"}
+              </button>
+              <button
+                onClick={() => setShowRestoreModal(false)}
+                disabled={isRestoring}
+                className="px-6 py-3 border border-[#2F6B60] rounded-lg hover:bg-black/60 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
               </button>
             </div>
           </div>

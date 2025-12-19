@@ -341,7 +341,7 @@ export default function StudyProjectsAdvanced({
       JSON.stringify({
         ...nextProgress,
         _meta: { xp: nextXP, bonusGiven: nextBonusGiven },
-      }),
+      })
     );
     updateDashboard((prev) => ({
       ...prev,
@@ -505,6 +505,13 @@ export default function StudyProjectsAdvanced({
     </span>
   );
 
+  // At the top of your Projects.jsx file
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
+
   /* ========== RENDER ========== */
   return (
     <div className="min-h-[calc(60vh-var(--nav-height))] rounded-2xl px-6 py-6 transition-all duration-300 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9] dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000] text-foreground">
@@ -606,33 +613,63 @@ export default function StudyProjectsAdvanced({
           </div>
 
           {/* Controls Row */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 ">
             {/* LEFT: Difficulty Filter */}
-            <div className="relative flex-1 sm:flex-initial">
+            <div className="relative flex-1 sm:flex-initial ">
               <select
                 value={filterDifficulty}
                 onChange={(e) => setFilterDifficulty(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-600/10 to-teal-600/10 hover:border-emerald-400/50 transition-all text-sm font-medium text-emerald-100 shadow-lg shadow-black/20 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 cursor-pointer appearance-none pr-10"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(16,185,129,0.7)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 0.75rem center",
-                  backgroundSize: "1.25rem",
-                }}
+                className="w-full sm:w-auto px-4 py-2.5 pr-10
+                 rounded-xl border border-emerald-500/30 
+                 bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-100 shadow-lg shadow-emerald-500/20 hover:border-emerald-400/50 
+                 transition-all text-sm font-medium 
+                 dark:text-emerald-100                  
+                 focus:outline-none 
+                 focus:ring-2 focus:ring-emerald-400/50 
+                 cursor-pointer appearance-none"
               >
-                <option className="bg-[#0F1622] text-emerald-100">
+                <option
+                  value="All"
+                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100 rounded-xl"
+                >
                   All Levels
                 </option>
-                <option className="bg-[#0F1622] text-emerald-100">
+                <option
+                  value="Beginner"
+                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100"
+                >
                   Beginner
                 </option>
-                <option className="bg-[#0F1622] text-emerald-100">
+                <option
+                  value="Intermediate"
+                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100"
+                >
                   Intermediate
                 </option>
-                <option className="bg-[#0F1622] text-emerald-100">
+                <option
+                  value="Advanced"
+                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100"
+                >
                   Advanced
                 </option>
               </select>
+
+              {/* Custom Arrow - Theme Aware */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg
+                  className="w-4 h-4 text-emerald-700 dark:text-emerald-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </div>
 
             {/* CENTER: View Switch */}
@@ -1382,55 +1419,323 @@ export default function StudyProjectsAdvanced({
           </div>
         )}
 
-        {/* TIMELINE VIEW */}
+        {/* TIMELINE VIEW - Minimal & Feature-Full */}
         {view === "timeline" && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Learning Roadmap</h3>
-            <div className="border-t border-border pt-6 mt-6">
-              <h4 className="text-md font-semibold mb-3">
-                Completed Tasks Log
-              </h4>
-              {Object.keys(progress).length === 0 ? (
-                <p className="text-sm opacity-60 text-center mt-6">
-                  No completed tasks yet — complete some projects to populate
-                  timeline.
-                </p>
-              ) : (
-                Object.entries(progress)
-                  .filter(([section]) => section !== "_meta")
-                  .map(([section, tasks]) => (
-                    <div
-                      key={section}
-                      className="rounded-xl border border-border p-4 bg-black/20 mb-4"
-                    >
-                      <h4 className="font-semibold text-sm mb-2">
-                        {section.replaceAll("_", " ")}
-                      </h4>
-                      {Object.entries(tasks?.completionDates || {}).length ===
-                      0 ? (
-                        <p className="text-xs opacity-60">
-                          No completed tasks yet.
-                        </p>
-                      ) : (
-                        Object.entries(tasks?.completionDates || {}).map(
-                          ([idx, date]) => (
-                            <div
-                              key={idx}
-                              className="flex justify-between text-xs border-b border-border/30 py-1"
-                            >
-                              <span>
-                                {PROJECT_SECTIONS[section]?.[idx] ||
-                                  "Unknown Task"}
-                              </span>
-                              <span className="opacity-70">{date}</span>
-                            </div>
-                          )
-                        )
-                      )}
-                    </div>
-                  ))
-              )}
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold text-emerald-100 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
+                </svg>
+                Completion Timeline
+              </h3>
+              <span className="text-xs text-emerald-200/60">
+                Your learning journey
+              </span>
             </div>
+
+            {/* Check if any progress exists */}
+            {Object.keys(progress).length === 0 ? (
+              // Empty State
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-600/5 via-teal-600/5 to-cyan-600/5 p-12">
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                      <svg
+                        className="w-10 h-10 text-emerald-300/50"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-emerald-100 mb-2">
+                      No Completed Projects Yet
+                    </h4>
+                    <p className="text-sm text-emerald-200/60 max-w-md mx-auto">
+                      Start completing projects to see your timeline. Each
+                      completed project will appear here with completion dates.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setView("sections")}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-100 text-sm font-semibold hover:from-emerald-500/30 hover:to-teal-500/30 transition-all"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                    Browse Projects
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Timeline Content
+              <div className="space-y-3">
+                {Object.entries(progress)
+                  .filter(([section]) => section !== "_meta")
+                  .map(([section, tasks]) => {
+                    // Count completed tasks in this section
+                    const completionDates = tasks?.completionDates || {};
+                    const completedCount = Object.keys(completionDates).length;
+
+                    // Skip sections with no completed tasks
+                    if (completedCount === 0) return null;
+
+                    // Get section color
+                    const sectionColors = {
+                      HTML: {
+                        border: "border-orange-500/30",
+                        bg: "from-orange-500/10 to-red-500/5",
+                        text: "text-orange-300",
+                      },
+                      CSS: {
+                        border: "border-blue-500/30",
+                        bg: "from-blue-500/10 to-indigo-500/5",
+                        text: "text-blue-300",
+                      },
+                      TAILWIND: {
+                        border: "border-cyan-500/30",
+                        bg: "from-cyan-500/10 to-teal-500/5",
+                        text: "text-cyan-300",
+                      },
+                      JAVASCRIPT: {
+                        border: "border-yellow-500/30",
+                        bg: "from-yellow-500/10 to-amber-500/5",
+                        text: "text-yellow-300",
+                      },
+                      REACT: {
+                        border: "border-purple-500/30",
+                        bg: "from-purple-500/10 to-pink-500/5",
+                        text: "text-purple-300",
+                      },
+                      NODEMONGO: {
+                        border: "border-green-500/30",
+                        bg: "from-green-500/10 to-emerald-500/5",
+                        text: "text-green-300",
+                      },
+                      MERN: {
+                        border: "border-emerald-500/30",
+                        bg: "from-emerald-500/10 to-teal-500/5",
+                        text: "text-emerald-300",
+                      },
+                    };
+
+                    const colors = sectionColors[section] || {
+                      border: "border-gray-500/30",
+                      bg: "from-gray-500/10 to-slate-500/5",
+                      text: "text-gray-300",
+                    };
+
+                    return (
+                      <div
+                        key={section}
+                        className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-gradient-to-br ${colors.bg} p-4 hover:border-opacity-60 transition-all`}
+                      >
+                        {/* Section Header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className={`font-bold text-base ${colors.text}`}>
+                            {section.replaceAll("_", " ")}
+                          </h4>
+                          <span className="px-2.5 py-0.5 rounded-full bg-black/30 border border-white/10 text-xs font-semibold text-emerald-200">
+                            {completedCount} completed
+                          </span>
+                        </div>
+
+                        {/* Completed Tasks List */}
+                        <div className="space-y-2">
+                          {Object.entries(completionDates)
+                            .sort(
+                              ([, dateA], [, dateB]) =>
+                                new Date(dateB) - new Date(dateA)
+                            ) // Sort by date, newest first
+                            .map(([idx, date]) => {
+                              const projectName =
+                                PROJECT_SECTIONS[section]?.[idx] ||
+                                "Unknown Task";
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className="flex items-start justify-between gap-3 p-2 rounded-lg bg-black/20 border border-white/5 hover:bg-black/30 transition-colors"
+                                >
+                                  {/* Left: Checkmark + Name */}
+                                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                      <svg
+                                        className="w-4 h-4 text-emerald-300"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <span className="text-sm text-emerald-100/90 leading-tight">
+                                      {projectName}
+                                    </span>
+                                  </div>
+
+                                  {/* Right: Date */}
+                                  <span className="text-xs text-emerald-200/60 whitespace-nowrap flex items-center gap-1">
+                                    <svg
+                                      className="w-3 h-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                    {date.split("-").reverse().join("-")}{" "}
+                                    {/* ✅ */}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                        </div>
+
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      </div>
+                    );
+                  })}
+
+                {/* Check if all sections have 0 completed tasks */}
+                {Object.entries(progress)
+                  .filter(([section]) => section !== "_meta")
+                  .every(
+                    ([, tasks]) =>
+                      Object.keys(tasks?.completionDates || {}).length === 0
+                  ) && (
+                  <div className="p-8 rounded-xl bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border border-emerald-500/20 text-center">
+                    <p className="text-sm text-emerald-200/60">
+                      No completed tasks yet. Start completing projects to see
+                      your timeline!
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer Stats */}
+            {Object.keys(progress).length > 0 && (
+              <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                {/* Total Completed */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-emerald-300"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs text-emerald-200/70 uppercase tracking-wide font-semibold">
+                        Total Completed
+                      </div>
+                      <div className="text-xl font-bold text-emerald-100">
+                        {Object.values(progress).reduce(
+                          (acc, tasks) =>
+                            acc +
+                            Object.keys(tasks?.completionDates || {}).length,
+                          0
+                        )}{" "}
+                        projects
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Most Recent */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-cyan-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs text-cyan-200/70 uppercase tracking-wide font-semibold">
+                        Most Recent
+                      </div>
+                      <div className="text-sm font-bold text-cyan-100">
+                        {(() => {
+                          let latestDate = null;
+                          Object.values(progress).forEach((tasks) => {
+                            Object.values(tasks?.completionDates || {}).forEach(
+                              (date) => {
+                                if (
+                                  !latestDate ||
+                                  new Date(date) > new Date(latestDate)
+                                ) {
+                                  latestDate = date;
+                                }
+                              }
+                            );
+                          });
+                          return latestDate
+                            ? latestDate.split("-").reverse().join("-")
+                            : "No completions yet";
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
