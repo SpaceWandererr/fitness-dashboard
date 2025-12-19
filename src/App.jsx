@@ -267,46 +267,21 @@ export default function App() {
         }
         // ------------------------------------------------
 
-        // Prevent unnecessary rerenders
+        // ✅ FIXED: Always apply backend state (removed broken logic)
         if (!cancelled) {
-          setDashboardState((prev) => {
-            const prevUpdated = prev?.updatedAt;
-            const nextUpdated = state?.updatedAt;
-
-            // If backend did not send updatedAt, trust backend anyway
-            if (!nextUpdated) {
-              console.log("⚠️ No updatedAt from backend → applying state");
-              return state;
-            }
-
-            // Skip update only if versions match
-            if (prevUpdated && nextUpdated && prevUpdated === nextUpdated) {
-              console.log("🛑 State already up to date (updatedAt match)");
-              return prev;
-            }
-
-            console.log("✅ Applying newer backend state");
-            return state;
-          });
+          console.log("✅ Applying backend state");
+          setDashboardState(state);
         }
       } catch (err) {
         if (!cancelled) console.error("🔥 Load error:", err);
       }
     }
 
-    // Listen for update triggers
-    const handleLifeosUpdate = () => loadState();
-
-    window.addEventListener("lifeos:update", handleLifeosUpdate);
-    window.addEventListener("storage", handleLifeosUpdate);
-
-    // Initial call
+    // ✅ Load once on mount only
     loadState();
 
     return () => {
       cancelled = true;
-      window.removeEventListener("lifeos:update", handleLifeosUpdate);
-      window.removeEventListener("storage", handleLifeosUpdate);
     };
   }, []);
 
@@ -406,17 +381,20 @@ export default function App() {
       const resolvedUpdates =
         typeof updates === "function" ? updates(dashboardState) : updates;
 
-      const newState = { ...dashboardState, ...resolvedUpdates };
+      const newState = {
+        ...dashboardState,
+        ...resolvedUpdates,
+        updatedAt: new Date().toISOString(), // ✅ Add timestamp
+      };
 
       setDashboardState(newState);
-      // localStorage.setItem("lifeos_state", JSON.stringify(newState));
 
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
         fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(resolvedUpdates), // ✅ send ONLY updates
+          body: JSON.stringify(newState), // ✅ Send FULL state, not just updates
         })
           .then((r) => r.json())
           .then(() => console.log("💾 Synced to backend"))
@@ -480,197 +458,517 @@ export default function App() {
         ref={navRef}
         className="fixed top-0 left-0 right-0 z-40 border-b border-teal-500/20 bg-[#020617]/70 backdrop-blur-xl"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <Link
-            to="/"
-            onClick={() => setMenuOpen(false)}
-            className="flex-shrink-0"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="group relative"
-            >
-              <h1
-                className="text-base sm:text-lg md:text-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] 
-                bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
-                hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300 flex wrap"
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          {/* TABLET LAYOUT: Logo on top, links below (640px - 1023px) */}
+          <div className="hidden sm:flex lg:hidden flex-col gap-3">
+            {/* Top row: Logo + Right controls */}
+            <div className="flex items-center justify-between">
+              <Link
+                to="/"
+                onClick={() => setMenuOpen(false)}
+                className="flex-shrink-0"
               >
-                JAY SINH THAKUR
-              </h1>
-              {/* Glow underline on hover */}
-              <div
-                className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
-                scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
-              />
-            </motion.div>
-          </Link>
-
-          <div className="hidden gap-2 md:flex">
-            {links.map((l) => (
-              <NavLink key={l.to} {...l} current={location.pathname} />
-            ))}
-          </div>
-
-          <div className="flex items-center gap-6">
-            <span className="hidden text-xs font-mono mr-4 text-teal-200/80 sm:inline">
-              {time.toLocaleTimeString()}
-            </span>
-
-            <button
-              ref={themeBtnRef}
-              onClick={() => {
-                const rect = themeBtnRef.current.getBoundingClientRect();
-                const x = rect.left + rect.width / 2 - 10;
-                const y = rect.top + rect.height / 2 - 10;
-
-                setFlashOrigin({ x, y });
-                setDark((prev) => {
-                  const next = !prev;
-
-                  updateDashboard({
-                    ui: {
-                      ...(dashboardState.ui || {}),
-                      theme: next ? "dark" : "light",
-                    },
-                  });
-
-                  return next;
-                });
-
-                setThemeFlash((prev) => prev + 1);
-              }}
-              className="relative group rounded-full w-10 h-10 flex
-              items-center justify-center
-              border
-              border-yellow-400/30 dark:border-white/30
-              bg-transparent backdrop-blur-xl
-              shadow-[0_0_25px_rgba(255,193,7,0.6)]
-              dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
-              hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
-              dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
-              transition-all duration-400"
-              aria-label="Toggle dark mode"
-            >
-              {/* Inner glow pulse */}
-              <div
-                className="absolute inset-1 rounded-full                
-                scale-0 group-hover:scale-110
-                transition-transform duration-500"
-              />
-
-              {/* Eclipse overlay */}
-              <AnimatePresence>
                 <motion.div
-                  key={dark ? "eclipse-dark" : "eclipse-light"}
-                  initial={{ scale: 0, opacity: 0.8 }}
-                  animate={{ scale: 1.4, opacity: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="absolute inset-2 rounded-full pointer-events-none"
-                  style={{
-                    background: dark
-                      ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
-                      : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
-                  }}
-                />
-              </AnimatePresence>
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="group relative"
+                >
+                  <h1
+                    className="text-lg font-bold tracking-[0.2em] 
+                    bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                    hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
+                  >
+                    JAY SINH THAKUR
+                  </h1>
+                  <div
+                    className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
+                    scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+                  />
+                </motion.div>
+              </Link>
 
-              {/* CELESTIAL SYSTEM */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="relative text-xl z-10">
-                  <AnimatePresence mode="wait">
-                    {dark ? (
-                      <motion.div
-                        key="moon"
-                        initial={{ scale: 0.7, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                        transition={{ duration: 0.9, ease: "easeOut" }}
-                        className="relative flex items-center justify-center"
-                      >
-                        <motion.span
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1.5, opacity: 0.35 }}
-                          transition={{ duration: 1.2, ease: "easeOut" }}
-                          className="absolute w-8 h-8 rounded-full pointer-events-none"
-                          style={{
-                            background:
-                              "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
-                            filter: "blur(7px)",
-                          }}
-                        />
-                        <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
-                          🌙
-                        </span>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="sun"
-                        initial={{ scale: 0.4, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.6, opacity: 0 }}
-                        transition={{ duration: 0.9, ease: "easeOut" }}
-                        className="relative flex items-center justify-center"
-                      >
-                        <motion.span
-                          initial={{ scale: 0, opacity: 0.2 }}
-                          animate={{ scale: 1.6, opacity: 0.4 }}
-                          transition={{ duration: 1.2, ease: "easeOut" }}
-                          className="absolute w-8 h-8 rounded-full"
-                          style={{
-                            background:
-                              "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
-                            filter: "blur(8px)",
-                          }}
-                        />
-                        <span className="drop-shadow-[0_0_18px_#FFB800]">
-                          ☀️
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-teal-200/80">
+                  {time.toLocaleTimeString()}
                 </span>
 
-                <motion.div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{ transformOrigin: "50% 50%" }}
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 26,
-                    ease: "linear",
-                    repeat: Infinity,
+                <button
+                  ref={themeBtnRef}
+                  onClick={() => {
+                    const rect = themeBtnRef.current.getBoundingClientRect();
+                    const x = rect.left + rect.width / 2 - 10;
+                    const y = rect.top + rect.height / 2 - 10;
+
+                    setFlashOrigin({ x, y });
+                    setDark((prev) => {
+                      const next = !prev;
+                      updateDashboard({
+                        ui: {
+                          ...(dashboardState.ui || {}),
+                          theme: next ? "dark" : "light",
+                        },
+                      });
+                      return next;
+                    });
+                    setThemeFlash((prev) => prev + 1);
                   }}
+                  className="relative group rounded-full w-10 h-10 flex
+                  items-center justify-center border
+                  border-yellow-400/30 dark:border-white/30
+                  bg-transparent backdrop-blur-xl
+                  shadow-[0_0_25px_rgba(255,193,7,0.6)]
+                  dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+                  hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+                  dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+                  transition-all duration-400"
+                  aria-label="Toggle dark mode"
                 >
-                  <div
-                    className="absolute select-none transition-all duration-300"
+                  <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+                  <AnimatePresence>
+                    <motion.div
+                      key={dark ? "eclipse-dark" : "eclipse-light"}
+                      initial={{ scale: 0, opacity: 0.8 }}
+                      animate={{ scale: 1.4, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className="absolute inset-2 rounded-full pointer-events-none"
+                      style={{
+                        background: dark
+                          ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
+                          : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
+                      }}
+                    />
+                  </AnimatePresence>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="relative text-xl z-10">
+                      <AnimatePresence mode="wait">
+                        {dark ? (
+                          <motion.div
+                            key="moon"
+                            initial={{ scale: 0.7, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ duration: 0.9, ease: "easeOut" }}
+                            className="relative flex items-center justify-center"
+                          >
+                            <motion.span
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1.5, opacity: 0.35 }}
+                              transition={{ duration: 1.2, ease: "easeOut" }}
+                              className="absolute w-8 h-8 rounded-full pointer-events-none"
+                              style={{
+                                background:
+                                  "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
+                                filter: "blur(7px)",
+                              }}
+                            />
+                            <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
+                              🌙
+                            </span>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="sun"
+                            initial={{ scale: 0.4, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.6, opacity: 0 }}
+                            transition={{ duration: 0.9, ease: "easeOut" }}
+                            className="relative flex items-center justify-center"
+                          >
+                            <motion.span
+                              initial={{ scale: 0, opacity: 0.2 }}
+                              animate={{ scale: 1.6, opacity: 0.4 }}
+                              transition={{ duration: 1.2, ease: "easeOut" }}
+                              className="absolute w-8 h-8 rounded-full"
+                              style={{
+                                background:
+                                  "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
+                                filter: "blur(8px)",
+                              }}
+                            />
+                            <span className="drop-shadow-[0_0_18px_#FFB800]">
+                              ☀️
+                            </span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </span>
+                    <motion.div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ transformOrigin: "50% 50%" }}
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 26,
+                        ease: "linear",
+                        repeat: Infinity,
+                      }}
+                    >
+                      <div
+                        className="absolute select-none transition-all duration-300"
+                        style={{
+                          top: "-6px",
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          fontSize: "8px",
+                          filter: dark
+                            ? "drop-shadow(0 0 6px #FFD700)"
+                            : "drop-shadow(0 0 6px #FFFFFF)",
+                        }}
+                      >
+                        {dark ? "☀️" : "🌙"}
+                      </div>
+                    </motion.div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom row: Links */}
+            <div className="flex gap-2 flex-wrap">
+              {links.map((l) => (
+                <NavLink key={l.to} {...l} current={location.pathname} />
+              ))}
+            </div>
+          </div>
+
+          {/* MOBILE LAYOUT: Single row with hamburger */}
+          <div className="flex sm:hidden items-center justify-between">
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              className="flex-shrink-0"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="group relative"
+              >
+                <h1
+                  className="text-base font-bold tracking-[0.15em] 
+                  bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                  hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
+                >
+                  JAY SINH THAKUR
+                </h1>
+                <div
+                  className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
+                  scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+                />
+              </motion.div>
+            </Link>
+
+            <div className="flex items-center gap-3">
+              <button
+                ref={themeBtnRef}
+                onClick={() => {
+                  const rect = themeBtnRef.current.getBoundingClientRect();
+                  const x = rect.left + rect.width / 2 - 10;
+                  const y = rect.top + rect.height / 2 - 10;
+                  setFlashOrigin({ x, y });
+                  setDark((prev) => {
+                    const next = !prev;
+                    updateDashboard({
+                      ui: {
+                        ...(dashboardState.ui || {}),
+                        theme: next ? "dark" : "light",
+                      },
+                    });
+                    return next;
+                  });
+                  setThemeFlash((prev) => prev + 1);
+                }}
+                className="relative group rounded-full w-9 h-9 flex
+                items-center justify-center border
+                border-yellow-400/30 dark:border-white/30
+                bg-transparent backdrop-blur-xl
+                shadow-[0_0_25px_rgba(255,193,7,0.6)]
+                dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+                hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+                dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+                transition-all duration-400"
+                aria-label="Toggle dark mode"
+              >
+                <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+                <AnimatePresence>
+                  <motion.div
+                    key={dark ? "eclipse-dark" : "eclipse-light"}
+                    initial={{ scale: 0, opacity: 0.8 }}
+                    animate={{ scale: 1.4, opacity: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="absolute inset-2 rounded-full pointer-events-none"
                     style={{
-                      top: "-6px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      fontSize: "8px",
-                      filter: dark
-                        ? "drop-shadow(0 0 6px #FFD700)"
-                        : "drop-shadow(0 0 6px #FFFFFF)",
+                      background: dark
+                        ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
+                        : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
+                    }}
+                  />
+                </AnimatePresence>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="relative text-xl z-10">
+                    <AnimatePresence mode="wait">
+                      {dark ? (
+                        <motion.div
+                          key="moon"
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          className="relative flex items-center justify-center"
+                        >
+                          <motion.span
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1.5, opacity: 0.35 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            className="absolute w-8 h-8 rounded-full pointer-events-none"
+                            style={{
+                              background:
+                                "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
+                              filter: "blur(7px)",
+                            }}
+                          />
+                          <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
+                            🌙
+                          </span>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="sun"
+                          initial={{ scale: 0.4, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.6, opacity: 0 }}
+                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          className="relative flex items-center justify-center"
+                        >
+                          <motion.span
+                            initial={{ scale: 0, opacity: 0.2 }}
+                            animate={{ scale: 1.6, opacity: 0.4 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            className="absolute w-8 h-8 rounded-full"
+                            style={{
+                              background:
+                                "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
+                              filter: "blur(8px)",
+                            }}
+                          />
+                          <span className="drop-shadow-[0_0_18px_#FFB800]">
+                            ☀️
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </span>
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ transformOrigin: "50% 50%" }}
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 26,
+                      ease: "linear",
+                      repeat: Infinity,
                     }}
                   >
-                    {dark ? "☀️" : "🌙"}
-                  </div>
-                </motion.div>
-              </div>
-            </button>
+                    <div
+                      className="absolute select-none transition-all duration-300"
+                      style={{
+                        top: "-6px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        fontSize: "8px",
+                        filter: dark
+                          ? "drop-shadow(0 0 6px #FFD700)"
+                          : "drop-shadow(0 0 6px #FFFFFF)",
+                      }}
+                    >
+                      {dark ? "☀️" : "🌙"}
+                    </div>
+                  </motion.div>
+                </div>
+              </button>
 
-            <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-md border border-teal-500/40 bg-black/40 p-1.5 text-teal-100 md:hidden"
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="rounded-md border border-teal-500/40 bg-black/40 p-1.5 text-teal-100"
+              >
+                {menuOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {/* DESKTOP LAYOUT: Horizontal single row (1024px+) */}
+          <div className="hidden lg:flex items-center justify-between">
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              className="flex-shrink-0"
             >
-              {menuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="group relative"
+              >
+                <h1
+                  className="text-xl font-bold tracking-[0.2em] 
+                  bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                  hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
+                >
+                  JAY SINH THAKUR
+                </h1>
+                <div
+                  className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
+                  scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+                />
+              </motion.div>
+            </Link>
+
+            <div className="flex gap-2">
+              {links.map((l) => (
+                <NavLink key={l.to} {...l} current={location.pathname} />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono text-teal-200/80">
+                {time.toLocaleTimeString()}
+              </span>
+
+              <button
+                ref={themeBtnRef}
+                onClick={() => {
+                  const rect = themeBtnRef.current.getBoundingClientRect();
+                  const x = rect.left + rect.width / 2 - 10;
+                  const y = rect.top + rect.height / 2 - 10;
+                  setFlashOrigin({ x, y });
+                  setDark((prev) => {
+                    const next = !prev;
+                    updateDashboard({
+                      ui: {
+                        ...(dashboardState.ui || {}),
+                        theme: next ? "dark" : "light",
+                      },
+                    });
+                    return next;
+                  });
+                  setThemeFlash((prev) => prev + 1);
+                }}
+                className="relative group rounded-full w-10 h-10 flex
+                items-center justify-center border
+                border-yellow-400/30 dark:border-white/30
+                bg-transparent backdrop-blur-xl
+                shadow-[0_0_25px_rgba(255,193,7,0.6)]
+                dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+                hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+                dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+                transition-all duration-400"
+                aria-label="Toggle dark mode"
+              >
+                <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+                <AnimatePresence>
+                  <motion.div
+                    key={dark ? "eclipse-dark" : "eclipse-light"}
+                    initial={{ scale: 0, opacity: 0.8 }}
+                    animate={{ scale: 1.4, opacity: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="absolute inset-2 rounded-full pointer-events-none"
+                    style={{
+                      background: dark
+                        ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
+                        : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
+                    }}
+                  />
+                </AnimatePresence>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="relative text-xl z-10">
+                    <AnimatePresence mode="wait">
+                      {dark ? (
+                        <motion.div
+                          key="moon"
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          className="relative flex items-center justify-center"
+                        >
+                          <motion.span
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1.5, opacity: 0.35 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            className="absolute w-8 h-8 rounded-full pointer-events-none"
+                            style={{
+                              background:
+                                "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
+                              filter: "blur(7px)",
+                            }}
+                          />
+                          <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
+                            🌙
+                          </span>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="sun"
+                          initial={{ scale: 0.4, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.6, opacity: 0 }}
+                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          className="relative flex items-center justify-center"
+                        >
+                          <motion.span
+                            initial={{ scale: 0, opacity: 0.2 }}
+                            animate={{ scale: 1.6, opacity: 0.4 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            className="absolute w-8 h-8 rounded-full"
+                            style={{
+                              background:
+                                "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
+                              filter: "blur(8px)",
+                            }}
+                          />
+                          <span className="drop-shadow-[0_0_18px_#FFB800]">
+                            ☀️
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </span>
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ transformOrigin: "50% 50%" }}
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 26,
+                      ease: "linear",
+                      repeat: Infinity,
+                    }}
+                  >
+                    <div
+                      className="absolute select-none transition-all duration-300"
+                      style={{
+                        top: "-6px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        fontSize: "8px",
+                        filter: dark
+                          ? "drop-shadow(0 0 6px #FFD700)"
+                          : "drop-shadow(0 0 6px #FFFFFF)",
+                      }}
+                    >
+                      {dark ? "☀️" : "🌙"}
+                    </div>
+                  </motion.div>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* MOBILE MENU DROPDOWN */}
         {menuOpen && (
-          <div className="border-t border-teal-500/20 bg-[#020617]/95 px-3 pb-3 pt-1 md:hidden">
+          <div className="border-t border-teal-500/20 bg-[#020617]/95 px-3 pb-3 pt-1 sm:hidden">
             {links.map((l) => (
               <Link
                 key={l.to}
@@ -726,6 +1024,7 @@ export default function App() {
                   <Syllabus
                     dashboardState={dashboardState}
                     setDashboardState={setDashboardState}
+                    updateDashboard={updateDashboard} // ✅ ADD THIS
                   />
                 </motion.div>
               }

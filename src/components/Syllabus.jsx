@@ -4335,7 +4335,6 @@ function totalsOf(node, visited = new WeakSet()) {
 // keep for compatibility but delegate to normalized version
 const normalizeWholeTree = (src) => normalizeTree(src);
 
-
 function resetSyllabusProgress() {
   // 1️⃣ Clone current syllabus from state
   const cloned = structuredClone(dashboardState.syllabus_tree_v2);
@@ -4366,7 +4365,11 @@ function resetSyllabusProgress() {
 }
 
 /* ======================= MAIN ======================= */
-export default function Syllabus({ dashboardState, setDashboardState }) {
+export default function Syllabus({
+  dashboardState,
+  setDashboardState,
+  updateDashboard,
+}) {
   // ---------------- MONGO CONFIG ----------------
   const API_URL =
     import.meta.env.VITE_API_URL ||
@@ -4420,14 +4423,14 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   // Tree is stored ONCE to prevent infinite re-renders, recursion, or re-normalizing.
   const treeRef = useRef(null);
 
+  // Initialize once (TREE is only fallback)
   if (!treeRef.current) {
-    // Use stored backend state if available, otherwise seed original TREE template.
-    treeRef.current =
+    treeRef.current = structuredClone(
       dashboardState?.syllabus_tree_v2 &&
-      typeof dashboardState.syllabus_tree_v2 === "object" &&
-      Object.keys(dashboardState.syllabus_tree_v2).length > 0
-        ? structuredClone(dashboardState.syllabus_tree_v2)
-        : structuredClone(TREE);
+        Object.keys(dashboardState.syllabus_tree_v2).length > 0
+        ? dashboardState.syllabus_tree_v2
+        : TREE,
+    );
   }
 
   // This is now the final stable syllabus tree for the UI.
@@ -4539,39 +4542,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     }
   }, [dashboardState]);
 
-  /* ======================= DASHBOARD UPDATE ======================= */
-  const updateDashboard = useCallback(
-    (updates) => {
-      setDashboardState((prev) => {
-        const newState = {
-          ...prev,
-          ...updates,
-        };
-
-        // 1️⃣ Save to localStorage
-        try {
-          window.localStorage.setItem(LOCAL_KEY, JSON.stringify(newState));
-        } catch (err) {
-          console.error("⚠️ localStorage save failed (updateDashboard):", err);
-        }
-
-        // 2️⃣ Debounced backend save
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-        saveTimeoutRef.current = setTimeout(() => {
-          fetch(API_URL, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newState),
-          }).catch((err) => console.error("Mongo save failed:", err));
-        }, 500);
-
-        return newState;
-      });
-    },
-    [API_URL]
-  );
 
   /* ======================= CLEANUP TIMEOUT ======================= */
   useEffect(() => {
@@ -4604,9 +4574,12 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
+    const timer = setTimeout(
+      () => {
+        setShowLastStudied(false);
+      },
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
+    );
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
@@ -4627,45 +4600,8 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
   const grand = useMemo(
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2]
+    [dashboardState?.syllabus_tree_v2],
   );
-
-  // Add this after your useState declarations
-  useEffect(() => {
-    const fetchBackendData = async () => {
-      try {
-        const response = await fetch(API_URL, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          // console.log("✅ Loaded from backend:", data);
-
-          // Update state with backend data
-          setDashboardState(data);
-
-          // Also update localStorage
-          window.localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
-        } else {
-          console.warn("⚠️ Backend returned:", response.status);
-        }
-      } catch (err) {
-        console.error("❌ Backend fetch failed:", err);
-        // Fallback to localStorage if backend fails
-        const local = window.localStorage.getItem(LOCAL_KEY);
-        if (local) {
-          setDashboardState(JSON.parse(local));
-        }
-      }
-    };
-
-    // Only fetch if dashboardState is empty or missing syllabus data
-    if (!dashboardState?.syllabus_tree_v2) {
-      fetchBackendData();
-    }
-  }, []); // Run only once on mount
 
   /* ======================= ACTIONS ======================= */
 
@@ -4674,12 +4610,11 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     (path) => {
       const key = pathKey(path);
 
-      // Use functional update to read latest state
       setDashboardState((prev) => {
         const current = prev?.syllabus_meta || {};
         const prevOpen = current[key]?.open || false;
 
-        const newState = {
+        return {
           ...prev,
           syllabus_meta: {
             ...current,
@@ -4688,24 +4623,11 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               open: !prevOpen,
             },
           },
+          updatedAt: new Date().toISOString(), // ✅ Timestamp for tracking
         };
-
-        // Save to MongoDB asynchronously AFTER state update (debounced, no event)
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-        saveTimeoutRef.current = setTimeout(() => {
-          fetch(API_URL, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newState),
-          }).catch((err) => console.error("Mongo save failed:", err));
-        }, 500); // Debounce saves by 500ms
-
-        return newState;
       });
     },
-    [API_URL]
+    [], // ✅ Clean - no dependencies
   );
 
   // alias for Section header click
@@ -4947,7 +4869,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         updateDashboard({ syllabus_notes: newNR });
       }
     },
-    [updateDashboard, API_URL]
+    [updateDashboard, API_URL],
   );
 
   /* ======================= EXPORT ======================= */
@@ -5024,7 +4946,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -5171,7 +5093,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
                 onClick={async () => {
                   if (
                     !confirm(
-                      "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
+                      "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
                     )
                   )
                     return;
@@ -5236,7 +5158,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
                     console.error("❌ Reset failed:", err);
                     alert(
                       "Reset failed! Check console for details.\n\nError: " +
-                        err.message
+                        err.message,
                     );
                   }
                 }}
@@ -5308,10 +5230,10 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
               grand.pct < 25
                 ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
                 : grand.pct < 50
-                ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
-                : grand.pct < 75
-                ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
+                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+                  : grand.pct < 75
+                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
+                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
             }
           `}
                 style={{
@@ -5762,8 +5684,8 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
             daysDiff > 0
               ? "text-green-400"
               : daysDiff < 0
-              ? "text-red-400"
-              : "text-yellow-400"
+                ? "text-red-400"
+                : "text-yellow-400"
           }
         `}
                   >
@@ -5772,10 +5694,10 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                           daysDiff !== 1 ? "s" : ""
                         } before deadline)`
                       : daysDiff < 0
-                      ? `(${Math.abs(daysDiff)} day${
-                          Math.abs(daysDiff) !== 1 ? "s" : ""
-                        } after deadline)`
-                      : "(on deadline day)"}
+                        ? `(${Math.abs(daysDiff)} day${
+                            Math.abs(daysDiff) !== 1 ? "s" : ""
+                          } after deadline)`
+                        : "(on deadline day)"}
                   </span>
                 )}
               </div>
@@ -5867,7 +5789,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -5909,7 +5831,7 @@ function SectionCard({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5918,7 +5840,7 @@ function SectionCard({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -6023,10 +5945,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                    : totals.pct < 75
-                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                      : totals.pct < 75
+                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6242,7 +6164,7 @@ function SectionCard({
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -6377,7 +6299,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -6386,7 +6308,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -6636,7 +6558,7 @@ function SubNode({
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -6849,8 +6771,8 @@ function DailyPlanner({ tree, nr }) {
                                 95,
                                 Math.max(
                                   5,
-                                  ((maxDays - daysRemaining) / maxDays) * 100
-                                )
+                                  ((maxDays - daysRemaining) / maxDays) * 100,
+                                ),
                               );
                               return progress;
                             })()}%`,
@@ -6900,7 +6822,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      })
+      }),
     );
   }, [tree]);
 
@@ -7086,19 +7008,19 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                     barColor: "bg-red-500", // For vertical bar
                   }
                 : item.deadline &&
-                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                ? {
-                    bg: "bg-yellow-500/20",
-                    text: "text-yellow-300",
-                    border: "border-yellow-600/50",
-                    barColor: "bg-yellow-500", // For vertical bar
-                  }
-                : {
-                    bg: "bg-emerald-500/20",
-                    text: "text-emerald-400",
-                    border: "border-emerald-600/50",
-                    barColor: "bg-emerald-500", // For vertical bar
-                  };
+                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                  ? {
+                      bg: "bg-yellow-500/20",
+                      text: "text-yellow-300",
+                      border: "border-yellow-600/50",
+                      barColor: "bg-yellow-500", // For vertical bar
+                    }
+                  : {
+                      bg: "bg-emerald-500/20",
+                      text: "text-emerald-400",
+                      border: "border-emerald-600/50",
+                      barColor: "bg-emerald-500", // For vertical bar
+                    };
             const countdown = daysLeft(item.deadline);
 
             return (
