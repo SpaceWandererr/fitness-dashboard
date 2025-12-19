@@ -247,7 +247,7 @@ export default function App() {
 
         if (!hasBackendSyllabus) {
           console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)",
           );
         }
 
@@ -259,7 +259,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2)
+            structuredClone(state.syllabus_tree_v2),
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -423,7 +423,7 @@ export default function App() {
           .catch((err) => console.error("❌ Sync failed:", err));
       }, 700);
     },
-    [dashboardState]
+    [dashboardState],
   );
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
@@ -481,15 +481,30 @@ export default function App() {
         className="fixed top-0 left-0 right-0 z-40 border-b border-teal-500/20 bg-[#020617]/70 backdrop-blur-xl"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <Link to="/" onClick={() => setMenuOpen(false)}>
-            <motion.h1
+          <Link
+            to="/"
+            onClick={() => setMenuOpen(false)}
+            className="flex-shrink-0"
+          >
+            <motion.div
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-xl font-bold tracking-[0.2em] text-teal-300 glow-text"
+              className="group relative"
             >
-              JAY SINH THAKUR
-            </motion.h1>
+              <h1
+                className="text-base sm:text-lg md:text-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] 
+                bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300 flex wrap"
+              >
+                JAY SINH THAKUR
+              </h1>
+              {/* Glow underline on hover */}
+              <div
+                className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
+                scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+              />
+            </motion.div>
           </Link>
 
           <div className="hidden gap-2 md:flex">
@@ -498,8 +513,8 @@ export default function App() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs font-mono text-teal-200/80 sm:inline">
+          <div className="flex items-center gap-6">
+            <span className="hidden text-xs font-mono mr-4 text-teal-200/80 sm:inline">
               {time.toLocaleTimeString()}
             </span>
 
