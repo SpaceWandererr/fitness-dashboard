@@ -4429,7 +4429,7 @@ export default function Syllabus({
       dashboardState?.syllabus_tree_v2 &&
         Object.keys(dashboardState.syllabus_tree_v2).length > 0
         ? dashboardState.syllabus_tree_v2
-        : TREE,
+        : TREE
     );
   }
 
@@ -4458,48 +4458,6 @@ export default function Syllabus({
 
   // this creates a dummy state update function to force redraw
   const [, forceRender] = useState(0);
-
-  // ========= FIXED SYLLABUS TOGGLE (WORKING + LOCAL + BACKEND SAVE) =========
-  const toggleTask = (path) => {
-    // point to treeRef version (never re-created)
-    let ref = tree;
-
-    // go through nested keys
-    for (let i = 0; i < path.length - 1; i++) {
-      ref = ref[path[i]];
-    }
-
-    const lastKey = path[path.length - 1];
-
-    // toggle
-    ref[lastKey].done = !ref[lastKey].done;
-
-    // prepare updated state
-    const updated = {
-      ...dashboardState,
-      syllabus_tree_v2: tree,
-    };
-
-    // 1️⃣ React state
-    updateDashboard({ syllabus_tree_v2: tree });
-
-    // 2️⃣ Local save
-    try {
-      window.localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
-    } catch (err) {
-      console.error("⚠️ localStorage save failed (toggleTask):", err);
-    }
-
-    // 3️⃣ Debounced backend save
-    clearTimeout(window._syllabusUpdateTimer);
-    window._syllabusUpdateTimer = setTimeout(() => {
-      fetch(API_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
-      }).catch((err) => console.error("❌ Save failed:", err));
-    }, 400);
-  };
 
   // 2️⃣ RAW META SECOND
   const meta = dashboardState?.syllabus_meta || {};
@@ -4542,7 +4500,6 @@ export default function Syllabus({
     }
   }, [dashboardState]);
 
-
   /* ======================= CLEANUP TIMEOUT ======================= */
   useEffect(() => {
     return () => {
@@ -4574,33 +4531,16 @@ export default function Syllabus({
 
     setShowLastStudied(true);
 
-    const timer = setTimeout(
-      () => {
-        setShowLastStudied(false);
-      },
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
-    );
+    const timer = setTimeout(() => {
+      setShowLastStudied(false);
+    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
 
     return () => clearTimeout(timer);
   }, [lastStudied]);
 
-  /* ======================= STREAK ======================= */
-  const streak = useMemo(() => {
-    const has = (iso) => daySet.has(iso);
-    let st = 0;
-    const d = new Date();
-    while (true) {
-      const iso = d.toISOString().slice(0, 10);
-      if (has(iso)) st++;
-      else break;
-      d.setDate(d.getDate() - 1);
-    }
-    return st;
-  }, [dashboardState?.syllabus_streak]);
-
   const grand = useMemo(
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2],
+    [dashboardState?.syllabus_tree_v2]
   );
 
   /* ======================= ACTIONS ======================= */
@@ -4627,13 +4567,8 @@ export default function Syllabus({
         };
       });
     },
-    [], // ✅ Clean - no dependencies
+    [] // ✅ Clean - no dependencies
   );
-
-  // alias for Section header click
-  const onSectionHeaderClick = (path) => {
-    toggleOpen(path);
-  };
 
   // =========================================================
   // 🔥 FINAL FIXED: Set deadline on section + cascade to tasks
@@ -4869,7 +4804,7 @@ export default function Syllabus({
         updateDashboard({ syllabus_notes: newNR });
       }
     },
-    [updateDashboard, API_URL],
+    [updateDashboard, API_URL]
   );
 
   /* ======================= EXPORT ======================= */
@@ -4946,7 +4881,7 @@ export default function Syllabus({
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q),
+          (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
@@ -5021,226 +4956,268 @@ export default function Syllabus({
   dark:border-[#00D1FF33] md:mt-7 lg:mt-0
 "
     >
+      {/* Header Section */}
       <header
         className="
-    sticky top-0 z-40 rounded-xl
-    bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
-    dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
-    backdrop-blur-xl
-    border border-[#0B5134]/60
-    shadow-[0_0_15px_rgba(0,0,0,0.35)]
-    dark:border-[#00D1FF33]
-    text-[#E6F1FF]
+    sticky top-0 z-40bg-[#020617]/95 backdrop-blur-2xl
+    border-b border-white/10 rounded-xl
   "
       >
-        <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
-          {/* 🔹 Top Row */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            {/* LEFT — Title */}
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#d9ebe5]">
-              Syllabus Jay's Web Dev-2026
-            </h1>
+        <div className="max-w-7xl mx-auto px-3 py-1">
+          <div
+            className="
+        rounded-2xl px-4 py-3 md:px-5 md:py-4
+        bg-gradient-to-r from-[#020617] via-[#082f49] to-[#b91c1c]
+        dark:from-[#020617] dark:via-[#020b1a] dark:to-[#000814]
+        border border-white/10
+        shadow-[0_18px_45px_rgba(0,0,0,0.6)]
+      "
+          >
+            {/* Top row: title + streak + progress */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              {/* Left: title + meta */}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-400/40 text-sm">
+                    📚
+                  </span>
+                  <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-slate-50">
+                    Jay&apos;s Web Dev Syllabus 2026
+                  </h1>
+                </div>
+                <p className="text-[11px] md:text-xs text-slate-300/80">
+                  Structured roadmap with streaks, exports and safe reset.
+                </p>
+              </div>
 
-            {/* RIGHT — Buttons */}
-            <div className="flex flex-wrap justify-end gap-2">
-              {/* 🔥 Streak */}
-              <span
-                className="
-          px-3 py-1.5 rounded-xl
-          bg-gradient-to-r from-[#0ca56d] to-[#18c481]
-          border border-[#0B5134]/60
-          text-[14px] font-semibold text-black
-        "
-              >
-                🔥 Streak: <b>{Array.from(daySet).length}</b> days
-              </span>
-              {/* Expand */}
-              <button
-                onClick={() => {
-                  const curr = dashboardState.syllabus_meta || {};
-                  const updated = { ...curr };
-                  Object.keys(updated).forEach((k) => {
-                    updated[k] = { ...(updated[k] || {}), open: true };
-                  });
-                  updateDashboard({ syllabus_meta: updated });
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 text-[#d9ebe5]
-          border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-              >
-                Expand
-              </button>
-              {/* Collapse */}
-              <button
-                onClick={() => {
-                  const curr = dashboardState.syllabus_meta || {};
-                  const updated = { ...curr };
-                  Object.keys(updated).forEach((k) => {
-                    updated[k] = { ...(updated[k] || {}), open: false };
-                  });
-                  updateDashboard({ syllabus_meta: updated });
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm 
-          bg-[#113f30]/80 text-[#d9ebe5]
-          border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-              >
-                Collapse
-              </button>
-              {/* Reset */}
-              <button
-                onClick={async () => {
-                  if (
-                    !confirm(
-                      "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
-                    )
-                  )
-                    return;
-
-                  try {
-                    // Step 1: Create completely fresh tree - USE TREE DIRECTLY
-                    const resetTree = structuredClone(TREE);
-
-                    // Step 2: Read current backend state
-                    const getResponse = await fetch(API_URL, {
-                      method: "GET",
-                      headers: { "Content-Type": "application/json" },
-                    });
-
-                    const currentBackend = await getResponse.json();
-                    console.log("📥 Current backend:", currentBackend);
-
-                    // Step 3: Build new state keeping only gym data
-                    const newState = {
-                      ...currentBackend,
-                      syllabus_tree_v2: resetTree,
-                      syllabus_meta: {},
-                      syllabus_notes: {},
-                      syllabus_nr: {},
-                      syllabus_streak: [],
-                      syllabus_lastStudied: "",
-                    };
-
-                    console.log("📤 Sending to backend:", newState);
-
-                    // Step 4: Send to backend with PUT
-                    const putResponse = await fetch(API_URL, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(newState),
-                    });
-
-                    if (!putResponse.ok) {
-                      throw new Error(`Backend returned ${putResponse.status}`);
-                    }
-
-                    console.log("✅ Backend updated successfully");
-
-                    // Step 5: Verify it saved
-                    const verifyResponse = await fetch(API_URL, {
-                      method: "GET",
-                      headers: { "Content-Type": "application/json" },
-                    });
-                    const verified = await verifyResponse.json();
-                    console.log("✅ Verified backend:", verified);
-
-                    // Step 6: Clear ALL localStorage
-                    localStorage.clear();
-
-                    // Step 7: Show success and reload
-                    alert("✅ RESET COMPLETE! Page will reload now.");
-
-                    // Hard reload bypassing cache
-                    window.location.href =
-                      window.location.href + "?t=" + Date.now();
-                  } catch (err) {
-                    console.error("❌ Reset failed:", err);
-                    alert(
-                      "Reset failed! Check console for details.\n\nError: " +
-                        err.message,
-                    );
-                  }
-                }}
-                className="px-3 py-1.5 rounded-xl text-sm bg-[#B82132] text-white shadow-md hover:bg-[#a51b2a] transition"
-              >
-                Reset
-              </button>
-
-              {/* Export */}
-              <button
-                onClick={exportProgress}
-                className="px-3 py-1.5 rounded-xl text-sm text-[#d9ebe5]
-          bg-[#113f30]/80 border border-[#1f6a50]/40
-          hover:bg-[#0F3A2B] transition"
-              >
-                📤 Export
-              </button>
-              {/* Import */}
-              <label
-                className="px-3 py-1.5 rounded-xl text-sm cursor-pointer
-          bg-[#113f30]/80 border border-[#1f6a50]/40 text-[#d9ebe5]
-          hover:bg-[#0F3A2B] transition"
-              >
-                📥 Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importProgress}
-                  className="hidden"
-                />
-              </label>
+              {/* Right: streak + global progress */}
+              <div className="flex flex-wrap items-center justify-start md:justify-end gap-2">
+                {/* Streak pill */}
+                <span
+                  className="inline-flex items-center gap-1.5
+                   px-3 py-1.5 rounded-full text-[12px] font-semibold
+                   bg-gradient-to-r from-emerald-400 to-emerald-300
+                   text-[#022c22] border border-emerald-900/40
+                   shadow-[0_0_12px_rgba(16,185,129,0.45)]
+                 "
+                >
+                  🔥 <span>Streak</span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-900/10 text-xs font-bold">
+                    {Array.from(daySet).length}d
+                  </span>
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* 🔹 Progress Section */}
-          <div className="pt-2">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between text-xs text-[#d9ebe5] gap-1">
-              <span className="font-medium">
-                Progress: {grand.done}/{grand.total}
-              </span>
-
-              {showLastStudied &&
-                (lastStudied ? (
-                  <div className="text-green-300/90 flex items-center gap-1">
-                    📘 <span>Last studied:</span>
-                    <span className="font-medium text-green-200">
-                      {lastStudied}
+            {/* Middle row: actions */}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              {/* Last studied (keeps your current logic) */}
+              <div className="text-[11px] md:text-xs text-slate-200 flex items-center gap-1 min-h-[20px]">
+                {showLastStudied &&
+                  (lastStudied ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-200">
+                      📘 <span>Last studied:</span>
+                      <span className="font-medium text-emerald-100">
+                        {lastStudied}
+                      </span>
                     </span>
-                  </div>
-                ) : (
-                  <div className="text-gray-400">
-                    📭 No topics completed yet.
-                  </div>
-                ))}
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-slate-400">
+                      📭 <span>No topics completed yet.</span>
+                    </span>
+                  ))}
+              </div>
 
-              <span className="font-semibold text-[#a7f3d0]">{grand.pct}%</span>
+              {/* Action buttons */}
+              <div className="flex flex-wrap justify-end gap-1.5">
+                {/* Expand */}
+                <button
+                  onClick={() => {
+                    const curr = dashboardState.syllabus_meta || {};
+                    const updated = { ...curr };
+                    Object.keys(updated).forEach((k) => {
+                      updated[k] = { ...(updated[k] || {}), open: true };
+                    });
+                    updateDashboard({ syllabus_meta: updated });
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
+bg-slate-900/80 text-slate-100
+border border-slate-600/70
+shadow-sm
+transition
+hover:bg-slate-800 hover:-translate-y-[1px] hover:shadow-[0_0_12px_rgba(148,163,184,0.6)]
+active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
+            "
+                >
+                  Expand
+                </button>
+
+                {/* Collapse */}
+                <button
+                  onClick={() => {
+                    const curr = dashboardState.syllabus_meta || {};
+                    const updated = { ...curr };
+                    Object.keys(updated).forEach((k) => {
+                      updated[k] = { ...(updated[k] || {}), open: false };
+                    });
+                    updateDashboard({ syllabus_meta: updated });
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
+bg-slate-900/80 text-slate-100
+border border-slate-600/70
+shadow-sm
+transition
+hover:bg-slate-800 hover:-translate-y-[1px] hover:shadow-[0_0_12px_rgba(148,163,184,0.6)]
+active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
+            "
+                >
+                  Collapse
+                </button>
+
+                {/* Reset */}
+                <button
+                  onClick={async () => {
+                    if (
+                      !confirm(
+                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
+                      )
+                    )
+                      return;
+
+                    try {
+                      const resetTree = structuredClone(TREE);
+
+                      const getResponse = await fetch(API_URL, {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                      });
+                      const currentBackend = await getResponse.json();
+
+                      const newState = {
+                        ...currentBackend,
+                        syllabus_tree_v2: resetTree,
+                        syllabus_meta: {},
+                        syllabus_notes: {},
+                        syllabus_nr: {},
+                        syllabus_streak: [],
+                        syllabus_lastStudied: "",
+                      };
+
+                      const putResponse = await fetch(API_URL, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(newState),
+                      });
+
+                      if (!putResponse.ok) {
+                        throw new Error(
+                          `Backend returned ${putResponse.status}`
+                        );
+                      }
+
+                      const verifyResponse = await fetch(API_URL, {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                      });
+                      const verified = await verifyResponse.json();
+                      console.log("✅ Verified backend:", verified);
+
+                      localStorage.clear();
+                      alert("✅ RESET COMPLETE! Page will reload now.");
+                      window.location.href =
+                        window.location.href + "?t=" + Date.now();
+                    } catch (err) {
+                      console.error("❌ Reset failed:", err);
+                      alert(
+                        "Reset failed! Check console for details.\n\nError: " +
+                          err.message
+                      );
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
+bg-gradient-to-r from-red-600 to-red-500
+text-white border border-red-400/80
+shadow-[0_0_10px_rgba(248,113,113,0.7)]
+transition
+hover:brightness-110 hover:-translate-y-[1px] hover:shadow-[0_0_18px_rgba(248,113,113,0.95)]
+active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
+
+  "
+                >
+                  Reset
+                </button>
+
+                {/* Export */}
+                <button
+                  onClick={exportProgress}
+                  className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
+bg-slate-900/80 text-slate-100
+border border-slate-600/70
+shadow-sm
+transition
+hover:bg-slate-800 hover:-translate-y-[1px] hover:shadow-[0_0_12px_rgba(52,211,153,0.7)]
+active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
+
+            "
+                >
+                  📤 Export
+                </button>
+
+                {/* Import */}
+                <label
+                  className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs cursor-pointer
+bg-slate-900/80 text-slate-100
+border border-slate-600/70
+shadow-sm
+transition
+hover:bg-slate-800 hover:-translate-y-[1px] hover:shadow-[0_0_12px_rgba(59,130,246,0.7)]
+active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
+
+            "
+                >
+                  📥 Import
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={importProgress}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
-            {/* ✅ Improved Progress Bar */}
-            <div className="relative mt-2 h-2.5 rounded-full bg-[#102720] overflow-hidden">
-              {/* Background glow layer */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+            {/* Bottom row: progress bar full-width on mobile */}
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-[11px] text-slate-300 sm: mb-1">
+                <span>
+                  {grand.done}/{grand.total} topics
+                </span>
+                <span className="text-emerald-300 font-semibold">
+                  {grand.pct}%
+                </span>
+              </div>
 
-              {/* Progress Fill */}
-              <div
-                className={`
-            h-full rounded-full transition-all duration-700 ease-out
-            ${
-              grand.pct < 25
-                ? "bg-gradient-to-r from-[#0f766e] to-[#22c55e] shadow-[0_0_6px_#22c55e]"
-                : grand.pct < 50
-                  ? "bg-gradient-to-r from-[#22c55e] to-[#4ade80] shadow-[0_0_6px_#4ade80]"
+              <div className="relative h-2.5 rounded-full bg-slate-900/80 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-50/10 to-transparent" />
+                <div
+                  className={`
+              h-full rounded-full transition-all duration-700 ease-out
+              ${
+                grand.pct < 25
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-300 shadow-[0_0_6px_#22c55e]"
+                  : grand.pct < 50
+                  ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
                   : grand.pct < 75
-                    ? "bg-gradient-to-r from-[#4ade80] to-[#a7f3d0] shadow-[0_0_6px_#a7f3d0]"
-                    : "bg-gradient-to-r from-[#7a1d2b] to-[#ef4444] shadow-[0_0_8px_#ef4444]"
-            }
-          `}
-                style={{
-                  width: `${grand.pct}%`,
-                  minWidth: grand.pct > 0 ? "6px" : "6px",
-                }}
-              />
+                  ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
+                  : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
+              }
+            `}
+                  style={{
+                    width: `${grand.pct}%`,
+                    minWidth: grand.pct > 0 ? "6px" : "6px",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -5248,7 +5225,7 @@ export default function Syllabus({
 
       {/* === Search Bar === */}
       <div className="w-full px-3 mt-4 mb-2">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="relative">
             <input
               type="text"
