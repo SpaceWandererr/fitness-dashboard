@@ -234,7 +234,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
     if (!dashboardState) return;
 
     setStartISO(
-      dashboardState.wd_mern_start_date || new Date().toISOString().slice(0, 10)
+      dashboardState.wd_mern_start_date ||
+        new Date().toISOString().slice(0, 10),
     );
 
     setEndISO(dashboardState.wd_mern_end_date || DEFAULT_END);
@@ -243,7 +244,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Derived date metrics
   const startDate = useMemo(
     () => (startISO ? new Date(startISO) : null),
-    [startISO]
+    [startISO],
   );
   const endDate = useMemo(() => (endISO ? new Date(endISO) : null), [endISO]);
   const now = new Date();
@@ -311,7 +312,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
       "Don't chase motivation — build systems. This dashboard *is* your system.",
       "The grind is temporary. The life you're chasing through MERN, fitness and discipline is permanent.",
     ],
-    []
+    [],
   );
 
   // MERN internal page swipe (keeps original 4-page behavior)
@@ -348,7 +349,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   // Date popup & tmp state
   const [showDatePopup, setShowDatePopup] = useState(false);
   const [tmpStart, setTmpStart] = useState(() =>
-    startISO ? startISO : todayISO
+    startISO ? startISO : todayISO,
   );
   const [tmpEnd, setTmpEnd] = useState(() => (endISO ? endISO : DEFAULT_END));
   useEffect(() => setTmpStart(startISO), [startISO]);
@@ -465,7 +466,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
     {
       render: () => (
         <motion.div
-          className="relative rounded-2xl w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full"
+          className="relative rounded-2xl w-full lg:max-w-[350px] md:max-w-[550px] mx-auto lg:max-w-none lg:w-full"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleDragEnd(info)}
@@ -599,7 +600,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.96, y: -8 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute z-50 top-full mt-2 left-0 w-full rounded-lg bg-[rgba(10,18,28,0.98)] border border-white/20 backdrop-blur-xl shadow-2xl p-3"
+                                className="absolute z-50 top-full mt-2 left-0 w-full rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-white/30 backdrop-blur-xl shadow-2xl p-3"
                                 style={{
                                   boxShadow:
                                     "0 0 30px rgba(0,240,210,0.15), inset 0 0 14px rgba(255,255,255,0.04)",
@@ -623,7 +624,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                         wd_mern_start_date: val,
                                       });
                                     }}
-                                    className="w-full px-2 py-1.5 rounded bg-white/8 border border-white/15 text-xs focus:outline-none focus:border-teal-400/60 transition-colors"
+                                    className="w-full px-2 py-1.5 rounded bg-white/8 border border-white/15 text-white text-xs focus:outline-none focus:border-teal-400/60 transition-colors [color-scheme:dark]"
                                   />
                                 </div>
 
@@ -641,7 +642,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                         wd_mern_end_date: val,
                                       });
                                     }}
-                                    className="w-full px-2 py-1.5 rounded bg-white/8 border border-white/15 text-xs focus:outline-none focus:border-teal-400/60 transition-colors"
+                                    className="w-full px-2 py-1.5 rounded bg-white/8 border border-white/15 text-white text-xs focus:outline-none focus:border-teal-400/60 transition-colors [color-scheme:dark]"
                                   />
                                 </div>
 
@@ -867,10 +868,10 @@ export default function Goals({ dashboardState, updateDashboard }) {
                               {merPercent < 25
                                 ? "🌱"
                                 : merPercent < 50
-                                ? "🚀"
-                                : merPercent < 75
-                                ? "⚡"
-                                : "🔥"}
+                                  ? "🚀"
+                                  : merPercent < 75
+                                    ? "⚡"
+                                    : "🔥"}
                             </text>
                           </g>
                         </svg>
@@ -932,19 +933,19 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             {timeProgressPct < 25
                               ? "🌱"
                               : timeProgressPct < 50
-                              ? "🚀"
-                              : timeProgressPct < 75
-                              ? "⚡"
-                              : "🔥"}
+                                ? "🚀"
+                                : timeProgressPct < 75
+                                  ? "⚡"
+                                  : "🔥"}
                           </span>
                           <span>
                             {timeProgressPct < 25
                               ? "Starting"
                               : timeProgressPct < 50
-                              ? "Building"
-                              : timeProgressPct < 75
-                              ? "Pushing"
-                              : "Finishing"}
+                                ? "Building"
+                                : timeProgressPct < 75
+                                  ? "Pushing"
+                                  : "Finishing"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -1029,7 +1030,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
                                         .split("-")
                                         .reverse()
                                         .map((v, i) =>
-                                          i === 2 ? v.slice(-2) : v
+                                          i === 2 ? v.slice(-2) : v,
                                         )
                                         .join("/")
                                     : "—"}
@@ -1060,8 +1061,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
                             {daysRemaining > 200
                               ? "🌱 Long Journey"
                               : daysRemaining > 100
-                              ? "🔥 Stay Consistent"
-                              : "🚀 Final Push!"}
+                                ? "🔥 Stay Consistent"
+                                : "🚀 Final Push!"}
                           </div>
                         </div>
                       </div>
@@ -1299,7 +1300,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
         items: ["Work visa", "Move to NZ", "Apply for residency"],
       },
     ],
-    []
+    [],
   );
 
   const nzWrapper = [
@@ -1310,7 +1311,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={(e, info) => handleNZDrag(info)}
           whileHover={{ y: -4 }}
-          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full rounded-xl p-4 lg:p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
+          className="w-full lg:max-w-[350px] md:max-w-[550px] mx-auto lg:max-w-none lg:w-full rounded-xl p-4 lg:p-5 border border-[rgba(0,240,210,0.06)] bg-[rgba(10,20,30,0.35)] backdrop-blur-xl shadow-lg relative overflow-hidden min-h-[300px]"
           style={{
             transform: "translateZ(0)",
             willChange: "transform, opacity",
@@ -1388,7 +1389,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           whileHover={{ y: -4 }}
-          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full min-h-[230px] relative rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg overflow-hidden"
+          className="w-full lg:max-w-[350px] md:max-w-[550px] mx-auto lg:max-w-none lg:w-full min-h-[230px] relative rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg overflow-hidden"
         >
           {/* soft NZ-style holo bars */}
           <div
@@ -1434,8 +1435,8 @@ export default function Goals({ dashboardState, updateDashboard }) {
             const curWeight = Number.isFinite(Number(latestLog?.weight))
               ? Number(latestLog.weight)
               : Number.isFinite(baseline)
-              ? baseline
-              : null;
+                ? baseline
+                : null;
 
             const start = Number.isFinite(baseline) ? baseline : curWeight;
 
@@ -1583,7 +1584,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           whileHover={{ y: -4 }}
-          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+          className="w-full lg:max-w-[350px] md:max-w-[550px] mx-auto lg:max-w-none lg:w-full rounded-xl p-4 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
           {/* Vertical & Horizontal bars */}
           <div
@@ -1727,7 +1728,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
           dragConstraints={{ left: 0, right: 0 }}
           whileHover={{ y: -4 }}
           transition={{ duration: 0 }}
-          className="w-full max-w-[320px] mx-auto lg:max-w-none lg:w-full min-h-[200px] rounded-xl pl-4 p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
+          className="w-full lg:max-w-[350px] md:max-w-[550px] mx-auto lg:max-w-none lg:w-full min-h-[200px] rounded-xl pl-4 p-3 border border-white/5 bg-[rgba(15,20,30,0.45)] backdrop-blur-xl shadow-lg relative overflow-hidden"
         >
           {/* soft NZ-style holo bars */}
           <div
@@ -1803,44 +1804,85 @@ export default function Goals({ dashboardState, updateDashboard }) {
         <div className="absolute inset-0 animate-grid move-grid" />
       </div>
 
-      <header className="mb-2 max-w-6xl mx-auto px-4 sm:px-6 pb-2 flex items-center justify-between">
-        <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-emerald-400 tracking-tight whitespace-nowrap hover:tracking-wider transition-all duration-300">
-          JAY SINH THAKUR
+      {/* Header Section */}
+      <header className="mb-6 max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Top Row */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="relative group cursor-pointer">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-500 flex items-center justify-center font-black text-slate-900 text-lg shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 group-hover:scale-105 transition-all duration-300">
+                JST
+              </div>
+            </div>
+
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-white via-emerald-200 to-teal-300 bg-clip-text text-transparent">
+                JAY SINH THAKUR
+              </h1>
+              <p className="text-xs text-white/50 mt-0.5 hidden sm:block">Building the future, one commit at a time 🚀</p>
+            </div>
+        </div>
         </div>
       </header>
 
+
+
       {/* Main Content Section */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pb-1">
-        <section
-          className="mb-4 transform-gpu"
-          style={{ transform: `translateZ(40px)` }}
-        >
-          <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-snug text-center px-2"
-            style={{
-              textShadow:
-                "0 6px 30px rgba(0,0,0,0.6), 0 0 18px rgba(40,200,180,0.06)",
-            }}
-          >
-            <span className="inline-block px-3 py-3 rounded-md bg-gradient-to-r from-teal-300/10 to-cyan-300/6 border border-[rgba(255,255,255,0.03)]">
-              🚀 My Goals Command Center
-            </span>
-          </h1>
-          {/*QuotesSection*/}
-          <div className="mt-1 max-w-2xl mx-auto px-2">
-            <div className="rounded-2xl p-0 bg-[rgba(255,255,255,0.01)] text-center">
-              <FadeSwiper
-                data={inspoLines}
-                render={(line) => (
-                  <div className="w-full text-center text-sm md:text-base opacity-85 leading-relaxed px-2 py-1">
-                    {line}
-                  </div>
-                )}
-                noDrag
-              />
+        <section className="mb-8 relative overflow-hidden">
+          {/* Background Glow Effects */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+
+          <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
+            {/* Main Title */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-3 mb-4 pt-3 rounded-xl">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30 animate-bounce " style={{animationDuration: '2s'}}>
+                  🚀
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-white via-emerald-200 to-teal-300 bg-clip-text text-transparent tracking-tight">
+                  My Goals Command Center
+                </h1>
+              </div>
+
+              <p className="text-sm sm:text-base text-white/60 max-w-2xl mx-auto mb-6 leading-relaxed">
+                Every small step you take here shapes the man you're becoming tomorrow.
+              </p>
+            </div>
+
+            {/* Quotes Swiper with Enhanced Design */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 rounded-2xl blur-xl"></div>
+
+              <div className="relative rounded-2xl p-6 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 backdrop-blur-sm shadow-2xl">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <svg className="w-5 h-5 text-emerald-400/60" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-emerald-400/80 tracking-wider uppercase">Daily Inspiration</span>
+                </div>
+
+                <FadeSwiper
+                  data={inspoLines}
+                  render={(line) => (
+                    <div className="w-full text-center">
+                      <p className="text-sm sm:text-base md:text-lg text-white/90 leading-relaxed px-4 py-2 font-medium italic">
+                        "{line}"
+                      </p>
+                    </div>
+                  )}
+                  noDrag
+                />
+
+                {/* Decorative Quote Marks */}
+                <div className="absolute top-4 left-4 text-4xl text-emerald-400/10 font-serif">"</div>
+                <div className="absolute bottom-4 right-4 text-4xl text-emerald-400/10 font-serif">"</div>
+              </div>
             </div>
           </div>
         </section>
+
 
         {/* Page One - FIXED RESPONSIVE GRID */}
         <section className="min-h-[calc(60vh-var(--nav-height))] w-full">
