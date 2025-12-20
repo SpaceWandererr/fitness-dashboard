@@ -456,7 +456,13 @@ export default function App() {
       {/* NAVBAR */}
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 z-40 border-b border-teal-500/20 bg-[#020617]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(6,182,212,0.1)]"
+        className="
+    fixed top-0 left-0 right-0 z-40
+    border-b border-teal-400/25
+    bg-gradient-to-r from-slate-950/90 via-teal-950/85 to-slate-950/90
+    backdrop-blur-xl
+    shadow-[0_10px_30px_rgba(15,118,110,0.45)]
+  "
       >
         <div className="mx-auto max-w-7xl px-4 py-3">
           {/* TABLET LAYOUT: Logo on top, links below (640px - 1023px) */}
@@ -488,8 +494,8 @@ export default function App() {
                 </motion.div>
               </Link>
 
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono text-teal-200/80">
+              <div className="flex items-center gap-3 ">
+                <span className="text-xs font-mono text-teal-200/80 mr-6">
                   {time.toLocaleTimeString()}
                 </span>
 
@@ -660,6 +666,9 @@ export default function App() {
             </Link>
 
             <div className="flex items-center gap-3">
+              <span className="text-xs font-mono text-teal-200/80 mr-4">
+                {time.toLocaleTimeString()}
+              </span>
               <button
                 ref={themeBtnRef}
                 onClick={() => {
@@ -831,7 +840,7 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-teal-200/80">
+              <span className="text-xs font-mono text-teal-200/80 mr-6">
                 {time.toLocaleTimeString()}
               </span>
 
@@ -968,17 +977,56 @@ export default function App() {
 
         {/* MOBILE MENU DROPDOWN */}
         {menuOpen && (
-          <div className="border-t border-teal-500/20 bg-[#020617]/95 px-3 pb-3 pt-1 sm:hidden">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setMenuOpen(false)}
-                className="block rounded-md px-2 py-1.5 text-sm text-slate-100 hover:bg-teal-500/10"
+          <div className="sm:hidden px-3 pb-3 pt-2">
+            <div className="flex justify-end">
+              <div
+                className="
+          relative
+          w-[250px]           /* control width */
+          rounded-2xl
+          bg-gradient-to-br from-slate-950/95 via-teal-950/90 to-slate-950/95
+          border border-teal-400/30
+          backdrop-blur-2xl
+          shadow-[0_18px_40px_rgba(0,0,0,0.85)]
+          px-2.5 py-2
+          space-y-1
+        "
               >
-                {l.label}
-              </Link>
-            ))}
+                {/* small arrow pointing to hamburger */}
+                <div
+                  className="
+            absolute -top-1 right-4
+            h-2 w-2
+            rotate-45
+            bg-slate-950/95
+            border-t border-l border-teal-400/30
+          "
+                />
+
+                {links.map((l) => (
+                  <Link
+                    key={l.to}
+                    to={l.to}
+                    onClick={() => setMenuOpen(false)}
+                    className="
+              flex items-center
+              rounded-lg px-3 py-2
+              text-[13px] text-slate-100
+              bg-slate-900/40
+              border border-transparent
+              transition
+              hover:bg-teal-500/15
+              hover:border-teal-400/60
+              hover:shadow-[0_0_14px_rgba(45,212,191,0.7)]
+              active:scale-[0.98] active:translate-y-[1px]
+            "
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-400 mr-2 shadow-[0_0_6px_rgba(45,212,191,0.9)]" />
+                    <span>{l.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </nav>
