@@ -4966,9 +4966,9 @@ export default function Syllabus({
         <div className="max-w-7xl mx-auto px-3 py-1">
           <div
             className="
-        rounded-2xl px-4 py-3 md:px-5 md:py-4
-        bg-gradient-to-r from-[#020617] via-[#082f49] to-[#b91c1c]
-        dark:from-[#020617] dark:via-[#020b1a] dark:to-[#000814]
+        rounded-2xl px-2 py-1 md:px-5 md:py-4
+        bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
+    dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
         border border-white/10
         shadow-[0_18px_45px_rgba(0,0,0,0.6)]
       "
@@ -5010,7 +5010,7 @@ export default function Syllabus({
             </div>
 
             {/* Middle row: actions */}
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
               {/* Last studied (keeps your current logic) */}
               <div className="text-[11px] md:text-xs text-slate-200 flex items-center gap-1 min-h-[20px]">
                 {showLastStudied &&
@@ -5187,7 +5187,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
             </div>
 
             {/* Bottom row: progress bar full-width on mobile */}
-            <div className="mt-3">
+            <div className="mt-1">
               <div className="flex items-center justify-between text-[11px] text-slate-300 sm: mb-1">
                 <span>
                   {grand.done}/{grand.total} topics
