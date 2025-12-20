@@ -687,7 +687,7 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
 
   const start = base.startOf("month").startOf("week");
   const days = [];
-  for (let i = 0; i < 42; i++) days.push(start.add(i, "day"));
+  for (let i = 0; i < 35; i++) days.push(start.add(i, "day"));
 
   return (
     <div
@@ -759,7 +759,6 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
 
             const baseClasses =
               "relative p-2 rounded-lg text-xs h-10 flex items-center justify-center flex-col transition-all cursor-pointer";
-
             let colorClasses = "";
             if (isSelected) {
               colorClasses =
@@ -2092,7 +2091,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                   const taskScore = totalPlanned; // 0-8 points (morning + afternoon + evening tasks)
                   const waterScore = Math.min(
                     1,
-                    (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
+                    (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
                   ); // 0-1 point
                   const meditateScore = planner.dayMap?.[dayKey]?.habits
                     ?.meditate
@@ -2100,7 +2099,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     : 0; // 0-1 point
                   const readingScore = Math.min(
                     1,
-                    (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
+                    (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
                   ); // 0-1 point
                   const total =
                     taskScore + waterScore + meditateScore + readingScore;
@@ -2142,7 +2141,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                             ...prevDay.habits,
                             water: Math.max(
                               0,
-                              (prevDay.habits?.water || 0) - 1,
+                              (prevDay.habits?.water || 0) - 1
                             ),
                           },
                         };
@@ -2179,7 +2178,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                             ...prevDay.habits,
                             water: Math.min(
                               12,
-                              (prevDay.habits?.water || 0) + 1,
+                              (prevDay.habits?.water || 0) + 1
                             ),
                           },
                         };
@@ -2328,7 +2327,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     width: `${Math.min(
                       100,
                       ((planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30) *
-                        100,
+                        100
                     )}%`,
                   }}
                   transition={{ duration: 0.5 }}
@@ -2354,7 +2353,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     const taskScore = totalPlanned; // 0-8
                     const waterScore = Math.min(
                       1,
-                      (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
+                      (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
                     ); // 0-1
                     const meditateScore = planner.dayMap?.[dayKey]?.habits
                       ?.meditate
@@ -2362,7 +2361,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                       : 0; // 0-1
                     const readingScore = Math.min(
                       1,
-                      (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
+                      (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
                     ); // 0-1
                     const total =
                       taskScore + waterScore + meditateScore + readingScore;
@@ -2378,7 +2377,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                       const taskScore = totalPlanned; // 0-8
                       const waterScore = Math.min(
                         1,
-                        (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
+                        (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
                       );
                       const meditateScore = planner.dayMap?.[dayKey]?.habits
                         ?.meditate
@@ -2386,7 +2385,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                         : 0;
                       const readingScore = Math.min(
                         1,
-                        (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
+                        (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
                       );
                       const total =
                         taskScore + waterScore + meditateScore + readingScore;
@@ -2422,14 +2421,14 @@ export default function Planner({ dashboardState, updateDashboard }) {
                 Tasks ({totalPlanned}/8) + Water (
                 {Math.min(
                   1,
-                  (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
+                  (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
                 ).toFixed(1)}
                 ) + Meditation (
                 {planner.dayMap?.[dayKey]?.habits?.meditate ? 1 : 0}) + Reading
                 (
                 {Math.min(
                   1,
-                  (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
+                  (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
                 ).toFixed(1)}
                 )
               </div>
@@ -2621,7 +2620,10 @@ export default function Planner({ dashboardState, updateDashboard }) {
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_300px] gap-6 items-stretch">
         {/* ================= LEFT: MINI CALENDAR ================= */}
         <div className="h-full">
-          <div className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3">
+          <div
+            className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3
+           place-content-center"
+          >
             <MiniCalendar
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
