@@ -24,7 +24,7 @@ export default function Gallery() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:mt-10 lg:mt-0">
       <div className="flex flex-wrap gap-3 items-center">
         <label className="border rounded px-3 py-2 cursor-pointer">Upload Gym Photos
           <input type="file" className="hidden" accept="image/*" multiple onChange={(e)=>onSelect(e,'Gym')} />

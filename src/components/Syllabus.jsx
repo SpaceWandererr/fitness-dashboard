@@ -5018,7 +5018,7 @@ export default function Syllabus({
   text-[#dceee8] dark:text-[#E6F1FF]
   bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
   dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-  dark:border-[#00D1FF33]
+  dark:border-[#00D1FF33] md:mt-7 lg:mt-0
 "
     >
       <header

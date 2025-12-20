@@ -456,7 +456,7 @@ export default function App() {
       {/* NAVBAR */}
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 z-40 border-b border-teal-500/20 bg-[#020617]/70 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-40 border-b border-teal-500/20 bg-[#020617]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(6,182,212,0.1)]"
       >
         <div className="mx-auto max-w-7xl px-4 py-3">
           {/* TABLET LAYOUT: Logo on top, links below (640px - 1023px) */}

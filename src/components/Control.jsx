@@ -469,7 +469,7 @@ export default function Control({
   const availableTags = ["all", "manual", "auto", "emergency"]; // ✅ All tags included
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 text-[#E8FFFA]">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 text-[#E8FFFA] md:mt-3 lg:mt-0">
       {/* Toast Notification */}
       {notification && (
         <div

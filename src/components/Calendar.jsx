@@ -426,7 +426,7 @@ export default function CalendarFullDarkUpdated({
       colors duration-500 rounded-xl
       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
       dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
-      [#0A0F1C]"
+      [#0A0F1C] md:mt-7 lg:mt-0"
     >
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
@@ -468,8 +468,8 @@ export default function CalendarFullDarkUpdated({
                         {streakInfo.current >= 30
                           ? "🏆"
                           : streakInfo.current >= 14
-                          ? "⭐"
-                          : "✨"}
+                            ? "⭐"
+                            : "✨"}
                       </span>
                     )}
                   </div>
@@ -504,8 +504,8 @@ export default function CalendarFullDarkUpdated({
               streakInfo.percent < 50
                 ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
                 : streakInfo.percent < 80
-                ? "bg-gradient-to-r from-[#F59E0B] to-[#FB923C] shadow-[0_0_8px_#FB923C]"
-                : "bg-gradient-to-r from-[#EF4444] to-[#FF8F8F] shadow-[0_0_8px_#EF4444]"
+                  ? "bg-gradient-to-r from-[#F59E0B] to-[#FB923C] shadow-[0_0_8px_#FB923C]"
+                  : "bg-gradient-to-r from-[#EF4444] to-[#FF8F8F] shadow-[0_0_8px_#EF4444]"
             }
           `}
                   style={{ width: `${Math.max(3, streakInfo.percent)}%` }}
@@ -663,7 +663,7 @@ export default function CalendarFullDarkUpdated({
                           (todayStats.exercises > 0 ? 25 : 0) +
                             (todayStats.topics > 0 ? 25 : 0) +
                             (todayStats.calories > 0 ? 25 : 0) +
-                            (todayStats.weight > 0 ? 25 : 0)
+                            (todayStats.weight > 0 ? 25 : 0),
                         )}%`,
                       }}
                     />
@@ -674,7 +674,7 @@ export default function CalendarFullDarkUpdated({
                       (todayStats.exercises > 0 ? 25 : 0) +
                         (todayStats.topics > 0 ? 25 : 0) +
                         (todayStats.calories > 0 ? 25 : 0) +
-                        (todayStats.weight > 0 ? 25 : 0)
+                        (todayStats.weight > 0 ? 25 : 0),
                     )}
                     %
                   </span>
@@ -995,10 +995,10 @@ export default function CalendarFullDarkUpdated({
               status === "both"
                 ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
                 : status === "study"
-                ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
-                : status === "gym"
-                ? "bg-[#071A2F] text-[#9FCAFF] border border-[#3b82f6]/20"
-                : "bg-[#081C18]/60 text-[#B6E5DC] border border-[#2F6B60]/20";
+                  ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
+                  : status === "gym"
+                    ? "bg-[#071A2F] text-[#9FCAFF] border border-[#3b82f6]/20"
+                    : "bg-[#081C18]/60 text-[#B6E5DC] border border-[#2F6B60]/20";
 
             const selectedClass = isSelected
               ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105 z-10"
@@ -1020,10 +1020,10 @@ export default function CalendarFullDarkUpdated({
                   status === "both"
                     ? "Study + Gym"
                     : status === "study"
-                    ? "Study"
-                    : status === "gym"
-                    ? "Gym"
-                    : "No activity"
+                      ? "Study"
+                      : status === "gym"
+                        ? "Gym"
+                        : "No activity"
                 }`}
               >
                 {/* Date */}
@@ -1418,7 +1418,7 @@ export default function CalendarFullDarkUpdated({
                             const sets = ex.match(/(\d+)\s*×/);
                             return sum + (sets ? parseInt(sets[1]) : 0);
                           },
-                          0
+                          0,
                         )}
                       </div>
                     </div>
@@ -1434,7 +1434,7 @@ export default function CalendarFullDarkUpdated({
                             const reps = ex.match(/×\s*(\d+)/);
                             return sum + (reps ? parseInt(reps[1]) : 0);
                           },
-                          0
+                          0,
                         )}
                       </div>
                     </div>

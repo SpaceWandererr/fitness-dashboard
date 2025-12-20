@@ -200,7 +200,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0
+    0,
   );
 
   const MUSCLES = {
@@ -256,11 +256,12 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-      ? "Great job! Keep pushing! 💪"
-      : "You showed up. That's what matters. 🚀";
+        ? "Great job! Keep pushing! 💪"
+        : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
-  const cardClass = "p-0 h-full text-[#E8FFFA] flex flex-col justify-between";
+  const cardClass =
+    "p-0 h-full text-[#E8FFFA] flex flex-col justify-between";
 
   return (
     <div className={`${cardClass}`}>
@@ -356,8 +357,21 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
-                <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
-                  {entry?.bmi ?? "—"}
+                <div className="flex items-baseline justify-between gap-1 sm:gap-2">
+                  <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
+                    {entry?.bmi ?? "—"}
+                  </div>
+                  {entry?.bmi && (
+                    <div className="text-[8px] sm:text-[10px] font-medium text-purple-300/80 dark:text-purple-200/70">
+                      {entry.bmi < 18.5
+                        ? "Underweight"
+                        : entry.bmi < 25
+                          ? "Normal"
+                          : entry.bmi < 30
+                            ? "Overweight"
+                            : "Obese"}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -384,7 +398,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           <span className="text-emerald-400">✓</span>
                           <span>{ex}</span>
                         </div>
-                      ) : null
+                      ) : null,
                     )}
                   </div>
                 ) : (
@@ -580,8 +594,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                        ? `↘️ ${weightTrend}kg`
-                        : "→ 0kg"
+                          ? `↘️ ${weightTrend}kg`
+                          : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -591,8 +605,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                        ? "text-emerald-300"
-                        : "text-gray-300"
+                          ? "text-emerald-300"
+                          : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -642,7 +656,7 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length
+          : (i - 1 + modes.length) % modes.length,
       );
     }
   };
@@ -761,6 +775,7 @@ const HEIGHT_CM = 176; // used to compute BMI
 
 /* -------------------- Exported Gym component STARTS below -------------------- */
 export default function Gym({ dashboardState, updateDashboard }) {
+  
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
@@ -777,7 +792,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   // Modal inputs + editing states
@@ -823,13 +838,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
-        : ""
+        : "",
     );
 
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
-        : ""
+        : "",
     );
   }, [dashboardState]);
 
@@ -873,7 +888,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger."
+            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
           );
         });
     }
@@ -1019,12 +1034,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : existing.weight ?? null;
+      : (existing.weight ?? null);
 
     const newBmi =
       weightVal != null
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-        : existing.bmi ?? null;
+        : (existing.bmi ?? null);
 
     // ✅ REAL completion logic = exercises OR any meaningful data
     const hasExercisesDone =
@@ -1477,11 +1492,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   return (
     <div
-      className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500
-     bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
+      className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all
+      duration-500 bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
       dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
       [#0A0F1C]
-      border-gray-800 text-emerald-100 font-medium"
+      border-gray-800 text-emerald-100 font-medium md:mt-7 lg:mt-0"
     >
       {/* Header */}
       <header className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-0F766E/20 via-183D3D/30 to-0F0F0F/20 backdrop-blur-xl p-5 shadow-xl shadow-black/40 transform-gpu will-change-transform">
@@ -1827,7 +1842,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -1853,7 +1868,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -1932,7 +1947,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 16px)`,
             }}
           >
@@ -2070,9 +2085,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0)
+                                  (dayPlan.finisher?.length || 0),
                               )) *
-                              100
+                              100,
                           )}
                           %
                         </p>
@@ -2095,10 +2110,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0)
+                                  (dayPlan.finisher?.length || 0),
                               )) *
-                              100
-                          )
+                              100,
+                          ),
                         )}%`,
                       }}
                     ></div>
@@ -2173,8 +2188,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           doneState[dateKey] && logs?.[dateKey]
                             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
                             : allDone
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-                            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+                              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
                         }
                       `}
                     >
@@ -2682,7 +2697,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>
+              </div>,
             );
           }
 
@@ -2732,7 +2747,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             if (entry) {
               const countDone = (arr = []) =>
                 arr.filter((e) =>
-                  typeof e === "boolean" ? e : e?.done === true
+                  typeof e === "boolean" ? e : e?.done === true,
                 ).length;
 
               const doneByExercises =
@@ -2796,7 +2811,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>
+              </div>,
             );
           }
 
@@ -2833,8 +2848,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                        ? "bg-yellow-500/60"
-                        : "bg-gray-700"
+                          ? "bg-yellow-500/60"
+                          : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -2854,7 +2869,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             <div className="text-lg sm:text-xl font-bold text-emerald-300">
               {
                 Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM"))
+                  k.startsWith(today.format("YYYY-MM")),
                 ).length
               }
               <span className="text-sm text-emerald-300/60">
@@ -2892,7 +2907,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               {(() => {
                 const totalDays = today.daysInMonth();
                 const done = Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM"))
+                  k.startsWith(today.format("YYYY-MM")),
                 ).length;
                 return Math.round((done / totalDays) * 100);
               })()}

@@ -690,7 +690,10 @@ function MiniCalendar({ selectedDate, setSelectedDate, dayMap }) {
   for (let i = 0; i < 42; i++) days.push(start.add(i, "day"));
 
   return (
-    <div className="rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden hover:shadow-[0_0_12px_rgba(63,167,150,0.4)] transition-all">
+    <div
+      className="rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden hover:shadow-[0_0_12px_rgba(63,167,150,0.4)] transition-all
+      "
+    >
       {/* Header */}
       <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-b border-[#2F6B60]/30">
         <div className="flex items-center justify-between">
@@ -930,7 +933,7 @@ function WeatherCard({
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col ">
       {/* Header - Redesigned */}
       <div className="px-4 py-2 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-[#2F6B60]/40 rounded-xl mb-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
@@ -1543,7 +1546,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto rounded-xl text-[#E8FFFA] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] transition-colors duration-500 space-y-6">
+    <div className="p-6 max-w-7xl mx-auto rounded-xl text-[#E8FFFA] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] transition-colors duration-500 space-y-6 md:mt-7 lg:mt-0">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -1598,7 +1601,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
           )}
         </div>
       </div>
-      
+
       {/* TOP GRID: Templates + Slots */}
       <div className="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-4">
         {/* TEMPLATES PANEL */}

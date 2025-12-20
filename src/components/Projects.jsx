@@ -312,7 +312,7 @@ export default function StudyProjectsAdvanced({
     const list = PROJECT_SECTIONS[key];
     if (!list || list.length === 0) return 0;
     const done = Object.entries(progress[key] || {}).filter(
-      ([k, v]) => !isNaN(k) && v === true
+      ([k, v]) => !isNaN(k) && v === true,
     ).length;
     return Math.round((done / list.length) * 100);
   };
@@ -323,7 +323,7 @@ export default function StudyProjectsAdvanced({
     Object.entries(PROJECT_SECTIONS).forEach(([k, v]) => {
       total += v.length;
       const sectionDone = Object.entries(progress[k] || {}).filter(
-        ([k2, v2]) => !isNaN(k2) && v2 === true
+        ([k2, v2]) => !isNaN(k2) && v2 === true,
       ).length;
       done += sectionDone;
     });
@@ -341,7 +341,7 @@ export default function StudyProjectsAdvanced({
       JSON.stringify({
         ...nextProgress,
         _meta: { xp: nextXP, bonusGiven: nextBonusGiven },
-      })
+      }),
     );
     updateDashboard((prev) => ({
       ...prev,
@@ -379,7 +379,7 @@ export default function StudyProjectsAdvanced({
     // bonus check
     const list = PROJECT_SECTIONS[section];
     const doneCount = Object.entries(next[section]).filter(
-      ([k, v]) => !isNaN(k) && v === true
+      ([k, v]) => !isNaN(k) && v === true,
     ).length;
     let nextBonusGiven = { ...bonusGiven };
     if (!wasDone && doneCount === list.length && !bonusGiven[section]) {
@@ -497,8 +497,8 @@ export default function StudyProjectsAdvanced({
         d === "Beginner"
           ? "bg-white/5 border-white/10"
           : d === "Intermediate"
-          ? "bg-white/8 border-white/12"
-          : "bg-white/12 border-white/20"
+            ? "bg-white/8 border-white/12"
+            : "bg-white/12 border-white/20"
       }`}
     >
       {d}
@@ -514,7 +514,7 @@ export default function StudyProjectsAdvanced({
 
   /* ========== RENDER ========== */
   return (
-    <div className="min-h-[calc(60vh-var(--nav-height))] rounded-2xl px-6 py-6 transition-all duration-300 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9] dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000] text-foreground">
+    <div className="min-h-[calc(60vh-var(--nav-height))] rounded-2xl px-6 py-6 transition-all duration-300 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#FAFAF9] dark:bg-gradient-to-br dark:from-[#002b29] dark:via-[#001b1f] dark:to-[#2a0000] text-foreground md:mt-7 lg:mt-0">
       <div className="max-w-6xl mx-auto">
         {/* PAGE HEADER */}
         <header className="relative mb-2 overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-0F766E/20 via-183D3D/30 to-0F0F0F/20 backdrop-blur-xl p-5 sm:p-6 shadow-xl shadow-black/40">
@@ -950,7 +950,7 @@ export default function StudyProjectsAdvanced({
                                     {remaining === "Expired"
                                       ? `Expired: ${formatDate(deadline)}`
                                       : `Due: ${formatDate(
-                                          deadline
+                                          deadline,
                                         )} (${remaining})`}
                                   </div>
                                 )}
@@ -962,7 +962,7 @@ export default function StudyProjectsAdvanced({
                                     <div className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
                                       Completed:{" "}
                                       {formatDate(
-                                        progress[sec].completionDates[canonIdx]
+                                        progress[sec].completionDates[canonIdx],
                                       )}
                                     </div>
                                   )}
@@ -1575,7 +1575,7 @@ export default function StudyProjectsAdvanced({
                           {Object.entries(completionDates)
                             .sort(
                               ([, dateA], [, dateB]) =>
-                                new Date(dateB) - new Date(dateA)
+                                new Date(dateB) - new Date(dateA),
                             ) // Sort by date, newest first
                             .map(([idx, date]) => {
                               const projectName =
@@ -1641,7 +1641,7 @@ export default function StudyProjectsAdvanced({
                   .filter(([section]) => section !== "_meta")
                   .every(
                     ([, tasks]) =>
-                      Object.keys(tasks?.completionDates || {}).length === 0
+                      Object.keys(tasks?.completionDates || {}).length === 0,
                   ) && (
                   <div className="p-8 rounded-xl bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border border-emerald-500/20 text-center">
                     <p className="text-sm text-emerald-200/60">
@@ -1681,7 +1681,7 @@ export default function StudyProjectsAdvanced({
                           (acc, tasks) =>
                             acc +
                             Object.keys(tasks?.completionDates || {}).length,
-                          0
+                          0,
                         )}{" "}
                         projects
                       </div>
@@ -1723,7 +1723,7 @@ export default function StudyProjectsAdvanced({
                                 ) {
                                   latestDate = date;
                                 }
-                              }
+                              },
                             );
                           });
                           return latestDate

@@ -1797,7 +1797,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
   ---------------------------*/
 
   return (
-    <div className="w-full relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl">
+    <div className="w-full relative overflow-hidden bg-background text-foreground transition-colors rounded-2xl md:mt-10 lg:mt-0">
       {/* subtle background holographic grid */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgba(6,30,26,0.18)] via-[rgba(6,18,30,0.12)] to-[rgba(112,14,30,0.06)]" />
@@ -1811,7 +1811,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
           <div className="flex items-center gap-3">
             <div className="relative group cursor-pointer">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-400 to-cyan-500 flex items-center justify-center font-black text-slate-900 text-lg shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 group-hover:scale-105 transition-all duration-300">
-                JST
+                TJ
               </div>
             </div>
 
