@@ -4168,6 +4168,8 @@ const TREE = {
   },
 };
 
+// Unique key for syllabus localStorage
+
 // Stabilize meta reference to prevent re-renders
 
 function useStable(obj) {
@@ -4319,23 +4321,20 @@ function totalsOf(node, visited = new WeakSet()) {
  * Normalizes your entire syllabus TREE
  * Converts all sections into nested structures
  */
-// keep for compatibility but delegate to normalized version
-const normalizeWholeTree = (src) => normalizeTree(src);
 
+// CHANGE reset to use TREE directly
 const resetSyllabusProgress = () => {
   if (!confirm("Reset ALL syllabus progress? This cannot be undone!")) return;
 
-  const resetTree = normalizeTree(TREE);
+  const resetTree = TREE; // or structuredClone(TREE) if you need a copy
 
-  // 1️⃣ CRITICAL: stop pending debounced save
   if (saveTimeoutRef.current) {
     clearTimeout(saveTimeoutRef.current);
   }
 
-  // 2️⃣ Update ref FIRST (UI source of truth)
   treeRef.current = resetTree;
+  setTreeState(resetTree);
 
-  // 3️⃣ Push clean state
   updateDashboard({
     syllabus_tree_v2: resetTree,
     syllabus_meta: {},
@@ -4352,9 +4351,9 @@ export default function Syllabus({
   updateDashboard,
 }) {
   // ==================== ALL HOOKS AT TOP (FIXED ORDER) ====================
-
-  // Refs
+  const[treeState, setTreeState] = useState(() => TREE);
   const treeRef = useRef(null);
+
   const saveTimeoutRef = useRef(null);
   const seededOnceRef = useRef(false);
 
@@ -4398,10 +4397,9 @@ export default function Syllabus({
       typeof backendTree === "object" &&
       Object.keys(backendTree).length > 0
     ) {
-      if (!treeRef.current) {
-        treeRef.current = structuredClone(backendTree);
-        forceRender((v) => v + 1);
-      }
+      const cloned = structuredClone(backendTree);
+      treeRef.current = cloned;
+      setTreeState(cloned); // ensure UI uses backend tree
       seededOnceRef.current = true;
       return;
     }
@@ -4651,16 +4649,25 @@ export default function Syllabus({
   // 🔥 Mark single task
   // =========================================================
   const markTask = (path, idx, val) => {
-    const newTree = deepClone(treeRef.current);
+    // 1️⃣ Clone current tree
+    const newTree = deepClone(
+      treeRef.current || dashboardState?.syllabus_tree_v2 || TREE
+    );
 
+    // 2️⃣ Locate the parent node and item
     const parent = getRefAtPath(newTree, path.slice(0, -1));
     const leafKey = path[path.length - 1];
-    const item = parent[leafKey][idx];
+    const item = parent?.[leafKey]?.[idx];
+    if (!item) return;
 
+    // 3️⃣ Update completion state
     item.done = val;
     item.completedOn = val ? todayISO() : "";
 
-    const updates = { syllabus_tree_v2: newTree };
+    // 4️⃣ Build updates object
+    const updates = {
+      syllabus_tree_v2: newTree,
+    };
 
     if (val) {
       updates.syllabus_lastStudied = `${
@@ -4669,10 +4676,20 @@ export default function Syllabus({
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
+    // 5️⃣ Update ref + UI
     treeRef.current = newTree;
-    forceRender((x) => x + 1);
+    setTreeState(newTree); // if you keep treeState; otherwise keep forceRender
+    // or keep your existing forceRender:
+    // forceRender((x) => x + 1);
 
-    updateDashboard(updates);
+    // 6️⃣ Debounced backend save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      updateDashboard(updates);
+    }, 500);
   };
 
   // =========================================================
@@ -4707,25 +4724,21 @@ export default function Syllabus({
   /* ======================= NOTES ======================= */
   const setNR = useCallback(
     (newNR) => {
-      // If newNR is a function (same behavior as setState callback)
+      // Functional form: setNR((old) => ({ ...old, ... }))
       if (typeof newNR === "function") {
         setDashboardState((prev) => {
           const currentNotes = prev?.syllabus_notes || {};
           const updatedNotes = newNR(currentNotes);
 
+          // build new global dashboard state
           const newState = {
             ...prev,
             syllabus_notes: updatedNotes,
+            // keep syllabus_tree_v2 in sync with current tree
+            syllabus_tree_v2: treeRef.current || prev?.syllabus_tree_v2,
           };
 
-          // 1️⃣ Save to local storage
-          try {
-            window.localStorage.setItem(LOCAL_KEY, JSON.stringify(newState));
-          } catch (err) {
-            console.error("⚠️ localStorage save failed (setNR callback):", err);
-          }
-
-          // 2️⃣ Debounce + save to backend
+          // debounce + save to backend (Mongo)
           if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
           saveTimeoutRef.current = setTimeout(() => {
@@ -4739,11 +4752,26 @@ export default function Syllabus({
           return newState;
         });
       } else {
-        // If a normal object was passed → delegate to updateDashboard()
-        updateDashboard({ syllabus_notes: newNR });
+        // Direct object form: setNR(updatedNotesObject)
+        // merge into dashboard and keep treeRef in sync
+        const updatedNotes = newNR;
+        const newState = ((prev) => ({
+          ...prev,
+          syllabus_notes: updatedNotes,
+          syllabus_tree_v2: treeRef.current || prev?.syllabus_tree_v2,
+        }))(dashboardState || {});
+
+        // update local dashboard state
+        setDashboardState(newState);
+
+        // save via updateDashboard helper
+        updateDashboard({
+          syllabus_notes: updatedNotes,
+          syllabus_tree_v2: treeRef.current,
+        });
       }
     },
-    [updateDashboard, API_URL]
+    [API_URL, setDashboardState, updateDashboard]
   );
 
   /* ======================= EXPORT ======================= */
@@ -5629,7 +5657,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
           </div>
         </div>
 
-        {/* META ROW - FIXED with consistent space and smooth transitions */}
+        {/* META ROW */}
         {(deadline || (it.done && completedDate)) && (
           <div className="mt-2 pl-6 text-[10px] transition-all duration-200">
             {/* Deadline Display - Only show if NOT completed */}
@@ -5652,15 +5680,15 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 {deadline && daysDiff !== null && (
                   <span
                     className={`
-          ml-1 font-semibold
-          ${
-            daysDiff > 0
-              ? "text-green-400"
-              : daysDiff < 0
-              ? "text-red-400"
-              : "text-yellow-400"
-          }
-        `}
+                      ml-1 font-semibold
+                      ${
+                        daysDiff > 0
+                          ? "text-green-400"
+                          : daysDiff < 0
+                          ? "text-red-400"
+                          : "text-yellow-400"
+                      }
+                    `}
                   >
                     {daysDiff > 0
                       ? `(${daysDiff} day${
@@ -5698,9 +5726,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 border-gray-300 dark:border-[#2F6B60]
                 shadow-black/20 dark:shadow-black/60
               "
-              style={{
-                fontSize: "13px",
-              }}
+              style={{ fontSize: "13px" }}
             >
               <DatePicker
                 selected={deadline ? new Date(deadline) : null}
@@ -5767,6 +5793,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
     </>
   );
 }
+
 
 // ------------------ SECTION CARD ------------------
 function SectionCard({
