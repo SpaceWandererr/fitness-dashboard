@@ -481,7 +481,7 @@ export default function Goals({ dashboardState, updateDashboard }) {
         >
           <div
             className="relative rounded-xl border border-[rgba(150,255,230,0.06)] bg-[rgba(10,20,30,0.35)]
-                  backdrop-blur-md p-4 shadow-xl min-h-[580px] sm:min-h-[540px] lg:min-h-[520px]"
+                  backdrop-blur-sm p-4 shadow-xl min-h-[580px] sm:min-h-[540px] lg:min-h-[520px]"
             style={{
               transformStyle: "preserve-3d",
               overflow: "visible",

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
@@ -76,10 +82,21 @@ function normalizeSection(section, _visited = new WeakSet()) {
 /* ======================= MAIN APP ======================= */
 
 export default function App() {
+  useEffect(() => {
+    const handleVisibility = () => {
+      document.documentElement.classList.toggle("paused", document.hidden);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
   const [dark, setDark] = useState(false);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const isHome = location.pathname === "/";
+
   const navRef = useRef(null);
 
   const [time, setTime] = useState(new Date());
@@ -122,7 +139,9 @@ export default function App() {
   // }, []);
 
   // In App.jsx - Replace your FloatingScrollControl with this:
-  function FloatingScrollControl({ scrollRef }) {
+  const FloatingScrollControl = React.memo(function FloatingScrollControl({
+    scrollRef,
+  }) {
     const [showUpArrow, setShowUpArrow] = useState(false);
 
     useEffect(() => {
@@ -151,7 +170,7 @@ export default function App() {
       let timeout;
       const onScroll = () => {
         clearTimeout(timeout);
-        timeout = setTimeout(checkScroll, 100);
+        timeout = setTimeout(checkScroll, 1000);
       };
 
       el.addEventListener("scroll", onScroll, { passive: true });
@@ -184,18 +203,20 @@ export default function App() {
         onClick={handleClick}
         aria-label={showUpArrow ? "Scroll to top" : "Scroll to bottom"}
         title={showUpArrow ? "Go to Top" : "Go to Bottom"}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-md border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
+        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-sm border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
       >
         {showUpArrow ? "▲" : "▼"}
       </button>
     );
-  }
+  });
 
   /* ---------- global effects ---------- */
 
   // live clock
   useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 1000);
+    const update = () => setTime(new Date());
+    update();
+    const t = setInterval(update, 60000);
     return () => clearInterval(t);
   }, []);
 
@@ -247,7 +268,7 @@ export default function App() {
 
         if (!hasBackendSyllabus) {
           console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)",
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
           );
         }
 
@@ -259,7 +280,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2),
+            structuredClone(state.syllabus_tree_v2)
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -288,47 +309,44 @@ export default function App() {
   // Load stats from BACKEND ONLY
   // When dashboardState changes → recalc stats
   useEffect(() => {
-    if (!dashboardState) return;
+    const gymLogs = dashboardState?.wd_gym_logs || {};
+    const syllabus = dashboardState?.syllabus_tree_v2 || {};
+    const doneMap = dashboardState?.wd_done || {};
 
-    const gymLogs = dashboardState.wd_gym_logs || {};
-    const syllabus = dashboardState.syllabus_tree_v2 || {};
-    const done = dashboardState.wd_done || {};
-
-    let wh = Object.entries(gymLogs)
-      .filter(([_, v]) => typeof v.weight === "number")
+    /* -------- Weight history -------- */
+    const wh = Object.entries(gymLogs)
+      .filter(([, v]) => typeof v?.weight === "number")
       .map(([date, v]) => ({ date, weight: v.weight }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    const latestWeight = wh.length > 0 ? wh[wh.length - 1].weight : "—";
+    const latestWeight = wh.length ? wh[wh.length - 1].weight : "—";
     const gymDates = Object.keys(gymLogs).sort();
 
+    /* -------- Syllabus traversal -------- */
     function walk(node, visited = new WeakSet()) {
-      let total = 0;
-      let done = 0;
-
-      // Prevent circular references
       if (!node || typeof node !== "object") return { total: 0, done: 0 };
       if (visited.has(node)) return { total: 0, done: 0 };
       visited.add(node);
 
+      let total = 0;
+      let done = 0;
+
       if (Array.isArray(node)) {
-        node.forEach((item) => {
+        for (const item of node) {
           const r = walk(item, visited);
           total += r.total;
           done += r.done;
-        });
-      } else if (typeof node === "object" && node !== null) {
-        // leaf topic (your real schema)
+        }
+      } else {
         if (node.title) {
           total++;
           if (node.done) done++;
         }
-        // nested objects (Episode → Section → Topic arrays)
-        Object.values(node).forEach((child) => {
+        for (const child of Object.values(node)) {
           const r = walk(child, visited);
           total += r.total;
           done += r.done;
-        });
+        }
       }
 
       return { total, done };
@@ -336,15 +354,17 @@ export default function App() {
 
     const { total, done: doneTopics } = walk(syllabus);
 
+    /* -------- Streak -------- */
     let streak = 0;
     const today = dayjs();
 
     for (let i = 0; i < 365; i++) {
       const key = today.subtract(i, "day").format("YYYY-MM-DD");
-      if (done[key]) streak++;
+      if (doneMap[key]) streak++;
       else break;
     }
 
+    /* -------- Apply -------- */
     setStats({
       weight: latestWeight,
       gymDays: gymDates.length,
@@ -355,7 +375,11 @@ export default function App() {
 
     setWeightHistory(wh);
     setGymLogDates(gymDates);
-  }, [dashboardState]);
+  }, [
+    dashboardState?.wd_gym_logs,
+    dashboardState?.syllabus_tree_v2,
+    dashboardState?.wd_done,
+  ]);
 
   // inject glow CSS once
   useEffect(() => {
@@ -374,40 +398,44 @@ export default function App() {
   const lastSavedRef = useRef(null);
   const saveTimeoutRef = useRef(null);
 
-  const updateDashboard = useCallback(
-    (updates) => {
-      if (!dashboardState) return;
+  const updateDashboard = useCallback((updates) => {
+    setDashboardState((prev) => {
+      if (!prev) return prev;
 
+      // Resolve functional or object updates SAFELY
       const resolvedUpdates =
-        typeof updates === "function" ? updates(dashboardState) : updates;
+        typeof updates === "function" ? updates(prev) : updates;
 
-      const newState = {
-        ...dashboardState,
+      // Merge once
+      const nextState = {
+        ...prev,
         ...resolvedUpdates,
-        updatedAt: new Date().toISOString(), // ✅ Add timestamp
+        updatedAt: new Date().toISOString(),
       };
 
-      setDashboardState(newState);
-
+      // 🔥 Throttled backend sync (NO re-render trigger)
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
         fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newState), // ✅ Send FULL state, not just updates
-        })
-          .then((r) => r.json())
-          .then(() => console.log("💾 Synced to backend"))
-          .catch((err) => console.error("❌ Sync failed:", err));
-      }, 700);
-    },
-    [dashboardState],
-  );
+          body: JSON.stringify(nextState), // send FULL state
+        }).catch((err) => {
+          console.error("❌ Sync failed:", err);
+        });
+      }, 1500);
+
+      return nextState;
+    });
+  }, []);
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
 
-  const bgClass =
-    "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617] ";
+  const bgClass = useMemo(
+    () =>
+      "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
+    []
+  );
 
   return (
     <div
@@ -449,8 +477,8 @@ export default function App() {
 
       {/* subtle background blobs */}
       <div className="pointer-events-none fixed inset-0 opacity-40">
-        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle_at_center,#b82132aa,transparent_60%)] blur-3xl" />
+        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-xl" />
+        <div className="absolute bottom-0 right-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle_at_center,#b82132aa,transparent_60%)] blur-xl" />
       </div>
 
       {/* NAVBAR */}
@@ -477,7 +505,7 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={isHome ? { duration: 0.5 } : {}}
                   className="group relative"
                 >
                   <h1
@@ -537,7 +565,9 @@ export default function App() {
                       initial={{ scale: 0, opacity: 0.8 }}
                       animate={{ scale: 1.4, opacity: 0 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      transition={
+                        isHome ? { duration: 0.5, ease: "easeOut" } : {}
+                      }
                       className="absolute inset-2 rounded-full pointer-events-none"
                       style={{
                         background: dark
@@ -555,13 +585,17 @@ export default function App() {
                             initial={{ scale: 0.7, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
-                            transition={{ duration: 0.9, ease: "easeOut" }}
+                            transition={
+                              isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                            }
                             className="relative flex items-center justify-center"
                           >
                             <motion.span
                               initial={{ scale: 0, opacity: 0 }}
                               animate={{ scale: 1.5, opacity: 0.35 }}
-                              transition={{ duration: 1.2, ease: "easeOut" }}
+                              transition={
+                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                              }
                               className="absolute w-8 h-8 rounded-full pointer-events-none"
                               style={{
                                 background:
@@ -579,13 +613,17 @@ export default function App() {
                             initial={{ scale: 0.4, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.6, opacity: 0 }}
-                            transition={{ duration: 0.9, ease: "easeOut" }}
+                            transition={
+                              isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                            }
                             className="relative flex items-center justify-center"
                           >
                             <motion.span
                               initial={{ scale: 0, opacity: 0.2 }}
                               animate={{ scale: 1.6, opacity: 0.4 }}
-                              transition={{ duration: 1.2, ease: "easeOut" }}
+                              transition={
+                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                              }
                               className="absolute w-8 h-8 rounded-full"
                               style={{
                                 background:
@@ -603,7 +641,7 @@ export default function App() {
                     <motion.div
                       className="absolute inset-0 pointer-events-none"
                       style={{ transformOrigin: "50% 50%" }}
-                      animate={{ rotate: 360 }}
+                      animate={isHome ? { rotate: 360 } : false}
                       transition={{
                         duration: 26,
                         ease: "linear",
@@ -648,7 +686,7 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={isHome ? { duration: 0.5 } : {}}
                 className="group relative"
               >
                 <h1
@@ -706,7 +744,9 @@ export default function App() {
                     initial={{ scale: 0, opacity: 0.8 }}
                     animate={{ scale: 1.4, opacity: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeOut" } : {}
+                    }
                     className="absolute inset-2 rounded-full pointer-events-none"
                     style={{
                       background: dark
@@ -724,13 +764,17 @@ export default function App() {
                           initial={{ scale: 0.7, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.8, opacity: 0 }}
-                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          transition={
+                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                          }
                           className="relative flex items-center justify-center"
                         >
                           <motion.span
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1.5, opacity: 0.35 }}
-                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            transition={
+                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                            }
                             className="absolute w-8 h-8 rounded-full pointer-events-none"
                             style={{
                               background:
@@ -748,13 +792,17 @@ export default function App() {
                           initial={{ scale: 0.4, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.6, opacity: 0 }}
-                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          transition={
+                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                          }
                           className="relative flex items-center justify-center"
                         >
                           <motion.span
                             initial={{ scale: 0, opacity: 0.2 }}
                             animate={{ scale: 1.6, opacity: 0.4 }}
-                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            transition={
+                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                            }
                             className="absolute w-8 h-8 rounded-full"
                             style={{
                               background:
@@ -772,7 +820,7 @@ export default function App() {
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
                     style={{ transformOrigin: "50% 50%" }}
-                    animate={{ rotate: 360 }}
+                    animate={isHome ? { rotate: 360 } : false}
                     transition={{
                       duration: 26,
                       ease: "linear",
@@ -816,7 +864,7 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={isHome ? { duration: 0.5 } : {}}
                 className="group relative"
               >
                 <h1
@@ -881,7 +929,9 @@ export default function App() {
                     initial={{ scale: 0, opacity: 0.8 }}
                     animate={{ scale: 1.4, opacity: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeOut" } : {}
+                    }
                     className="absolute inset-2 rounded-full pointer-events-none"
                     style={{
                       background: dark
@@ -899,13 +949,17 @@ export default function App() {
                           initial={{ scale: 0.7, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.8, opacity: 0 }}
-                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          transition={
+                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                          }
                           className="relative flex items-center justify-center"
                         >
                           <motion.span
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1.5, opacity: 0.35 }}
-                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            transition={
+                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                            }
                             className="absolute w-8 h-8 rounded-full pointer-events-none"
                             style={{
                               background:
@@ -923,13 +977,17 @@ export default function App() {
                           initial={{ scale: 0.4, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.6, opacity: 0 }}
-                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          transition={
+                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                          }
                           className="relative flex items-center justify-center"
                         >
                           <motion.span
                             initial={{ scale: 0, opacity: 0.2 }}
                             animate={{ scale: 1.6, opacity: 0.4 }}
-                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            transition={
+                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                            }
                             className="absolute w-8 h-8 rounded-full"
                             style={{
                               background:
@@ -947,7 +1005,7 @@ export default function App() {
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
                     style={{ transformOrigin: "50% 50%" }}
-                    animate={{ rotate: 360 }}
+                    animate={isHome ? { rotate: 360 } : false}
                     transition={{
                       duration: 26,
                       ease: "linear",
@@ -1045,8 +1103,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <HomeDashboard
                     stats={stats}
@@ -1062,19 +1122,26 @@ export default function App() {
             <Route
               path="/syllabus"
               element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                >
-                  {/* Pass Mongo-synced dashboard state into Syllabus */}
-                  <Syllabus
-                    dashboardState={dashboardState}
-                    setDashboardState={setDashboardState}
-                    updateDashboard={updateDashboard} // ✅ ADD THIS
-                  />
-                </motion.div>
+                dashboardState ? (
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Syllabus
+                      dashboardState={dashboardState}
+                      setDashboardState={setDashboardState}
+                      updateDashboard={updateDashboard}
+                    />
+                  </motion.div>
+                ) : (
+                  <div className="flex h-screen items-center justify-center text-emerald-400 text-sm">
+                    Loading syllabus…
+                  </div>
+                )
               }
             />
 
@@ -1084,8 +1151,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Gym
                     dashboardState={dashboardState}
@@ -1100,8 +1169,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Projects
                     dashboardState={dashboardState}
@@ -1116,8 +1187,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Calendar
                     syllabus_tree_v2={dashboardState.syllabus_tree_v2}
@@ -1136,8 +1209,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Planner
                     dashboardState={dashboardState}
@@ -1152,8 +1227,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Gallery />
                 </motion.div>
@@ -1165,8 +1242,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Control
                     dashboardState={dashboardState}
@@ -1182,8 +1261,10 @@ export default function App() {
                 <motion.div
                   initial={{ opacity: 0, x: 300 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -300 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
                 >
                   <Goals
                     dashboardState={dashboardState}
@@ -1223,6 +1304,7 @@ export default function App() {
 
 function VisionCarousel({ cards }) {
   const [index, setIndex] = useState(0);
+  const isHome = location.pathname === "/";
 
   // Auto switch every 60 seconds
   useEffect(() => {
@@ -1251,7 +1333,7 @@ function VisionCarousel({ cards }) {
         className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 
     hidden sm:flex
     p-3 sm:p-3.5 
-    bg-teal-500/10 backdrop-blur-md 
+    bg-teal-500/10 backdrop-blur-sm
     border border-teal-400/30 
     rounded-full 
     shadow-[0_0_20px_rgba(20,184,166,0.3)]
@@ -1272,7 +1354,7 @@ function VisionCarousel({ cards }) {
         className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 
     hidden sm:flex
     p-3 sm:p-3.5 
-    bg-teal-500/10 backdrop-blur-md 
+    bg-teal-500/10 backdrop-blur-sm
     border border-teal-400/30 
     rounded-full 
     shadow-[0_0_20px_rgba(20,184,166,0.3)]
@@ -1288,7 +1370,7 @@ function VisionCarousel({ cards }) {
       </button>
 
       {/* Mobile Swipe Indicator */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 sm:hidden flex items-center gap-2 px-4 py-2 bg-teal-500/10 backdrop-blur-md border border-teal-400/30 rounded-full">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 sm:hidden flex items-center gap-2 px-4 py-2 bg-teal-500/10 backdrop-blur-sm border border-teal-400/30 rounded-full">
         <ChevronLeft size={14} className="text-teal-400 animate-pulse" />
         <span className="text-teal-300 text-sm font-medium">
           Swipe to navigate
@@ -1310,7 +1392,9 @@ function VisionCarousel({ cards }) {
             initial={{ opacity: 0, x: 80 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -80 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
+            transition={
+              isHome ? { duration: 0.45, ease: "easeOut" } : undefined
+            }
             className="w-full sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[95%]"
           >
             {cards[index]}
@@ -1340,6 +1424,7 @@ function HomeDashboard({
   const disciplineProgress = Math.min(100, stats.streak);
   const nzProgress = 30; // manual milestone % for now
   const moneyProgress = 15; // manual for now
+  const isHome = location.pathname === "/";
 
   return (
     <div className="min-h-screen space-y-16 pb-20">
@@ -1348,13 +1433,19 @@ function HomeDashboard({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1.2 }}
+        transition={isHome ? { duration: 1.2 } : undefined}
         className="relative min-h-screen overflow-hidden bg-green"
       >
         {/* Scanning ambient background */}
         <div className="fixed inset-0 opacity-30">
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-black to-black" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(16,185,129,0.03)_50%,transparent_100%)] animate-[scan_12s_ease-in-out_infinite]" />
+          <div
+            className={
+              isHome
+                ? "absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(16,185,129,0.03)_50%,transparent_100%)] animate-[scan_12s_ease-in-out_infinite]"
+                : ""
+            }
+          />
         </div>
 
         {/* Central Core Ring */}
@@ -1363,25 +1454,41 @@ function HomeDashboard({
             {/* Core Title + Pulse Ring */}
             <div className="relative flex flex-col items-center">
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+                animate={isHome ? { rotate: 360 } : false}
+                transition={
+                  isHome
+                    ? { duration: 120, repeat: Infinity, ease: "linear" }
+                    : {}
+                }
                 className="absolute -top-20 w-96 h-96 border border-emerald-500/20 rounded-full"
               />
               <motion.div
                 animate={{ rotate: -360 }}
-                transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
+                transition={
+                  isHome
+                    ? { duration: 80, repeat: Infinity, ease: "linear" }
+                    : {}
+                }
                 className="absolute -top-32 w-[500px] h-[500px] border border-cyan-500/10 rounded-full"
               />
 
               <h1 className="relative text-8xl md:text-9xl font-black tracking-tighter">
                 <span
-                  className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-600
-                           drop-shadow-[0_0_60px_rgba(16,185,129,0.8)]
-                           animate-[pulseGlow_4s_ease-in-out_infinite]"
+                  className={
+                    isHome
+                      ? "bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-600 drop-shadow-[0_0_60px_rgba(16,185,129,0.8)] animate-[pulseGlow_4s_ease-in-out_infinite]"
+                      : "bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-600"
+                  }
                 >
                   Jay&apos;s
                 </span>
-                <span className="absolute -inset-4 bg-emerald-500/20 blur-3xl animate-[pulse_3s_ease-in-out_infinite]" />
+                <span
+                  className={
+                    isHome
+                      ? "absolute -inset-4 bg-emerald-500/20 blur-xl animate-[pulse_3s_ease-in-out_infinite]"
+                      : "absolute -inset-4 bg-emerald-500/20 blur-xl"
+                  }
+                />
               </h1>
 
               <p className="mt-8 text-2xl font-light tracking-widest text-cyan-300/80">
@@ -1448,10 +1555,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1536,11 +1643,15 @@ function HomeDashboard({
                               y: [0, Math.random() * 200 - 100, 0],
                               opacity: [0, 1, 0],
                             }}
-                            transition={{
-                              duration: 3,
-                              repeat: Infinity,
-                              delay: i * 0.3,
-                            }}
+                            transition={
+                              isHome
+                                ? {
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    delay: i * 0.3,
+                                  }
+                                : {}
+                            }
                           />
                         ))}
                       </div>
@@ -1552,7 +1663,6 @@ function HomeDashboard({
 
             {/* NEURAL COMMAND DECK */}
             <motion.div
-              layout
               className="mt-24 max-w-6xl mx-auto"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1562,7 +1672,7 @@ function HomeDashboard({
                 className="relative rounded-3xl overflow-hidden border-2 
                   border-teal-500/50 dark:border-emerald-500/60
                   bg-[#020617]/95 dark:bg-black/98
-                  backdrop-blur-3xl 
+                  backdrop-blur-md
                   shadow-2xl 
                   ring-1 ring-teal-400/30 dark:ring-emerald-400/30"
               >
@@ -1934,13 +2044,15 @@ function VisionCard({
   progress = 0,
   phases = [],
   metrics = [],
-}) {
+})
+{
+  const isHome = location.pathname === "/";
   return (
     <motion.div
       initial={{ opacity: 0, y: 60 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      transition={isHome ? { duration: 0.8, ease: "easeOut" } : {}}
       className={`relative mx-auto max-w-6xl rounded-3xl border ${border} bg-gradient-to-br ${gradient} p-10 shadow-2xl backdrop-blur-xl ${glow} min-h-screen flex flex-col justify-center snap-start`}
     >
       <div className="flex flex-col gap-6">
@@ -2022,13 +2134,14 @@ function WeightPanel({ history }) {
   const first = history.length ? history[0].weight : null;
   const diff =
     latest != null && first != null ? Number(latest) - Number(first) : null;
+  const isHome = location.pathname === "/";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25 }}
+      transition={isHome ? { duration: 0.25 } : {}}
       className="rounded-2xl border border-teal-500/25 bg-black/50 p-5 shadow-[0_0_30px_rgba(45,212,191,0.25)]"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-teal-500/20 pb-3">
@@ -2095,10 +2208,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                    ? "Fat loss in progress ✅"
-                    : diff > 0
-                      ? "Weight increased ⚠️"
-                      : "Stable"
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
               }
             />
           </div>
@@ -2113,6 +2226,7 @@ function WeightPanel({ history }) {
 }
 
 function GymPanel({ gymDates }) {
+  const isHome = location.pathname === "/";
   const total = gymDates.length;
   const lastDate = total ? gymDates[gymDates.length - 1] : null;
 
@@ -2130,7 +2244,7 @@ function GymPanel({ gymDates }) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25 }}
+      transition={isHome ? { duration: 0.25 } : {}}
       className="rounded-2xl border border-indigo-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(129,140,248,0.3)]"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-500/30 pb-3">
@@ -2196,6 +2310,7 @@ function GymPanel({ gymDates }) {
 }
 
 function TopicsPanel({ stats }) {
+  const isHome = location.pathname === "/";
   const [localStats, setLocalStats] = useState(stats);
 
   useEffect(() => {
@@ -2212,7 +2327,7 @@ function TopicsPanel({ stats }) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25 }}
+      transition={isHome ? { duration: 0.25 } : {}}
       className="rounded-2xl border border-emerald-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(16,185,129,0.3)]"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/30 pb-3">
@@ -2275,7 +2390,7 @@ function StreakPanel({ stats }) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25 }}
+      transition={isHome ? { duration: 0.25 } : {}}
       className="rounded-2xl border border-fuchsia-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(217,70,239,0.3)]"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-fuchsia-500/30 pb-3">
@@ -2320,6 +2435,7 @@ function StreakPanel({ stats }) {
 /* ======================= VISION / NZ / DATA ======================= */
 
 function NZMigrationBlock() {
+  const isHome = location.pathname === "/";
   // small status bar at top to make it feel like a command dashboard
   const stages = [
     { label: "Skill Alignment", status: "ON TRACK" },
@@ -2333,7 +2449,7 @@ function NZMigrationBlock() {
       initial={{ opacity: 0, y: 80 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.9, ease: "easeOut" }}
+      transition={isHome ? { duration: 0.9, ease: "easeOut" } : {}}
       className="relative mx-auto max-w-6xl 
     rounded-2xl sm:rounded-3xl 
     border border-emerald-500/40 
@@ -2497,7 +2613,7 @@ function DirectivesBlock() {
       <div
         className="absolute inset-0 rounded-3xl 
         bg-[radial-gradient(circle_at_right,rgba(16,185,129,0.2),transparent_70%)] 
-        blur-3xl pointer-events-none"
+        blur-xl pointer-events-none"
       ></div>
 
       <div

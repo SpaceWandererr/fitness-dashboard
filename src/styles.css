@@ -221,6 +221,11 @@ body {
   }
 }
 
+.paused * {
+  animation-play-state: paused !important;
+}
+
+
 /* Smooth fade-in animation for task meta info */
 @keyframes fadeIn {
   from {

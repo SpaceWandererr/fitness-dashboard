@@ -796,7 +796,7 @@ export default function StudyProjectsAdvanced({
             {Object.entries(filteredSections).map(([sec, list]) => (
               <section
                 key={sec}
-                className="rounded-2xl border border-border p-4 backdrop-blur-md bg-black/20"
+                className="rounded-2xl border border-border p-4 backdrop-blur-sm bg-black/20"
               >
                 {/* SECTION HEADER */}
                 <header

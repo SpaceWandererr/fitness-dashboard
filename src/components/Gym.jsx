@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
+
 import dayjs from "dayjs";
 
 /* ---------------------- Constants ---------------------- */
@@ -58,7 +65,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
             ts: Date.now(),
             text: txt,
             source: "api",
-          }),
+          })
         );
       } catch {}
     }
@@ -200,7 +207,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0,
+    0
   );
 
   const MUSCLES = {
@@ -256,12 +263,12 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-        ? "Great job! Keep pushing! 💪"
-        : "You showed up. That's what matters. 🚀";
+      ? "Great job! Keep pushing! 💪"
+      : "You showed up. That's what matters. 🚀";
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
-    "p-0 h-full text-[#E8FFFA] flex flex-col justify-between";
+    "rounded-xl p-3 sm:rounded-2xl sm:p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
 
   return (
     <div className={`${cardClass}`}>
@@ -357,21 +364,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
-                <div className="flex items-baseline justify-between gap-1 sm:gap-2">
-                  <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
-                    {entry?.bmi ?? "—"}
-                  </div>
-                  {entry?.bmi && (
-                    <div className="text-[8px] sm:text-[10px] font-medium text-purple-300/80 dark:text-purple-200/70">
-                      {entry.bmi < 18.5
-                        ? "Underweight"
-                        : entry.bmi < 25
-                          ? "Normal"
-                          : entry.bmi < 30
-                            ? "Overweight"
-                            : "Obese"}
-                    </div>
-                  )}
+                <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
+                  {entry?.bmi ?? "—"}
                 </div>
               </div>
             </div>
@@ -398,7 +392,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           <span className="text-emerald-400">✓</span>
                           <span>{ex}</span>
                         </div>
-                      ) : null,
+                      ) : null
                     )}
                   </div>
                 ) : (
@@ -594,8 +588,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                          ? `↘️ ${weightTrend}kg`
-                          : "→ 0kg"
+                        ? `↘️ ${weightTrend}kg`
+                        : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -605,8 +599,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                          ? "text-emerald-300"
-                          : "text-gray-300"
+                        ? "text-emerald-300"
+                        : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -656,84 +650,71 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length,
+          : (i - 1 + modes.length) % modes.length
       );
     }
   };
 
   return (
-    <section
-      className="
-        border border-emerald-500/30 rounded-3xl 
-        px-3 py-3 sm:px-5 sm:py-2.5
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-        dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-        text-[#FAFAFA] shadow-xl shadow-black/40
-        max-w-full overflow-hidden mx-auto sm:mx-0
-        h-[650px] sm:h-[570px]
-        flex flex-col
-      "
-    >
-      <div className="relative h-full" ref={containerRef}>
-        {/* LEFT BUTTON */}
-        <button
-          onClick={() => setIndex((i) => (i - 1 + modes.length) % modes.length)}
-          className="absolute left-0 rounded-r top-1/2 -translate-y-1/2 z-20
-            bg-gradient-to-r from-transparent to-[#0F766E]/60 
-            border-r border-emerald-400/40 
-            px-2 py-1.5 text-emerald-300 
-            hover:to-emerald-500/80 hover:text-emerald-200
-            transition-all duration-200 hover:px-3
-            text-sm font-medium"
-        >
-          ‹
-        </button>
+    <div className="relative" ref={containerRef}>
+      {/* LEFT BUTTON */}
+      <button
+        onClick={() => setIndex((i) => (i - 1 + modes.length) % modes.length)}
+        className="absolute left-0 rounded-r top-1/2 -translate-y-1/2 z-20
+    bg-gradient-to-r from-transparent to-[#0F766E]/60 
+    border-r border-emerald-400/40 
+    px-2 py-1.5 text-emerald-300 
+    hover:to-emerald-500/80 hover:text-emerald-200
+    transition-all duration-200 hover:px-3
+    text-sm font-medium"
+      >
+        ‹
+      </button>
 
-        {/* RIGHT BUTTON */}
-        <button
-          onClick={() => setIndex((i) => (i + 1) % modes.length)}
-          className="absolute right-0 rounded-l top-1/2 -translate-y-1/2 z-20
-            bg-gradient-to-l from-transparent to-[#0F766E]/60 
-            border-l border-emerald-400/40 
-            px-2 py-1.5 text-emerald-300 
-            hover:to-emerald-500/80 hover:text-emerald-200
-            transition-all duration-200 hover:px-3
-            text-sm font-medium"
-        >
-          ›
-        </button>
+      {/* RIGHT BUTTON */}
+      <button
+        onClick={() => setIndex((i) => (i + 1) % modes.length)}
+        className="absolute right-0 rounded-l top-1/2 -translate-y-1/2 z-20
+    bg-gradient-to-l from-transparent to-[#0F766E]/60 
+    border-l border-emerald-400/40 
+    px-2 py-1.5 text-emerald-300 
+    hover:to-emerald-500/80 hover:text-emerald-200
+    transition-all duration-200 hover:px-3
+    text-sm font-medium"
+      >
+        ›
+      </button>
 
-        {/* Carousel Slides */}
+      {/* Carousel Slides */}
+      <div
+        className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+        onTouchStart={handleStart}
+        onTouchEnd={handleEnd}
+      >
         <div
-          className="overflow-hidden rounded-2xl"
-          onTouchStart={handleStart}
-          onTouchEnd={handleEnd}
+          className="flex transition-transform duration-500"
+          style={{ transform: `translateX(-${index * 100}%)` }}
         >
-          <div
-            className="flex transition-transform duration-500"
-            style={{ transform: `translateX(-${index * 100}%)` }}
-          >
-            {modes.map((mode, idx) => (
-              <div key={idx} className="w-full flex-shrink-0">
-                <DailySummaryMerged mode={mode} date={date} logs={logs} />
-              </div>
-            ))}
-          </div>
+          {modes.map((mode, idx) => (
+            <div key={idx} className="w-full flex-shrink-0">
+              <DailySummaryMerged mode={mode} date={date} logs={logs} />
+            </div>
+          ))}
+        </div>
 
-          {/* Dots */}
-          <div className="flex justify-center gap-2 pb-2 pt-3">
-            {modes.map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full ${
-                  index === i ? "bg-emerald-400" : "bg-emerald-400/30"
-                }`}
-              />
-            ))}
-          </div>
+        {/* Dots */}
+        <div className="flex justify-center gap-2 pb-2">
+          {modes.map((_, i) => (
+            <div
+              key={i}
+              className={`w-2 h-2 rounded-full ${
+                index === i ? "bg-emerald-400" : "bg-emerald-400/30"
+              }`}
+            />
+          ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -775,7 +756,6 @@ const HEIGHT_CM = 176; // used to compute BMI
 
 /* -------------------- Exported Gym component STARTS below -------------------- */
 export default function Gym({ dashboardState, updateDashboard }) {
-  
   const today = dayjs();
   const todayIso = today.format("YYYY-MM-DD");
   const todayName = today.format("dddd");
@@ -792,7 +772,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   // Modal inputs + editing states
@@ -811,20 +791,31 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [editRight, setEditRight] = useState([]);
   const [editFinisher, setEditFinisher] = useState([]);
 
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
+
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [isEditingCurrent, setIsEditingCurrent] = useState(false);
+  const [showExerciseEditor, setShowExerciseEditor] = useState(false);
+
   useEffect(() => {
     if (!dashboardState) return;
 
-    // ✅ SMART MERGE — Only update if backend has newer/different data
+    // ✅ SMART MERGE — Load backend data ONCE on mount, then prefer local changes
     setLogs((prev) => {
       const incoming = dashboardState.wd_gym_logs || {};
-      const merged = {};
 
-      // Get all unique date keys
+      // First load: take everything from backend
+      if (!hasLoadedInitialData) {
+        return incoming;
+      }
+
+      // Subsequent loads: prefer incoming (backend) over local to sync updates
+      const merged = {};
       const allKeys = new Set([...Object.keys(prev), ...Object.keys(incoming)]);
 
       allKeys.forEach((dateKey) => {
-        // Keep local version if it exists, otherwise use backend
-        merged[dateKey] = prev[dateKey] || incoming[dateKey];
+        // ✅ Prefer backend data if it exists, otherwise keep local
+        merged[dateKey] = incoming[dateKey] || prev[dateKey];
       });
 
       return merged;
@@ -838,15 +829,20 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
-        : "",
+        : ""
     );
 
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
-        : "",
+        : ""
     );
-  }, [dashboardState]);
+
+    // Mark as loaded after first run
+    if (!hasLoadedInitialData) {
+      setHasLoadedInitialData(true);
+    }
+  }, [dashboardState, hasLoadedInitialData]);
 
   useEffect(() => {
     setLogs((prev) => {
@@ -888,51 +884,54 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
+            "Recovery is just as important as training. Rest, recharge, and come back stronger."
           );
         });
     }
   }, [weekday]);
 
   /* -------------------- Helper: normalizer / getEntry -------------------- */
-  const getEntry = (dateKey) => {
-    const entryWeekday = dayjs(dateKey).format("dddd");
-    const plan = DEFAULT_PLAN[entryWeekday] || {
-      left: [],
-      right: [],
-      finisher: [],
-    };
+  const getEntry = useCallback(
+    (dateKey) => {
+      const entryWeekday = dayjs(dateKey).format("dddd");
+      const plan = DEFAULT_PLAN[entryWeekday] || {
+        left: [],
+        right: [],
+        finisher: [],
+      };
 
-    const existing = logs[dateKey] || {};
+      const existing = logs[dateKey] || {};
 
-    const normalize = (planList = [], savedList = []) => {
-      return planList.map((name, i) => {
-        const saved = savedList?.[i];
+      const normalize = (planList = [], savedList = []) => {
+        return planList.map((name, i) => {
+          const saved = savedList?.[i];
 
-        // already object {name, done}
-        if (saved && typeof saved === "object") return saved;
+          // already object {name, done}
+          if (saved && typeof saved === "object") return saved;
 
-        // boolean true/false old format
-        if (typeof saved === "boolean") return { name, done: saved };
+          // boolean true/false old format
+          if (typeof saved === "boolean") return { name, done: saved };
 
-        // nothing saved => default object
-        return { name, done: false };
-      });
-    };
+          // nothing saved => default object
+          return { name, done: false };
+        });
+      };
 
-    return {
-      weekday: existing.weekday || entryWeekday,
-      left: normalize(plan.left || [], existing.left || []),
-      right: normalize(plan.right || [], existing.right || []),
-      finisher: normalize(plan.finisher || [], existing.finisher || []),
-      calories: existing.calories ?? null,
-      weight: existing.weight ?? null,
-      bmi: existing.bmi ?? null,
-      done: existing.done || false,
-      duration: existing.duration || null,
-      mood: existing.mood || null,
-    };
-  };
+      return {
+        weekday: existing.weekday || entryWeekday,
+        left: normalize(plan.left || [], existing.left || []),
+        right: normalize(plan.right || [], existing.right || []),
+        finisher: normalize(plan.finisher || [], existing.finisher || []),
+        calories: existing.calories ?? null,
+        weight: existing.weight ?? null,
+        bmi: existing.bmi ?? null,
+        done: existing.done || false,
+        duration: existing.duration || null,
+        mood: existing.mood || null,
+      };
+    },
+    [logs]
+  );
 
   /* -------------------- Toggle single exercise (click in UI) -------------------- */
   const toggle = (section, index, dateKey) => {
@@ -975,14 +974,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const right = Array.isArray(base.right) ? base.right : [];
     const finisher = Array.isArray(base.finisher) ? base.finisher : [];
 
-    // Safe "all done" check (NO .every)
-    const allDone =
+    // ✅ Simple boolean check - NO useMemo here!
+    const allCurrentlyDone =
       left.length > 0 &&
       countDone(left) === left.length &&
       countDone(right) === right.length &&
       countDone(finisher) === finisher.length;
 
-    const val = !allDone;
+    const val = !allCurrentlyDone;
 
     const updatedEntry = {
       ...base,
@@ -1025,37 +1024,32 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* -------------------- Save workout (from modal) -------------------- */
-  const saveWorkout = () => {
+  const saveWorkout = useCallback(async () => {
     const dateKey = dayjs(date).format("YYYY-MM-DD");
-
     const existing = logs[dateKey] || getEntry(dateKey);
 
     const caloriesVal = caloriesInput === "" ? null : Number(caloriesInput);
     const parsedWeight = weightInput === "" ? null : Number(weightInput);
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : (existing.weight ?? null);
+      : existing.weight ?? null;
 
     const newBmi =
       weightVal != null
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-        : (existing.bmi ?? null);
+        : existing.bmi ?? null;
 
-    // ✅ REAL completion logic = exercises OR any meaningful data
-    const hasExercisesDone =
+    const isDone =
       editLeft.some((e) => e.done) ||
       editRight.some((e) => e.done) ||
-      editFinisher.some((e) => e.done);
-
-    const hasMeta =
+      editFinisher.some((e) => e.done) ||
       caloriesVal != null ||
       weightVal != null ||
-      Number(durationHours) > 0 ||
-      Number(durationMinutes) > 0 ||
-      moodInput !== "🙂";
+      (Number(durationHours) || 0) > 0 ||
+      (Number(durationMinutes) || 0) > 0 ||
+      (moodInput !== "🙂" && moodInput !== ""); // ✅ Fix: Only if mood is actually changed
 
-    const isDone = hasExercisesDone || hasMeta;
-
+    // ✅ Update logs
     const updatedLogs = {
       ...logs,
       [dateKey]: {
@@ -1075,30 +1069,46 @@ export default function Gym({ dashboardState, updateDashboard }) {
       },
     };
 
-    // ✅ UPDATE LOCAL UI STATE
+    // ✅ Update doneState - THIS WAS MISSING!
+    const updatedDone = {
+      ...doneState,
+      [dateKey]: isDone,
+    };
+
+    // Update local state
     setLogs(updatedLogs);
-
-    // ✅ CRITICAL: sync doneState (calendar + locking logic)
-    setDoneState((prev) => ({
-      ...prev,
-      ...(isDone ? { [dateKey]: true } : {}),
-    }));
-
+    setDoneState(updatedDone); // ✅ ADD THIS LINE
     setShowModal(false);
 
-    // ✅ SINGLE SOURCE OF TRUTH (backend / localStorage)
-    updateDashboard({
+    // Sync to backend - SINGLE SOURCE OF TRUTH
+    await updateDashboard({
       wd_gym_logs: updatedLogs,
-      wd_done: {
-        ...doneState,
-        ...(isDone ? { [dateKey]: true } : {}),
-      },
+      wd_done: updatedDone, // ✅ ADD THIS
       wd_goals: {
         targetWeight,
         currentWeight: currWeight,
       },
     });
-  };
+
+    console.log(`✅ Workout saved for ${dateKey}, isDone: ${isDone}`);
+  }, [
+    date,
+    logs,
+    getEntry,
+    caloriesInput,
+    weightInput,
+    editLeft,
+    editRight,
+    editFinisher,
+    durationHours,
+    durationMinutes,
+    moodInput,
+    weekday,
+    doneState,
+    targetWeight,
+    currWeight,
+    updateDashboard,
+  ]);
 
   /* -------------------- Edit existing workout (open modal with values) -------------------- */
   const editWorkout = () => {
@@ -1122,7 +1132,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* -------------------- Delete / Unmark (clear) a date entry -------------------- */
-  const deleteWorkout = (dateKey) => {
+  const deleteWorkout = async (dateKey) => {
     // optimistic UI update
     setLogs((prev) => {
       const updated = { ...prev };
@@ -1144,7 +1154,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     delete updatedDone[dateKey];
 
     // ✅ SINGLE SOURCE OF TRUTH
-    updateDashboard({
+    await updateDashboard({
       wd_gym_logs: updatedLogs,
       wd_done: updatedDone,
       wd_goals: {
@@ -1155,7 +1165,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* -------------------- Save target / current weight -------------------- */
-  const saveTargetWeight = () => {
+  const saveTargetWeight = async () => {
     const raw = targetWeight;
     if (!raw || isNaN(raw)) {
       alert("Enter a valid target weight!");
@@ -1166,7 +1176,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setTargetWeight(newWeight);
 
     // ✅ SINGLE SOURCE OF TRUTH
-    updateDashboard({
+    await updateDashboard({
       wd_goals: {
         targetWeight: newWeight,
         currentWeight: currWeight,
@@ -1178,7 +1188,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     console.log("Target weight saved:", newWeight);
   };
 
-  const updateCurrentWeight = () => {
+  const updateCurrentWeight = async () => {
     const raw = currWeight;
     if (raw === "" || isNaN(raw)) {
       alert("Enter a valid weight!");
@@ -1189,7 +1199,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(newWeight);
 
     // ✅ SINGLE SOURCE OF TRUTH
-    updateDashboard({
+    await updateDashboard({
       wd_goals: {
         targetWeight,
         currentWeight: newWeight,
@@ -1202,7 +1212,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* -------------------- Reset full progress -------------------- */
-  const resetProgress = () => {
+  const resetProgress = async () => {
     const confirmReset = window.confirm("Reset ALL gym data?");
     if (!confirmReset) return;
 
@@ -1216,11 +1226,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
     };
 
     // 🔑 SINGLE SOURCE OF TRUTH
-    updateDashboard(outgoing);
+    await updateDashboard(outgoing);
 
     // local UI reset (instant feedback)
-    setLogs({});
-    setDoneState({});
+    setLogs((prev) => ({}));
+    setDoneState((prev) => ({}));
     setCurrWeight("");
     setTargetWeight("");
     setSundayQuote("Fetching your motivational quote...");
@@ -1229,32 +1239,48 @@ export default function Gym({ dashboardState, updateDashboard }) {
   };
 
   /* --------------- Derived values (entry/dayPlan/completion) --------------- */
-  const dateKey = dayjs(date).format("YYYY-MM-DD");
+  /* --------------- Derived values (MEMOIZED) --------------- */
+  const dateKey = useMemo(() => dayjs(date).format("YYYY-MM-DD"), [date]);
 
-  const entry = logs[dateKey] || getEntry(dateKey);
-  const dayWeekday = dayjs(date).format("dddd");
+  const entry = useMemo(
+    () => logs[dateKey] || getEntry(dateKey),
+    [logs, dateKey, getEntry]
+  );
 
-  const dayPlan = DEFAULT_PLAN[dayWeekday] || {
-    title: `${dayWeekday} — No Plan`,
-    left: [],
-    right: [],
-    finisher: [],
-  };
+  const dayWeekday = useMemo(() => dayjs(date).format("dddd"), [date]);
 
-  const totalExercises =
-    (dayPlan.left?.length || 0) +
-    (dayPlan.right?.length || 0) +
-    (dayPlan.finisher?.length || 0);
+  const dayPlan = useMemo(
+    () =>
+      DEFAULT_PLAN[dayWeekday] || {
+        title: `${dayWeekday} — No Plan`,
+        left: [],
+        right: [],
+        finisher: [],
+      },
+    [dayWeekday]
+  );
 
-  const completedExercises =
-    (entry.left ?? []).filter((e) => e?.done).length +
-    (entry.right ?? []).filter((e) => e?.done).length +
-    (entry.finisher ?? []).filter((e) => e?.done).length;
+  const totalExercises = useMemo(
+    () =>
+      (dayPlan.left?.length || 0) +
+      (dayPlan.right?.length || 0) +
+      (dayPlan.finisher?.length || 0),
+    [dayPlan]
+  );
 
-  let canComplete = totalExercises > 0 && completedExercises > 0;
-  if (!canComplete && !dayjs(date).isSame(dayjs(), "day")) {
-    canComplete = true;
-  }
+  const completedExercises = useMemo(
+    () =>
+      (entry.left ?? []).filter((e) => e?.done).length +
+      (entry.right ?? []).filter((e) => e?.done).length +
+      (entry.finisher ?? []).filter((e) => e?.done).length,
+    [entry]
+  );
+
+  const canComplete = useMemo(() => {
+    if (totalExercises > 0 && completedExercises > 0) return true;
+    if (!dayjs(date).isSame(dayjs(), "day")) return true;
+    return false;
+  }, [totalExercises, completedExercises, date]);
 
   // compute progress to target
   let baseline;
@@ -1430,10 +1456,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
     );
   }
 
-  const [isEditingTarget, setIsEditingTarget] = useState(false);
-  const [isEditingCurrent, setIsEditingCurrent] = useState(false);
-  const [showExerciseEditor, setShowExerciseEditor] = useState(false);
-
   useEffect(() => {
     const t = dashboardState?.wd_goals?.targetWeight;
     const c = dashboardState?.wd_goals?.currentWeight;
@@ -1455,6 +1477,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     countDone(entry.finisher) === entry.finisher.length;
 
   // 🔓 FIX: unlock ghost-locked days like yesterday
+  // 🔓 FIX: unlock ghost-locked days like Nov 16
   useEffect(() => {
     const key = dayjs(date).format("YYYY-MM-DD");
 
@@ -1492,14 +1515,18 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   return (
     <div
-      className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all
-      duration-500 bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
+      className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500
+     bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
       dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
       [#0A0F1C]
-      border-gray-800 text-emerald-100 font-medium md:mt-7 lg:mt-0"
+      border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}
-      <header className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-0F766E/20 via-183D3D/30 to-0F0F0F/20 backdrop-blur-xl p-5 shadow-xl shadow-black/40 transform-gpu will-change-transform">
+      <header
+        className="relative mb-6 overflow-hidden rounded-2xl border border-emerald-500/30 
+        bg-gradient-to-br from-[#0F766E]/20 via-[#183D3D]/30 to-[#0F0F0F]/20 
+        backdrop-blur-xl p-5 shadow-xl shadow-black/40"
+      >
         {/* Gradient Accent Border */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 -z-10" />
 
@@ -1578,7 +1605,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </header>
-
       {/* Progress / Weight Section */}
       <section
         className="mb-2 border border-emerald-500/30 rounded-3xl p-5 space-y-4 
@@ -1704,8 +1730,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
               {/* Status right aligned */}
               {(() => {
                 const hasWeight = entry?.weight != null;
-                const isToday = dayjs(date).isSame(dayjs(), "day");
-                const isFuture = dayjs(date).isAfter(dayjs(), "day");
+                const isToday = useMemo(
+                  () => dayjs(date).isSame(dayjs(), "day"),
+                  [date]
+                );
+                const isFuture = useMemo(
+                  () => dayjs(date).isAfter(dayjs(), "day"),
+                  [date]
+                );
 
                 if (isFuture) {
                   return (
@@ -1842,7 +1874,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -1868,7 +1900,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -1947,7 +1979,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
+                Math.abs(pctToGoal)
               )}% - 16px)`,
             }}
           >
@@ -1961,7 +1993,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </section>
-
       {/* Calendar + Daily Summary */}
       <section
         className="grid gap-4 lg:grid-cols-2 w-full align-center
@@ -1969,17 +2000,21 @@ export default function Gym({ dashboardState, updateDashboard }) {
       >
         <div className="w-full flex">
           <div className="w-full">
-            <MiniCalendar date={date} setDate={setDate} doneState={doneState} />
+            <MiniCalendar
+              date={date}
+              setDate={setDate}
+              doneState={doneState}
+              logs={logs} // ✅ ADD THIS
+            />
           </div>
         </div>
 
-        <div className="w-full flex ">
+        <div className="w-full flex">
           <div className="w-full">
             <DailySummaryCarousel date={date} logs={logs} />
           </div>
         </div>
       </section>
-
       {/* Workout Section */}
       <section className="mb-6 mt-2">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
@@ -2085,9 +2120,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0),
+                                  (dayPlan.finisher?.length || 0)
                               )) *
-                              100,
+                              100
                           )}
                           %
                         </p>
@@ -2110,10 +2145,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0),
+                                  (dayPlan.finisher?.length || 0)
                               )) *
-                              100,
-                          ),
+                              100
+                          )
                         )}%`,
                       }}
                     ></div>
@@ -2164,40 +2199,29 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                 {/* FOOTER ACTION BAR */}
                 <div className="mt-4 border-t border-emerald-500/20 pt-4">
-                  <div
-                    className="
-    grid gap-2 
-    grid-cols-1 
-    xs:grid-cols-2 
-    sm:grid-cols-2
-    md:grid-cols-3
-    lg:grid-cols-4
-  "
-                  >
-                    {/* MARK ALL / UNMARK ALL */}
+                  <div className="grid gap-2 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {/* MARK ALL / UNMARK ALL - Disabled when workout is done */}
                     <button
-                      onClick={() =>
-                        !logs?.[dateKey]?.done && toggleMarkAll(dateKey)
-                      }
-                      disabled={doneState[dateKey] && logs?.[dateKey]}
+                      onClick={() => toggleMarkAll(dateKey)}
+                      disabled={doneState[dateKey]}
                       className={`
-                        w-full rounded-xl px-4 py-3 font-semibold text-sm
-                        flex items-center justify-center gap-2
-                        transition-all duration-300
-                        ${
-                          doneState[dateKey] && logs?.[dateKey]
-                            ? "bg-gray-600/40 text-gray-400 cursor-not-allowed"
-                            : allDone
-                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-                              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
-                        }
-                      `}
+        w-full rounded-xl px-4 py-3 font-semibold text-sm
+        flex items-center justify-center gap-2
+        transition-all duration-300
+        ${
+          doneState[dateKey]
+            ? "bg-gray-600/40 text-gray-400 cursor-not-allowed opacity-50"
+            : allDone
+            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+        }
+      `}
                     >
                       {allDone ? "❌ Unmark All" : "✔️ Mark All"}
                     </button>
 
-                    {/* MAIN DONE BUTTON OR EDIT/DELETE */}
-                    {!doneState[dateKey] ? (
+                    {/* MARK WORKOUT DONE - Only shows when NOT done yet */}
+                    {!doneState[dateKey] && (
                       <button
                         onClick={openModal}
                         disabled={
@@ -2208,7 +2232,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           )
                         }
                         className={`
-          w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300
+          w-full rounded-xl px-4 py-3 font-semibold text-sm 
+          flex items-center justify-center gap-2 transition-all duration-300
           ${
             countDone(entry.left) > 0 ||
             countDone(entry.right) > 0 ||
@@ -2220,26 +2245,43 @@ export default function Gym({ dashboardState, updateDashboard }) {
                       >
                         ✅ Mark Workout Done
                       </button>
-                    ) : (
-                      <>
-                        {/* DELETE */}
-                        <button
-                          onClick={() => deleteWorkout(dateKey)}
-                          className="w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2
-          bg-gradient-to-r from-red-600 to-rose-600 text-white hover:scale-[1.02] transition-all duration-300 shadow-md shadow-red-600/30"
-                        >
-                          ❌ Clear Day
-                        </button>
+                    )}
 
-                        {/* EDIT */}
-                        <button
-                          onClick={editWorkout}
-                          className="w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2
-           text-emerald-200 bg-white/10 backdrop-blur-md border border-emerald-400/30 hover:bg-white/15 hover:border-emerald-300/50 transition-all duration-300"
-                        >
-                          ✏️ Edit
-                        </button>
-                      </>
+                    {/* EDIT BUTTON - Shows when workout is done */}
+                    {doneState[dateKey] && (
+                      <button
+                        onClick={editWorkout}
+                        className="w-full rounded-xl px-4 py-3 font-semibold text-sm 
+          flex items-center justify-center gap-2
+          text-emerald-200 bg-white/10 backdrop-blur-md 
+          border border-emerald-400/30 
+          hover:bg-white/15 hover:border-emerald-300/50 
+          transition-all duration-300 hover:scale-[1.02]"
+                      >
+                        ✏️ Edit Workout
+                      </button>
+                    )}
+
+                    {/* CLEAR DAY - Shows when workout is done */}
+                    {doneState[dateKey] && (
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "⚠️ Clear this workout? This cannot be undone."
+                            )
+                          ) {
+                            deleteWorkout(dateKey);
+                          }
+                        }}
+                        className="w-full rounded-xl px-4 py-3 font-semibold text-sm 
+          flex items-center justify-center gap-2
+          bg-gradient-to-r from-red-600 to-rose-600 text-white 
+          hover:scale-[1.02] transition-all duration-300 
+          shadow-md shadow-red-600/30"
+                      >
+                        🗑️ Clear Day
+                      </button>
                     )}
                   </div>
                 </div>
@@ -2248,7 +2290,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </section>
-
       {/* ------------- MODAL BLOCK WITH EXERCISE EDITOR ------------- */}
       {showModal && (
         <Modal onClose={() => setShowModal(false)} onEnter={saveWorkout}>
@@ -2267,7 +2308,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 type="number"
                 value={caloriesInput}
                 onChange={(e) => setCaloriesInput(e.target.value)}
-                className="w-full bg-emerald-900/40
+                className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
                      border border-emerald-400/30 rounded-xl p-2.5 
                      text-emerald-100 placeholder:text-emerald-300/40
                      outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
@@ -2286,7 +2327,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 step="0.1"
                 value={weightInput}
                 onChange={(e) => setWeightInput(e.target.value)}
-                className="w-full bg-cyan-900/40
+                className="w-full bg-gradient-to-br from-[#183D3D]/30 via-[#0F2A2A]/20 to-[#0A1F1F]/30 
                      border border-cyan-400/30 rounded-xl p-2.5 
                      text-cyan-100 placeholder:text-cyan-300/40
                      outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400
@@ -2311,7 +2352,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     max="5"
                     value={durationHours}
                     onChange={(e) => setDurationHours(Number(e.target.value))}
-                    className="w-full bg-teal-900/40
+                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-100 placeholder:text-teal-300/40
                          outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
@@ -2333,7 +2374,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     max="59"
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="w-full bg-teal-900/40
+                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-100 placeholder:text-teal-300/40
                          outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
@@ -2565,31 +2606,81 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
   const today = dayjs();
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setViewMonth(dayjs());
-    }, 60 * 1000);
-    return () => clearInterval(id);
-  }, []);
+    setViewMonth(dayjs());
+  }, [dayjs().format("YYYY-MM-DD")]);
 
-  // ✅ SAFE helper (single source)
-  const countDone = (arr = []) =>
-    arr.filter((e) => (typeof e === "boolean" ? e : e?.done === true)).length;
+  const monthStart = viewMonth.startOf("month");
+  const weekdayIndex = (monthStart.day() + 6) % 7;
+  const start = monthStart.subtract(weekdayIndex, "day");
+  const cells = Array.from({ length: 42 }, (_, i) => start.add(i, "day"));
 
-  const isEntryDone = (entry) => {
+  // HELPER FUNCTION: Check if date has completed exercises
+  const hasCompletedExercises = (dateKey) => {
+    const entry = logs?.[dateKey];
     if (!entry) return false;
 
-    const exercisesDone =
-      countDone(entry.left) +
-        countDone(entry.right) +
-        countDone(entry.finisher) >
-      0;
+    const checkArray = (arr) => {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+
+      // Check if array contains exercise objects with 'done' property
+      if (arr.some((item) => typeof item === "object" && item !== null)) {
+        return arr.some((e) => e?.done === true);
+      }
+
+      // Check if array contains boolean values directly
+      if (arr.every((item) => typeof item === "boolean")) {
+        return arr.some(Boolean);
+      }
+
+      return false;
+    };
 
     return (
-      exercisesDone ||
-      entry.calories != null ||
-      entry.weight != null ||
-      entry.done === true
+      checkArray(entry.left) ||
+      checkArray(entry.right) ||
+      checkArray(entry.finisher) ||
+      checkArray(entry.exercises) // Add this if you have exercises array
     );
+  };
+
+  // HELPER FUNCTION: Get all workout days in a month
+  const getWorkoutDaysInMonth = (monthFormat) => {
+    const workoutDays = new Set();
+
+    // From doneState
+    Object.keys(doneState || {}).forEach((k) => {
+      if (k.startsWith(monthFormat) && doneState[k] === true) {
+        workoutDays.add(k);
+      }
+    });
+
+    // From exercise logs
+    Object.keys(logs || {}).forEach((k) => {
+      if (k.startsWith(monthFormat) && hasCompletedExercises(k)) {
+        workoutDays.add(k);
+      }
+    });
+
+    return workoutDays.size;
+  };
+
+  // HELPER FUNCTION: Calculate streak
+  const calculateStreak = () => {
+    let streak = 0;
+    let currentDate = dayjs(today);
+
+    while (true) {
+      const dateKey = currentDate.format("YYYY-MM-DD");
+      const isDone =
+        doneState?.[dateKey] === true || hasCompletedExercises(dateKey);
+
+      if (!isDone) break;
+
+      streak++;
+      currentDate = currentDate.subtract(1, "day");
+    }
+
+    return streak;
   };
 
   return (
@@ -2601,27 +2692,22 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
         text-[#FAFAFA] shadow-xl shadow-black/40
         max-w-full overflow-hidden mx-auto sm:mx-0
-        h-[650px] sm:h-[570px]
-        flex flex-col
       "
     >
-      {/* Header - Matching Calendar Style */}
+      {/* Header */}
       <div className="mb-4">
-        {/* Top Row: Date Range + Navigation Arrows */}
         <div className="flex items-center justify-between mb-3 gap-2">
-          {/* Left Arrow */}
           <button
             onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
             className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0
-        rounded-full flex items-center justify-center
-        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20
-        transition-all duration-200 hover:scale-110 active:scale-95
-        text-lg sm:text-xl font-bold"
+              rounded-full flex items-center justify-center
+              bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20
+              transition-all duration-200 hover:scale-110 active:scale-95
+              text-lg sm:text-xl font-bold"
           >
             ‹
           </button>
 
-          {/* Date Range - Centered */}
           <div className="flex-1 text-center">
             <div className="text-sm sm:text-base md:text-lg font-bold text-emerald-200/90">
               {viewMonth.subtract(17, "day").format("MMM D")} -{" "}
@@ -2629,22 +2715,19 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             </div>
           </div>
 
-          {/* Right Arrow */}
           <button
             onClick={() => setViewMonth(viewMonth.add(1, "month"))}
             className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0
-        rounded-full flex items-center justify-center
-        bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20
-        transition-all duration-200 hover:scale-110 active:scale-95
-        text-lg sm:text-xl font-bold"
+              rounded-full flex items-center justify-center
+              bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20
+              transition-all duration-200 hover:scale-110 active:scale-95
+              text-lg sm:text-xl font-bold"
           >
             ›
           </button>
         </div>
 
-        {/* Bottom Row: Selected Date + Today Button - NO CARD BACKGROUND */}
         <div className="flex items-center justify-between gap-3 sm:gap-4 py-2">
-          {/* Selected Date Display */}
           <div className="flex-1 min-w-0">
             <div className="text-base sm:text-lg md:text-xl font-bold text-emerald-200 truncate">
               {dayjs(date).format("dddd")}
@@ -2654,40 +2737,37 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             </div>
           </div>
 
-          {/* Quick Jump to Today Button */}
           <button
             onClick={() => {
               setViewMonth(today);
               setDate(today.format("YYYY-MM-DD"));
             }}
             className="flex-shrink-0 flex items-center gap-1.5 
-        px-3 py-2 sm:px-4 sm:py-2.5
-        rounded-xl 
-        bg-cyan-500/20 hover:bg-cyan-500/30
-        border border-cyan-400/30 hover:border-cyan-400/50
-        text-[10px] sm:text-xs font-bold
-        text-cyan-200 hover:text-cyan-100 
-        uppercase tracking-wider
-        transition-all duration-200 hover:scale-105 active:scale-95"
+              px-3 py-2 sm:px-4 sm:py-2.5
+              rounded-xl 
+              bg-cyan-500/20 hover:bg-cyan-500/30
+              border border-cyan-400/30 hover:border-cyan-400/50
+              text-[10px] sm:text-xs font-bold
+              text-cyan-200 hover:text-cyan-100 
+              uppercase tracking-wider
+              transition-all duration-200 hover:scale-105 active:scale-95"
           >
             <span className="text-xs sm:text-sm">📍</span>
             <span>Today</span>
           </button>
         </div>
       </div>
-
-      {/* Weekday Headers - Dynamic based on today's position */}
+      {/* Weekday Headers */}
       <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
-          // Calculate which day is 3 days before today (left edge)
           const startDay = today.subtract(3, "day");
           const weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
           const headers = [];
 
           for (let i = 0; i < 7; i++) {
             const d = startDay.add(i, "day");
-            const dayIndex = (d.day() + 6) % 7; // Convert Sunday=0 to Monday=0
-            const isToday = i === 3; // Middle column
+            const dayIndex = (d.day() + 6) % 7;
+            const isToday = i === 3;
 
             headers.push(
               <div
@@ -2697,34 +2777,29 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>,
+              </div>
             );
           }
 
           return headers;
         })()}
       </div>
-      {/* 5 Rows × 7 Columns - Based on viewMonth */}
+      {/* Calendar Grid - 5 Rows × 7 Columns */}
       <div className="grid grid-cols-7 gap-[3px] sm:gap-1.5 mb-2">
         {(() => {
           const cells = [];
-
-          // IMPORTANT: Use viewMonth as the center date, not today
           const centerDate = viewMonth;
-
-          // Start 17 days before viewMonth (3 left + 14 for 2 rows)
           const startDate = centerDate.subtract(17, "day");
 
-          // Generate 5 rows × 7 days = 35 days
           for (let i = 0; i < 35; i++) {
             const d = startDate.add(i, "day");
             const key = d.format("YYYY-MM-DD");
-            const isToday = d.isSame(today, "day"); // Highlight actual today
+            const isToday = d.isSame(today, "day");
             const isSelected = key === date;
 
             const row = Math.floor(i / 7);
             const col = i % 7;
-            const isCurrentWeek = row === 2; // Middle row
+            const isCurrentWeek = row === 2;
 
             // Opacity calculation
             let opacity = 1;
@@ -2740,35 +2815,12 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               }
             }
 
+            // ✅ FIXED: Check both doneState AND exercise logs
+            const doneByState = doneState?.[key] === true;
+            const doneByExercises = hasCompletedExercises(key);
+            const isDone = doneByState || doneByExercises;
+
             const entry = logs?.[key];
-            const doneByState = Boolean(doneState?.[key]);
-
-            let doneByExercises = false;
-            if (entry) {
-              const countDone = (arr = []) =>
-                arr.filter((e) =>
-                  typeof e === "boolean" ? e : e?.done === true,
-                ).length;
-
-              const doneByExercises =
-                entry &&
-                countDone(entry.left) +
-                  countDone(entry.right) +
-                  countDone(entry.finisher) >
-                  0;
-
-              doneByExercises =
-                checkArray(entry.left) ||
-                checkArray(entry.right) ||
-                checkArray(entry.finisher);
-            }
-
-            const isDone =
-              doneByState ||
-              doneByExercises ||
-              entry?.calories != null ||
-              entry?.weight != null;
-
             const hasCalories = entry?.calories != null;
             const hasWeight = entry?.weight != null;
 
@@ -2780,38 +2832,37 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               >
                 <button
                   onClick={() => setDate(key)}
-                  // title={d.format("DD-MM-YYYY")}
                   className={`
-              w-7 h-7 sm:w-9 sm:h-9 rounded-full text-xs font-medium
-              flex items-center justify-center border
-              transition-all duration-200
-              cursor-pointer hover:scale-105
-              ${
-                isDone
-                  ? "bg-emerald-600 text-white border-emerald-400/50 shadow-md shadow-emerald-500/30"
-                  : "bg-gray-700/80 text-gray-200 border-white/10 hover:bg-gray-600/80"
-              }
-              ${isSelected ? "ring-2 ring-cyan-400 scale-[1.08] shadow-lg" : ""}
-              ${
-                isToday
-                  ? "border-cyan-400 ring-2 ring-cyan-400/60 font-bold scale-110 shadow-lg shadow-cyan-400/30"
-                  : ""
-              }
-            `}
+                    w-7 h-7 sm:w-9 sm:h-9 rounded-full text-xs font-medium
+                    flex items-center justify-center border
+                    transition-all duration-200
+                    cursor-pointer hover:scale-105
+                    ${
+                      isDone
+                        ? "bg-emerald-600 text-white border-emerald-400/50 shadow-md shadow-emerald-500/30"
+                        : "bg-gray-700/80 text-gray-200 border-white/10 hover:bg-gray-600/80"
+                    }
+                    ${
+                      isSelected
+                        ? "ring-2 ring-cyan-400 scale-[1.08] shadow-lg"
+                        : ""
+                    }
+                    ${
+                      isToday
+                        ? "border-cyan-400 ring-2 ring-cyan-400/60 font-bold scale-110 shadow-lg shadow-cyan-400/30"
+                        : ""
+                    }
+                  `}
                 >
                   {d.date()}
                 </button>
-
-                {hasCalories && isCurrentWeek && (
-                  <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" />
-                )}
 
                 <div className="pointer-events-none absolute top-8 sm:top-11 scale-90 sm:scale-100 z-30 rounded-lg bg-black/90 px-2.5 py-1.5 text-[10px] text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-emerald-500/20 shadow-xl">
                   {d.format("MMM D")} • {isDone ? "✅ Done" : "No workout"}
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>,
+              </div>
             );
           }
 
@@ -2829,7 +2880,9 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             return ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day, i) => {
               const currentDay = startOfWeek.add(i, "day");
               const dayKey = currentDay.format("YYYY-MM-DD");
-              const dayDone = doneState?.[dayKey] === true;
+              // ✅ FIXED: Check both sources
+              const dayDone =
+                doneState?.[dayKey] === true || hasCompletedExercises(dayKey);
               const isCurrentDay = currentDay.isSame(today, "day");
 
               return (
@@ -2848,8 +2901,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                          ? "bg-yellow-500/60"
-                          : "bg-gray-700"
+                        ? "bg-yellow-500/60"
+                        : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -2861,17 +2914,13 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
       {/* Monthly Stats */}
       <div className="mt-4 md:p-3 border-t border-emerald-500/20">
         <div className="grid grid-cols-3 sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-0">
-          {/* This Month */}
+          {/* This Month - ✅ FIXED */}
           <div className="bg-white/5 rounded-xl p-2">
             <div className="text-[8px] sm:text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
               This Month
             </div>
             <div className="text-lg sm:text-xl font-bold text-emerald-300">
-              {
-                Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM")),
-                ).length
-              }
+              {getWorkoutDaysInMonth(today.format("YYYY-MM"))}
               <span className="text-sm text-emerald-300/60">
                 /{today.daysInMonth()}
               </span>
@@ -2879,26 +2928,18 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             <div className="text-[9px] text-emerald-300/60">workouts</div>
           </div>
 
-          {/* Streak */}
+          {/* Streak - ✅ FIXED */}
           <div className="bg-white/5 rounded-xl p-2">
             <div className="text-[9px] text-cyan-200/60 uppercase tracking-wide font-semibold mb-0.5">
               Streak
             </div>
             <div className="text-xl font-bold text-cyan-300">
-              {(() => {
-                let streak = 0;
-                let currentDate = dayjs(today);
-                while (doneState?.[currentDate.format("YYYY-MM-DD")]) {
-                  streak++;
-                  currentDate = currentDate.subtract(1, "day");
-                }
-                return streak;
-              })()}
+              {calculateStreak()}
             </div>
             <div className="text-[9px] text-cyan-300/60">days</div>
           </div>
 
-          {/* Monthly Goal */}
+          {/* Monthly Goal - ✅ FIXED */}
           <div className="bg-white/5 rounded-xl p-2">
             <div className="text-[9px] text-teal-200/60 uppercase tracking-wide font-semibold mb-0.5">
               Monthly Goal
@@ -2906,9 +2947,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             <div className="text-xl font-bold text-teal-300">
               {(() => {
                 const totalDays = today.daysInMonth();
-                const done = Object.keys(doneState || {}).filter((k) =>
-                  k.startsWith(today.format("YYYY-MM")),
-                ).length;
+                const done = getWorkoutDaysInMonth(today.format("YYYY-MM"));
                 return Math.round((done / totalDays) * 100);
               })()}
               %
@@ -2917,7 +2956,6 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           </div>
         </div>
       </div>
-      {/* <div className="h-5 "></div> */}
     </section>
   );
 }

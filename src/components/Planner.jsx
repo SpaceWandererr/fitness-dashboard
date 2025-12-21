@@ -1060,7 +1060,7 @@ function WeatherCard({
         </div>
 
         {/* Compact stats - SINGLE ROW 2x2 */}
-        <div className="relative z-30 backdrop-blur-md bg-black/50 border-t border-[#2F6B60]/40">
+        <div className="relative z-30 backdrop-blur-sm bg-black/50 border-t border-[#2F6B60]/40">
           <div className="grid grid-cols-2 gap-2 p-2.5">
             {/* Humidity */}
             <div className="rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/10 border border-blue-400/30 p-2 flex items-center gap-2">

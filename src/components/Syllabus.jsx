@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-const LOCAL_KEY = "wd_dashboard_state";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // In your component:
@@ -4207,7 +4206,7 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
  * Safe deep clone using JSON method
  * NOTE: Only use for pure JSON objects
  */
-const deepClone = (o) => JSON.parse(JSON.stringify(o || {}));
+const deepClone = (o) => structuredClone(o || {});
 
 /**
  * Converts path array to a readable string
@@ -4221,7 +4220,7 @@ const pathKey = (pathArr) => {
           .trim() // remove leading/trailing spaces
           .replace(/\s+/g, "_") // convert spaces to _
           .replace(/[^\w_]/g, "") // remove invalid chars like > - :
-          .toLowerCase(), // normalize casing
+          .toLowerCase() // normalize casing
     )
     .join("__"); // consistent and clean
 };
@@ -4251,18 +4250,6 @@ function formatDateDDMMYYYY(iso) {
  * Returns number of days between two ISO dates
  * Example: 2025-01-01 and 2025-01-05 → 4
  */
-function daysDiff(aISO, bISO) {
-  if (!aISO || !bISO) return null;
-
-  const a = new Date(aISO);
-  const b = new Date(bISO);
-
-  if (isNaN(a) || isNaN(b)) return null;
-
-  const ms = a.setHours(0, 0, 0, 0) - b.setHours(0, 0, 0, 0);
-
-  return Math.round(ms / 86400000);
-}
 
 /**
  * Safely get any nested node reference from tree using path array
@@ -4335,34 +4322,28 @@ function totalsOf(node, visited = new WeakSet()) {
 // keep for compatibility but delegate to normalized version
 const normalizeWholeTree = (src) => normalizeTree(src);
 
-function resetSyllabusProgress() {
-  // 1️⃣ Clone current syllabus from state
-  const cloned = structuredClone(dashboardState.syllabus_tree_v2);
+const resetSyllabusProgress = () => {
+  if (!confirm("Reset ALL syllabus progress? This cannot be undone!")) return;
 
-  // 2️⃣ Walk and reset progress
-  const walk = (node) => {
-    if (Array.isArray(node)) {
-      node.forEach((item) => {
-        item.done = false;
-        item.deadline = "";
-        item.completedOn = "";
-      });
-      return;
-    }
+  const resetTree = normalizeTree(TREE);
 
-    if (node && typeof node === "object") {
-      Object.values(node).forEach(walk);
-    }
-  };
+  // 1️⃣ CRITICAL: stop pending debounced save
+  if (saveTimeoutRef.current) {
+    clearTimeout(saveTimeoutRef.current);
+  }
 
-  walk(cloned);
+  // 2️⃣ Update ref FIRST (UI source of truth)
+  treeRef.current = resetTree;
 
-  // 3️⃣ Save back to state
-  setDashboardState((prev) => ({
-    ...prev,
-    syllabus_tree_v2: cloned,
-  }));
-}
+  // 3️⃣ Push clean state
+  updateDashboard({
+    syllabus_tree_v2: resetTree,
+    syllabus_meta: {},
+    syllabus_notes: {},
+    syllabus_streak: [],
+    syllabus_lastStudied: "",
+  });
+};
 
 /* ======================= MAIN ======================= */
 export default function Syllabus({
@@ -4370,137 +4351,80 @@ export default function Syllabus({
   setDashboardState,
   updateDashboard,
 }) {
-  // ---------------- MONGO CONFIG ----------------
-  const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://fitness-backend-laoe.onrender.com/api/state";
+  // ==================== ALL HOOKS AT TOP (FIXED ORDER) ====================
 
-  // ⛑ Guard: prevent crash before state arrives
-  if (!dashboardState) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0A0F1C] overflow-hidden">
-        <div className="flex flex-col items-center gap-6">
-          {/* Animated Icons */}
-          <div className="flex space-x-4 text-5xl">
-            <span className="animate-bounce" style={{ animationDelay: "0s" }}>
-              💪
-            </span>
-            <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>
-              🏋️
-            </span>
-            <span className="animate-bounce" style={{ animationDelay: "0.4s" }}>
-              🔥
-            </span>
-          </div>
-
-          {/* Loading Text */}
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-[#CFE8E1] animate-pulse">
-              Loading your fitness journey...
-            </h2>
-            <div className="flex items-center justify-center gap-1">
-              <div
-                className="w-2 h-2 bg-[#00d1b2] rounded-full animate-bounce"
-                style={{ animationDelay: "0s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-[#00d1b2] rounded-full animate-bounce"
-                style={{ animationDelay: "0.2s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-[#00d1b2] rounded-full animate-bounce"
-                style={{ animationDelay: "0.4s" }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ======================= SYLLABUS TREE (SAFE + FIXED) ======================= */
-
-  // Tree is stored ONCE to prevent infinite re-renders, recursion, or re-normalizing.
+  // Refs
   const treeRef = useRef(null);
+  const saveTimeoutRef = useRef(null);
+  const seededOnceRef = useRef(false);
 
-  // Initialize once (TREE is only fallback)
-  if (!treeRef.current) {
-    treeRef.current = structuredClone(
-      dashboardState?.syllabus_tree_v2 &&
-        Object.keys(dashboardState.syllabus_tree_v2).length > 0
-        ? dashboardState.syllabus_tree_v2
-        : TREE
-    );
-  }
-
-  // This is now the final stable syllabus tree for the UI.
-  const tree = treeRef.current;
-
-  // useEffect(() => {
-  //   if (
-  //     dashboardState?.syllabus_tree_v2 &&
-  //     typeof dashboardState.syllabus_tree_v2 === "object" &&
-  //     Object.keys(dashboardState.syllabus_tree_v2).length > 0
-  //   ) {
-  //     treeRef.current = structuredClone(dashboardState.syllabus_tree_v2);
-  //   }
-  // }, [dashboardState?.syllabus_tree_v2]);
-
-  useEffect(() => {
-    if (
-      dashboardState?.syllabus_tree_v2 &&
-      typeof dashboardState.syllabus_tree_v2 === "object"
-    ) {
-      treeRef.current = structuredClone(dashboardState.syllabus_tree_v2);
-      forceRender((v) => v + 1);
-    }
-  }, [dashboardState?.syllabus_tree_v2]);
-
-  // this creates a dummy state update function to force redraw
+  // State
   const [, forceRender] = useState(0);
-
-  // 2️⃣ RAW META SECOND
-  const meta = dashboardState?.syllabus_meta || {};
-
-  // 3️⃣ STABLE META THIRD - Use useMemo to ensure updates properly
-  const stableMeta = useMemo(() => meta, [meta]);
-
-  // 4️⃣ NOTES / REMINDERS
-  const nr = dashboardState?.syllabus_notes || {};
-  const daySet = new Set(dashboardState?.syllabus_streak || []);
-
   const [showLastStudied, setShowLastStudied] = useState(true);
-
-  const lastStudied = dashboardState?.syllabus_lastStudied || "";
-  const LAST_STUDIED_HIDE_MINUTES = 10;
-
   const [query, setQuery] = useState("");
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [milestone, setMilestone] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const saveTimeoutRef = useRef(null);
 
+  // Constants derived from props
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://fitness-backend-laoe.onrender.com/api/state";
+
+  const meta = dashboardState?.syllabus_meta || {};
+  const stableMeta = useMemo(() => meta, [meta]);
+  const nr = dashboardState?.syllabus_notes || {};
+  const daySet = new Set(dashboardState?.syllabus_streak || []);
+  const lastStudied = dashboardState?.syllabus_lastStudied || "";
+  const LAST_STUDIED_HIDE_MINUTES = 10;
+
+  const tree = treeRef.current;
+
+  // ==================== ALL EFFECTS (CONSOLIDATED) ====================
+
+  // Effect 1: Sync treeRef + seed from backend OR static TREE
   useEffect(() => {
     if (!dashboardState) return;
 
-    const hasTree =
-      dashboardState.syllabus_tree_v2 &&
-      Object.keys(dashboardState.syllabus_tree_v2).length > 0;
+    // ✅ ADD THIS CHECK
+    if (seededOnceRef.current) return;
 
-    if (!hasTree) {
-      console.log("🌱 Seeding syllabus from code");
+    const backendTree = dashboardState.syllabus_tree_v2;
+
+    // Backend has tree → use it
+    if (
+      backendTree &&
+      typeof backendTree === "object" &&
+      Object.keys(backendTree).length > 0
+    ) {
+      if (!treeRef.current) {
+        treeRef.current = structuredClone(backendTree);
+        forceRender((v) => v + 1);
+      }
+      seededOnceRef.current = true;
+      return;
+    }
+
+    // Backend empty + not seeded yet → seed from static TREE
+    if (!seededOnceRef.current) {
+      const seeded = structuredClone(TREE);
+      treeRef.current = seeded;
+      forceRender((v) => v + 1);
 
       updateDashboard({
-        syllabus_tree_v2: structuredClone(TREE),
+        syllabus_tree_v2: seeded,
+        syllabus_meta: {},
         syllabus_notes: {},
         syllabus_streak: [],
-        syllabus_meta: {},
+        syllabus_lastStudied: null,
       });
-    }
-  }, [dashboardState]);
 
-  /* ======================= CLEANUP TIMEOUT ======================= */
+      seededOnceRef.current = true;
+    }
+  }, [dashboardState, updateDashboard]);
+
+  // Effect 2: Cleanup debounced save timeout
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -4509,51 +4433,66 @@ export default function Syllabus({
     };
   }, []);
 
-  /* ======================= AUTO SEED MONGO ======================= */
-  useEffect(() => {
-    // Only seed if we confirmed there's no backend data AND no localStorage
-    const hasLocalData = window.localStorage.getItem(LOCAL_KEY);
-
-    if (!dashboardState?.syllabus_tree_v2 && !hasLocalData) {
-      console.log("🌱 First-time setup → storing syllabus...");
-
-      const seededTree = structuredClone(TREE);
-
-      updateDashboard({
-        syllabus_tree_v2: seededTree,
-      });
-    }
-  }, [dashboardState?.syllabus_tree_v2]); // Only run when tree state changes
-
-  /* ======================= LAST STUDIED AUTO-HIDE ======================= */
+  // Effect 3: Auto-hide "last studied"
   useEffect(() => {
     if (!lastStudied) return;
-
     setShowLastStudied(true);
-
-    const timer = setTimeout(() => {
-      setShowLastStudied(false);
-    }, LAST_STUDIED_HIDE_MINUTES * 60 * 1000);
-
+    const timer = setTimeout(
+      () => setShowLastStudied(false),
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000
+    );
     return () => clearTimeout(timer);
-  }, [lastStudied]);
+  }, [lastStudied, LAST_STUDIED_HIDE_MINUTES]);
+
+  // Effect 4: Scroll listener for top button
+  useEffect(() => {
+    const onScroll = () => setShowTopBtn(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ==================== MEMOS ====================
 
   const grand = useMemo(
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
     [dashboardState?.syllabus_tree_v2]
   );
 
-  /* ======================= ACTIONS ======================= */
+  const filtered = useMemo(() => {
+    if (!tree) return {}; // ← GUARD: always return object
+    if (!query.trim()) return tree;
 
-  // ✅ Stable Toggle (does not break after Mongo re-render)
+    const q = query.toLowerCase();
+
+    function filterNode(node) {
+      if (Array.isArray(node)) {
+        const items = node.filter((it) =>
+          (it.title || "").toLowerCase().includes(q)
+        );
+        return items.length ? items : null;
+      }
+
+      if (!node || typeof node !== "object") return null;
+
+      const out = {};
+      for (const [k, v] of Object.entries(node)) {
+        const child = filterNode(v);
+        if (child) out[k] = child;
+      }
+      return Object.keys(out).length ? out : null;
+    }
+
+    return filterNode(tree) || {}; // ← GUARD: always return object
+  }, [tree, query]);
+
+  // ==================== CALLBACKS ====================
+
   const toggleOpen = useCallback(
     (path) => {
       const key = pathKey(path);
-
       setDashboardState((prev) => {
         const current = prev?.syllabus_meta || {};
         const prevOpen = current[key]?.open || false;
-
         return {
           ...prev,
           syllabus_meta: {
@@ -4563,11 +4502,11 @@ export default function Syllabus({
               open: !prevOpen,
             },
           },
-          updatedAt: new Date().toISOString(), // ✅ Timestamp for tracking
+          updatedAt: new Date().toISOString(),
         };
       });
     },
-    [] // ✅ Clean - no dependencies
+    [setDashboardState]
   );
 
   // =========================================================
@@ -4873,30 +4812,6 @@ export default function Syllabus({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ======================= FILTERED ======================= */
-  const filtered = useMemo(() => {
-    if (!query.trim()) return tree;
-    const q = query.toLowerCase();
-
-    function filterNode(node) {
-      if (Array.isArray(node)) {
-        const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
-        );
-        return items.length ? items : null;
-      }
-
-      const out = {};
-      for (const [k, v] of Object.entries(node || {})) {
-        const child = filterNode(v);
-        if (child) out[k] = child;
-      }
-      return Object.keys(out).length ? out : null;
-    }
-
-    return filterNode(tree) || {};
-  }, [tree, query]);
-
   /* ======================= GENERATE SMART PLAN ======================= */
   const generateSmartPlan = (availableMins) => {
     const leaves = [];
@@ -4945,7 +4860,88 @@ export default function Syllabus({
     return { plan, remaining };
   };
 
-  /* ======================= RENDER ======================= */
+  useEffect(() => {
+    if (seededOnceRef.current) return;
+
+    // if backend already has tree, STOP
+    if (
+      dashboardState?.syllabus_tree_v2 &&
+      Object.keys(dashboardState.syllabus_tree_v2).length > 0
+    ) {
+      seededOnceRef.current = true;
+      return;
+    }
+
+    console.log("🌱 Seeding syllabus TREE");
+
+    updateDashboard({
+      syllabus_tree_v2: structuredClone(TREE),
+    });
+
+    seededOnceRef.current = true;
+  }, [dashboardState]);
+
+  // ==================== EARLY RETURNS (AFTER ALL HOOKS) ====================
+
+  if (!dashboardState) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0A0F1C] overflow-hidden">
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex space-x-4 text-5xl">
+            <span className="animate-bounce" style={{ animationDelay: "0s" }}>
+              💪
+            </span>
+            <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>
+              🏋️
+            </span>
+            <span className="animate-bounce" style={{ animationDelay: "0.4s" }}>
+              🔥
+            </span>
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-semibold text-[#CFE8E1] animate-pulse">
+              Loading your fitness journey...
+            </h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tree || Object.keys(tree).length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900">
+        <div className="flex flex-col items-center gap-4 px-6 py-5 rounded-2xl border border-emerald-400/40 bg-black/60 shadow-[0_18px_45px_rgba(0,0,0,0.8)]">
+          {/* Spinner ring */}
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-2 border-emerald-500/30" />
+            <div className="absolute inset-0 rounded-full border-t-2 border-emerald-400 animate-spin" />
+            <div className="absolute inset-3 rounded-full bg-emerald-500/10" />
+          </div>
+
+          {/* Text */}
+          <div className="text-center space-y-1">
+            <p className="text-sm font-semibold tracking-wide text-emerald-200">
+              Initializing syllabus core…
+            </p>
+            <p className="text-[11px] text-emerald-100/70">
+              Loading roadmap from neural storage. Please hold position.
+            </p>
+          </div>
+
+          {/* Dots */}
+          <div className="flex gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-bounce [animation-delay:120ms]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-200 animate-bounce [animation-delay:240ms]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== MAIN RENDER ====================
+
   return (
     <div
       className="
@@ -5286,7 +5282,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
             className="
            rounded-2xl 
            border border-[#1a4a39]/40 
-           backdrop-blur-md p-4
+           backdrop-blur-sm p-4
            shadow-[0_0_20px_rgba(0,0,0,0.2)]
            bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
            dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]
@@ -5301,7 +5297,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
           {/* 🤖 Smart Suggest */}
           <div
             className="rounded-2xl border border-[#1a4a39]/40
-             backdrop-blur-md p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
+             backdrop-blur-sm p-4 shadow-[0_0_20px_rgba(0,0,0,0.2)]-sm
              bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
              dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#0A1F30] dark:to-[#000814]"
           >
@@ -5661,8 +5657,8 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
             daysDiff > 0
               ? "text-green-400"
               : daysDiff < 0
-                ? "text-red-400"
-                : "text-yellow-400"
+              ? "text-red-400"
+              : "text-yellow-400"
           }
         `}
                   >
@@ -5671,10 +5667,10 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                           daysDiff !== 1 ? "s" : ""
                         } before deadline)`
                       : daysDiff < 0
-                        ? `(${Math.abs(daysDiff)} day${
-                            Math.abs(daysDiff) !== 1 ? "s" : ""
-                          } after deadline)`
-                        : "(on deadline day)"}
+                      ? `(${Math.abs(daysDiff)} day${
+                          Math.abs(daysDiff) !== 1 ? "s" : ""
+                        } after deadline)`
+                      : "(on deadline day)"}
                   </span>
                 )}
               </div>
@@ -5766,7 +5762,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -5808,7 +5804,7 @@ function SectionCard({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5817,7 +5813,7 @@ function SectionCard({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5885,7 +5881,7 @@ function SectionCard({
           rounded-xl
           border border-[#1c5b44]/40
           dark:border-[#00D1FF33]
-          backdrop-blur-md
+          backdrop-blur-sm
           bg-gradient-to-br 
           from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
           dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
@@ -5922,10 +5918,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                      : totals.pct < 75
-                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
+                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6141,7 +6137,7 @@ function SectionCard({
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6276,7 +6272,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -6285,7 +6281,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -6535,7 +6531,7 @@ function SubNode({
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6748,8 +6744,8 @@ function DailyPlanner({ tree, nr }) {
                                 95,
                                 Math.max(
                                   5,
-                                  ((maxDays - daysRemaining) / maxDays) * 100,
-                                ),
+                                  ((maxDays - daysRemaining) / maxDays) * 100
+                                )
                               );
                               return progress;
                             })()}%`,
@@ -6799,7 +6795,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      }),
+      })
     );
   }, [tree]);
 
@@ -6985,19 +6981,19 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                     barColor: "bg-red-500", // For vertical bar
                   }
                 : item.deadline &&
-                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                  ? {
-                      bg: "bg-yellow-500/20",
-                      text: "text-yellow-300",
-                      border: "border-yellow-600/50",
-                      barColor: "bg-yellow-500", // For vertical bar
-                    }
-                  : {
-                      bg: "bg-emerald-500/20",
-                      text: "text-emerald-400",
-                      border: "border-emerald-600/50",
-                      barColor: "bg-emerald-500", // For vertical bar
-                    };
+                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                ? {
+                    bg: "bg-yellow-500/20",
+                    text: "text-yellow-300",
+                    border: "border-yellow-600/50",
+                    barColor: "bg-yellow-500", // For vertical bar
+                  }
+                : {
+                    bg: "bg-emerald-500/20",
+                    text: "text-emerald-400",
+                    border: "border-emerald-600/50",
+                    barColor: "bg-emerald-500", // For vertical bar
+                  };
             const countdown = daysLeft(item.deadline);
 
             return (
