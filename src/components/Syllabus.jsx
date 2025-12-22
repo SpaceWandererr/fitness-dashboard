@@ -1,21 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // In your component:
 import { createPortal } from "react-dom";
-
-function walkTree(tree, path, cb, currentPath = []) {
-  // If full path reached, start walking children
-  if (currentPath.length === path.length) {
-    cb(tree, currentPath);
-    return;
-  }
-
-  const nextKey = path[currentPath.length];
-  if (tree && tree[nextKey] !== undefined) {
-    walkTree(tree[nextKey], path, cb, [...currentPath, nextKey]);
-  }
-}
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4165,36 +4151,7 @@ const TREE = {
   },
 };
 
-// Unique key for syllabus localStorage
-
-// Stabilize meta reference to prevent re-renders
-
-function useStable(obj) {
-  const ref = useRef(obj);
-  // Update ref synchronously to avoid stale reads
-  if (ref.current !== obj) {
-    ref.current = obj;
-  }
-  return ref.current;
-}
-
-/* =======https://fitness-backend-laoe.onrender.com/=============== KEYS ======================= */
-const K_TREE = "syllabus_tree_v2";
-const K_META = "syllabus_meta_v2";
-const K_NOTES = "syllabus_notes_v2";
-const K_STREAK = "syllabus_streak_v2";
-
 /* ======================= UTIL ======================= */
-
-/**
- * Check if value is an array
- */
-const isArray = Array.isArray;
-
-/**
- * Check if value is a plain object (not null, not array)
- */
-const isObject = (o) => !!o && typeof o === "object" && !Array.isArray(o);
 
 /**
  * Returns today's date in YYYY-MM-DD format
@@ -4219,7 +4176,7 @@ const pathKey = (pathArr) => {
           .trim() // remove leading/trailing spaces
           .replace(/\s+/g, "_") // convert spaces to _
           .replace(/[^\w_]/g, "") // remove invalid chars like > - :
-          .toLowerCase(), // normalize casing
+          .toLowerCase() // normalize casing
     )
     .join("__"); // consistent and clean
 };
@@ -4246,11 +4203,6 @@ function formatDateDDMMYYYY(iso) {
 }
 
 /**
- * Returns number of days between two ISO dates
- * Example: 2025-01-01 and 2025-01-05 → 4
- */
-
-/**
  * Safely get any nested node reference from tree using path array
  * Example: ["JS", "Basics", "Scope"]
  */
@@ -4264,11 +4216,6 @@ function getRefAtPath(obj, path) {
 
   return ref;
 }
-
-/**
- * Calculates total items + done items from a section
- * Works for both array nodes and recursive objects
- */
 /**
  * Calculates total items + done items from a section
  * Works for both array nodes and recursive objects
@@ -4314,48 +4261,24 @@ function totalsOf(node, visited = new WeakSet()) {
   };
 }
 
-/**
- * Normalizes your entire syllabus TREE
- * Converts all sections into nested structures
- */
-
-// CHANGE reset to use TREE directly
-const resetSyllabusProgress = () => {
-  if (!confirm("Reset ALL syllabus progress? This cannot be undone!")) return;
-
-  const resetTree = TREE; // or structuredClone(TREE) if you need a copy
-
-  if (saveTimeoutRef.current) {
-    clearTimeout(saveTimeoutRef.current);
-  }
-
-  treeRef.current = resetTree;
-  setTreeState(resetTree);
-
-  updateDashboard({
-    syllabus_tree_v2: resetTree,
-    syllabus_meta: {},
-    syllabus_notes: {},
-    syllabus_streak: [],
-    syllabus_lastStudied: "",
-  });
-};
-
+/* ======================= MAIN ======================= */
 /* ======================= MAIN ======================= */
 export default function Syllabus({
   dashboardState,
   setDashboardState,
   updateDashboard,
 }) {
-  // ==================== ALL HOOKS AT TOP (FIXED ORDER) ====================
-  const [treeState, setTreeState] = useState(() => TREE);
+  // ==================== ALL HOOKS AT TOP ====================
   const treeRef = useRef(null);
-
   const saveTimeoutRef = useRef(null);
-  const seededOnceRef = useRef(false);
 
-  // State
+  // Control flags
+  const [ready, setReady] = useState(false);
+
+  // Force UI refresh when ref mutates
   const [, forceRender] = useState(0);
+
+  // UI state
   const [showLastStudied, setShowLastStudied] = useState(true);
   const [query, setQuery] = useState("");
   const [showTopBtn, setShowTopBtn] = useState(false);
@@ -4363,78 +4286,67 @@ export default function Syllabus({
   const [menuOpen, setMenuOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Constants derived from props
+  // Backend
   const API_URL =
     import.meta.env.VITE_API_URL ||
     "https://fitness-backend-laoe.onrender.com/api/state";
 
+  // Derived data (SAFE)
   const meta = dashboardState?.syllabus_meta || {};
-  const stableMeta = useMemo(() => meta, [meta]);
   const nr = dashboardState?.syllabus_notes || {};
   const daySet = new Set(dashboardState?.syllabus_streak || []);
   const lastStudied = dashboardState?.syllabus_lastStudied || "";
   const LAST_STUDIED_HIDE_MINUTES = 10;
 
+  // Single source of truth
   const tree = treeRef.current;
 
   // ==================== ALL EFFECTS (CONSOLIDATED) ====================
 
-  // Effect 1: Sync treeRef & seed from backend OR static TREE
+  // ==================== ALL EFFECTS (CLEAN & CORRECT) ====================
+
+  // 🔹 EFFECT 1: LOAD SYLLABUS FROM BACKEND (RUNS ONCE)
   useEffect(() => {
-    // ONLY RUN ONCE - check first
-    if (seededOnceRef.current) return;
-    if (!dashboardState) return;
+    let cancelled = false;
 
-    const backendTree = dashboardState.syllabus_tree_v2;
+    async function loadSyllabus() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
 
-    console.log("🔍 Seeding check:", {
-      hasBackend: !!backendTree,
-      treeKeys: backendTree ? Object.keys(backendTree).length : 0,
-    });
+        if (cancelled) return;
 
-    // Backend has tree => use it
-    if (
-      backendTree &&
-      typeof backendTree === "object" &&
-      Object.keys(backendTree).length > 0
-    ) {
-      console.log("✅ Using backend tree - NO re-seed");
-      const cloned = structuredClone(backendTree);
-      treeRef.current = cloned;
-      setTreeState(cloned);
-      seededOnceRef.current = true; // Mark as seeded
-      return;
+        if (
+          data?.syllabus_tree_v2 &&
+          typeof data.syllabus_tree_v2 === "object" &&
+          Object.keys(data.syllabus_tree_v2).length > 0
+        ) {
+          // ✅ Existing user → load backend data
+          treeRef.current = structuredClone(data.syllabus_tree_v2);
+        } else {
+          // 🆕 First-time user → seed from TREE
+          treeRef.current = structuredClone(TREE);
+        }
+
+        setReady(true);
+        forceRender((v) => v + 1);
+      } catch (err) {
+        console.error("❌ Failed to load syllabus:", err);
+
+        // Fallback to TREE if backend fails
+        treeRef.current = structuredClone(TREE);
+        setReady(true);
+        forceRender((v) => v + 1);
+      }
     }
 
-    // Backend empty => seed from static TREE (FIRST TIME ONLY)
-    console.log("🌱 First-time seeding from TREE constant");
-    const seeded = structuredClone(TREE);
-    treeRef.current = seeded;
-    forceRender((v) => v + 1);
+    loadSyllabus();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-    updateDashboard({
-      syllabus_tree_v2: seeded,
-      syllabus_meta: {},
-      syllabus_notes: {},
-      syllabus_streak: [],
-      syllabus_last_studied: null,
-    });
-
-    seededOnceRef.current = true; // Mark as seeded
-    // ⚠️ CRITICAL: EMPTY dependency array - runs ONCE on mount only!
-  }, []); // 🔥 Changed from [dashboardState] to []
-
-  // Effect 1.5: Update treeRef when backend data changes (but don't re-seed!)
-  useEffect(() => {
-    if (!dashboardState?.syllabus_tree_v2) return;
-    if (!seededOnceRef.current) return; // Wait for initial seed
-
-    // Just sync the ref, don't re-seed
-    treeRef.current = dashboardState.syllabus_tree_v2;
-    setTreeState(dashboardState.syllabus_tree_v2);
-  }, [dashboardState?.syllabus_tree_v2]);
-
-  // Effect 2: Cleanup debounced save timeout
+  // 🔹 EFFECT 2: CLEANUP DEBOUNCED SAVE ON UNMOUNT
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -4443,33 +4355,39 @@ export default function Syllabus({
     };
   }, []);
 
-  // Effect 3: Auto-hide "last studied"
+  // 🔹 EFFECT 3: AUTO-HIDE "LAST STUDIED"
   useEffect(() => {
     if (!lastStudied) return;
+
     setShowLastStudied(true);
+
     const timer = setTimeout(
       () => setShowLastStudied(false),
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000
     );
+
     return () => clearTimeout(timer);
   }, [lastStudied, LAST_STUDIED_HIDE_MINUTES]);
 
-  // Effect 4: Scroll listener for top button
+  // 🔹 EFFECT 4: SCROLL LISTENER FOR "BACK TO TOP"
   useEffect(() => {
     const onScroll = () => setShowTopBtn(window.scrollY > 400);
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // ==================== MEMOS ====================
 
-  const grand = useMemo(
-    () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2],
-  );
+  // ✅ GRAND TOTALS — ALWAYS USE treeRef (NOT dashboardState)
+  const grand = useMemo(() => {
+    if (!tree) return { total: 0, done: 0, pct: 0 };
+    return totalsOf(tree, new WeakSet());
+  }, [tree]);
 
+  // ✅ FILTERED TREE (SEARCH)
   const filtered = useMemo(() => {
-    if (!tree) return {}; // ← GUARD: always return object
+    if (!tree) return {};
     if (!query.trim()) return tree;
 
     const q = query.toLowerCase();
@@ -4477,7 +4395,7 @@ export default function Syllabus({
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q),
+          (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
@@ -4489,20 +4407,24 @@ export default function Syllabus({
         const child = filterNode(v);
         if (child) out[k] = child;
       }
+
       return Object.keys(out).length ? out : null;
     }
 
-    return filterNode(tree) || {}; // ← GUARD: always return object
+    return filterNode(tree) || {};
   }, [tree, query]);
 
   // ==================== CALLBACKS ====================
 
+  // 🔹 Toggle open / close (UI-only, no backend timestamp)
   const toggleOpen = useCallback(
     (path) => {
       const key = pathKey(path);
+
       setDashboardState((prev) => {
         const current = prev?.syllabus_meta || {};
         const prevOpen = current[key]?.open || false;
+
         return {
           ...prev,
           syllabus_meta: {
@@ -4512,69 +4434,52 @@ export default function Syllabus({
               open: !prevOpen,
             },
           },
-          updatedAt: new Date().toISOString(),
         };
       });
     },
-    [setDashboardState],
+    [setDashboardState]
   );
 
   // =========================================================
-  // 🔥 FINAL FIXED: Set deadline on section + cascade to tasks
+  // 🔥 FIXED: Set deadline on section + cascade to tasks
   // =========================================================
-  // ------------- Replace setTargetDate with this -------------
   const setTargetDate = (path, date) => {
     const key = pathKey(path);
 
-    // 1) Build updated meta starting from current meta
+    // 1️⃣ Clone meta safely
     const updatedMeta = { ...meta };
 
-    // Helper to set or delete targetDate on a meta entry
     const setMetaForKey = (k, d) => {
       if (d) {
         updatedMeta[k] = { ...(updatedMeta[k] || {}), targetDate: d };
-      } else {
-        // clear targetDate for this meta key
-        if (updatedMeta[k]) {
-          const copy = { ...updatedMeta[k] };
-          delete copy.targetDate;
-          // if copy is empty object, keep it empty (optional) or delete key:
-          if (Object.keys(copy).length === 0) {
-            delete updatedMeta[k];
-          } else {
-            updatedMeta[k] = copy;
-          }
-        }
+      } else if (updatedMeta[k]) {
+        const copy = { ...updatedMeta[k] };
+        delete copy.targetDate;
+        if (Object.keys(copy).length === 0) delete updatedMeta[k];
+        else updatedMeta[k] = copy;
       }
     };
 
-    // 2) Prepare new notes (syllabus_notes) from existing nr
+    // 2️⃣ Clone notes safely
     const newNotes = { ...(nr || {}) };
 
-    // 3) Cascade function: update meta for every nested subsection AND update notes for every topic
+    // 3️⃣ Cascade through treeRef ONLY
     const cascade = (node, currentPath) => {
       const currentKey = pathKey(currentPath);
-      // update meta for this current subsection (set or clear)
       setMetaForKey(currentKey, date);
 
       if (Array.isArray(node)) {
-        // it's a list of topics -> update their note entries
         node.forEach((_, idx) => {
           const itemK = itemKey(currentPath, idx);
           const existing = newNotes[itemK] || {};
+
           if (date) {
-            // set/replace deadline
             newNotes[itemK] = { ...existing, deadline: date };
           } else {
-            // clear deadline key only
             const clone = { ...existing };
-            if (clone.hasOwnProperty("deadline")) delete clone.deadline;
-            if (Object.keys(clone).length === 0) {
-              // remove empty note to avoid clutter
-              if (newNotes.hasOwnProperty(itemK)) delete newNotes[itemK];
-            } else {
-              newNotes[itemK] = clone;
-            }
+            delete clone.deadline;
+            if (Object.keys(clone).length === 0) delete newNotes[itemK];
+            else newNotes[itemK] = clone;
           }
         });
         return;
@@ -4587,12 +4492,11 @@ export default function Syllabus({
       }
     };
 
-    const subtree = getRefAtPath(tree, path);
+    const subtree = getRefAtPath(treeRef.current, path);
     if (subtree) cascade(subtree, path);
 
-    // 4) Persist changes (updateDashboard updates dashboardState so UI re-renders)
+    // 4️⃣ Persist ONLY what changed
     updateDashboard({
-      syllabus_tree_v2: treeRef.current,
       syllabus_meta: updatedMeta,
       syllabus_notes: newNotes,
     });
@@ -4602,7 +4506,7 @@ export default function Syllabus({
   // 🔹 Set section target percent
   // =========================================================
   const setSectionTargetPct = (secKey, pct) => {
-    const key = pathKey([secKey]);
+    const key = Array.isArray(secKey) ? pathKey(secKey) : pathKey([secKey]);
 
     updateDashboard({
       syllabus_meta: {
@@ -4619,15 +4523,15 @@ export default function Syllabus({
   // 🔥 Mark / Unmark ALL tasks in a section
   // =========================================================
   const setAllAtPath = (path, val) => {
-    const newTree = deepClone(treeRef.current);
-    const node = getRefAtPath(newTree, path);
+    const node = getRefAtPath(treeRef.current, path);
     let lastItem = null;
 
     function mark(n) {
       if (!n) return;
+
       if (Array.isArray(n)) {
         n.forEach((it) => {
-          if (typeof it === "object" && it.title) {
+          if (it && typeof it === "object") {
             it.done = val;
             it.completedOn = val ? todayISO() : "";
             if (val) lastItem = it;
@@ -4635,21 +4539,24 @@ export default function Syllabus({
         });
         return;
       }
-      for (const v of Object.values(n)) {
-        if (typeof v === "object") mark(v);
+
+      if (n && typeof n === "object") {
+        Object.values(n).forEach(mark);
       }
     }
 
     mark(node);
 
-    // Update ref & UI first
-    treeRef.current = newTree;
+    // UI refresh
     forceRender((n) => n + 1);
 
-    // Build updates and save immediately
-    const updates = { syllabus_tree_v2: newTree };
+    // Persist ONLY what changed
+    const updates = { syllabus_tree_v2: treeRef.current };
+
     if (val && lastItem) {
-      updates.syllabus_lastStudied = `${lastItem.title} @ ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_lastStudied = `${
+        lastItem.title
+      } @ ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
@@ -4657,127 +4564,78 @@ export default function Syllabus({
   };
 
   // =========================================================
-  // 🔥 Mark single task
+  // 🔥 Mark / Unmark SINGLE task
   // =========================================================
   const markTask = (path, idx, val) => {
-    // 1. Clone current tree
-    const newTree = deepClone(
-      treeRef.current || dashboardState?.syllabus_tree_v2 || TREE,
-    );
-
-    // 2. Locate the parent node and item
-    const parent = getRefAtPath(newTree, path.slice(0, -1));
+    const parent = getRefAtPath(treeRef.current, path.slice(0, -1));
     const leafKey = path[path.length - 1];
     const item = parent?.[leafKey]?.[idx];
     if (!item) return;
 
-    // 3. Update completion state
     item.done = val;
     item.completedOn = val ? todayISO() : "";
 
-    // 4. Build updates object
-    const updates = { syllabus_tree_v2: newTree };
+    forceRender((x) => x + 1);
+
+    const updates = { syllabus_tree_v2: treeRef.current };
+
     if (val) {
-      updates.syllabus_lastStudied = `${item.title} @ ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_lastStudied = `${
+        item.title
+      } @ ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
-    // 5. Update ref & UI
-    treeRef.current = newTree;
-    setTreeState(newTree);
-    forceRender((x) => x + 1);
-
-    // 6. IMMEDIATE backend save (no debounce)
     updateDashboard(updates);
   };
 
   // =========================================================
-  // 🔥 FIXED: Task deadline setter (updates NR, not just tree)
+  // 🔥 Task deadline setter (NOT TREE)
   // =========================================================
-  // ------------- Replace setTaskDeadline with this -------------
   const setTaskDeadline = (path, idx, date) => {
     const itemK = itemKey(path, idx);
-    const updatedNotes = { ...nr };
-    const existing = updatedNotes[itemK];
+    const updatedNotes = { ...(nr || {}) };
+    const existing = updatedNotes[itemK] || {};
 
     if (date) {
       updatedNotes[itemK] = { ...existing, deadline: date };
     } else {
       const clone = { ...existing };
-      if (clone.hasOwnProperty("deadline")) delete clone.deadline;
-      if (Object.keys(clone).length === 0) {
-        if (updatedNotes.hasOwnProperty(itemK)) delete updatedNotes[itemK];
-      } else {
-        updatedNotes[itemK] = clone;
-      }
+      delete clone.deadline;
+      if (Object.keys(clone).length === 0) delete updatedNotes[itemK];
+      else updatedNotes[itemK] = clone;
     }
 
-    // FIXED: Include the current tree so backend has both tree + notes
+    // Save ONLY notes
     updateDashboard({
-      syllabus_tree_v2: treeRef.current,
       syllabus_notes: updatedNotes,
     });
   };
 
   /* ======================= NOTES ======================= */
+
+  // ✅ Notes updater (NO tree, NO manual fetch)
   const setNR = useCallback(
     (newNR) => {
-      setDashboardState((prev) => {
-        if (!prev) return prev;
+      let updatedNotes;
 
-        let updatedNotes;
-        if (typeof newNR === "function") {
-          updatedNotes = newNR(prev?.syllabus_notes);
-        } else {
-          updatedNotes = newNR;
-        }
+      if (typeof newNR === "function") {
+        updatedNotes = newNR(nr || {});
+      } else {
+        updatedNotes = newNR;
+      }
 
-        return {
-          ...prev,
-          syllabus_notes: updatedNotes,
-        };
-      });
-
-      // Send to backend IMMEDIATELY after state update
-      setDashboardState((prev) => {
-        const finalState = {
-          ...prev,
-          syllabus_notes: prev?.syllabus_notes,
-          syllabus_tree_v2: treeRef.current || prev?.syllabus_tree_v2,
-        };
-
-        console.log(
-          "🔥 Saving deadline to backend:",
-          finalState.syllabus_notes,
-        );
-
-        fetch(API_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(finalState),
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error(`Backend error: ${res.status}`);
-            return res.json();
-          })
-          .then((data) => {
-            console.log("✅ Backend saved:", data);
-          })
-          .catch((err) => {
-            console.error("❌ Mongo save failed:", err);
-            alert("Failed to save deadline! Check console.");
-          });
-
-        return prev;
+      updateDashboard({
+        syllabus_notes: updatedNotes,
       });
     },
-    [API_URL, setDashboardState],
+    [nr, updateDashboard]
   );
 
   /* ======================= EXPORT ======================= */
   function exportProgress() {
     const payload = {
-      syllabus_tree_v2: tree,
+      syllabus_tree_v2: treeRef.current,
       syllabus_meta: meta,
       syllabus_notes: nr,
       syllabus_streak: Array.from(daySet),
@@ -4801,44 +4659,38 @@ export default function Syllabus({
 
     const reader = new FileReader();
 
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target.result);
 
-        const updated = {
-          ...dashboardState,
-          ...data,
-        };
-
-        updateDashboard({ syllabus_tree_v2: tree });
-
-        try {
-          window.localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
-        } catch (err) {
-          console.error("⚠️ localStorage save failed (importProgress):", err);
+        // 🔥 Validate minimal shape
+        if (!data.syllabus_tree_v2) {
+          alert("❌ Invalid syllabus file");
+          return;
         }
 
-        fetch(API_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
+        // Update ref FIRST
+        treeRef.current = structuredClone(data.syllabus_tree_v2);
+        forceRender((v) => v + 1);
+
+        // Save EVERYTHING properly
+        await updateDashboard({
+          syllabus_tree_v2: treeRef.current,
+          syllabus_meta: data.syllabus_meta || {},
+          syllabus_notes: data.syllabus_notes || {},
+          syllabus_streak: data.syllabus_streak || [],
+          syllabus_lastStudied: data.syllabus_lastStudied || "",
         });
+
         alert("✅ Syllabus imported successfully");
-        window.location.reload();
-      } catch {
+      } catch (err) {
+        console.error(err);
         alert("❌ Import failed. Invalid file.");
       }
     };
 
     reader.readAsText(file);
   }
-
-  /* ======================= SCROLL ======================= */
-  useEffect(() => {
-    const onScroll = () => setShowTopBtn(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   /* ======================= GENERATE SMART PLAN ======================= */
   const generateSmartPlan = (availableMins) => {
@@ -4848,25 +4700,25 @@ export default function Syllabus({
       if (Array.isArray(node)) {
         node.forEach((it, idx) => {
           if (!it.done) {
-            // Create itemKey to look up deadline in notes
             const itemK = itemKey(path, idx);
-            const noteData = nr[itemK]; // Get note data with deadline
+            const noteData = nr[itemK];
 
             leaves.push({
               title: it.title,
-              deadline: noteData?.deadline || null, // ✅ Get deadline from notes
+              deadline: noteData?.deadline || null,
               estimate: 0.5,
             });
           }
         });
         return;
       }
+
       for (const [key, v] of Object.entries(node || {})) {
-        walk(v, [...path, key]); // ✅ Pass path for itemKey
+        walk(v, [...path, key]);
       }
     }
 
-    walk(tree, []); // ✅ Start with empty path
+    walk(treeRef.current, []);
 
     const sorted = leaves.sort((a, b) => {
       const da = a.deadline ? Date.parse(a.deadline) : Infinity;
@@ -4888,34 +4740,9 @@ export default function Syllabus({
     return { plan, remaining };
   };
 
-  // ==================== EARLY RETURNS (AFTER ALL HOOKS) ====================
+  /* ==================== EARLY RETURNS ==================== */
 
-  if (!dashboardState) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0A0F1C] overflow-hidden">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex space-x-4 text-5xl">
-            <span className="animate-bounce" style={{ animationDelay: "0s" }}>
-              💪
-            </span>
-            <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>
-              🏋️
-            </span>
-            <span className="animate-bounce" style={{ animationDelay: "0.4s" }}>
-              🔥
-            </span>
-          </div>
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-[#CFE8E1] animate-pulse">
-              Loading your fitness journey...
-            </h2>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tree || Object.keys(tree).length === 0) {
+  if (!ready || !treeRef.current) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900">
         <div className="flex flex-col items-center gap-4 px-6 py-5 rounded-2xl border border-emerald-400/40 bg-black/60 shadow-[0_18px_45px_rgba(0,0,0,0.8)]">
@@ -4962,7 +4789,7 @@ export default function Syllabus({
       {/* Header Section */}
       <header
         className="
-    sticky top-0 z-40bg-[#020617]/95 backdrop-blur-2xl
+    sticky top-0 z-40 bg-[#020617]/95 backdrop-blur-2xl
     border-b border-white/10 rounded-xl
   "
       >
@@ -5082,60 +4909,27 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                   onClick={async () => {
                     if (
                       !confirm(
-                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
+                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
                       )
                     )
                       return;
 
-                    try {
-                      const resetTree = structuredClone(TREE);
+                    const resetTree = structuredClone(TREE);
 
-                      const getResponse = await fetch(API_URL, {
-                        method: "GET",
-                        headers: { "Content-Type": "application/json" },
-                      });
-                      const currentBackend = await getResponse.json();
+                    // Clear refs + UI immediately
+                    treeRef.current = resetTree;
+                    forceRender((v) => v + 1);
 
-                      const newState = {
-                        ...currentBackend,
-                        syllabus_tree_v2: resetTree,
-                        syllabus_meta: {},
-                        syllabus_notes: {},
-                        syllabus_nr: {},
-                        syllabus_streak: [],
-                        syllabus_lastStudied: "",
-                      };
+                    // Proper single-source update
+                    await updateDashboard({
+                      syllabus_tree_v2: resetTree,
+                      syllabus_meta: {},
+                      syllabus_notes: {},
+                      syllabus_streak: [],
+                      syllabus_lastStudied: "",
+                    });
 
-                      const putResponse = await fetch(API_URL, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(newState),
-                      });
-
-                      if (!putResponse.ok) {
-                        throw new Error(
-                          `Backend returned ${putResponse.status}`,
-                        );
-                      }
-
-                      const verifyResponse = await fetch(API_URL, {
-                        method: "GET",
-                        headers: { "Content-Type": "application/json" },
-                      });
-                      const verified = await verifyResponse.json();
-                      console.log("✅ Verified backend:", verified);
-
-                      localStorage.clear();
-                      alert("✅ RESET COMPLETE! Page will reload now.");
-                      window.location.href =
-                        window.location.href + "?t=" + Date.now();
-                    } catch (err) {
-                      console.error("❌ Reset failed:", err);
-                      alert(
-                        "Reset failed! Check console for details.\n\nError: " +
-                          err.message,
-                      );
-                    }
+                    alert("✅ RESET COMPLETE");
                   }}
                   className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
 bg-gradient-to-r from-red-600 to-red-500
@@ -5191,7 +4985,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
 
             {/* Bottom row: progress bar full-width on mobile */}
             <div className="mt-1">
-              <div className="flex items-center justify-between text-[11px] text-slate-300 sm: mb-1">
+              <div className="flex items-center justify-between text-[11px] text-slate-300 sm:mb-1">
                 <span>
                   {grand.done}/{grand.total} topics
                 </span>
@@ -5209,10 +5003,10 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                 grand.pct < 25
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-300 shadow-[0_0_6px_#22c55e]"
                   : grand.pct < 50
-                    ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
-                    : grand.pct < 75
-                      ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
-                      : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
+                  ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
+                  : grand.pct < 75
+                  ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
+                  : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
               }
             `}
                   style={{
@@ -5322,7 +5116,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                   key={secKey}
                   secKey={secKey}
                   node={node}
-                  stableMeta={stableMeta}
+                  meta={meta}
                   nr={nr}
                   setNR={setNR}
                   setSectionTargetPct={setSectionTargetPct}
@@ -5465,24 +5259,22 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
 // ------------------ TASK ITEM (must be top-level) ------------------
 function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
   const key = itemKey(path, idx);
-  const completedDate = nr[key]?.completedDate;
+
+  // ✅ FIX: completion date comes from TREE, not notes
+  const completedDate = it.completedOn;
   const deadline = nr[key]?.deadline;
 
-  // Date picker state
   const buttonRef = useRef(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
 
-  // Calculate days difference between completion and deadline
   const getDaysDifference = () => {
     if (!it.done || !completedDate || !deadline) return null;
 
     const completed = new Date(completedDate);
     const due = new Date(deadline);
     const diffTime = due.getTime() - completed.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const daysDiff = getDaysDifference();
@@ -5499,9 +5291,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
           }
         `}
       >
-        {/* MAIN ROW */}
         <div className="flex items-center justify-between gap-2">
-          {/* LEFT: Checkbox + Title */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {/* Checkbox */}
             <button
@@ -5529,7 +5319,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 cursor-pointer text-sm break-words flex-1 transition-all duration-200
                 ${
                   it.done
-                    ? "line-through opacity-70 text-gray-400 dark:text-gray-500"
+                    ? "line-through opacity-70 text-gray-400"
                     : "text-[#d9ebe5]"
                 }
               `}
@@ -5538,18 +5328,17 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
             </div>
           </div>
 
-          {/* RIGHT: Compact Controls */}
+          {/* Controls */}
           <div
             onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1.5 shrink-0"
           >
-            {/* Estimate Hours - Compact */}
             <input
               type="number"
               min={0}
               max={100}
               step="0.25"
-              value={nr[key]?.estimate !== undefined ? nr[key].estimate : 0.5}
+              value={nr[key]?.estimate ?? 0.5}
               onChange={(e) =>
                 setNR((old) => ({
                   ...old,
@@ -5559,20 +5348,10 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                   },
                 }))
               }
-              onClick={(e) => e.stopPropagation()}
-              className="
-                w-12 text-xs rounded px-1.5 py-1
-                border border-[#00d1b2]/40 
-                bg-[#051C14] text-[#d9ebe5]
-                hover:border-[#00d1b2]/60
-                focus:outline-none focus:ring-1 focus:ring-[#00d1b2]
-                transition text-center
-              "
-              title="Estimated hours"
+              className="w-12 text-xs rounded px-1.5 py-1 border border-[#00d1b2]/40 bg-[#051C14] text-[#d9ebe5]"
             />
             <span className="text-[10px] text-gray-500">h</span>
 
-            {/* Date Picker Button */}
             <button
               ref={buttonRef}
               onClick={(e) => {
@@ -5584,51 +5363,27 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                   let left = rect.left + window.scrollX;
                   let top = rect.bottom + window.scrollY + 5;
 
-                  if (left + calendarWidth > window.innerWidth) {
+                  if (left + calendarWidth > window.innerWidth)
                     left = window.innerWidth - calendarWidth - 10;
-                  }
-                  if (top + 280 > window.innerHeight + window.scrollY) {
+                  if (top + 280 > window.innerHeight + window.scrollY)
                     top = rect.top + window.scrollY - 280;
-                  }
 
                   setPickerPosition({ top, left });
-                  setShowDatePicker(true);
-                } else {
-                  setShowDatePicker(false);
                 }
+                setShowDatePicker((s) => !s);
               }}
-              className="
-                text-[11px] border rounded
-                px-2 py-1
-                border-[#00d1b2]/40 bg-[#051C14] text-[#d9ebe5]
-                hover:border-[#00d1b2]/60
-                transition cursor-pointer
-                whitespace-nowrap
-              "
-              title={
-                deadline
-                  ? `Deadline: ${formatDateDDMMYYYY(deadline)}`
-                  : "Set deadline"
-              }
+              className="text-[11px] border rounded px-2 py-1 border-[#00d1b2]/40 bg-[#051C14] text-[#d9ebe5]"
             >
               📅 {deadline ? formatDateDDMMYYYY(deadline) : "Set"}
             </button>
 
-            {/* Clear Deadline Button */}
             {deadline && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setTaskDeadline(path, idx, "");
                 }}
-                className="
-                  w-6 h-6 flex items-center justify-center
-                  border border-red-500/50 rounded
-                  bg-red-900/20 text-xs text-red-400
-                  hover:bg-red-900/40 hover:border-red-500
-                  transition-colors
-                "
-                title="Clear deadline"
+                className="w-6 h-6 flex items-center justify-center border border-red-500/50 rounded bg-red-900/20 text-xs text-red-400"
               >
                 ✕
               </button>
@@ -5636,48 +5391,32 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
           </div>
         </div>
 
-        {/* META ROW */}
         {(deadline || (it.done && completedDate)) && (
-          <div className="mt-2 pl-6 text-[10px] transition-all duration-200">
-            {/* Deadline Display - Only show if NOT completed */}
+          <div className="mt-2 pl-6 text-[10px]">
             {deadline && !it.done && (
-              <div className="flex items-center gap-1 text-[#a7f3d0] dark:text-[#6ee7b7]">
-                <span>⏰</span>
-                <span>Due: {formatDateDDMMYYYY(deadline)}</span>
+              <div className="flex items-center gap-1 text-[#a7f3d0]">
+                ⏰ Due: {formatDateDDMMYYYY(deadline)}
               </div>
             )}
 
-            {/* Completed Status with Days Before/After Deadline */}
             {it.done && completedDate && (
               <div className="flex items-center gap-1 flex-wrap">
-                <span>✅</span>
-                <span className="text-emerald-400 dark:text-emerald-300">
-                  Completed on {formatDateDDMMYYYY(completedDate)}
-                </span>
-
-                {/* Show days difference if deadline exists */}
+                ✅ Completed on {formatDateDDMMYYYY(completedDate)}
                 {deadline && daysDiff !== null && (
                   <span
-                    className={`
-                      ml-1 font-semibold
-                      ${
-                        daysDiff > 0
-                          ? "text-green-400"
-                          : daysDiff < 0
-                            ? "text-red-400"
-                            : "text-yellow-400"
-                      }
-                    `}
+                    className={`ml-1 font-semibold ${
+                      daysDiff > 0
+                        ? "text-green-400"
+                        : daysDiff < 0
+                        ? "text-red-400"
+                        : "text-yellow-400"
+                    }`}
                   >
                     {daysDiff > 0
-                      ? `(${daysDiff} day${
-                          daysDiff !== 1 ? "s" : ""
-                        } before deadline)`
+                      ? `(${daysDiff} days before deadline)`
                       : daysDiff < 0
-                        ? `(${Math.abs(daysDiff)} day${
-                            Math.abs(daysDiff) !== 1 ? "s" : ""
-                          } after deadline)`
-                        : "(on deadline day)"}
+                      ? `(${Math.abs(daysDiff)} days after deadline)`
+                      : "(on deadline day)"}
                   </span>
                 )}
               </div>
@@ -5686,88 +5425,31 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
         )}
       </li>
 
-      {/* ======================= COMPACT DATEPICKER PORTAL ======================= */}
       {showDatePicker &&
         createPortal(
           <div
             style={{
               position: "absolute",
-              top: `${pickerPosition.top}px`,
-              left: `${pickerPosition.left}px`,
+              top: pickerPosition.top,
+              left: pickerPosition.left,
               zIndex: 99999,
             }}
           >
-            <div
-              className="
-                rounded-lg p-1.5 shadow-xl border transition-all
-                w-[240px] max-w-[90vw]
-                bg-white dark:bg-[#0F1622]
-                border-gray-300 dark:border-[#2F6B60]
-                shadow-black/20 dark:shadow-black/60
-              "
-              style={{ fontSize: "13px" }}
-            >
-              <DatePicker
-                selected={deadline ? new Date(deadline) : null}
-                onChange={(date) => {
-                  const formatted = date
-                    ? date.toISOString().split("T")[0]
-                    : "";
-                  setTaskDeadline(path, idx, formatted);
-                  setShowDatePicker(false);
-                }}
-                onClickOutside={() => setShowDatePicker(false)}
-                inline
-                calendarClassName="compact-datepicker"
-                renderCustomHeader={({
-                  date,
-                  decreaseMonth,
-                  increaseMonth,
-                }) => (
-                  <div
-                    className="
-                      flex items-center justify-between 
-                      px-2 py-1.5 rounded-t-lg mb-1
-                      bg-gray-100 dark:bg-[#0B5134]
-                    "
-                  >
-                    <button
-                      onClick={decreaseMonth}
-                      className="
-                        transition p-0.5 text-lg font-bold
-                        text-gray-700 dark:text-[#CFE8E1]
-                        hover:text-blue-600 dark:hover:text-[#00d1b2]
-                      "
-                    >
-                      ‹
-                    </button>
-                    <span
-                      className="
-                        font-semibold text-sm
-                        text-gray-900 dark:text-[#CFE8E1]
-                      "
-                    >
-                      {date.toLocaleString("default", {
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <button
-                      onClick={increaseMonth}
-                      className="
-                        transition p-0.5 text-lg font-bold
-                        text-gray-700 dark:text-[#CFE8E1]
-                        hover:text-blue-600 dark:hover:text-[#00d1b2]
-                      "
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              />
-            </div>
+            <DatePicker
+              selected={deadline ? new Date(deadline) : null}
+              onChange={(date) => {
+                setTaskDeadline(
+                  path,
+                  idx,
+                  date ? date.toISOString().split("T")[0] : ""
+                );
+                setShowDatePicker(false);
+              }}
+              onClickOutside={() => setShowDatePicker(false)}
+              inline
+            />
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -5777,10 +5459,9 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
 function SectionCard({
   secKey,
   node,
-  stableMeta,
+  meta,
   nr,
   setNR,
-  onSectionHeaderClick,
   setTargetDate,
   toggleOpen,
   setAllAtPath,
@@ -5792,7 +5473,7 @@ function SectionCard({
   const sectionPath = [secKey];
 
   // Section meta (collapse state + target date)
-  const m = stableMeta[pathKey(sectionPath)] || {
+  const m = meta[pathKey(sectionPath)] || {
     open: false,
     targetDate: "",
   };
@@ -5809,7 +5490,7 @@ function SectionCard({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5818,7 +5499,7 @@ function SectionCard({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5858,7 +5539,7 @@ function SectionCard({
     ro.observe(el);
 
     return () => ro.disconnect();
-  }, [m.open, node, stableMeta, nr]);
+  }, [m.open, node, meta, nr]);
 
   /* ======================= CLOSE PICKER ON OUTSIDE CLICK ======================= */
   useEffect(() => {
@@ -5923,10 +5604,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                      : totals.pct < 75
-                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
+                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6045,7 +5726,7 @@ function SectionCard({
                 name={name}
                 node={child}
                 path={[secKey, name]}
-                stableMeta={stableMeta}
+                meta={meta}
                 nr={nr}
                 setNR={setNR}
                 toggleOpen={toggleOpen}
@@ -6142,7 +5823,7 @@ function SectionCard({
               />
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6153,7 +5834,7 @@ function SubNode({
   name,
   node,
   path,
-  stableMeta,
+  meta,
   nr,
   setNR,
   toggleOpen,
@@ -6164,10 +5845,10 @@ function SubNode({
 }) {
   /* ======================= META ======================= */
   const k = pathKey(path);
-  const m = stableMeta[k] || { open: false, targetDate: "" };
+  const m = meta[k] || { open: false, targetDate: "" };
 
   /* ======================= STATS ======================= */
-  const totals = useMemo(() => totalsOf(node), [node]);
+  const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
 
   /* ======================= COLLAPSE ANIMATION ======================= */
@@ -6175,43 +5856,9 @@ function SubNode({
   const buttonRef = useRef(null);
   const [height, setHeight] = useState("0px");
 
-  // Portal state for date picker
+  /* ======================= DATE PICKER ======================= */
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
-
-  useEffect(() => {
-    if (!showDatePicker) return;
-
-    const updatePosition = () => {
-      if (!buttonRef.current) return;
-
-      const rect = buttonRef.current.getBoundingClientRect();
-      const calendarWidth = 240;
-
-      let left = rect.left + window.scrollX;
-      let top = rect.bottom + window.scrollY + 5;
-
-      if (left + calendarWidth > window.innerWidth) {
-        left = window.innerWidth - calendarWidth - 10;
-      }
-      if (top + 280 > window.innerHeight + window.scrollY) {
-        top = rect.top + window.scrollY - 280;
-      }
-
-      setPickerPosition({ top, left });
-    };
-
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("orientationchange", updatePosition);
-
-    // Recalc immediately
-    updatePosition();
-
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("orientationchange", updatePosition);
-    };
-  }, [showDatePicker]);
 
   useEffect(() => {
     if (m.open && contentRef.current) {
@@ -6219,110 +5866,80 @@ function SubNode({
     } else {
       setHeight("0px");
     }
-  }, [m.open, node]);
-
-  /* ======================= AUTO-SAVE completedDate ======================= */
-  const completedRef = useRef(new Set());
+  }, [m.open, node, nr]);
 
   useEffect(() => {
-    if (!Array.isArray(node)) return;
+    if (!showDatePicker || !buttonRef.current) return;
 
-    const updates = {};
-    let hasChanges = false;
+    const updatePosition = () => {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const calendarWidth = 240;
 
-    node.forEach((it, idx) => {
-      const key = itemKey(path, idx);
-      const cacheKey = `${key}_${it.done}`;
+      let left = rect.left + window.scrollX;
+      let top = rect.bottom + window.scrollY + 5;
 
-      if (it.done) {
-        // Item is done: set completedDate if not already set
-        if (!nr[key]?.completedDate) {
-          updates[key] = {
-            ...(nr[key] || {}),
-            completedDate: new Date().toISOString(),
-          };
-          hasChanges = true;
-        }
-      } else {
-        // Item is undone: clear completedDate if it exists
-        if (nr[key]?.completedDate) {
-          const { completedDate, ...rest } = nr[key];
-          updates[key] = Object.keys(rest).length > 0 ? rest : undefined;
-          hasChanges = true;
-        }
-      }
-    });
+      if (left + calendarWidth > window.innerWidth)
+        left = window.innerWidth - calendarWidth - 10;
+      if (top + 280 > window.innerHeight + window.scrollY)
+        top = rect.top + window.scrollY - 280;
 
-    // Only update if there are actual changes to prevent loops
-    if (hasChanges) {
-      setNR((old) => {
-        const newNR = { ...old };
-        Object.entries(updates).forEach(([key, value]) => {
-          if (value === undefined) {
-            delete newNR[key];
-          } else {
-            newNR[key] = value;
-          }
-        });
-        return newNR;
-      });
-    }
-  }, [node, path, setNR, nr]);
+      setPickerPosition({ top, left });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("orientationchange", updatePosition);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("orientationchange", updatePosition);
+    };
+  }, [showDatePicker]);
 
   /* ======================= HOUR ROLLUP ======================= */
   const hoursRollup = useMemo(() => {
     if (!Array.isArray(node)) {
       let est = 0;
+
       for (const [childKey, childVal] of Object.entries(node || {})) {
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
+              nr[itemKey([...path, childKey], idx)]?.estimate ?? 0.5
             );
             est += isFinite(e) ? e : 0.5;
           });
         } else {
-          Object.entries(childVal || {}).forEach(([gk, gv]) => {
+          for (const [gk, gv] of Object.entries(childVal || {})) {
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate ?? 0.5
                 );
                 est += isFinite(e) ? e : 0.5;
               });
             }
-          });
+          }
         }
       }
       return est;
     }
 
-    return node.reduce((s, _, idx) => {
-      const e = Number(nr[itemKey(path, idx)]?.estimate || 0.5);
-      return s + (isFinite(e) ? e : 0.5);
+    // Leaf list
+    return node.reduce((sum, _, idx) => {
+      const e = Number(nr[itemKey(path, idx)]?.estimate ?? 0.5);
+      return sum + (isFinite(e) ? e : 0.5);
     }, 0);
   }, [node, nr, path]);
 
   /* ======================= UI ======================= */
   return (
     <>
-      <div
-        className="
-          rounded-xl border border-[#0B5134]/35 dark:border-gray-800
-          bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-          text-[#d9ebe5] shadow-[0_0_15px_rgba(0,0,0,0.2)]
-        "
-      >
+      <div className="rounded-xl border border-[#0B5134]/35 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#d9ebe5]">
         {/* HEADER */}
         <div
           onClick={() => toggleOpen(path)}
-          className="
-    p-2 cursor-pointer bg-[#134039]
-    hover:bg-[#00d1b2]/10
-    border-l-4 border-[#D42916]
-    rounded-xl
-  "
+          className="p-2 cursor-pointer bg-[#134039] hover:bg-[#00d1b2]/10 border-l-4 border-[#D42916] rounded-xl"
         >
           <div className="flex justify-between gap-2 flex-wrap">
             <div className="flex gap-2 items-center">
@@ -6334,68 +5951,38 @@ function SubNode({
               onClick={(e) => e.stopPropagation()}
               className="flex flex-wrap gap-2 text-xs items-center"
             >
-              <span className="whitespace-nowrap">
+              <span>
                 {totals.done}/{totals.total} • {totals.pct}% •{" "}
-                {hoursRollup.toFixed(1)}h
+                {totals.total ? "≈" : ""}
+                {hoursRollup?.toFixed?.(1) ?? ""}
               </span>
 
               <button
                 onClick={() => setAllAtPath(path, !allDone)}
-                className="px-2 py-1 border border-[#00d1b2]/50 rounded hover:bg-[#0B2F2A]/80 transition whitespace-nowrap"
+                className="px-2 py-1 border border-[#00d1b2]/50 rounded"
               >
                 {allDone ? "Undo all" : "Mark all"}
               </button>
 
-              {/* Deadline Picker Button */}
               <button
                 ref={buttonRef}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!showDatePicker && buttonRef.current) {
-                    const rect = buttonRef.current.getBoundingClientRect();
-                    const calendarWidth = 240;
-
-                    let left = rect.left + window.scrollX;
-                    let top = rect.bottom + window.scrollY + 5;
-
-                    if (left + calendarWidth > window.innerWidth) {
-                      left = window.innerWidth - calendarWidth - 10;
-                    }
-                    if (top + 280 > window.innerHeight + window.scrollY) {
-                      top = rect.top + window.scrollY - 280;
-                    }
-
-                    setPickerPosition({ top, left });
-                    setShowDatePicker(true);
-                  } else {
-                    setShowDatePicker(false);
-                  }
+                  setShowDatePicker((v) => !v);
                 }}
-                className="
-          px-2 py-1 border border-[#0B5134] rounded-md
-          bg-[#051C14] text-xs
-          hover:border-[#2F6B60] transition
-          whitespace-nowrap
-        "
+                className="px-2 py-1 border border-[#0B5134] rounded-md bg-[#051C14] text-xs"
               >
                 📅{" "}
                 {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
               </button>
 
-              {/* Clear Date Button - Only show if date exists */}
               {m.targetDate && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setTargetDate(path, "");
                   }}
-                  className="
-            px-2 py-1 border border-red-500/50 rounded-md
-            bg-red-900/20 text-xs text-red-400
-            hover:bg-red-900/40 hover:border-red-500
-            transition-colors shrink-0
-          "
-                  title="Clear deadline"
+                  className="px-2 py-1 border border-red-500/50 rounded-md text-red-400"
                 >
                   ✕
                 </button>
@@ -6428,115 +6015,51 @@ function SubNode({
               </ul>
             ) : (
               <div className="space-y-2">
-                {node &&
-                  typeof node === "object" &&
-                  !Array.isArray(node) &&
-                  Object.entries(node).map(([childKey, childVal]) => (
-                    <SubNode
-                      key={childKey}
-                      name={childKey}
-                      node={childVal}
-                      path={[...path, childKey]}
-                      stableMeta={stableMeta}
-                      nr={nr}
-                      setNR={setNR}
-                      toggleOpen={toggleOpen}
-                      setTargetDate={setTargetDate}
-                      setAllAtPath={setAllAtPath}
-                      markTask={markTask}
-                      setTaskDeadline={setTaskDeadline}
-                    />
-                  ))}
+                {Object.entries(node || {}).map(([childKey, childVal]) => (
+                  <SubNode
+                    key={childKey}
+                    name={childKey}
+                    node={childVal}
+                    path={[...path, childKey]}
+                    meta={meta}
+                    nr={nr}
+                    setNR={setNR}
+                    toggleOpen={toggleOpen}
+                    setTargetDate={setTargetDate}
+                    setAllAtPath={setAllAtPath}
+                    markTask={markTask}
+                    setTaskDeadline={setTaskDeadline}
+                  />
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* ======================= DYNAMIC THEME DATEPICKER ======================= */}
       {showDatePicker &&
         createPortal(
           <div
             style={{
               position: "absolute",
-              top: `${pickerPosition.top}px`,
-              left: `${pickerPosition.left}px`,
+              top: pickerPosition.top,
+              left: pickerPosition.left,
               zIndex: 99999,
             }}
           >
-            <div
-              className="
-                rounded-lg p-1.5 shadow-xl border transition-all
-                w-[240px] max-w-[90vw]
-                bg-white dark:bg-[#0F1622]
-                border-gray-300 dark:border-[#2F6B60]
-                shadow-black/20 dark:shadow-black/60
-              "
-              style={{
-                fontSize: "13px",
+            <DatePicker
+              selected={m.targetDate ? new Date(m.targetDate) : null}
+              onChange={(date) => {
+                setTargetDate(
+                  path,
+                  date ? date.toISOString().split("T")[0] : ""
+                );
+                setShowDatePicker(false);
               }}
-            >
-              <DatePicker
-                selected={m.targetDate ? new Date(m.targetDate) : null}
-                onChange={(date) => {
-                  const formatted = date
-                    ? date.toISOString().split("T")[0]
-                    : "";
-                  setTargetDate(path, formatted);
-                  setShowDatePicker(false);
-                }}
-                onClickOutside={() => setShowDatePicker(false)}
-                inline
-                calendarClassName="compact-datepicker"
-                renderCustomHeader={({
-                  date,
-                  decreaseMonth,
-                  increaseMonth,
-                }) => (
-                  <div
-                    className="
-                      flex items-center justify-between 
-                      px-2 py-1.5 rounded-t-lg mb-1
-                      bg-gray-100 dark:bg-[#0B5134]
-                    "
-                  >
-                    <button
-                      onClick={decreaseMonth}
-                      className="
-                        transition p-0.5 text-lg font-bold
-                        text-gray-700 dark:text-[#CFE8E1]
-                        hover:text-blue-600 dark:hover:text-[#00d1b2]
-                      "
-                    >
-                      ‹
-                    </button>
-                    <span
-                      className="
-                        font-semibold text-sm
-                        text-gray-900 dark:text-[#CFE8E1]
-                      "
-                    >
-                      {date.toLocaleString("default", {
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <button
-                      onClick={increaseMonth}
-                      className="
-                        transition p-0.5 text-lg font-bold
-                        text-gray-700 dark:text-[#CFE8E1]
-                        hover:text-blue-600 dark:hover:text-[#00d1b2]
-                      "
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              />
-            </div>
+              inline
+            />
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6545,6 +6068,9 @@ function SubNode({
 /******************** DAILY AUTO PLANNER ********************/
 
 function DailyPlanner({ tree, nr }) {
+  // ✅ SAFETY GUARD (no UI change)
+  if (!tree) return null;
+
   const tasks = [];
 
   function walk(node, path) {
@@ -6574,12 +6100,11 @@ function DailyPlanner({ tree, nr }) {
   walk(tree, []);
 
   /** -------------------------------
-   *   FINAL LOGIC (CORRECT)
+   *   FINAL LOGIC (UNCHANGED)
    * ------------------------------- */
 
   const uncompleted = tasks.filter((t) => !t.done);
 
-  // 1️⃣ If NO uncompleted tasks → All Clear
   if (uncompleted.length === 0) {
     return (
       <div className="w-full text-center py-10 sm:py-12 px-4">
@@ -6590,26 +6115,21 @@ function DailyPlanner({ tree, nr }) {
     );
   }
 
-  // 2️⃣ If deadlines exist → show closest deadline tasks
   const withDeadlines = uncompleted
     .filter((t) => t.hasDeadline)
     .sort((a, b) => a.d - b.d)
     .slice(0, 6);
 
-  // 3️⃣ If no deadlines → show uncompleted in natural order (first 6)
   const toShow =
     withDeadlines.length > 0 ? withDeadlines : uncompleted.slice(0, 6);
 
   return (
     <div className="w-full">
-      {/* Header with stats on right */}
       <div className="flex items-start justify-between mb-3">
-        {/* Small subtitle on left */}
         <p className="text-sm opacity-80 mb-3">
           Closest-deadline topics not yet done.
         </p>
 
-        {/* Task count on right */}
         <div className="flex items-center gap-1.5">
           <span className="text-lg">🎯</span>
           <div>
@@ -6621,9 +6141,8 @@ function DailyPlanner({ tree, nr }) {
         </div>
       </div>
 
-      {/* Compact Task List */}
       <ul className="space-y-1.5">
-        {toShow.map((item, idx) => {
+        {toShow.map((item) => {
           const deadline = item.deadline ? new Date(item.deadline) : null;
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -6673,29 +6192,27 @@ function DailyPlanner({ tree, nr }) {
           }
 
           return (
+            // ✅ STABLE KEY (UI unchanged)
             <li
-              key={idx}
+              key={item.key}
               className={`
-              group relative
-              bg-gradient-to-br ${cardBg}
-              hover:brightness-110
-              rounded-lg
-              border ${borderColor}
-              overflow-hidden
-              transition-all duration-200
-              hover:shadow-md ${glowColor}
-              cursor-pointer
-            `}
+                group relative
+                bg-gradient-to-br ${cardBg}
+                hover:brightness-110
+                rounded-lg
+                border ${borderColor}
+                overflow-hidden
+                transition-all duration-200
+                hover:shadow-md ${glowColor}
+                cursor-pointer
+              `}
             >
-              {/* Thin Accent Bar */}
               <div
                 className={`absolute left-0 top-0 bottom-0 w-0.5 ${progressColor} opacity-60 group-hover:opacity-100 transition-opacity`}
               />
 
               <div className="p-2 pl-2.5">
-                {/* Single Row: Icon + Title + Date + Badge */}
                 <div className="flex items-center justify-between gap-2">
-                  {/* Left: Icon + Title */}
                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <span className="text-sm shrink-0">{urgencyIcon}</span>
                     <span className="text-xs text-[#d9ebe5] font-medium truncate group-hover:text-white transition-colors">
@@ -6703,10 +6220,8 @@ function DailyPlanner({ tree, nr }) {
                     </span>
                   </div>
 
-                  {/* Right: Date + Days Badge */}
                   {deadline && (
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {/* Date */}
                       <div className="flex items-center gap-0.5 opacity-70">
                         <span className="text-[9px]">📆</span>
                         <span className="text-[9px] text-gray-300 font-medium hidden sm:inline">
@@ -6714,15 +6229,18 @@ function DailyPlanner({ tree, nr }) {
                         </span>
                       </div>
 
-                      {/* Days Badge */}
                       {daysLeft && (
                         <span
                           className={`
-                          text-[9px] font-bold px-1.5 py-0.5 rounded
-                          border ${urgencyBadge}
-                          whitespace-nowrap
-                          ${urgencyBadge.includes("red") ? "animate-pulse" : ""}
-                        `}
+                            text-[9px] font-bold px-1.5 py-0.5 rounded
+                            border ${urgencyBadge}
+                            whitespace-nowrap
+                            ${
+                              urgencyBadge.includes("red")
+                                ? "animate-pulse"
+                                : ""
+                            }
+                          `}
                         >
                           {daysLeft}
                         </span>
@@ -6731,7 +6249,6 @@ function DailyPlanner({ tree, nr }) {
                   )}
                 </div>
 
-                {/* Thin Progress Bar (optional, only for normal tasks) */}
                 {deadline &&
                   daysLeft &&
                   !daysLeft.includes("late") &&
@@ -6745,14 +6262,13 @@ function DailyPlanner({ tree, nr }) {
                             width: `${(() => {
                               const daysRemaining = parseInt(daysLeft);
                               const maxDays = 30;
-                              const progress = Math.min(
+                              return Math.min(
                                 95,
                                 Math.max(
                                   5,
-                                  ((maxDays - daysRemaining) / maxDays) * 100,
-                                ),
+                                  ((maxDays - daysRemaining) / maxDays) * 100
+                                )
                               );
-                              return progress;
                             })()}%`,
                           }}
                         />
@@ -6761,14 +6277,12 @@ function DailyPlanner({ tree, nr }) {
                   )}
               </div>
 
-              {/* Hover effect overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </li>
           );
         })}
       </ul>
 
-      {/* Empty state */}
       {toShow.length === 0 && (
         <div className="text-center py-6">
           <span className="text-3xl mb-1 block">🎉</span>
@@ -6789,6 +6303,9 @@ function DailyPlanner({ tree, nr }) {
 */
 
 function SmartSuggest({ generateSmartPlan, tree }) {
+  // ✅ SAFETY GUARD (no UI change)
+  if (!tree) return null;
+
   const [minutes, setMinutes] = useState(120);
   const [plan, setPlan] = useState([]);
   const [remaining, setRemaining] = useState(0);
@@ -6800,7 +6317,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      }),
+      })
     );
   }, [tree]);
 
@@ -6808,14 +6325,12 @@ function SmartSuggest({ generateSmartPlan, tree }) {
   const handleSuggest = () => {
     const { plan, remaining } = generateSmartPlan(minutes);
 
-    // Sort by closest deadlines first
     const sorted = [...plan].sort((a, b) => {
       const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
       const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
       return da - db;
     });
 
-    // Dynamic motivation summary
     let sum = "";
     if (sorted.length === 0) sum = "No urgent topics found for now! 🎉";
     else if (sorted.length <= 2)
@@ -6835,7 +6350,6 @@ function SmartSuggest({ generateSmartPlan, tree }) {
 
     const today = new Date();
     const d = new Date(deadline);
-
     const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
 
     if (diff > 0) return `Due in ${diff} day${diff > 1 ? "s" : ""}`;
@@ -6845,6 +6359,8 @@ function SmartSuggest({ generateSmartPlan, tree }) {
 
   /* ========== Safely Find Task in Tree by Title ========== */
   function findInTree(node, title) {
+    if (!node) return null;
+
     if (Array.isArray(node)) {
       for (const it of node) {
         if (it.title === title) return it;
@@ -6862,16 +6378,16 @@ function SmartSuggest({ generateSmartPlan, tree }) {
   return (
     <div
       className="
-      rounded-2xl border border-[#0B5134]/40
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
-      dark:border-[#00D1FF33]
-      p-5 shadow-[0_0_20px_rgba(0,0,0,0.2)]
-      transition-all duration-300
-      hover:shadow-[0_0_30px_rgba(255,143,143,0.15)]
-    "
+        rounded-2xl border border-[#0B5134]/40
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
+        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
+        dark:border-[#00D1FF33]
+        p-5 shadow-[0_0_20px_rgba(0,0,0,0.2)]
+        transition-all duration-300
+        hover:shadow-[0_0_30px_rgba(255,143,143,0.15)]
+      "
     >
-      {/* ===== Modern Header ===== */}
+      {/* ===== Header ===== */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF8F8F] to-[#ff6f6f] dark:from-[#451013] dark:to-[#5A1418] flex items-center justify-center shadow-lg">
@@ -6887,21 +6403,18 @@ function SmartSuggest({ generateSmartPlan, tree }) {
 
         <span
           className="
-          text-[10px] px-3 py-1.5 rounded-full
-          bg-gradient-to-r from-[#FF8F8F] to-[#ff6f6f] text-black font-bold
-          dark:from-[#451013] dark:to-[#5A1418] dark:text-[#FFD1D1]
-          border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
-          whitespace-nowrap
-          transition-all duration-200
-          hover:scale-105 hover:shadow-lg
-          cursor-default
-        "
+            text-[10px] px-3 py-1.5 rounded-full
+            bg-gradient-to-r from-[#FF8F8F] to-[#ff6f6f] text-black font-bold
+            dark:from-[#451013] dark:to-[#5A1418] dark:text-[#FFD1D1]
+            border border-[#FF8F8F]/40 dark:border-[#FF8F8F]/30
+            whitespace-nowrap
+          "
         >
           ✨ AI Powered
         </span>
       </div>
 
-      {/* ===== Modern Input Section ===== */}
+      {/* ===== Input ===== */}
       <div className="mb-4">
         <label className="text-xs font-semibold text-gray-300 mb-2 block">
           Available Study Time
@@ -6913,18 +6426,14 @@ function SmartSuggest({ generateSmartPlan, tree }) {
               type="number"
               value={minutes}
               onChange={(e) => setMinutes(Number(e.target.value))}
-              placeholder="120"
               className="
-              w-full px-4 py-2.5 text-sm rounded-xl border 
-              bg-white/5 dark:bg-black/30
-              dark:border-[#00D1FF33] 
-              border-[#0B5134] outline-none text-white
-              focus:ring-2 focus:ring-[#FF8F8F]/50 dark:focus:ring-[#451013]
-              transition-all duration-200
-              placeholder:text-gray-500
-            "
+                w-full px-4 py-2.5 text-sm rounded-xl border 
+                bg-white/5 dark:bg-black/30
+                dark:border-[#00D1FF33] 
+                border-[#0B5134] outline-none text-white
+              "
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">
               minutes
             </span>
           </div>
@@ -6932,124 +6441,83 @@ function SmartSuggest({ generateSmartPlan, tree }) {
           <button
             onClick={handleSuggest}
             className="
-            px-5 py-2.5 rounded-xl 
-            bg-gradient-to-r from-[#FF8F8F] to-[#ff6f6f] text-black font-bold text-sm
-            dark:from-[#451013] dark:to-[#5A1418] dark:text-[#FFD1D1]
-            border border-[#FF8F8F]/40
-            shadow-lg
-            transition-all duration-200
-            hover:scale-105 hover:shadow-[0_0_15px_rgba(255,143,143,0.5)]
-            active:scale-95
-            whitespace-nowrap
-            flex items-center gap-2
-          "
+              px-5 py-2.5 rounded-xl 
+              bg-gradient-to-r from-[#FF8F8F] to-[#ff6f6f]
+              text-black font-bold text-sm
+            "
           >
-            <span>Generate</span>
-            <span className="text-base">✨</span>
+            Generate ✨
           </button>
         </div>
       </div>
 
-      {/* ===== Motivation Summary ===== */}
+      {/* ===== Summary ===== */}
       {summary && (
         <div className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10">
-          <p className="text-xs italic text-white/80 dark:text-gray-300">
-            💡 {summary}
-          </p>
+          <p className="text-xs italic text-white/80">💡 {summary}</p>
         </div>
       )}
 
-      {/* ===== Modern Suggestions List ===== */}
+      {/* ===== Suggestions ===== */}
       <div className="space-y-2.5">
         {plan.length === 0 ? (
           <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white/5 flex items-center justify-center">
-              <span className="text-3xl">📚</span>
-            </div>
-            <p className="text-sm font-medium text-gray-400 mb-1">
-              No suggestions yet
-            </p>
-            <p className="text-xs text-gray-500">
-              Enter your available time to get started
-            </p>
+            <span className="text-3xl">📚</span>
+            <p className="text-sm text-gray-400">No suggestions yet</p>
           </div>
         ) : (
-          plan.map((item, i) => {
+          plan.map((item) => {
             const now = new Date();
-            // Calculate urgency ONCE
             const urgency =
               item.deadline && new Date(item.deadline) < now
                 ? {
                     bg: "bg-red-500/20",
                     text: "text-red-400",
                     border: "border-red-600/50",
-                    barColor: "bg-red-500", // For vertical bar
+                    barColor: "bg-red-500",
                   }
                 : item.deadline &&
-                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                  ? {
-                      bg: "bg-yellow-500/20",
-                      text: "text-yellow-300",
-                      border: "border-yellow-600/50",
-                      barColor: "bg-yellow-500", // For vertical bar
-                    }
-                  : {
-                      bg: "bg-emerald-500/20",
-                      text: "text-emerald-400",
-                      border: "border-emerald-600/50",
-                      barColor: "bg-emerald-500", // For vertical bar
-                    };
+                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                ? {
+                    bg: "bg-yellow-500/20",
+                    text: "text-yellow-300",
+                    border: "border-yellow-600/50",
+                    barColor: "bg-yellow-500",
+                  }
+                : {
+                    bg: "bg-emerald-500/20",
+                    text: "text-emerald-400",
+                    border: "border-emerald-600/50",
+                    barColor: "bg-emerald-500",
+                  };
+
             const countdown = daysLeft(item.deadline);
 
             return (
               <div
-                key={i}
+                key={`${item.title}-${item.deadline || "no-deadline"}`} // ✅ stable key
                 className={`
-        group relative
-        rounded-xl border overflow-hidden
-        dark:border-gray-800 p-3 text-sm
-        transition-all duration-300 
-        hover:scale-[1.02] hover:shadow-lg
-        ${item.done ? "opacity-50 line-through" : "bg-white/5"}
-        ${urgency.border}
-      `}
+                  group relative rounded-xl border p-3 text-sm
+                  transition-all duration-300
+                  ${item.done ? "opacity-50 line-through" : "bg-white/5"}
+                  ${urgency.border}
+                `}
               >
-                {/* Accent indicator - USE urgency.barColor */}
                 <div
                   className={`absolute left-0 top-0 bottom-0 w-1 ${urgency.barColor}`}
                 />
 
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 pl-3">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-2 mb-1">
-                      <span className="text-base mt-0.5">📖</span>
-                      <span className="font-semibold text-[#d9ebe5] group-hover:text-white transition-colors">
-                        {item.title}
-                      </span>
-                    </div>
-
-                    {/* Time Estimate with icon */}
-                    <div className="flex items-center gap-2 pl-7">
-                      <span
-                        className={`text-xs ${
-                          item.done ? "opacity-40" : "opacity-70"
-                        } flex items-center gap-1`}
-                      >
-                        <span>⏱</span>
-                        <span>~{Math.round(item.estimate * 60)} minutes</span>
-                      </span>
-                    </div>
+                <div className="pl-3">
+                  <div className="font-semibold text-[#d9ebe5]">
+                    📖 {item.title}
                   </div>
 
-                  {/* Countdown Badge */}
                   {countdown && (
                     <span
                       className={`
-              text-[10px] font-bold px-2.5 py-1 rounded-lg 
-              ${urgency.bg} ${urgency.text} border ${urgency.border}
-              whitespace-nowrap shrink-0
-              group-hover:scale-105 transition-transform
-            `}
+                        text-[10px] font-bold px-2 py-1 rounded
+                        ${urgency.bg} ${urgency.text} border ${urgency.border}
+                      `}
                     >
                       {countdown}
                     </span>
@@ -7061,41 +6529,11 @@ function SmartSuggest({ generateSmartPlan, tree }) {
         )}
       </div>
 
-      {/* ===== Modern Footer ===== */}
-      <div
-        className="
-        mt-5 pt-4
-        border-t border-[#0B5134]/60 dark:border-gray-800 
-        flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3
-      "
-      >
-        <div className="flex items-center gap-2 text-xs text-white/70 dark:text-gray-400">
-          <span className="text-base">⏳</span>
-          <span className="font-medium">
-            {plan.length > 0
-              ? `Buffer remaining: ${remaining} mins`
-              : "Ready to plan your study session"}
-          </span>
-        </div>
-
-        {plan.length > 0 && (
-          <button
-            className="
-          px-4 py-2 rounded-xl
-          bg-gradient-to-r from-emerald-600 to-emerald-500
-          text-white font-bold text-xs
-          shadow-lg
-          transition-all duration-200
-          hover:scale-105 hover:shadow-emerald-500/30
-          active:scale-95
-          flex items-center gap-2
-          whitespace-nowrap
-        "
-          >
-            <span>Start Focus Mode</span>
-            <span>🚀</span>
-          </button>
-        )}
+      {/* ===== Footer ===== */}
+      <div className="mt-5 pt-4 border-t border-[#0B5134]/60 text-xs text-white/70">
+        {plan.length > 0
+          ? `Buffer remaining: ${remaining} mins`
+          : "Ready to plan your study session"}
       </div>
     </div>
   );
