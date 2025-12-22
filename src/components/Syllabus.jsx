@@ -10,31 +10,31 @@ const TREE = {
       {
         title: "History of Web (Web 1.0 to Web 3.0).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How computer communicate with each other.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How computer send data all over the world.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is Domain Name, IP & MAC Addresses and Routing.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How ISP and DNS work together to deliver data.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -42,46 +42,46 @@ const TREE = {
       {
         title: "What is Client-Server Model.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Difference between Client (browser) and Server (the computer hosting your website).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "How HTTP request and response cycle works (how browser talk to server).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What happens when you visit a website.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Difference between Front-end and Back-end (Front-end vs Back-end).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What are Static Websites and Dynamic Websites.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is web hosting and how it works.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -89,31 +89,31 @@ const TREE = {
       {
         title: "What is TCP protocol and why is widely used",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How Connection is established using TCP (3 Way handshake)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is UDP and why its used for fast communication",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How UPD establishes connection",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Difference between TCP and UPD",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -121,43 +121,43 @@ const TREE = {
       {
         title: "What is HTTP and its different version",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "HTTP status code for responses",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is HTTPS and why its better than HTTP",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How HTTPS provides a secure connection",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is SSL/TLS Encryption",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What are Proxy and Reverse Proxy",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How VPN works and helps accessing restricted content",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -165,32 +165,32 @@ const TREE = {
       {
         title: "Installing & Setting up VS Code",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Installing helpful extensions",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting up your browser for development",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What are file and folders and how to create them",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Testing our environment via serving a webpage - “ Namaste Duniya ”",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -200,64 +200,61 @@ const TREE = {
       {
         title: "Understanding HTML and its use Cases.",
         done: false,
-        deadline: "",
         completedOn: "",
       },
       {
         title: "Creating first HTML page in VS Code",
         done: false,
-        deadline: "",
         completedOn: "",
       },
       {
         title: "Understand HTML Structure",
         done: false,
-        deadline: "",
         completedOn: "",
       },
       {
         title:
           "Understanding Tags and building simple HTML page - doctype , html , head , title , body",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with text elements - h tags , p tag , br tag , a tag , span , code , pre",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with HTML Lists(Ordered & Unordered lists) - ol , ul , li",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Concept of nested elements in HTML",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Media Tags - img , video , audio",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "HTML attributes - href , target , alt , src , width , height ,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Navigating between pages",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -266,26 +263,26 @@ const TREE = {
         title:
           "Understanding semantic tags - article , section , main , aside , form , footer , header , details , figure",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Differentiating between block and inline elements",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Text formatting tags in HTML - b , string , i , small , ins , sub , sup , del , mark",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with HTML tables - table , td , tr , th",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -293,28 +290,28 @@ const TREE = {
       {
         title: "What is Form and why its important",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Creating a simple Form with tags - form , input , textarea , select , button , label",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Types of input fields - checkbox , text , color , file , tel , date , number , radio , submit , range",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Attributes of Form Elements - method , actions , target , novalidate , enctype , name , required, placeholder",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -322,20 +319,20 @@ const TREE = {
       {
         title: "Understanding with audio and video Tags",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Attributes if media tags - src , width , height , alt , muted , loop , autoplay , controls , media",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using source element for alternative media files",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -343,39 +340,39 @@ const TREE = {
       {
         title: "Introduction to CSS and Why it is important",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Syntax, Selectors and comments in CSS",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Adding CSS to HTML Page - Inline , Internal , External",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding difference between selectors - class , id , element",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding precedence of selectors",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "How to style text using CSS - font family , font style , font weight , line-height , text-decoration , text-align , text-transform , letter-spacing , word-spacing , text-shadow",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -383,40 +380,40 @@ const TREE = {
       {
         title: "Working with colors in CSS - name , rgb , etc.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with css units - % , px , rem , em , vw , vh , min , max",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with borders and border styling",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with box properties - margin , padding , box-sizing , height , width",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Background properties - background-size , background-attachment , background-image , background-repeat , background-position , linear-gradient",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Implementing shadow-[0_0_20px_rgba(0,0,0,0.2)] property.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -425,45 +422,45 @@ const TREE = {
         title:
           "Applying display properties - inline , grid , flex , none , inline-block , etc.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Introduction to FlexBox for aligning and structure - flex-direction , order , flex-wrap , flex-grow , flex-shrink , justify-content , align-items , align-content , align-self , flex-basis , shorthand properties of flex",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Flex Grid for making grids using CSS.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with positional properties - absolute , relative , static , sticky , fixed .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Overflow - visible , hidden , scroll.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Grouping Selectors.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Why we use Nested Selectors.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -472,34 +469,34 @@ const TREE = {
         title:
           "Applying pseudo classes and Pseudo Elements [ hover , focus , after , before , active ] .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning CSS Transitions ( properties , duration , timing functions , delays ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Creating with Transform ( translate , rotate , scale , skew , transform , rotate ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with 3D Transform ( translate3d() , translateZ() , scale3d() , scaleZ() , rotate3d() , rotateZ() .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding CSS Animation ( @keyframes ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -508,44 +505,44 @@ const TREE = {
         title:
           "Difference Between Mobile-first and Desktop first Website(mobile-first vs desktop first).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Measurement units for Responsive Design - px(pixel) , in(inch), mm(millimetre) , % , rem",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using Viewport meta element for Responsive.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting up Images and Typography for Responsiveness.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What are Media queries [ @media , max-width , min-width ].",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using Different function of CSS [ clamp , max , min ].",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understand HTML structure for Responsive Design.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -554,19 +551,19 @@ const TREE = {
         title:
           "What is SASS? Variables , Nesting , Mixins , Functions and Operators .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting up environment for SCSS .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "SCSS or SASS? and Setting Up SCSS .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -575,90 +572,90 @@ const TREE = {
         title:
           "Introduction to JavaScript, Why it is Important! and What can it do for you?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How to link javascript files using script-tag .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Running JavaScript in the Browser Console .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Variables and Keywords in Javascript [ var , let , const ].",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Logging with javascript - [ console.log() , console.info() , console.warn() , prompt , alert ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with String in JS and there -[ splice , slice , template string , split , replace , includes ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What are Statement and Semicolons in JS",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How to add Comments in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "What are Expression in Js and difference between expression and statement",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "JavaScript Data Types - [ float , number , string , boolean , null , array , object , Symbol , Undefined ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Some Important Values - [ undefined , null , NaN , Infinity ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Relative and Primitive Data Type in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Basic Operators(Arithmetic, Assignment, Increment, Decrement, Comparison, Logical, Bitwise) - [ + , , , / , ++ , - , == , === , != , and more ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Variable hoisting in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -667,55 +664,55 @@ const TREE = {
         title:
           "Understanding Condition Operator in Javascript - [ if , else , if-else , else-if , Ternary Operator , switch ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "for Loop in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "while Loop in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "do...while in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "forEach in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "for in Loop in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "for of Loop in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Recursion in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Loop control statements - [ break , continue ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -724,53 +721,53 @@ const TREE = {
         title:
           "Understanding Function in JavaScript and why its widely used - [ parameters , arguments , rest parameters , hoisting , Variable Hoisting , Function Hoisting ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Parameters in JavaScript - [ required , destructured , rest , default ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Arguments in JavaScript - [ positional , default , spread ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Classic Function , Nested Function (function within function), Scope Chain in Javascript.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Immediately Invoked Function Expression(IIFE).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "More Functions in JavaScript - [ Arrow Function , Fat Arrow , Anonymous , Higher Order , Callback , First Class , Pure Function , Impure Function ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Scoping in JS - [ Global scope , Function scope ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Closures , Scoping Rule .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -778,61 +775,61 @@ const TREE = {
       {
         title: "What are Arrays in JavaScript and how to Create an Array.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understand How to Accessing Elements in Array.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Functions on Arrays - [ push , pop , shift , unshift , indexOf , array destructuring , filter , some , map , reduce , spread operator , slice , reverse , sort , join , toString ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Iterating Over Arrays using - [ For Loop , forEach ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding What are Objects in JavaScript - [ key-value pair ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Creating Objects, Accessing Properties, Deleting Property and Nested Objects.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Recognise How Objects Are Stored, Traverse Keys of an Object, Array as Object.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Timing Events - setTimeout() , setInterval() , clearTimeout() , clearInterval()",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Operation in Objects - [ freeze , seal , destructuring , object methods , this keyword ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -840,42 +837,42 @@ const TREE = {
       {
         title: "Introduction to DOM in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding DOM Structure and Tree - [ nodes , elements , document ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Fetching Elements in DOM - [ document.getElementById , document.getElementsByTagName , document.getElementsByClassName, document.querySelectorAll , document.querySelector ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "DOM Tree Traversal - [ parentNode , childNodes , firstChild , nextSibling ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Manipulating DOM Element in JavaScript - [ innerHTML , textContent , setAttribute , getAttribute , style property , classList ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Create and Removing DOM Elements - [ createElement() , appendChild() , insertBefore() , removeChild() ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -884,34 +881,34 @@ const TREE = {
         title:
           "Event Handling in JavaScript - [ addEventListner() , event bubbling , event.target ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Scroll Events, Mouse Events, Key Events and Strict Mode.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with Forms and Input Elements [ Accessing Form Data , Validating Forms , preventDefault() , onsubmit , onchange ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with Classes ****Adding, Removing , Toggling (classList methods)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Browser Events - [ DOMContentLoaded , load , resize , scroll ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -920,26 +917,26 @@ const TREE = {
         title:
           "Browser Object Model - [ window , navigator , history , location , document ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Window Object - [ window.location , window.history ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with Storage - [ Local Storage , Session Storage , Cookies ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Web APIs in DOM - [ Fetch API ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -947,27 +944,27 @@ const TREE = {
       {
         title: "Introduction to OOPS in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding classes and objects in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Constructor and Prototypes - [ this keyword , call , apply , bind ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "More Topics in OOPS - [ class expression , hoisting , inheritence , getter & setter ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -975,31 +972,31 @@ const TREE = {
       {
         title: "Introduction to Asynchrony in JavaScript.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Introduction to callbacks and Problems in Callbacks",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding promises - pending , resolved , rejected",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How to prevent callback hell using async & await .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "setInterval & setTimeout in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1007,44 +1004,44 @@ const TREE = {
       {
         title: "Introduction to Error Handling",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Common types of errors in JavaScript - [ Syntax errors , Runtime errors , Logical errors ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding the Error object - [ message , name , stack ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Handling exceptions using try-catch , try-catch-finally",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How to Throw Errors in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "How to create custom error in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Error Handling in Asynchronous Code",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1052,14 +1049,14 @@ const TREE = {
       {
         title: "Throttling and Debouncing uses in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "JSON Handeling and JavaScript - [ JSON.parse() , JSON.stringify() ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1067,21 +1064,21 @@ const TREE = {
       {
         title: "What is Git and Github?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Concepts - Git commits , Understanding branches , Making branches , merging branches , conflict in branches , understanding workflow , pushing to GitHub .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "How to use GitHub with team members, forking, PR(pull requests) open source contribution, workflow with large teams.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1091,80 +1088,80 @@ const TREE = {
       {
         title: "What is React, and Why Use It?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "What are Components and types of Components - class component , function components",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Single Page Applications (SPAs), Single Page Applications Vs Multi-Page Applications.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Difference between Real DOM and Virtual DOM",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "NPM Basics | Installing Packages .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "How does updates work in React? and More ES6+ features like Import & Exports ,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Difference Between React and Other Frameworks ( Angular , Vue ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Some Basic Terminal Commands - pwd , ls , cd , clear",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up React Environment with nodejs .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Install React-Vite Boilerplate and Installing React Developer Tools.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding JSX or JavaScript XML and Its Importance - Fragments , Components Naming .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Creating and Understanding best practices for Components in React.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1172,32 +1169,32 @@ const TREE = {
       {
         title: "Different Styling Approaches.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Importance of component-based styling. Inline Styles , CSS Modules",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Dynamic Styling Based on Props or State.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Responsive Design in React",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Media queries with CSS and styled-components.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1206,7 +1203,7 @@ const TREE = {
         title:
           "Animation and Transitions Using libraries like framer-motion or gsap for advanced animations.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1214,40 +1211,40 @@ const TREE = {
       {
         title: "Create Components with functions .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Importing css file/stylesheet in react and Adding a CSS Modules Stylesheet - Styled Components , Dynamic styling with styled-components .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Creating a state and Manage State using setState - What is State? , setState , useState .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating Parameterised Function Components in React.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "React Props : Passing Data to Components.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Function chaining in React and Conditional Rendering - Rendering Array Data via map , Eliminating Array Data via filter .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1255,38 +1252,38 @@ const TREE = {
       {
         title: "Higher Order Components in React.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Reusing Components, Lists and Keys in React.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Sharing Data with child components : Props Drilling .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Rendering a List, Mapping and Component Lifecycle - Mounting , Updating , Unmounting .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding React Component Lifecycle .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Different Lifecycle Methods like componentDidMount .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1294,68 +1291,68 @@ const TREE = {
       {
         title: "Understanding React Hooks",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Rules of hooks.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Commonly Used Hooks: useState useEffect useContext useRef useCallback useMemo",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useState",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useEffect",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useContext",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useRef",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useCallback",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useMemo",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Custom Hooks : When and How to Create Them",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding and Applying Context API .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1363,57 +1360,57 @@ const TREE = {
       {
         title: "Introduction to React Router.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Setting Up and Configuring React Router setup of react-router-dom .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Navigating Between Pages with .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Passing Data while Navigating",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Dynamic Routing",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "URL Parameters and Query Strings",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Nested Routes",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Programmatic Navigation Using useNavigate .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Handling 404 Pages : fallback route for unmatched paths, Customizing the “Page Not Found” experience.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1422,56 +1419,56 @@ const TREE = {
         title:
           "Introduction to Redux , What is redux?, When and Why use redux?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understand Principles of Redux and Redux Flow.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding State Management in React using Redux.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Why Use State Management Libraries?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Why Redux need reducers to be pure functions .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Redux Basics: Actions , Reducers , Store , Currying , Middleware , Async Actions: Thunk",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Connecting Redux to React Components with react-redux .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Introduction to Redux Toolkit.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Alternatives: Recoil, Zustand, or MobX.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1479,56 +1476,56 @@ const TREE = {
       {
         title: "Introduction to Forms in React.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Building Basic Forms.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating form elements like input , textarea , select , etc.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Two way binding with react [ input , textarea ].",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Handling Form Events [ onChange , onSubmit , event.preventDefault() ].",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Validation in React Forms : client-side form validation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Integrating Forms with APIs.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Sending form data to a backend using fetch or axios .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Handling loading states and success/error feedback.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1536,51 +1533,51 @@ const TREE = {
       {
         title: "Code Splitting with React Lazy and Suspense",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Avoids redundant calculations by caching Using Memoization Techniques: React.memo useMemo useCallback",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "React.memo",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useMemo",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "useCallback",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Avoiding Re-Renders using useState ,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Optimizing Component Structure",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Performance Profiling Tools using Chrome DevTools , Lighthouse , Web Vitals ,Largest Contentful Paint (LCP), First Input Delay (FID)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1588,25 +1585,25 @@ const TREE = {
       {
         title: "Preparing a React App for Production .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Building React Applications.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Environment Variables in React.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Deployment Platforms: Netlify , Vercel , GitHub Pages ,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1614,26 +1611,26 @@ const TREE = {
       {
         title: "Building a Complete React Project",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Combining All Concepts ( Routing , State Management , API , etc.)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Styling and Responsiveness ,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Optimizing and Deploying the Project.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1641,31 +1638,31 @@ const TREE = {
       {
         title: "On-Page Optimization in SEO.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Guide to SEO Meta Tags.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Image SEO Best Practices.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Internal Link Building SEO.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Create An SEO Sitemap For a Website.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1673,49 +1670,49 @@ const TREE = {
       {
         title: "Understanding what is Scene .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using 3d models for animation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Controlling view with Orbit controls.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Applying Lights inside the scene.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding different types of Cameras .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Animating the mesh with GSAP or Framer motion .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Different types Geometries .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using different Materials for animation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1726,31 +1723,31 @@ const TREE = {
         title:
           "Introduction to Node.js and Getting Our Tools - Node.js LTS , Postman , Editor",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting up the Tools for our Environments",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Running script with nodejs - “Namaste Duniya”",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "NPM Basics | Installing Packages .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating and Managing package.json .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1758,38 +1755,38 @@ const TREE = {
       {
         title: "What is Server and how it works?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up Our First Node.js Server using HTTP",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Serving A Response to the Browser and Understanding Responses.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Routing in HTTP Servers.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Status Code - 1XX , 2XX , 3XX , 404 - Not Found , 200 - success , 500 - Internal Server error , 422 - Invalid Input , 403 - the client does not have access rights to the content , etc.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Installing Nodemon for Automatic Server Restarts.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1797,19 +1794,19 @@ const TREE = {
       {
         title: "Different Architectures in backend like MVC and SOA .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding MVC Architecture Model , View , Control .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "MVC in the context of REST APIs .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1817,38 +1814,38 @@ const TREE = {
       {
         title: "what is Express.js and why to use it.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up Express Server .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Returning Response from the server.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using Query Parameters and URL Parameters.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "HTTP Request - Some Important part of requests , Different Types of Requests - Get , Post , PUT , Patch , Delete .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Serving Static Files with express.static() .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1857,40 +1854,40 @@ const TREE = {
         title:
           "What is Template Engine and What is the use of Template Engine.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Template Engine Option - Handlebars , EJS , Pug , jade but We’ll use EJS .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up Template Engine - Installed EJS template engine .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Rendering Our First Page using EJS and Some important syntax - <%= %> , <% %> , <%- %> .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Loop statement, Conditional statement and Locals in views - EJS .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Accessing the Static Files Inside EJS file.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1898,34 +1895,34 @@ const TREE = {
       {
         title: "Understanding the middleware in express.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Implementing middleware with express.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Different types of middleware : builtIn middleware , third-party middleware , custom middleware .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Different level of middleware : Application-Level , Router-Level .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Handeling Errors and Security with middleware : Error-Handling , Helmet , CORS .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1933,38 +1930,38 @@ const TREE = {
       {
         title: "Understand Multer and its usecase?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Uploading file with multer.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Memory and Disk Storage.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Accessing uploaded file req.file .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with express.static .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Using Cloudinary or Imagekit for Real-time media processing APIs and Digital Asset Management.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -1972,51 +1969,51 @@ const TREE = {
       {
         title: "Relational and non-relational Databases : mongodb & mysql .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is MongoDB ? Why Use It?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Installing Compass and Understand how to access DB using terminal.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up MongoDB Locally and in the Cloud .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Datatypes Collections and Documents .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Connecting MongoDB to Node.js with Mongoose .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Database Relations - One to One , One to Many OR Many to One , Many to Many , Polymorphic .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Handling Relationships with Mongoose ( populate ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2024,41 +2021,41 @@ const TREE = {
       {
         title: "What is a REST API?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Versioning in RESTful APIs - /v1/",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Using Postman for API Testing and developing - Send Requests , Save Collections , Write Tests .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding and Working With Status code , 2xx (Success) , 4xx (Client Errors) , 5xx (Server Errors) .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Validating API Inputs Using libraries like express-validator or Sanitization .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Security Handling - Rate Limiting with express-rate-limit , XSS Attack , CSRF Attack , DOS Attack .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2067,70 +2064,70 @@ const TREE = {
         title:
           "Indexing for Performance with MongoDB :- Single-Field Indexes , Compound Indexes , Text Indexes , Wildcard Indexes .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Best practice with Indexing explain() .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning MongoDB Aggregation .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Comparison Operators - [ $eq , $ne , $lt , $gt , $lte , $gte , $in , $nin ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Logical Operators - [ $not , $and , $or and $nor ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Array[ $pop , $pull , $push and $addToSet ]",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Stages in Aggregation pipeline :- $match , $group , $project , $sort , $lookup .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating Database on Local and Atlas",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating parallel pipeline with $facet .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning MongoDB Operators .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Different types of Operators :- Comparison , Regex , Update , Aggregation .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2138,25 +2135,25 @@ const TREE = {
       {
         title: "Why is Logging Important?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up Logging with Libraries winstone , Pino , Morgan .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Different mode of morgan , dev , short , tiny .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Error Handling and Logging.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2164,45 +2161,45 @@ const TREE = {
       {
         title: "Understanding the Basic Structure of application.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning File Naming Conventions, Git Configuration,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understanding Important Folders :- src/ , config/ , routes/ , utils/ .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Role of package.json , ENV and .gitignore .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Production Environment - PM2 , Error & Response Handling Configuration , CORS Configuration , async-handler.js .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using and Configuring ESLint and Prettier for code formatting.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Testing APIs using Postman .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2210,69 +2207,69 @@ const TREE = {
       {
         title: "Difference Between Authentication & Authorization",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Working with Passwords and Authentication - Cookie Authentication , OAuth Authentication",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Session and Token Authentication.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Implementing JWT Authentication :- jsonwebtoken JWT_SECRET .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Securing user password with bcrypt hashing salt .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Role-Based Access Control ( RBAC ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Authenticating user with Express middleware .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Passport.js and its usecase?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Glancing through and Installing Passport.js",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Setting up Passport.js - passport-local , local-strategy , google-OAuth",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "express-sessions and using passport for authentication.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2280,38 +2277,38 @@ const TREE = {
       {
         title: "Understanding WebSockets protocol for realtime applications?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning handshake , Persistent connection , Bidirectional communication , HTTP polling .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding difference between WebSocket Vs Socket.io.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with socket.io for realtime applications.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding usage of Rooms in Socket.io.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Middleware in Socket.io.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2319,32 +2316,32 @@ const TREE = {
       {
         title: "What is Caching and How to cache data locally?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is Redis ?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Why Use Redis for Caching ?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Implementing Redis Caching in Node.js .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Advanced Redis Features TTL , Complex Data Structures , Pub/Sub .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2352,19 +2349,19 @@ const TREE = {
       {
         title: "Basic Error Handling in Express next() .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Catching Specific Errors try & catch .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating Util Class for Error Handling.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2372,19 +2369,19 @@ const TREE = {
       {
         title: "Understanding Unit-Testing With Jest.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Cross Browser Testing and Why Is It Performed?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What Is Web Testing? and How to Test a Website.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2395,51 +2392,51 @@ const TREE = {
         title:
           "Overview of Generative AI : Understanding its core concepts and potential.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Building an Authentication System with Generative AI .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Exploring Social Media Automation and Content Generation Projects.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Introduction to LangChain : Features and Practical Uses.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Developing Real-World Applications: AI-powered Resume Reviewer and Virtual Interview Assistant using tools like ChatGPT or Gemini .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Agentic-ai application",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with multi agent system",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "MCP server",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2447,63 +2444,63 @@ const TREE = {
       {
         title: "Overview of Progressive Web Apps and their benefits.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Service Workers and their role in PWA.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Lifecycle of a Service Worker ( Install , Activate , Fetch ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding the Manifest File.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating a Manifest.json File.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Key Properties (name, short_name, icons, start_url, theme_color, background_color)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Browser DevTools for PWA Debugging .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Implementing Lazy Loading and Code Splitting for improved performance.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Exploring various testing techniques for PWAs.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Optimizing performance with advanced caching strategies.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2512,20 +2509,20 @@ const TREE = {
         title:
           "Understanding DevOps and its importance in modern software development.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning about Continuous Integration and Continuous Deployment (CI/CD) pipelines .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Introduction to Docker and the basics of containerization .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2533,104 +2530,104 @@ const TREE = {
       {
         title: "What are Microservices ? Why Use Them?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Monolithic vs Microservices Architecture.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Challenges of Microservices.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating a Node.js Microservice.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Designing a Microservice Architecture for a sample application.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Role of package.json in Each Microservice.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "What is Inter-Service Communication?",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Communication Patterns ( Synchronous vs Asynchronous ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Role of an API Gateway in Microservices.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting Up an API Gateway with Express.js .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Microservices and Proxying Requests .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Rate Limiting and Authentication in API Gateway.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "REST APIs for Communication",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Message Brokers (e.g., Redis Pub/Sub ).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Event-Driven Communication with Redis or RabbitMQ .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "OverView of Docker and Kubernetes .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Using Docker for microservice.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2638,43 +2635,43 @@ const TREE = {
       {
         title: "Next.js Fundamentals",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "File-based routing",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Static assets & Image optimization",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Dynamic routes ([id].js)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Rendering & Data Fetching",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Styling in Next.js",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Deployment",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2682,34 +2679,34 @@ const TREE = {
       {
         title: "Understanding the concept and potential of Web3 .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Fundamentals of Blockchain technology and how it powers Web3.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Exploring Decentralized Applications ( DApps ) and their use cases.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Introduction to Smart Contracts : How they work and their applications.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Overview of Cryptocurrencies and their role in the Web3 ecosystem.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2717,53 +2714,53 @@ const TREE = {
       {
         title: "We will be deploying the project on the cloud.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Easy and Smart - We’ll DigitalOcean App Platform (in-built load-balancer, scalable, containers) for Deploying our app.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Service providers give us a machine-like cloud [ AWS, GCP, Heroku, Azure ] but we’ll use AWS .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Launching Our First Machine using EC2 .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Setting up the Machine - SSH .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Pulling the code and clone the repository of the code to the main server.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Configuring the NGINX .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Masking the Domain On Our IP (We are now going to buy a new domain and Link it with cloud AWS).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2773,32 +2770,32 @@ const TREE = {
       {
         title: "Understanding Conditional Statements",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Types of Conditional Statements if , if-else , if-else if , switch",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Making decisions in a program based on inputs or variables.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Validating user data or input forms.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating interactive menus or options in applications.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2806,58 +2803,58 @@ const TREE = {
       {
         title: "Undertsanding the use of Loops.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "for loop.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "while loop.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "do-while loop.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding the Use of Nested Loops.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning Pattern Programming - Pyramid patterns , right-angled triangles , and inverted triangles .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding Control Flow statement break and continue",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning how to set correct conditions to avoid getting stuck in infinite loops.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understand how to optimize nested loops for better performance and reduced time complexity.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2865,32 +2862,32 @@ const TREE = {
       {
         title: "Understanding the use of Arrays.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Basic Manipulations - insertion , deletion , updation",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Accessing Elements in Arrays .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Traversing Elements in Arrays .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Array Algorithms - Two Pointer Algorithm , Rotation Algorithms , Kadane’s Algorithm , etc",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2898,40 +2895,40 @@ const TREE = {
       {
         title: "Understanding Object-Oriented Programming",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learn how to define a class for creating objects.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understand how to instantiate objects from a class",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learn how the constructor() function initializes an object when it’s created.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understand how this refers to the current object in the context.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Use this to access properties and methods within the same object.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2939,54 +2936,54 @@ const TREE = {
       {
         title: "Understanding Strings in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning String Manipulation Methods - concat() , slice() , substring() , replace() , replaceAll()",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning String Search and Check Operations - indexOf() , lastIndexOf() , includes() , startsWith() , endsWith()",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learning String Transformations - toUpperCase() , toLowerCase() , trim()",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning String Splitting and Joining: - split() , join()",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Embed variables and expressions in strings using backticks ( )`",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Escape Characters - \\n , \\t , \\’",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Algorithms on Strings - Reverse a String , Check for Palindrome , Find Longest Common Prefix , Character Frequency Count , Anagram Check",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -2994,75 +2991,75 @@ const TREE = {
       {
         title: "Understanding Time Complexity",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding the Big-O Notation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Constant Time – O(1)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Logarithmic Time – O(log n)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Linear Time – O(n)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Linearithmic Time – O(n log n)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Quadratic Time – O(n²)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Exponential Time – O(2ⁿ)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Factorial Time – O(n!)",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Key Factors That Affect Complexity - Algorithm Design , Data Structure Choice , Problem Constraints",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Tips to Reduce Time Complexity - Avoid Nested Loops , Efficient Data Structures , Optimize Recursion , Divide and Conquer",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Understanding what is Recursion and its use case",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3070,14 +3067,14 @@ const TREE = {
       {
         title: "Understanding Mathematical Operations and Their Applications",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Mathematical operations like (pow) (sqrt) and greatest common divisor (HCF) are essential in various problem-solving scenarios.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3085,55 +3082,55 @@ const TREE = {
       {
         title: "Understanding Advanced Array Concepts",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning two-pointer approach ,",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning prefix sums",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solving complex problems efficiently.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Multi-Dimensional Arrays in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Multi-Dimensional Arrays",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Key Operations on Multi-Dimensional Arrays",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Algorithms Using Multi-Dimensional Arrays",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Multi-Dimensional Arrays in Real-World Scenarios",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3141,31 +3138,31 @@ const TREE = {
       {
         title: "Learning Selection Sort",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Insertion Sort",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Merge Sort",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Quick Sort",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Cyclic Sort",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3173,37 +3170,37 @@ const TREE = {
       {
         title: "Binary Search on Sorted Arrays",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Variations of Binary Search",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Binary Search on Infinite Arrays",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Binary Search in Rotated Sorted Array",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Binary Search on 2D Matrix",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Real-World Use Cases of Binary Search",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3211,39 +3208,39 @@ const TREE = {
       {
         title: "Understanding Hashing in JavaScript - s**et , map *",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Set in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Methods in Set - add(value) , delete(value) , has(value) , clear() , size",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Map in JavaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Methods in Map - set(key, value) , get(key) , delete(key) , has(key) , clear() , size",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learning Algorithms Using Set & map",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3251,55 +3248,55 @@ const TREE = {
       {
         title: "Understanding Linked List - Data , Pointer",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Singly Linked List.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Doubly Linked List.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Circular Linked List.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Creating a Node in Linked List:",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Building a Linked List:",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Traversing a Linked List:",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Operations on Linked Lists - Insertion , Deletion , Searching",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Algorithms Using Linked Lists",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3307,32 +3304,32 @@ const TREE = {
       {
         title: "Implementation of Queue by Linked List and Array",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Queues - Basic Queue , Circular Queue",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Operations on Queues - Enqueue , Dequeue , Peek , IsEmpty , Size",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Algorithms Using Queues",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Applications of Queues",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3340,37 +3337,37 @@ const TREE = {
       {
         title: "Understanding Stacks in javaScript",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Implementation of Stack by Linked List and Array",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Working with Stacks",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Operations on Stacks - Push , Pop , Peek , IsEmpty , Size",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Algorithms Using Stacks",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Applications of Stacks",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3378,32 +3375,32 @@ const TREE = {
       {
         title: "Understanding Advanced Recursion and Backtracking",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Key Problems and Algorithms like N-Queens Problem , Sudoku Solver , Subset Sum , Word Search",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Optimizing Recursive Solutions with Backtracking",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Challenges with Recursion and Backtracking",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Applications of Recursion and Backtracking",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3411,41 +3408,41 @@ const TREE = {
       {
         title: "Understanding Binary Trees",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Types of Binary Trees - Full Binary Tree , Complete Binary Tree , Perfect Binary Tree",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Key Terminology in Binary Trees - Node , Root , Leaf , Height of a Tree , Depth of a Node , Level of a Node",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Binary Tree Operations - Insertion , Deletion , Traversal , Searching",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Binary Tree Algorithms - Height , Diameter , LCA , Symmetry Check",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Applications of Binary Trees",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3453,37 +3450,37 @@ const TREE = {
       {
         title: "Understanding Binary Search Tree",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Properties of Binary Search Tree",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "BST Operations -",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Binary Search Tree Algorithms",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Applications of Binary Search Tree",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Advantages of Binary Search Tree",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3493,19 +3490,19 @@ const TREE = {
       {
         title: "Learn tips and tricks for percentages.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve basic, medium, and advanced questions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to master percentages.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3513,28 +3510,28 @@ const TREE = {
       {
         title: "Concepts of Profit and loss",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Relationship between cost price, selling price, and mark-up price.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve practical scenarios involving discounts, successive transactions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Sharpen your skills with MCQs to prepare for competitive exams.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3542,26 +3539,26 @@ const TREE = {
       {
         title: "Master the formula for calculating simple interest.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Differentiate between principal, interest rate, and time period.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve case-based problems related to borrowing and lending.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs for thorough preparation",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3569,26 +3566,26 @@ const TREE = {
       {
         title: "Understand the growth of investments and savings.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Differentiate between simple interest and compound interest.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems with annual, semi-annual, and quarterly compounding.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs for preparation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3596,26 +3593,26 @@ const TREE = {
       {
         title: "Grasp the basics of ratios.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve problems on proportional relationships.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Analyze scenarios involving scaling, sharing, and dividing quantities.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs for preparation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3624,21 +3621,21 @@ const TREE = {
         title:
           "Understand the classification of natural numbers, whole numbers, integers, rational numbers, and irrational numbers.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Master divisibility rules, factors, multiples, and place value.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Practice MCQs to improve understanding and problem-solving speed.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3646,27 +3643,27 @@ const TREE = {
       {
         title: "Learn techniques to find HCF and LCM.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Understand their applications in scheduling and resource sharing.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve word problems involving time, distance, and recurring patterns.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs for competitive exam preparation.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3674,26 +3671,26 @@ const TREE = {
       {
         title: "Understand averages and their significance.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on weighted averages, missing numbers, and group data.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Apply averages in performance analysis and time management.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to enhance speed and accuracy.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3702,27 +3699,27 @@ const TREE = {
         title:
           "Understand the relationship between work, time, and efficiency.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems involving individuals or groups working together.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Analyze scenarios like alternating work schedules and work completion rates.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs problems.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3730,26 +3727,26 @@ const TREE = {
       {
         title: "Understand the analogy between pipes and work-time.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems with multiple pipes working together or alternately.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Address challenges like leaks or partial closure.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to improve your skills.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3757,20 +3754,20 @@ const TREE = {
       {
         title: "Master the formula: Speed = Distance / Time.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on relative speed, average speed, and varying speeds.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs questions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3779,19 +3776,19 @@ const TREE = {
         title:
           "Calculate the time for a train to cross poles, platforms, or other trains.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Apply relative speed in train-related problems.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs questions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3800,26 +3797,26 @@ const TREE = {
         title:
           "Understand the impact of stream direction (upstream, downstream) on speed.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on relative speed and effective speed in flowing water.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Analyze scenarios like rowing competitions or river crossings.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to test your understanding.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3828,27 +3825,27 @@ const TREE = {
         title:
           "Understand the difference between permutations (arrangement) and combinations (selection).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Learn key formulas and techniques for calculating arrangements and selections.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems with factorials, repetition, and circular permutations.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to improve problem-solving skills.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3856,19 +3853,19 @@ const TREE = {
       {
         title: "Understand probability as a measure of likelihood.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learn formulas for calculating probability in events.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to improve proficiency.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3876,32 +3873,32 @@ const TREE = {
       {
         title: "Understand Arithmetic Progression with a constant difference.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Derive formulas for general term (an) and sum of n terms (Sn).",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Apply AP in real-life problem solving.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on missing terms, specific terms, and sum of series.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs and concept-based questions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3909,14 +3906,14 @@ const TREE = {
       {
         title: "Understand Geometric Progression with a constant ratio.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on missing terms, specific terms, and sum of series.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3924,32 +3921,32 @@ const TREE = {
       {
         title: "Understand days, months, leap years, and century years.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Learn Odd Days concept and calculation for day of the week.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Use key formulas to find the day for any given date.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on repeating calendar years and calendar-based tricks.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs and scenario-based questions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3958,32 +3955,32 @@ const TREE = {
         title:
           "Understand clock structure, minute hand, hour hand, and their movements.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve angle problems between clock hands.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Solve problems on overlaps, right angles, and opposite directions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice clock puzzles and time calculation problems.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs and puzzle-based questions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -3994,25 +3991,25 @@ const TREE = {
         title:
           "Understand directions (North, South, East, West) and final direction after movements.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Track movements and turns (right/left) to find final position.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve problems with multiple directions and movement patterns.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs for speed and accuracy.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4021,25 +4018,25 @@ const TREE = {
         title:
           "Identify relationships like father , mother , brother , sister .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Analyze clues to trace family connections .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve problems with family trees and complex relationships.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to improve deduction skills.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4047,25 +4044,25 @@ const TREE = {
       {
         title: "Understand logical reasoning and conclusion deduction.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Break down premises to check conclusions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Work with All , Some , No premises.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve MCQs to identify valid/invalid conclusions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4073,25 +4070,25 @@ const TREE = {
       {
         title: "Learn to arrange people or objects based on conditions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Apply constraints like sitting together or specific positions.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve problems with multiple arrangement conditions .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to strengthen understanding.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4099,26 +4096,26 @@ const TREE = {
       {
         title: "Understand number sequences and identify next terms.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title:
           "Recognize patterns like arithmetic progressions , geometric progressions .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Solve problems with varying series types and difficulty.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
       {
         title: "Practice MCQs to improve pattern recognition.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4128,7 +4125,7 @@ const TREE = {
       {
         title: "Practice MCQs to improve sentence ordering skills.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4136,7 +4133,7 @@ const TREE = {
       {
         title: "Practice MCQs to sharpen error spotting and correction.",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4144,7 +4141,7 @@ const TREE = {
       {
         title: "Practice MCQs to improve sentence quality .",
         done: false,
-        deadline: "",
+
         completedOn: "",
       },
     ],
@@ -4156,7 +4153,14 @@ const TREE = {
 /**
  * Returns today's date in YYYY-MM-DD format
  */
-const todayISO = () => new Date().toISOString().slice(0, 10);
+// ✅ Local-safe "today" (YYYY-MM-DD)
+const todayISO = () => {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 /**
  * Safe deep clone using JSON method
@@ -4200,6 +4204,27 @@ function formatDateDDMMYYYY(iso) {
   const yyyy = String(d.getFullYear());
 
   return `${dd}-${mm}-${yyyy}`;
+}
+
+// ✅ Local-safe date formatter (NO timezone shift)
+// Returns DD-MM-YYYY
+function formatLocalDDMMYYYY(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
+// ✅ Local-safe ISO-like storage (YYYY-MM-DD)
+function formatLocalISO(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 /**
@@ -5075,7 +5100,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
       </div>
 
       {/* === Combined Layout (Planner + Topics) === */}
-      <div className="w-full px-3 mt-2 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
+      <div className="w-full max-w-7xl px-3 mt-2 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-1">
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
           {/* 🗓️ Daily Planner */}
@@ -5105,7 +5130,6 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
             <SmartSuggest generateSmartPlan={generateSmartPlan} tree={tree} />
           </div>
         </div>
-
         {/* LEFT SIDE — All Topics */}
         <div className="order-2 lg:order-1 lg:col-span-6 space-y-4 ">
           <main className="w-full px-0 md:px-1 space-y-4">
@@ -5283,7 +5307,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
     <>
       <li
         className={`
-          p-2.5 rounded-lg border transition-all duration-200
+          p-2.5 rounded-lg border transition-all duration-200 mt-2
           ${
             it.done
               ? "border-[#00d1b2]/20 bg-[#0B2F2A]/30 opacity-90"
@@ -5438,11 +5462,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
             <DatePicker
               selected={deadline ? new Date(deadline) : null}
               onChange={(date) => {
-                setTaskDeadline(
-                  path,
-                  idx,
-                  date ? date.toISOString().split("T")[0] : ""
-                );
+                setTaskDeadline(path, idx, date ? formatLocalISO(date) : "");
                 setShowDatePicker(false);
               }}
               onClickOutside={() => setShowDatePicker(false)}
@@ -5766,9 +5786,7 @@ function SectionCard({
               <DatePicker
                 selected={m.targetDate ? new Date(m.targetDate) : null}
                 onChange={(date) => {
-                  const formatted = date
-                    ? date.toISOString().split("T")[0]
-                    : "";
+                  const formatted = date ? formatLocalISO(date) : "";
                   setTargetDate(sectionPath, formatted);
                   setShowDatePicker(false);
                 }}
@@ -5932,6 +5950,46 @@ function SubNode({
     }, 0);
   }, [node, nr, path]);
 
+  // ======================= DEADLINE STATUS =======================
+
+  const deadlineStatus = useMemo(() => {
+    if (!m.targetDate) return null;
+    if (!Array.isArray(node)) return null;
+
+    // collect completed dates
+    const completedDates = node
+      .map((it, idx) => {
+        const key = itemKey(path, idx);
+        return it.done ? nr[key]?.completedDate || it.completedOn : null;
+      })
+      .filter(Boolean);
+
+    if (completedDates.length < node.length) {
+      return { type: "progress", label: "⏳ In progress" };
+    }
+
+    const deadline = new Date(m.targetDate);
+    const latestCompletion = new Date(
+      completedDates.sort((a, b) => new Date(b) - new Date(a))[0]
+    );
+
+    if (latestCompletion <= deadline) {
+      return {
+        type: "ontime",
+        label: `✅ Completed on time (${formatDateDDMMYYYY(
+          latestCompletion.toISOString().slice(0, 10)
+        )})`,
+      };
+    }
+
+    return {
+      type: "late",
+      label: `⚠️ Completed late (${formatDateDDMMYYYY(
+        latestCompletion.toISOString().slice(0, 10)
+      )})`,
+    };
+  }, [node, nr, m.targetDate, path]);
+
   /* ======================= UI ======================= */
   return (
     <>
@@ -5939,56 +5997,89 @@ function SubNode({
         {/* HEADER */}
         <div
           onClick={() => toggleOpen(path)}
-          className="p-2 cursor-pointer bg-[#134039] hover:bg-[#00d1b2]/10 border-l-4 border-[#D42916] rounded-xl"
+          className="group p-3 cursor-pointer bg-gradient-to-r from-[#134039] to-[#0f362f] hover:from-[#165247] hover:to-[#134039] border-l-4 border-[#D42916] rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
         >
-          <div className="flex justify-between gap-2 flex-wrap">
-            <div className="flex gap-2 items-center">
-              <span>{m.open ? "🔽" : "▶️"}</span>
-              <span>{name}</span>
-            </div>
-
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="flex flex-wrap gap-2 text-xs items-center"
-            >
-              <span>
-                {totals.done}/{totals.total} • {totals.pct}% •{" "}
-                {totals.total ? "≈" : ""}
-                {hoursRollup?.toFixed?.(1) ?? ""}
+          <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+            {/* Left section: Icon + Title + Badge */}
+            <div className="flex items-center gap-2.5 flex-1 min-w-fit">
+              <span className="text-base transition-transform group-hover:scale-110">
+                {m.open ? "🔽" : "▶️"}
               </span>
-
-              <button
-                onClick={() => setAllAtPath(path, !allDone)}
-                className="px-2 py-1 border border-[#00d1b2]/50 rounded"
-              >
-                {allDone ? "Undo all" : "Mark all"}
-              </button>
-
-              <button
-                ref={buttonRef}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDatePicker((v) => !v);
-                }}
-                className="px-2 py-1 border border-[#0B5134] rounded-md bg-[#051C14] text-xs"
-              >
-                📅{" "}
-                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
-              </button>
-
+              <span className="font-medium text-sm sm:text-[15px] text-gray-100">
+                {name}
+              </span>
               {m.targetDate && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setTargetDate(path, "");
                   }}
-                  className="px-2 py-1 border border-red-500/50 rounded-md text-red-400"
+                  className="px-2 sm:hidden py-1 border border-red-500/50 hover:border-red-500 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Right section: Stats + Actions */}
+            <div
+              onClick={(e) => e.stopPropagagation()}
+              className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto"
+            >
+              {/* Stats with enhanced visibility */}
+              <div className="px-2 sm:px-2.5 py-1 bg-black/20 rounded-md border border-gray-700/30">
+                <span className="text-[11px] sm:text-xs font-medium text-gray-300 whitespace-nowrap">
+                  {totals.done}/{totals.total} • {totals.pct}% •{" "}
+                  {totals.total ? "≈" : ""}
+                  {hoursRollup?.toFixed?.(1) ?? ""}h
+                </span>
+              </div>
+              {/* Vertical divider - hidden on mobile */}
+              <div className="hidden sm:block h-5 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
+              {/* Action buttons */}
+              <button
+                onClick={() => setAllAtPath(path, !allDone)}
+                className="px-2.5 sm:px-3 py-1.5 border border-[#00d1b2]/50 hover:border-[#00d1b2] rounded-lg bg-[#00d1b2]/5 hover:bg-[#00d1b2]/15 text-[#00d1b2] font-medium text-[11px] sm:text-xs transition-all duration-200 hover:shadow-md hover:shadow-[#00d1b2]/20 whitespace-nowrap"
+              >
+                {allDone ? "Undo all" : "Mark all"}
+              </button>
+              <button
+                ref={buttonRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDatePicker((v) => !v);
+                }}
+                className="px-2.5 sm:px-3 py-1.5 border border-[#0B5134] hover:border-[#0d6847] rounded-lg bg-[#051C14] hover:bg-[#072920] transition-all duration-200 text-[11px] sm:text-xs font-medium whitespace-nowrap hover:shadow-md"
+              >
+                📅{" "}
+                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
+              </button>
+              {m.targetDate && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTargetDate(path, "");
+                  }}
+                  className="px-2 hidden sm:block py-1 border border-red-500/50 hover:border-red-500 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 text-xs"
                 >
                   ✕
                 </button>
               )}
             </div>
           </div>
+          {deadlineStatus && (
+            <div
+              className={`text-[10px] font-bold px-2 sm:px-2.5 py-1 rounded-full w-fit sm:mt-0 mt-2 whitespace-nowrap shadow-sm ${
+                deadlineStatus.type === "ontime"
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
+                  : deadlineStatus.type === "late"
+                  ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                  : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+              }`}
+            >
+              {deadlineStatus.label}
+            </div>
+          )}
         </div>
 
         {/* BODY */}
@@ -6050,12 +6141,10 @@ function SubNode({
             <DatePicker
               selected={m.targetDate ? new Date(m.targetDate) : null}
               onChange={(date) => {
-                setTargetDate(
-                  path,
-                  date ? date.toISOString().split("T")[0] : ""
-                );
+                setTargetDate(path, date ? formatLocalISO(date) : "");
                 setShowDatePicker(false);
               }}
+              onClickOutside={() => setShowDatePicker(false)}
               inline
             />
           </div>,
