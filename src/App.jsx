@@ -33,47 +33,39 @@ import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
 
-function normalizeSection(section, _visited = new WeakSet()) {
+function normalizeSection(section, visited = new WeakSet()) {
   // Base cases
   if (!section || typeof section !== "object") return section;
 
-  // ✅ PREVENT INFINITE RECURSION - return empty object
-  if (_visited.has(section)) {
-    console.warn("⚠️ Circular reference detected in normalizeSection");
-    return {}; // Return empty object instead of the circular one
+  // PREVENT INFINITE RECURSION
+  if (visited.has(section)) {
+    console.warn("Circular reference detected in normalizeSection");
+    return {}; // Return empty object instead
   }
-
-  _visited.add(section);
+  visited.add(section);
 
   // Handle arrays
   if (Array.isArray(section)) {
-    return section.map((item) => normalizeSection(item, _visited));
+    return section.map((item) => normalizeSection(item, visited));
   }
 
   // Handle objects
   const normalized = {};
 
-  // Copy properties
+  // Copy properties AS-IS (don't add defaults!)
   for (const key of Object.keys(section)) {
-    // Skip special metadata that might cause issues
-    if (key === "__normalized" || key.startsWith("_")) {
+    // Skip special metadata
+    if (key.startsWith("_normalized")) {
       normalized[key] = section[key];
       continue;
     }
 
-    // Handle nested objects/arrays
+    // Handle nested objects/arrays recursively
     if (typeof section[key] === "object" && section[key] !== null) {
-      normalized[key] = normalizeSection(section[key], _visited);
+      normalized[key] = normalizeSection(section[key], visited);
     } else {
       normalized[key] = section[key];
     }
-  }
-
-  // Set defaults for topic objects (those with 'title')
-  if (section.title) {
-    if (!("done" in normalized)) normalized.done = false;
-    if (!("deadline" in normalized)) normalized.deadline = "";
-    if (!("completedOn" in normalized)) normalized.completedOn = "";
   }
 
   return normalized;
@@ -268,7 +260,7 @@ export default function App() {
 
         if (!hasBackendSyllabus) {
           console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)",
           );
         }
 
@@ -280,7 +272,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2)
+            structuredClone(state.syllabus_tree_v2),
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -395,9 +387,6 @@ export default function App() {
   };
 
   // ----------------- GLOBAL BACKEND SAVE ENGINE -----------------
-  const lastSavedRef = useRef(null);
-  const saveTimeoutRef = useRef(null);
-
   const updateDashboard = useCallback((updates) => {
     setDashboardState((prev) => {
       if (!prev) return prev;
@@ -413,17 +402,14 @@ export default function App() {
         updatedAt: new Date().toISOString(),
       };
 
-      // 🔥 Throttled backend sync (NO re-render trigger)
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(() => {
-        fetch(API_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nextState), // send FULL state
-        }).catch((err) => {
-          console.error("❌ Sync failed:", err);
-        });
-      }, 1500);
+      // 🔥 IMMEDIATE backend sync (NO delay)
+      fetch(API_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextState), // send FULL state
+      }).catch((err) => {
+        console.error("❌ Sync failed:", err);
+      });
 
       return nextState;
     });
@@ -434,7 +420,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    []
+    [],
   );
 
   return (
@@ -1555,10 +1541,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -2044,8 +2030,7 @@ function VisionCard({
   progress = 0,
   phases = [],
   metrics = [],
-})
-{
+}) {
   const isHome = location.pathname === "/";
   return (
     <motion.div
@@ -2208,10 +2193,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>

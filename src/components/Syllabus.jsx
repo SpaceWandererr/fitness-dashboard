@@ -4,9 +4,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // In your component:
 import { createPortal } from "react-dom";
 
-//
-// ✅ ADD THIS JUST BELOW LOCAL_KEY
-//
 function walkTree(tree, path, cb, currentPath = []) {
   // If full path reached, start walking children
   if (currentPath.length === path.length) {
@@ -4222,7 +4219,7 @@ const pathKey = (pathArr) => {
           .trim() // remove leading/trailing spaces
           .replace(/\s+/g, "_") // convert spaces to _
           .replace(/[^\w_]/g, "") // remove invalid chars like > - :
-          .toLowerCase() // normalize casing
+          .toLowerCase(), // normalize casing
     )
     .join("__"); // consistent and clean
 };
@@ -4351,7 +4348,7 @@ export default function Syllabus({
   updateDashboard,
 }) {
   // ==================== ALL HOOKS AT TOP (FIXED ORDER) ====================
-  const[treeState, setTreeState] = useState(() => TREE);
+  const [treeState, setTreeState] = useState(() => TREE);
   const treeRef = useRef(null);
 
   const saveTimeoutRef = useRef(null);
@@ -4382,45 +4379,60 @@ export default function Syllabus({
 
   // ==================== ALL EFFECTS (CONSOLIDATED) ====================
 
-  // Effect 1: Sync treeRef + seed from backend OR static TREE
+  // Effect 1: Sync treeRef & seed from backend OR static TREE
   useEffect(() => {
-    if (!dashboardState) return;
-
-    // ✅ ADD THIS CHECK
+    // ONLY RUN ONCE - check first
     if (seededOnceRef.current) return;
+    if (!dashboardState) return;
 
     const backendTree = dashboardState.syllabus_tree_v2;
 
-    // Backend has tree → use it
+    console.log("🔍 Seeding check:", {
+      hasBackend: !!backendTree,
+      treeKeys: backendTree ? Object.keys(backendTree).length : 0,
+    });
+
+    // Backend has tree => use it
     if (
       backendTree &&
       typeof backendTree === "object" &&
       Object.keys(backendTree).length > 0
     ) {
+      console.log("✅ Using backend tree - NO re-seed");
       const cloned = structuredClone(backendTree);
       treeRef.current = cloned;
-      setTreeState(cloned); // ensure UI uses backend tree
-      seededOnceRef.current = true;
+      setTreeState(cloned);
+      seededOnceRef.current = true; // Mark as seeded
       return;
     }
 
-    // Backend empty + not seeded yet → seed from static TREE
-    if (!seededOnceRef.current) {
-      const seeded = structuredClone(TREE);
-      treeRef.current = seeded;
-      forceRender((v) => v + 1);
+    // Backend empty => seed from static TREE (FIRST TIME ONLY)
+    console.log("🌱 First-time seeding from TREE constant");
+    const seeded = structuredClone(TREE);
+    treeRef.current = seeded;
+    forceRender((v) => v + 1);
 
-      updateDashboard({
-        syllabus_tree_v2: seeded,
-        syllabus_meta: {},
-        syllabus_notes: {},
-        syllabus_streak: [],
-        syllabus_lastStudied: null,
-      });
+    updateDashboard({
+      syllabus_tree_v2: seeded,
+      syllabus_meta: {},
+      syllabus_notes: {},
+      syllabus_streak: [],
+      syllabus_last_studied: null,
+    });
 
-      seededOnceRef.current = true;
-    }
-  }, [dashboardState, updateDashboard]);
+    seededOnceRef.current = true; // Mark as seeded
+    // ⚠️ CRITICAL: EMPTY dependency array - runs ONCE on mount only!
+  }, []); // 🔥 Changed from [dashboardState] to []
+
+  // Effect 1.5: Update treeRef when backend data changes (but don't re-seed!)
+  useEffect(() => {
+    if (!dashboardState?.syllabus_tree_v2) return;
+    if (!seededOnceRef.current) return; // Wait for initial seed
+
+    // Just sync the ref, don't re-seed
+    treeRef.current = dashboardState.syllabus_tree_v2;
+    setTreeState(dashboardState.syllabus_tree_v2);
+  }, [dashboardState?.syllabus_tree_v2]);
 
   // Effect 2: Cleanup debounced save timeout
   useEffect(() => {
@@ -4437,7 +4449,7 @@ export default function Syllabus({
     setShowLastStudied(true);
     const timer = setTimeout(
       () => setShowLastStudied(false),
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
     );
     return () => clearTimeout(timer);
   }, [lastStudied, LAST_STUDIED_HIDE_MINUTES]);
@@ -4453,7 +4465,7 @@ export default function Syllabus({
 
   const grand = useMemo(
     () => totalsOf(dashboardState?.syllabus_tree_v2 || TREE, new WeakSet()),
-    [dashboardState?.syllabus_tree_v2]
+    [dashboardState?.syllabus_tree_v2],
   );
 
   const filtered = useMemo(() => {
@@ -4465,7 +4477,7 @@ export default function Syllabus({
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -4504,7 +4516,7 @@ export default function Syllabus({
         };
       });
     },
-    [setDashboardState]
+    [setDashboardState],
   );
 
   // =========================================================
@@ -4580,6 +4592,7 @@ export default function Syllabus({
 
     // 4) Persist changes (updateDashboard updates dashboardState so UI re-renders)
     updateDashboard({
+      syllabus_tree_v2: treeRef.current,
       syllabus_meta: updatedMeta,
       syllabus_notes: newNotes,
     });
@@ -4608,12 +4621,10 @@ export default function Syllabus({
   const setAllAtPath = (path, val) => {
     const newTree = deepClone(treeRef.current);
     const node = getRefAtPath(newTree, path);
-
     let lastItem = null;
 
-    (function mark(n) {
+    function mark(n) {
       if (!n) return;
-
       if (Array.isArray(n)) {
         n.forEach((it) => {
           if (typeof it === "object" && it.title) {
@@ -4624,72 +4635,60 @@ export default function Syllabus({
         });
         return;
       }
-
       for (const v of Object.values(n)) {
         if (typeof v === "object") mark(v);
       }
-    })(node);
+    }
 
+    mark(node);
+
+    // Update ref & UI first
+    treeRef.current = newTree;
+    forceRender((n) => n + 1);
+
+    // Build updates and save immediately
     const updates = { syllabus_tree_v2: newTree };
-
     if (val && lastItem) {
-      updates.syllabus_lastStudied = `${
-        lastItem.title
-      } — ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_lastStudied = `${lastItem.title} @ ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
     updateDashboard(updates);
-
-    treeRef.current = newTree;
-    forceRender((n) => n + 1);
   };
 
   // =========================================================
   // 🔥 Mark single task
   // =========================================================
   const markTask = (path, idx, val) => {
-    // 1️⃣ Clone current tree
+    // 1. Clone current tree
     const newTree = deepClone(
-      treeRef.current || dashboardState?.syllabus_tree_v2 || TREE
+      treeRef.current || dashboardState?.syllabus_tree_v2 || TREE,
     );
 
-    // 2️⃣ Locate the parent node and item
+    // 2. Locate the parent node and item
     const parent = getRefAtPath(newTree, path.slice(0, -1));
     const leafKey = path[path.length - 1];
     const item = parent?.[leafKey]?.[idx];
     if (!item) return;
 
-    // 3️⃣ Update completion state
+    // 3. Update completion state
     item.done = val;
     item.completedOn = val ? todayISO() : "";
 
-    // 4️⃣ Build updates object
-    const updates = {
-      syllabus_tree_v2: newTree,
-    };
-
+    // 4. Build updates object
+    const updates = { syllabus_tree_v2: newTree };
     if (val) {
-      updates.syllabus_lastStudied = `${
-        item.title
-      } — ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_lastStudied = `${item.title} @ ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
-    // 5️⃣ Update ref + UI
+    // 5. Update ref & UI
     treeRef.current = newTree;
-    setTreeState(newTree); // if you keep treeState; otherwise keep forceRender
-    // or keep your existing forceRender:
-    // forceRender((x) => x + 1);
+    setTreeState(newTree);
+    forceRender((x) => x + 1);
 
-    // 6️⃣ Debounced backend save
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    saveTimeoutRef.current = setTimeout(() => {
-      updateDashboard(updates);
-    }, 500);
+    // 6. IMMEDIATE backend save (no debounce)
+    updateDashboard(updates);
   };
 
   // =========================================================
@@ -4698,25 +4697,24 @@ export default function Syllabus({
   // ------------- Replace setTaskDeadline with this -------------
   const setTaskDeadline = (path, idx, date) => {
     const itemK = itemKey(path, idx);
-    const updatedNotes = { ...(nr || {}) };
-
-    const existing = updatedNotes[itemK] || {};
+    const updatedNotes = { ...nr };
+    const existing = updatedNotes[itemK];
 
     if (date) {
       updatedNotes[itemK] = { ...existing, deadline: date };
     } else {
-      // clear only the deadline key
       const clone = { ...existing };
       if (clone.hasOwnProperty("deadline")) delete clone.deadline;
       if (Object.keys(clone).length === 0) {
-        // remove empty note
         if (updatedNotes.hasOwnProperty(itemK)) delete updatedNotes[itemK];
       } else {
         updatedNotes[itemK] = clone;
       }
     }
 
+    // FIXED: Include the current tree so backend has both tree + notes
     updateDashboard({
+      syllabus_tree_v2: treeRef.current,
       syllabus_notes: updatedNotes,
     });
   };
@@ -4724,54 +4722,56 @@ export default function Syllabus({
   /* ======================= NOTES ======================= */
   const setNR = useCallback(
     (newNR) => {
-      // Functional form: setNR((old) => ({ ...old, ... }))
-      if (typeof newNR === "function") {
-        setDashboardState((prev) => {
-          const currentNotes = prev?.syllabus_notes || {};
-          const updatedNotes = newNR(currentNotes);
+      setDashboardState((prev) => {
+        if (!prev) return prev;
 
-          // build new global dashboard state
-          const newState = {
-            ...prev,
-            syllabus_notes: updatedNotes,
-            // keep syllabus_tree_v2 in sync with current tree
-            syllabus_tree_v2: treeRef.current || prev?.syllabus_tree_v2,
-          };
+        let updatedNotes;
+        if (typeof newNR === "function") {
+          updatedNotes = newNR(prev?.syllabus_notes);
+        } else {
+          updatedNotes = newNR;
+        }
 
-          // debounce + save to backend (Mongo)
-          if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-
-          saveTimeoutRef.current = setTimeout(() => {
-            fetch(API_URL, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(newState),
-            }).catch((err) => console.error("Mongo save failed:", err));
-          }, 500);
-
-          return newState;
-        });
-      } else {
-        // Direct object form: setNR(updatedNotesObject)
-        // merge into dashboard and keep treeRef in sync
-        const updatedNotes = newNR;
-        const newState = ((prev) => ({
+        return {
           ...prev,
           syllabus_notes: updatedNotes,
+        };
+      });
+
+      // Send to backend IMMEDIATELY after state update
+      setDashboardState((prev) => {
+        const finalState = {
+          ...prev,
+          syllabus_notes: prev?.syllabus_notes,
           syllabus_tree_v2: treeRef.current || prev?.syllabus_tree_v2,
-        }))(dashboardState || {});
+        };
 
-        // update local dashboard state
-        setDashboardState(newState);
+        console.log(
+          "🔥 Saving deadline to backend:",
+          finalState.syllabus_notes,
+        );
 
-        // save via updateDashboard helper
-        updateDashboard({
-          syllabus_notes: updatedNotes,
-          syllabus_tree_v2: treeRef.current,
-        });
-      }
+        fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(finalState),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+            return res.json();
+          })
+          .then((data) => {
+            console.log("✅ Backend saved:", data);
+          })
+          .catch((err) => {
+            console.error("❌ Mongo save failed:", err);
+            alert("Failed to save deadline! Check console.");
+          });
+
+        return prev;
+      });
     },
-    [API_URL, setDashboardState, updateDashboard]
+    [API_URL, setDashboardState],
   );
 
   /* ======================= EXPORT ======================= */
@@ -4887,27 +4887,6 @@ export default function Syllabus({
 
     return { plan, remaining };
   };
-
-  useEffect(() => {
-    if (seededOnceRef.current) return;
-
-    // if backend already has tree, STOP
-    if (
-      dashboardState?.syllabus_tree_v2 &&
-      Object.keys(dashboardState.syllabus_tree_v2).length > 0
-    ) {
-      seededOnceRef.current = true;
-      return;
-    }
-
-    console.log("🌱 Seeding syllabus TREE");
-
-    updateDashboard({
-      syllabus_tree_v2: structuredClone(TREE),
-    });
-
-    seededOnceRef.current = true;
-  }, [dashboardState]);
 
   // ==================== EARLY RETURNS (AFTER ALL HOOKS) ====================
 
@@ -5103,7 +5082,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                   onClick={async () => {
                     if (
                       !confirm(
-                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
+                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
                       )
                     )
                       return;
@@ -5135,7 +5114,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
 
                       if (!putResponse.ok) {
                         throw new Error(
-                          `Backend returned ${putResponse.status}`
+                          `Backend returned ${putResponse.status}`,
                         );
                       }
 
@@ -5154,7 +5133,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                       console.error("❌ Reset failed:", err);
                       alert(
                         "Reset failed! Check console for details.\n\nError: " +
-                          err.message
+                          err.message,
                       );
                     }
                   }}
@@ -5230,10 +5209,10 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                 grand.pct < 25
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-300 shadow-[0_0_6px_#22c55e]"
                   : grand.pct < 50
-                  ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
-                  : grand.pct < 75
-                  ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
-                  : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
+                    ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
+                    : grand.pct < 75
+                      ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
+                      : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
               }
             `}
                   style={{
@@ -5685,8 +5664,8 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                         daysDiff > 0
                           ? "text-green-400"
                           : daysDiff < 0
-                          ? "text-red-400"
-                          : "text-yellow-400"
+                            ? "text-red-400"
+                            : "text-yellow-400"
                       }
                     `}
                   >
@@ -5695,10 +5674,10 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                           daysDiff !== 1 ? "s" : ""
                         } before deadline)`
                       : daysDiff < 0
-                      ? `(${Math.abs(daysDiff)} day${
-                          Math.abs(daysDiff) !== 1 ? "s" : ""
-                        } after deadline)`
-                      : "(on deadline day)"}
+                        ? `(${Math.abs(daysDiff)} day${
+                            Math.abs(daysDiff) !== 1 ? "s" : ""
+                          } after deadline)`
+                        : "(on deadline day)"}
                   </span>
                 )}
               </div>
@@ -5788,12 +5767,11 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
 }
-
 
 // ------------------ SECTION CARD ------------------
 function SectionCard({
@@ -5831,7 +5809,7 @@ function SectionCard({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5840,7 +5818,7 @@ function SectionCard({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5945,10 +5923,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                    : totals.pct < 75
-                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                      : totals.pct < 75
+                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6164,7 +6142,7 @@ function SectionCard({
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -6299,7 +6277,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -6308,7 +6286,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -6558,7 +6536,7 @@ function SubNode({
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -6771,8 +6749,8 @@ function DailyPlanner({ tree, nr }) {
                                 95,
                                 Math.max(
                                   5,
-                                  ((maxDays - daysRemaining) / maxDays) * 100
-                                )
+                                  ((maxDays - daysRemaining) / maxDays) * 100,
+                                ),
                               );
                               return progress;
                             })()}%`,
@@ -6822,7 +6800,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      })
+      }),
     );
   }, [tree]);
 
@@ -7008,19 +6986,19 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                     barColor: "bg-red-500", // For vertical bar
                   }
                 : item.deadline &&
-                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                ? {
-                    bg: "bg-yellow-500/20",
-                    text: "text-yellow-300",
-                    border: "border-yellow-600/50",
-                    barColor: "bg-yellow-500", // For vertical bar
-                  }
-                : {
-                    bg: "bg-emerald-500/20",
-                    text: "text-emerald-400",
-                    border: "border-emerald-600/50",
-                    barColor: "bg-emerald-500", // For vertical bar
-                  };
+                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                  ? {
+                      bg: "bg-yellow-500/20",
+                      text: "text-yellow-300",
+                      border: "border-yellow-600/50",
+                      barColor: "bg-yellow-500", // For vertical bar
+                    }
+                  : {
+                      bg: "bg-emerald-500/20",
+                      text: "text-emerald-400",
+                      border: "border-emerald-600/50",
+                      barColor: "bg-emerald-500", // For vertical bar
+                    };
             const countdown = daysLeft(item.deadline);
 
             return (
