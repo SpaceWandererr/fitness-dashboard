@@ -4770,7 +4770,18 @@ export default function Syllabus({
 
   if (!ready || !treeRef.current) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900">
+      <div
+        className="
+        min-h-[80vh]
+        rounded-xl
+        flex
+        items-center
+        justify-center
+        bg-gradient-to-br
+        from-slate-950
+        via-emerald-950
+        to-slate-900"
+      >
         <div className="flex flex-col items-center gap-4 px-6 py-5 rounded-2xl border border-emerald-400/40 bg-black/60 shadow-[0_18px_45px_rgba(0,0,0,0.8)]">
           {/* Spinner ring */}
           <div className="relative h-12 w-12">
@@ -4789,7 +4800,7 @@ export default function Syllabus({
             </p>
           </div>
 
-          {/* Dots */}
+          {/* Bouncing dots */}
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce" />
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-bounce [animation-delay:120ms]" />
@@ -5651,7 +5662,6 @@ function SectionCard({
                 {secKey}
               </span>
             </div>
-
             <div
               className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
               onClick={(e) => e.stopPropagation()}
