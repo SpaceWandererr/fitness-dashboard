@@ -32,6 +32,7 @@ import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
+import GlobalUpgrade from "./components/GlobalUpgrade";
 
 function normalizeSection(section, visited = new WeakSet()) {
   // Base cases
@@ -1131,6 +1132,25 @@ export default function App() {
               }
             />
 
+            <Route
+              path="/GlobalUpgrade"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={
+                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                  }
+                >
+                  <GlobalUpgrade 
+                    dashboardState={dashboardState} 
+                    updateDashboard={updateDashboard} 
+                  />
+                </motion.div>
+              }
+            />
+            {/* GYM */}
             <Route
               path="/gym"
               element={
@@ -2736,6 +2756,7 @@ function NavLink({ to, label, current }) {
 const links = [
   { to: "/", label: "HOME" },
   { to: "/syllabus", label: "STUDY" },
+  { to: "/GlobalUpgrade", label: "MOVE" },
   { to: "/gym", label: "GYM" },
   { to: "/projects", label: "PROJECTS" },
   { to: "/calendar", label: "CALENDAR" },
