@@ -4180,7 +4180,7 @@ const pathKey = (pathArr) => {
           .trim() // remove leading/trailing spaces
           .replace(/\s+/g, "_") // convert spaces to _
           .replace(/[^\w_]/g, "") // remove invalid chars like > - :
-          .toLowerCase() // normalize casing
+          .toLowerCase(), // normalize casing
     )
     .join("__"); // consistent and clean
 };
@@ -4197,13 +4197,14 @@ function formatDateDDMMYYYY(iso) {
   if (!iso) return "";
 
   const d = new Date(iso);
-  if (isNaN(d)) return iso;
+  if (isNaN(d.getTime())) return iso; // better check for invalid date
 
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
+  // Get last two digits of year
+  const yy = String(d.getFullYear()).slice(-2);
 
-  return `${dd}-${mm}-${yyyy}`;
+  return `${dd}-${mm}-${yy}`;
 }
 
 // ✅ Local-safe date formatter (NO timezone shift)
@@ -4388,7 +4389,7 @@ export default function Syllabus({
 
     const timer = setTimeout(
       () => setShowLastStudied(false),
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
     );
 
     return () => clearTimeout(timer);
@@ -4420,7 +4421,7 @@ export default function Syllabus({
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -4462,7 +4463,7 @@ export default function Syllabus({
         };
       });
     },
-    [setDashboardState]
+    [setDashboardState],
   );
 
   // =========================================================
@@ -4654,7 +4655,7 @@ export default function Syllabus({
         syllabus_notes: updatedNotes,
       });
     },
-    [nr, updateDashboard]
+    [nr, updateDashboard],
   );
 
   /* ======================= EXPORT ======================= */
@@ -4934,7 +4935,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                   onClick={async () => {
                     if (
                       !confirm(
-                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
+                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
                       )
                     )
                       return;
@@ -5028,10 +5029,10 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                 grand.pct < 25
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-300 shadow-[0_0_6px_#22c55e]"
                   : grand.pct < 50
-                  ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
-                  : grand.pct < 75
-                  ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
-                  : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
+                    ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
+                    : grand.pct < 75
+                      ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
+                      : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
               }
             `}
                   style={{
@@ -5432,15 +5433,15 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                       daysDiff > 0
                         ? "text-green-400"
                         : daysDiff < 0
-                        ? "text-red-400"
-                        : "text-yellow-400"
+                          ? "text-red-400"
+                          : "text-yellow-400"
                     }`}
                   >
                     {daysDiff > 0
                       ? `(${daysDiff} days before deadline)`
                       : daysDiff < 0
-                      ? `(${Math.abs(daysDiff)} days after deadline)`
-                      : "(on deadline day)"}
+                        ? `(${Math.abs(daysDiff)} days after deadline)`
+                        : "(on deadline day)"}
                   </span>
                 )}
               </div>
@@ -5469,7 +5470,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               inline
             />
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -5510,7 +5511,7 @@ function SectionCard({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5
+              nr[itemKey([secKey, childKey], idx)]?.estimate || 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5519,7 +5520,7 @@ function SectionCard({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5
+                  nr[itemKey([secKey, childKey, gk], idx)]?.estimate || 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5624,10 +5625,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                    : totals.pct < 75
-                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                      : totals.pct < 75
+                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -5655,19 +5656,23 @@ function SectionCard({
               className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
               onClick={(e) => e.stopPropagation()}
             >
-              <span className="shrink-0">
-                {totals.done}/{totals.total} • {totals.pct}% • ~
-                {hoursRollup.toFixed(1)}h
-              </span>
+              <div className="px-2 sm:px-2.5 py-1 bg-black/20 rounded-md border border-gray-700/30">
+                <span className="text-[11px] sm:text-xs font-medium text-gray-300 whitespace-nowrap">
+                  {totals.done}/{totals.total} • {totals.pct}% • ~
+                  {hoursRollup.toFixed(1)}h
+                </span>
+              </div>
 
               <button
                 onClick={() => setAllAtPath(sectionPath, !allDone)}
                 className="
-                  px-2 py-1 rounded-md border
-                  border-[#00d1b2]/50 bg-[#051C14]
-                  text-xs font-medium
-                  hover:bg-[#07261b]
-                  transition-colors shrink-0
+                px-2.5 py-1.5 text-xs font-medium
+                rounded-lg border border-[#00d1b2]/50
+                bg-[#00d1b2]/10 hover:bg-[#00d1b2]/20
+                text-[#00d1b2] 
+                hover:border-[#00d1b2]
+                hover:shadow-md hover:shadow-[#00d1b2]/30
+                transition-all duration-200 shrink-0
                 "
               >
                 {allDone ? "Undo all" : "Mark all"}
@@ -5699,10 +5704,7 @@ function SectionCard({
                   }
                 }}
                 className="
-                  px-2 py-1 border border-[#0B5134] rounded-md
-                  bg-[#051C14] text-xs
-                  hover:border-[#2F6B60] transition
-                  whitespace-nowrap shrink-0
+                px-2.5 sm:px-3 py-1.5 border border-[#0B5134] hover:border-[#0d6847] rounded-lg bg-[#051C14] hover:bg-[#072920] transition-all duration-200 text-[11px] sm:text-xs font-medium whitespace-nowrap hover:shadow-md
                 "
               >
                 📅{" "}
@@ -5841,7 +5843,7 @@ function SectionCard({
               />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -5923,7 +5925,7 @@ function SubNode({
         if (Array.isArray(childVal)) {
           childVal.forEach((_, idx) => {
             const e = Number(
-              nr[itemKey([...path, childKey], idx)]?.estimate ?? 0.5
+              nr[itemKey([...path, childKey], idx)]?.estimate ?? 0.5,
             );
             est += isFinite(e) ? e : 0.5;
           });
@@ -5932,7 +5934,7 @@ function SubNode({
             if (Array.isArray(gv)) {
               gv.forEach((_, idx) => {
                 const e = Number(
-                  nr[itemKey([...path, childKey, gk], idx)]?.estimate ?? 0.5
+                  nr[itemKey([...path, childKey, gk], idx)]?.estimate ?? 0.5,
                 );
                 est += isFinite(e) ? e : 0.5;
               });
@@ -5970,14 +5972,14 @@ function SubNode({
 
     const deadline = new Date(m.targetDate);
     const latestCompletion = new Date(
-      completedDates.sort((a, b) => new Date(b) - new Date(a))[0]
+      completedDates.sort((a, b) => new Date(b) - new Date(a))[0],
     );
 
     if (latestCompletion <= deadline) {
       return {
         type: "ontime",
         label: `✅ Completed on time (${formatDateDDMMYYYY(
-          latestCompletion.toISOString().slice(0, 10)
+          latestCompletion.toISOString().slice(0, 10),
         )})`,
       };
     }
@@ -5985,7 +5987,7 @@ function SubNode({
     return {
       type: "late",
       label: `⚠️ Completed late (${formatDateDDMMYYYY(
-        latestCompletion.toISOString().slice(0, 10)
+        latestCompletion.toISOString().slice(0, 10),
       )})`,
     };
   }, [node, nr, m.targetDate, path]);
@@ -6014,7 +6016,8 @@ function SubNode({
                     e.stopPropagation();
                     setTargetDate(path, "");
                   }}
-                  className="px-2 sm:hidden py-1 border border-red-500/50 hover:border-red-500 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 text-xs"
+                  className="px-2 sm:hidden py-1 border border-red-500/50 hover:border-red-500 rounded-md
+                  bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 text-xs"
                 >
                   ✕
                 </button>
@@ -6073,8 +6076,8 @@ function SubNode({
                 deadlineStatus.type === "ontime"
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                   : deadlineStatus.type === "late"
-                  ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
-                  : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+                    ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                    : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
               }`}
             >
               {deadlineStatus.label}
@@ -6148,7 +6151,7 @@ function SubNode({
               inline
             />
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -6355,8 +6358,8 @@ function DailyPlanner({ tree, nr }) {
                                 95,
                                 Math.max(
                                   5,
-                                  ((maxDays - daysRemaining) / maxDays) * 100
-                                )
+                                  ((maxDays - daysRemaining) / maxDays) * 100,
+                                ),
                               );
                             })()}%`,
                           }}
@@ -6406,7 +6409,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
       prev.map((p) => {
         const match = findInTree(tree, p.title);
         return match ? { ...p, done: !!match.done } : p;
-      })
+      }),
     );
   }, [tree]);
 
@@ -6566,19 +6569,19 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                     barColor: "bg-red-500",
                   }
                 : item.deadline &&
-                  new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
-                ? {
-                    bg: "bg-yellow-500/20",
-                    text: "text-yellow-300",
-                    border: "border-yellow-600/50",
-                    barColor: "bg-yellow-500",
-                  }
-                : {
-                    bg: "bg-emerald-500/20",
-                    text: "text-emerald-400",
-                    border: "border-emerald-600/50",
-                    barColor: "bg-emerald-500",
-                  };
+                    new Date(item.deadline) - now < 1000 * 60 * 60 * 24 * 2
+                  ? {
+                      bg: "bg-yellow-500/20",
+                      text: "text-yellow-300",
+                      border: "border-yellow-600/50",
+                      barColor: "bg-yellow-500",
+                    }
+                  : {
+                      bg: "bg-emerald-500/20",
+                      text: "text-emerald-400",
+                      border: "border-emerald-600/50",
+                      barColor: "bg-emerald-500",
+                    };
 
             const countdown = daysLeft(item.deadline);
 
