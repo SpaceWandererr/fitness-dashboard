@@ -422,11 +422,11 @@ export default function CalendarFullDarkUpdated({
   return (
     <div
       className="w-full max-w-[1300px] mx-auto p-3 overflow-x-hidden
-      grid grid-cols-1 lg:grid-cols-2 gap-4 items-start transition- 
-      colors duration-500 rounded-xl
-      bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] 
-      dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
-      [#0A0F1C] md:mt-7 lg:mt-0"
+               grid grid-cols-1 gap-4 items-start
+               transition-colors duration-500 rounded-xl
+               bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+               dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+               md:mt-7 lg:mt-0"
     >
       {/* Top Controls */}
       <div className="lg:col-span-3 flex flex-col gap-4">
@@ -468,8 +468,8 @@ export default function CalendarFullDarkUpdated({
                         {streakInfo.current >= 30
                           ? "🏆"
                           : streakInfo.current >= 14
-                            ? "⭐"
-                            : "✨"}
+                          ? "⭐"
+                          : "✨"}
                       </span>
                     )}
                   </div>
@@ -504,8 +504,8 @@ export default function CalendarFullDarkUpdated({
               streakInfo.percent < 50
                 ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_6px_#22C55E]"
                 : streakInfo.percent < 80
-                  ? "bg-gradient-to-r from-[#F59E0B] to-[#FB923C] shadow-[0_0_8px_#FB923C]"
-                  : "bg-gradient-to-r from-[#EF4444] to-[#FF8F8F] shadow-[0_0_8px_#EF4444]"
+                ? "bg-gradient-to-r from-[#F59E0B] to-[#FB923C] shadow-[0_0_8px_#FB923C]"
+                : "bg-gradient-to-r from-[#EF4444] to-[#FF8F8F] shadow-[0_0_8px_#EF4444]"
             }
           `}
                   style={{ width: `${Math.max(3, streakInfo.percent)}%` }}
@@ -663,7 +663,7 @@ export default function CalendarFullDarkUpdated({
                           (todayStats.exercises > 0 ? 25 : 0) +
                             (todayStats.topics > 0 ? 25 : 0) +
                             (todayStats.calories > 0 ? 25 : 0) +
-                            (todayStats.weight > 0 ? 25 : 0),
+                            (todayStats.weight > 0 ? 25 : 0)
                         )}%`,
                       }}
                     />
@@ -674,7 +674,7 @@ export default function CalendarFullDarkUpdated({
                       (todayStats.exercises > 0 ? 25 : 0) +
                         (todayStats.topics > 0 ? 25 : 0) +
                         (todayStats.calories > 0 ? 25 : 0) +
-                        (todayStats.weight > 0 ? 25 : 0),
+                        (todayStats.weight > 0 ? 25 : 0)
                     )}
                     %
                   </span>
@@ -795,21 +795,24 @@ export default function CalendarFullDarkUpdated({
         </div>
       </div>
 
-      {/* Calendar Section */}
-      <div
-        className="xl:col-span-1 rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3 
-        w-full min-h-[400px] md:min-h-[600px]
-        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-        shadow-2xl"
-      >
-        {/* Compact Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-          {/* Month Navigation */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMonth((m) => m.subtract(1, "month"))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center
+      {/* MAIN CONTENT ROW */}
+      <div className="lg:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Calendar Section */}
+          <div
+            className=" rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3
+               w-full md:h-[590px]
+               bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
+               shadow-2xl"
+          >
+            {/* Compact Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              {/* Month Navigation */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMonth((m) => m.subtract(1, "month"))}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center
               bg-black/20 backdrop-blur-sm
               text-[#9FF2E8]
               border border-[#2F6B60]/40
@@ -817,24 +820,24 @@ export default function CalendarFullDarkUpdated({
               hover:border-[#4ade80] hover:text-[#CFFFF7]
               hover:shadow-[0_0_8px_#4ade80]
               active:scale-95"
-            >
-              ←
-            </button>
+                >
+                  ←
+                </button>
 
-            <h2
-              className="px-3 py-1.5 rounded-lg
+                <h2
+                  className="px-3 py-1.5 rounded-lg
               text-sm sm:text-base font-semibold
               text-[#9FF2E8]
               border border-[#2F6B60]/40
               bg-black/20 backdrop-blur-sm
               min-w-[140px] text-center"
-            >
-              {month.format("MMMM YYYY")}
-            </h2>
+                >
+                  {month.format("MMMM YYYY")}
+                </h2>
 
-            <button
-              onClick={() => setMonth((m) => m.add(1, "month"))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center
+                <button
+                  onClick={() => setMonth((m) => m.add(1, "month"))}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center
               bg-black/20 backdrop-blur-sm
               text-[#9FF2E8]
               border border-[#2F6B60]/40
@@ -842,41 +845,41 @@ export default function CalendarFullDarkUpdated({
               hover:border-[#4ade80] hover:text-[#CFFFF7]
               hover:shadow-[0_0_8px_#4ade80]
               active:scale-95"
-            >
-              →
-            </button>
-          </div>
+                >
+                  →
+                </button>
+              </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const today = dayjs();
-                setMonth(today);
-                setSelectedDate(today.format("YYYY-MM-DD"));
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const today = dayjs();
+                    setMonth(today);
+                    setSelectedDate(today.format("YYYY-MM-DD"));
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium
               bg-black/20 text-[#9FF2E8]
               border border-[#2F6B60]/40
               transition-all duration-200
               hover:border-[#4ade80] hover:text-[#CFFFF7]
               hover:shadow-[0_0_8px_#4ade80]
               active:scale-95"
-            >
-              Today
-            </button>
+                >
+                  Today
+                </button>
 
-            {/* Quick Jump - With Date Display on Hover */}
-            <div className="relative group">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  const newDate = dayjs(e.target.value);
-                  setMonth(newDate);
-                  setSelectedDate(e.target.value);
-                }}
-                className="
+                {/* Quick Jump - With Date Display on Hover */}
+                <div className="relative group">
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      const newDate = dayjs(e.target.value);
+                      setMonth(newDate);
+                      setSelectedDate(e.target.value);
+                    }}
+                    className="
                   peer
                   w-9 h-8 rounded-lg
                   bg-black/20 backdrop-blur-sm 
@@ -895,90 +898,92 @@ export default function CalendarFullDarkUpdated({
                   sm:focus:w-32
                   focus:w-full
                 "
-                title="Jump to date"
-              />
-              {/* Icon - Hidden on Hover/Focus */}
-              <div className="absolute left-2.5 top-2 pointer-events-none peer-hover:opacity-0 peer-focus:opacity-0 transition-opacity">
-                <svg
-                  className="w-4 h-4 text-[#9FF2E8]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    title="Jump to date"
                   />
-                </svg>
+                  {/* Icon - Hidden on Hover/Focus */}
+                  <div className="absolute left-2.5 top-2 pointer-events-none peer-hover:opacity-0 peer-focus:opacity-0 transition-opacity">
+                    <svg
+                      className="w-4 h-4 text-[#9FF2E8]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Dynamic Stats - Updates with Selected Date */}
-        <div
-          className="flex items-center justify-center gap-3 sm:gap-4 px-3 py-1.5 rounded-lg
+            {/* Dynamic Stats - Updates with Selected Date */}
+            <div
+              className="flex items-center justify-center gap-3 sm:gap-4 px-3 py-1.5 rounded-lg
           bg-black/20 backdrop-blur-sm border border-[#2F6B60]/30
           transition-all duration-300"
-        >
-          {/* Date Label - Shows Selected Date */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] sm:text-xs text-[#9FF2E8]/50 font-medium">
-              {selectedDate ? dayjs(selectedDate).format("MMM DD") : "Select"}
-            </span>
-          </div>
+            >
+              {/* Date Label - Shows Selected Date */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] sm:text-xs text-[#9FF2E8]/50 font-medium">
+                  {selectedDate
+                    ? dayjs(selectedDate).format("MMM DD")
+                    : "Select"}
+                </span>
+              </div>
 
-          <div className="w-px h-3 bg-[#2F6B60]/40" />
+              <div className="w-px h-3 bg-[#2F6B60]/40" />
 
-          {/* Study Count for Selected Date */}
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
-            <span className="text-xs font-semibold text-[#4ADE80]">
-              {selectedDate
-                ? (studyMap[selectedDate] || []).length
-                : monthlyStats.topics}
-            </span>
-            <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 hidden sm:inline">
-              {selectedDate ? "topics" : "monthly"}
-            </span>
-            <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 sm:hidden">
-              T
-            </span>
-          </div>
+              {/* Study Count for Selected Date */}
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+                <span className="text-xs font-semibold text-[#4ADE80]">
+                  {selectedDate
+                    ? (studyMap[selectedDate] || []).length
+                    : monthlyStats.topics}
+                </span>
+                <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 hidden sm:inline">
+                  {selectedDate ? "topics" : "monthly"}
+                </span>
+                <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 sm:hidden">
+                  T
+                </span>
+              </div>
 
-          <div className="w-px h-3 bg-[#2F6B60]/40" />
+              <div className="w-px h-3 bg-[#2F6B60]/40" />
 
-          {/* Gym/Exercise Count for Selected Date */}
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
-            <span className="text-xs font-semibold text-[#60A5FA]">
-              {selectedDate
-                ? gymLogs[selectedDate]
-                  ? combinedExercisesForDateWrapper(selectedDate).length
-                  : 0
-                : monthlyStats.exercises}
-            </span>
-            <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 hidden sm:inline">
-              {selectedDate ? "exercises" : "monthly"}
-            </span>
-            <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 sm:hidden">
-              E
-            </span>
-          </div>
-        </div>
+              {/* Gym/Exercise Count for Selected Date */}
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
+                <span className="text-xs font-semibold text-[#60A5FA]">
+                  {selectedDate
+                    ? gymLogs[selectedDate]
+                      ? combinedExercisesForDateWrapper(selectedDate).length
+                      : 0
+                    : monthlyStats.exercises}
+                </span>
+                <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 hidden sm:inline">
+                  {selectedDate ? "exercises" : "monthly"}
+                </span>
+                <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 sm:hidden">
+                  E
+                </span>
+              </div>
+            </div>
 
-        {/* Calendar Grid - Compact */}
-        <div className="grid grid-cols-5 sm:grid-cols-7 gap-1.5 sm:gap-2">
-          {days.map((d) => {
-            const iso = d.format("YYYY-MM-DD");
-            const status = getDayStatusStr(iso);
-            const isCurMonth = d.month() === month.month();
-            const isToday = iso === todayISO();
-            const isSelected = iso === selectedDate;
+            {/* Calendar Grid - Compact */}
+            <div className="grid grid-cols-5 sm:grid-cols-7 gap-1.5 sm:gap-2">
+              {days.map((d) => {
+                const iso = d.format("YYYY-MM-DD");
+                const status = getDayStatusStr(iso);
+                const isCurMonth = d.month() === month.month();
+                const isToday = iso === todayISO();
+                const isSelected = iso === selectedDate;
 
-            const base = `
+                const base = `
               aspect-square w-full 
               min-w-[32px] max-w-[56px]
               rounded-xl 
@@ -989,511 +994,660 @@ export default function CalendarFullDarkUpdated({
               select-none cursor-pointer
             `;
 
-            const notCur = !isCurMonth ? "opacity-30" : "";
+                const notCur = !isCurMonth ? "opacity-30" : "";
 
-            const bgClass =
-              status === "both"
-                ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
-                : status === "study"
-                  ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
-                  : status === "gym"
+                const bgClass =
+                  status === "both"
+                    ? "bg-gradient-to-br from-[#064E3B] to-[#7A1D2B] text-[#ECFFFA]"
+                    : status === "study"
+                    ? "bg-[#0A2B22] text-[#9FF2E8] border border-[#10b981]/20"
+                    : status === "gym"
                     ? "bg-[#071A2F] text-[#9FCAFF] border border-[#3b82f6]/20"
                     : "bg-[#081C18]/60 text-[#B6E5DC] border border-[#2F6B60]/20";
 
-            const selectedClass = isSelected
-              ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105 z-10"
-              : "hover:scale-105 hover:shadow-[0_0_8px_rgba(63,167,150,0.2)]";
+                const selectedClass = isSelected
+                  ? "ring-2 ring-[#3FA796] shadow-[0_0_15px_rgba(63,167,150,0.4)] scale-105 z-10"
+                  : "hover:scale-105 hover:shadow-[0_0_8px_rgba(63,167,150,0.2)]";
 
-            const todayClass =
-              isToday && !isSelected
-                ? "ring-2 ring-[#fbbf24]/50 animate-pulse"
-                : "";
+                const todayClass =
+                  isToday && !isSelected
+                    ? "ring-2 ring-[#fbbf24]/50 animate-pulse"
+                    : "";
 
-            return (
-              <button
-                key={iso}
-                onClick={() => openDay(d)}
-                onMouseEnter={(e) => handleMouseEnterDate(e, iso)}
-                onMouseLeave={handleMouseLeaveDate}
-                className={`${base} ${notCur} ${bgClass} ${selectedClass} ${todayClass}`}
-                title={`${d.format("ddd, DD MMM YYYY")} — ${
-                  status === "both"
-                    ? "Study + Gym"
-                    : status === "study"
-                      ? "Study"
-                      : status === "gym"
+                return (
+                  <button
+                    key={iso}
+                    onClick={() => openDay(d)}
+                    onMouseEnter={(e) => handleMouseEnterDate(e, iso)}
+                    onMouseLeave={handleMouseLeaveDate}
+                    className={`${base} ${notCur} ${bgClass} ${selectedClass} ${todayClass}`}
+                    title={`${d.format("ddd, DD MMM YYYY")} — ${
+                      status === "both"
+                        ? "Study + Gym"
+                        : status === "study"
+                        ? "Study"
+                        : status === "gym"
                         ? "Gym"
                         : "No activity"
-                }`}
-              >
-                {/* Date */}
-                <span className="z-10">{d.date()}</span>
+                    }`}
+                  >
+                    {/* Date */}
+                    <span className="z-10">{d.date()}</span>
 
-                {/* Activity dots */}
-                {(status === "study" ||
-                  status === "gym" ||
-                  status === "both") && (
-                  <div className="absolute bottom-1 flex gap-0.5">
-                    {(status === "study" || status === "both") && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+                    {/* Activity dots */}
+                    {(status === "study" ||
+                      status === "gym" ||
+                      status === "both") && (
+                      <div className="absolute bottom-1 flex gap-0.5">
+                        {(status === "study" || status === "both") && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+                        )}
+                        {(status === "gym" || status === "both") && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
+                        )}
+                      </div>
                     )}
-                    {(status === "gym" || status === "both") && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
-                    )}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
+                  </button>
+                );
+              })}
+            </div>
 
-        {/* Compact Notes with Character Counter */}
-        <div
-          className="rounded-xl p-2.5 border border-[#2F6B60]/30
+            {/* Compact Notes with Character Counter */}
+            <div
+              className="rounded-xl p-2.5 border border-[#2F6B60]/30
           bg-gradient-to-br from-[#B82132]/20 via-[#183D3D]/20 to-[#0F0F0F]/20 
           dark:from-[#0F1622]/40 dark:via-[#132033]/40 dark:to-[#0A0F1C]/40
           backdrop-blur-sm"
-        >
-          <div className="flex items-center justify-between mb-1.5">
-            <h4 className="font-semibold text-[#00e5ff] text-xs flex items-center gap-1.5">
-              📝 {selectedDate ? dayjs(selectedDate).format("MMM DD") : "Notes"}
-            </h4>
-            <span className="text-[10px] text-[#9FF2E8]/50">
-              {selectedNote.length}/200
-            </span>
-          </div>
-          <textarea
-            value={selectedNote}
-            onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
-            maxLength={200}
-            placeholder="Quick note for today..."
-            className="w-full min-h-[60px] p-2 border rounded-lg text-sm
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <h4 className="font-semibold text-[#00e5ff] text-xs flex items-center gap-1.5">
+                  📝{" "}
+                  {selectedDate
+                    ? dayjs(selectedDate).format("MMM DD")
+                    : "Notes"}
+                </h4>
+                <span className="text-[10px] text-[#9FF2E8]/50">
+                  {selectedNote.length}/200
+                </span>
+              </div>
+              <textarea
+                value={selectedNote}
+                onChange={(e) => saveNoteForDate(selectedDate, e.target.value)}
+                maxLength={200}
+                placeholder="Quick note for today..."
+                className="w-full min-h-[60px] p-2 border rounded-lg text-sm
               bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
               text-[#cfefff] border-[#233446]
               focus:border-[#4ade80]/50 focus:outline-none
               placeholder:text-[#9FF2E8]/30 resize-none"
-          />
-        </div>
-
-        {/* Compact Charts */}
-        <div className="space-y-3">
-          {view === "weekly" && (
-            <div
-              className="rounded-xl p-2.5 border border-[#2F6B60]/30
-              bg-[#071827]/60 backdrop-blur-sm"
-            >
-              <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeklyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#122236" />
-                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
-                    <YAxis stroke="#94a3b8" fontSize={10} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#071425",
-                        border: "1px solid #263249",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: "11px" }} />
-                    <Bar
-                      dataKey="study"
-                      stackId="a"
-                      fill="#4ADE80"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="gym"
-                      stackId="a"
-                      fill="#60A5FA"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              />
             </div>
-          )}
 
-          {view === "compare" && (
-            <div
-              className="rounded-xl p-2.5 border border-[#2F6B60]/30
+            {/* Compact Charts */}
+            <div className="space-y-3">
+              {view === "weekly" && (
+                <div
+                  className="rounded-xl p-2.5 border border-[#2F6B60]/30
               bg-[#071827]/60 backdrop-blur-sm"
-            >
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={compareDates[0] || ""}
-                    onChange={(e) => setCompareSlot(0, e.target.value)}
-                    className="flex-1 px-2 py-1 rounded-lg text-xs
+                >
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={weeklyData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#122236" />
+                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
+                        <YAxis stroke="#94a3b8" fontSize={10} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#071425",
+                            border: "1px solid #263249",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                          }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} />
+                        <Bar
+                          dataKey="study"
+                          stackId="a"
+                          fill="#4ADE80"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="gym"
+                          stackId="a"
+                          fill="#60A5FA"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {view === "compare" && (
+                <div
+                  className="rounded-xl p-2.5 border border-[#2F6B60]/30
+              bg-[#071827]/60 backdrop-blur-sm"
+                >
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={compareDates[0] || ""}
+                        onChange={(e) => setCompareSlot(0, e.target.value)}
+                        className="flex-1 px-2 py-1 rounded-lg text-xs
                     bg-[#02061a] text-white border border-[#2F6B60]/40
                     focus:border-[#4ade80]/50 focus:outline-none
                     [color-scheme:dark]"
-                  />
-                  <input
-                    type="date"
-                    value={compareDates[1] || ""}
-                    onChange={(e) => setCompareSlot(1, e.target.value)}
-                    className="flex-1 px-2 py-1 rounded-lg text-xs
+                      />
+                      <input
+                        type="date"
+                        value={compareDates[1] || ""}
+                        onChange={(e) => setCompareSlot(1, e.target.value)}
+                        className="flex-1 px-2 py-1 rounded-lg text-xs
                     bg-[#02061a] text-white border border-[#2F6B60]/40
                     focus:border-[#4ade80]/50 focus:outline-none
                     [color-scheme:dark]"
-                  />
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[0, 1].map((i) => {
+                        const iso = compareDates[i];
+                        const info = iso
+                          ? {
+                              studyCount: (studyMap[iso] || []).length,
+                              gymDone: !!gymLogs[iso],
+                              exercises: combinedExercisesForDateWrapper(iso),
+                              notes: notesMap[iso] || "",
+                            }
+                          : null;
+                        return (
+                          <div
+                            key={i}
+                            className="p-2 rounded-lg bg-[#071323]/80 border border-[#2F6B60]/30"
+                          >
+                            <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
+                              {iso ? dayjs(iso).format("MMM DD") : "—"}
+                            </div>
+                            <div className="space-y-1 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-[#9FF2E8]/70">Study</span>
+                                <span className="text-[#4ADE80] font-semibold">
+                                  {info ? info.studyCount : "—"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[#9FF2E8]/70">Gym</span>
+                                <span className="text-[#60A5FA] font-semibold">
+                                  {info ? (info.gymDone ? "✓" : "✗") : "—"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[#9FF2E8]/70">Ex.</span>
+                                <span className="text-[#E0F2F1] font-semibold">
+                                  {info ? info.exercises.length : "—"}
+                                </span>
+                              </div>
+                            </div>
+                            {info?.notes && (
+                              <p className="text-[10px] text-[#9FF2E8]/60 mt-1.5 line-clamp-1">
+                                {info.notes}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[0, 1].map((i) => {
-                    const iso = compareDates[i];
-                    const info = iso
-                      ? {
-                          studyCount: (studyMap[iso] || []).length,
-                          gymDone: !!gymLogs[iso],
-                          exercises: combinedExercisesForDateWrapper(iso),
-                          notes: notesMap[iso] || "",
-                        }
-                      : null;
-                    return (
-                      <div
-                        key={i}
-                        className="p-2 rounded-lg bg-[#071323]/80 border border-[#2F6B60]/30"
-                      >
-                        <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
-                          {iso ? dayjs(iso).format("MMM DD") : "—"}
-                        </div>
-                        <div className="space-y-1 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-[#9FF2E8]/70">Study</span>
-                            <span className="text-[#4ADE80] font-semibold">
-                              {info ? info.studyCount : "—"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#9FF2E8]/70">Gym</span>
-                            <span className="text-[#60A5FA] font-semibold">
-                              {info ? (info.gymDone ? "✓" : "✗") : "—"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#9FF2E8]/70">Ex.</span>
-                            <span className="text-[#E0F2F1] font-semibold">
-                              {info ? info.exercises.length : "—"}
-                            </span>
-                          </div>
-                        </div>
-                        {info?.notes && (
-                          <p className="text-[10px] text-[#9FF2E8]/60 mt-1.5 line-clamp-1">
-                            {info.notes}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {/* Right Panel */}
-      <div
-        className="xl:col-span-1 relative rounded-2xl border p-3
-       bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]      
-       dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-       space-y-3 w-full min-h-[400px] md:min-h-[600px]
-        border-green-600/40 dark:border-gray-700 transition-colors"
-      >
-        <div className="text-sm text-white font-bold mb-2">
-          {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
-        </div>
+          {/* Topics Panel */}
+          <div
+            className="rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3
+               w-full md:h-[590px]
+               bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
+               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+          >
+            <div className="text-sm text-white font-bold mb-2">
+              {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
+            </div>
 
-        {/* Selected date stats */}
-        <div
-          className="rounded-2xl p-2 border
+            {/* Selected date stats */}
+            <div
+              className="rounded-2xl p-2 border
          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
           border-green-600/40 dark:border-gray-700 transition-colors
          "
-        >
-          <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
-          <div className="grid grid-cols-5 text-center mt-0 min-h-[20px]">
-            <div>
-              <p className="text-[#38bdf8] font-semibold">
-                {(studyMap[selectedDate] || []).length}
-              </p>
-              <p className="text-xs opacity-70">Topics</p>
+            >
+              <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
+              <div className="grid grid-cols-5 text-center mt-0 min-h-[20px]">
+                <div>
+                  <p className="text-[#38bdf8] font-semibold">
+                    {(studyMap[selectedDate] || []).length}
+                  </p>
+                  <p className="text-xs opacity-70">Topics</p>
+                </div>
+                <div>
+                  <p className="text-[#22c55e] font-semibold">
+                    {
+                      combinedExercisesForDateWrapper(selectedDate, gymLogs)
+                        .length
+                    }
+                  </p>
+                  <p className="text-xs opacity-70">Exercises</p>
+                </div>
+                <div>
+                  <p className="text-[#facc15] font-semibold">
+                    {selectedGym.calories || "—"}
+                  </p>
+                  <p className="text-xs opacity-70">Calories</p>
+                </div>
+                <div>
+                  <p className="text-[#f472b6] font-semibold">
+                    {selectedGym.weight || "—"}
+                  </p>
+                  <p className="text-xs opacity-70">Weight</p>
+                </div>
+                <div>
+                  <p className="text-[#34d399] font-semibold">
+                    {selectedGym.bmi || "—"}
+                  </p>
+                  <p className="text-xs opacity-70">BMI</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-[#22c55e] font-semibold">
-                {combinedExercisesForDateWrapper(selectedDate, gymLogs).length}
-              </p>
-              <p className="text-xs opacity-70">Exercises</p>
-            </div>
-            <div>
-              <p className="text-[#facc15] font-semibold">
-                {selectedGym.calories || "—"}
-              </p>
-              <p className="text-xs opacity-70">Calories</p>
-            </div>
-            <div>
-              <p className="text-[#f472b6] font-semibold">
-                {selectedGym.weight || "—"}
-              </p>
-              <p className="text-xs opacity-70">Weight</p>
-            </div>
-            <div>
-              <p className="text-[#34d399] font-semibold">
-                {selectedGym.bmi || "—"}
-              </p>
-              <p className="text-xs opacity-70">BMI</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Topics studied - Sticky Header & Footer */}
-        <div
-          className="rounded-xl border border-green-600/40 dark:border-gray-700
+            {/* Topics studied - Sticky Header & Footer */}
+            <div
+              className="rounded-xl border border-green-600/40 dark:border-gray-700
           bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
           dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]        
           transition-all duration-300
-          min-h-[160px] max-h-[360px]
+          md:h-[430px]
           flex flex-col overflow-hidden"
-        >
-          {/* Sticky Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-green-400 flex items-center gap-2">
-                📚 Topics Studied
-              </h4>
+            >
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-green-400 flex items-center gap-2">
+                    📚 Topics Studied
+                  </h4>
+                  {selectedStudy.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
+                        {selectedStudy.length} topics
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-[#10b981]/20 border border-[#10b981]/30 text-[10px] text-[#10b981] font-semibold">
+                        ✓ Complete
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Scrollable Content - Only Topics */}
+              <div className="flex-1 overflow-y-auto px-3 pt-2 custom-scrollbar-green">
+                {selectedStudy.length > 0 ? (
+                  <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] pb-2">
+                    {selectedStudy.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
+                      <span className="text-2xl opacity-50">📖</span>
+                    </div>
+                    <div className="text-sm text-[#9FF2E8]/50">
+                      No topics studied
+                    </div>
+                    <div className="text-xs text-[#9FF2E8]/30 mt-1">
+                      Add study topics for{" "}
+                      {selectedDate
+                        ? dayjs(selectedDate).format("MMM DD")
+                        : "this day"}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Sticky Footer - Stats & Categories */}
               {selectedStudy.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
-                    {selectedStudy.length} topics
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-[#10b981]/20 border border-[#10b981]/30 text-[10px] text-[#10b981] font-semibold">
-                    ✓ Complete
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Scrollable Content - Only Topics */}
-          <div className="flex-1 overflow-y-auto px-3 pt-2 custom-scrollbar-green">
-            {selectedStudy.length > 0 ? (
-              <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] pb-2">
-                {selectedStudy.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
-                  <span className="text-2xl opacity-50">📖</span>
-                </div>
-                <div className="text-sm text-[#9FF2E8]/50">
-                  No topics studied
-                </div>
-                <div className="text-xs text-[#9FF2E8]/30 mt-1">
-                  Add study topics for{" "}
-                  {selectedDate
-                    ? dayjs(selectedDate).format("MMM DD")
-                    : "this day"}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sticky Footer - Stats & Categories */}
-          {selectedStudy.length > 0 && (
-            <div className="sticky bottom-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] px-3 pb-3 pt-2 border-t border-[#2F6B60]/20">
-              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                <div className="flex items-center justify-between bg-gradient-to-r from-[#4ade80]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#4ade80]/20">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px]">✓</span>
-                    <span className="text-[#9FF2E8]/60 text-[10px]">Done</span>
-                  </div>
-                  <span className="font-bold text-[#4ade80] text-sm">
-                    {selectedStudy.length}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between bg-gradient-to-r from-[#60A5FA]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#60A5FA]/20">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px]">📊</span>
-                    <span className="text-[#9FF2E8]/60 text-[10px]">
-                      Progress
-                    </span>
-                  </div>
-                  <span className="font-bold text-[#60A5FA] text-sm">
-                    {Math.round((selectedStudy.length / 621) * 100)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Study Categories */}
-              {getStudyCategories(selectedStudy).length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {getStudyCategories(selectedStudy).map((category, idx) => (
-                    <span
-                      key={idx}
-                      className="px-1.5 py-0.5 rounded text-[10px] bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30"
-                    >
-                      {category}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Custom Scrollbar - Green theme */}
-        <style jsx>{`
-          .custom-scrollbar-green::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar-green::-webkit-scrollbar-track {
-            background: rgba(16, 185, 129, 0.1);
-            border-radius: 10px;
-          }
-          .custom-scrollbar-green::-webkit-scrollbar-thumb {
-            background: rgba(74, 222, 128, 0.4);
-            border-radius: 10px;
-          }
-          .custom-scrollbar-green::-webkit-scrollbar-thumb:hover {
-            background: rgba(74, 222, 128, 0.6);
-          }
-        `}</style>
-
-        {/* Gym Exercises - Sticky Header */}
-        <div
-          className="rounded-xl border border-[#2F6B60]/30
-          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-          transition-all duration-300
-          min-h-[160px] max-h-[260px]
-          flex flex-col overflow-hidden"
-        >
-          {/* Sticky Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-[#ff6b6b] flex items-center gap-2">
-                🏋️ Gym Summary
-              </h4>
-              {gymLogs[selectedDate] && (
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-[#60A5FA]/20 border border-[#60A5FA]/30 text-[10px] text-[#60A5FA] font-semibold">
-                    {combinedExercisesForDateWrapper(selectedDate).length}{" "}
-                    exercises
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
-                    ✓ Complete
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-3 pt-2 custom-scrollbar">
-            {gymLogs[selectedDate] ? (
-              <div className="space-y-2">
-                {/* Exercise List */}
-                <div className="text-sm space-y-1 text-[#e2e8f0]">
-                  {renderExercises(selectedDate, gymLogs)}
-                </div>
-
-                {/* Workout Analytics */}
-                <div className="mt-3 pt-3 border-t border-[#2F6B60]/30">
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Total Sets */}
-                    <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
-                      <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
-                        Total Sets
-                      </div>
-                      <div className="text-lg font-bold text-[#60A5FA]">
-                        {combinedExercisesForDateWrapper(selectedDate).reduce(
-                          (sum, ex) => {
-                            const sets = ex.match(/(\d+)\s*×/);
-                            return sum + (sets ? parseInt(sets[1]) : 0);
-                          },
-                          0,
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Total Reps */}
-                    <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
-                      <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
-                        Total Reps
-                      </div>
-                      <div className="text-lg font-bold text-[#4ade80]">
-                        {combinedExercisesForDateWrapper(selectedDate).reduce(
-                          (sum, ex) => {
-                            const reps = ex.match(/×\s*(\d+)/);
-                            return sum + (reps ? parseInt(reps[1]) : 0);
-                          },
-                          0,
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Target Muscle Groups */}
-                  <div className="mt-2 bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
-                    <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
-                      Target Muscles
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {getTargetMuscles(selectedDate).map((muscle, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 rounded-md bg-[#ff6b6b]/20 border border-[#ff6b6b]/30 text-[10px] text-[#ff6b6b] font-medium"
-                        >
-                          {muscle}
+                <div className="sticky bottom-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] px-3 pb-3 pt-2 border-t border-[#2F6B60]/20">
+                  <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-[#4ade80]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#4ade80]/20">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px]">✓</span>
+                        <span className="text-[#9FF2E8]/60 text-[10px]">
+                          Done
                         </span>
-                      ))}
+                      </div>
+                      <span className="font-bold text-[#4ade80] text-sm">
+                        {selectedStudy.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between bg-gradient-to-r from-[#60A5FA]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#60A5FA]/20">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px]">📊</span>
+                        <span className="text-[#9FF2E8]/60 text-[10px]">
+                          Progress
+                        </span>
+                      </div>
+                      <span className="font-bold text-[#60A5FA] text-sm">
+                        {Math.round((selectedStudy.length / 621) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Study Categories */}
+                  {getStudyCategories(selectedStudy).length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {getStudyCategories(selectedStudy).map(
+                        (category, idx) => (
+                          <span
+                            key={idx}
+                            className="px-1.5 py-0.5 rounded text-[10px] bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30"
+                          >
+                            {category}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Custom Scrollbar - Green theme */}
+            <style jsx>{`
+              .custom-scrollbar-green::-webkit-scrollbar {
+                width: 6px;
+              }
+              .custom-scrollbar-green::-webkit-scrollbar-track {
+                background: rgba(16, 185, 129, 0.1);
+                border-radius: 10px;
+              }
+              .custom-scrollbar-green::-webkit-scrollbar-thumb {
+                background: rgba(74, 222, 128, 0.4);
+                border-radius: 10px;
+              }
+              .custom-scrollbar-green::-webkit-scrollbar-thumb:hover {
+                background: rgba(74, 222, 128, 0.6);
+              }
+            `}</style>
+          </div>
+
+          {/* Gym Exercises - Sticky Header */}
+          <div
+            className="relative rounded-2xl border border-green-600/40
+               p-3 space-y-3 w-full md:h-[590px]
+               bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
+               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
+          >
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-[#ff6b6b] flex items-center gap-2">
+                  🏋️ Gym Summary
+                </h4>
+                {gymLogs[selectedDate] && (
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-[#60A5FA]/20 border border-[#60A5FA]/30 text-[10px] text-[#60A5FA] font-semibold">
+                      {combinedExercisesForDateWrapper(selectedDate).length}{" "}
+                      exercises
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
+                      ✓ Complete
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-3 pt-2 custom-scrollbar">
+              {gymLogs[selectedDate] ? (
+                <div className="space-y-2">
+                  {/* Exercise List */}
+                  <div className="text-sm space-y-1 text-[#e2e8f0]">
+                    {renderExercises(selectedDate, gymLogs)}
+                  </div>
+
+                  {/* Workout Analytics */}
+                  <div className="mt-3 pt-3 border-t border-[#2F6B60]/30">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Total Sets */}
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
+                        <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
+                          Total Sets
+                        </div>
+                        <div className="text-lg font-bold text-[#60A5FA]">
+                          {combinedExercisesForDateWrapper(selectedDate).reduce(
+                            (sum, ex) => {
+                              const sets = ex.match(/(\d+)\s*×/);
+                              return sum + (sets ? parseInt(sets[1]) : 0);
+                            },
+                            0
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Total Reps */}
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
+                        <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
+                          Total Reps
+                        </div>
+                        <div className="text-lg font-bold text-[#4ade80]">
+                          {combinedExercisesForDateWrapper(selectedDate).reduce(
+                            (sum, ex) => {
+                              const reps = ex.match(/×\s*(\d+)/);
+                              return sum + (reps ? parseInt(reps[1]) : 0);
+                            },
+                            0
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Target Muscle Groups */}
+                    <div className="mt-2 bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
+                      <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
+                        Target Muscles
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {getTargetMuscles(selectedDate).map((muscle, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-md bg-[#ff6b6b]/20 border border-[#ff6b6b]/30 text-[10px] text-[#ff6b6b] font-medium"
+                          >
+                            {muscle}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
+                    <span className="text-2xl opacity-50">💪</span>
+                  </div>
+                  <div className="text-sm text-[#9FF2E8]/50">
+                    No workout logged
+                  </div>
+                  <div className="text-xs text-[#9FF2E8]/30 mt-1">
+                    Track your exercises for{" "}
+                    {selectedDate
+                      ? dayjs(selectedDate).format("MMM DD")
+                      : "this day"}
+                  </div>
+                </div>
+              )}
+
+              {/* 🔹 Selected Day Gym Summary */}
+              <div className="mt-4 bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/10 to-[#0a3832]/20 border border-emerald-400/30 rounded-xl p-3 sm:p-4 text-[#E8FFFA]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] uppercase tracking-wider text-emerald-200/80 font-semibold">
+                    Today&apos;s Gym Summary
+                  </span>
+                  <span
+                    className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${
+                      gymLogs[selectedDate]?.done
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-500/40"
+                        : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-200 border border-gray-600/40"
+                    }`}
+                  >
+                    {gymLogs[selectedDate]?.done ? "✅ Done" : "⭕ Not Done"}
+                  </span>
+                </div>
+
+                {gymLogs[selectedDate] ? (
+                  <>
+                    {/* Top metrics row */}
+                    <div className="grid grid-cols-3 gap-2 text-[11px] sm:text-xs mb-2">
+                      <div className="bg-black/20 rounded-lg px-2 py-1.5 border border-orange-400/30">
+                        <div className="text-[9px] text-orange-200/70 uppercase tracking-wide">
+                          Calories
+                        </div>
+                        <div className="text-sm font-semibold text-orange-100">
+                          {gymLogs[selectedDate].calories ?? "—"}{" "}
+                          <span className="text-[10px] text-orange-200/70">
+                            kcal
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-black/20 rounded-lg px-2 py-1.5 border border-cyan-400/30">
+                        <div className="text-[9px] text-cyan-200/70 uppercase tracking-wide">
+                          Weight
+                        </div>
+                        <div className="text-sm font-semibold text-cyan-100">
+                          {gymLogs[selectedDate].weight ?? "—"}{" "}
+                          <span className="text-[10px] text-cyan-200/70">
+                            kg
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-black/20 rounded-lg px-2 py-1.5 border border-purple-400/30">
+                        <div className="text-[9px] text-purple-200/70 uppercase tracking-wide">
+                          BMI
+                        </div>
+                        <div className="text-sm font-semibold text-purple-100">
+                          {gymLogs[selectedDate].bmi ?? "—"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Extra activity row: Run | Yoga | Felt | Other */}
+                    <div className="mt-1">
+                      <div className="text-[9px] text-emerald-200/70 uppercase tracking-wide font-semibold mb-1">
+                        Extra Activity
+                      </div>
+                      <div className="grid grid-cols-4 gap-x-3 gap-y-1 text-[11px] sm:text-xs">
+                        {/* Labels */}
+                        <div className="text-emerald-200/80 font-semibold">
+                          Run
+                        </div>
+                        <div className="text-teal-200/80 font-semibold">
+                          Yoga
+                        </div>
+                        <div className="text-emerald-200/80 font-semibold">
+                          Felt
+                        </div>
+                        <div className="text-emerald-200/80 font-semibold text-right">
+                          Other
+                        </div>
+
+                        {/* Values */}
+                        <div className="text-emerald-100">
+                          {gymLogs[selectedDate].running?.distanceKm != null ||
+                          gymLogs[selectedDate].running?.durationMinutes !=
+                            null ? (
+                            <>
+                              {gymLogs[selectedDate].running?.distanceKm !=
+                                null && (
+                                <span>
+                                  {gymLogs[selectedDate].running.distanceKm} km
+                                </span>
+                              )}
+                              {gymLogs[selectedDate].running?.durationMinutes !=
+                                null && (
+                                <span>
+                                  {gymLogs[selectedDate].running?.distanceKm !=
+                                  null
+                                    ? " · "
+                                    : ""}
+                                  {
+                                    gymLogs[selectedDate].running
+                                      .durationMinutes
+                                  }{" "}
+                                  min
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-emerald-300/50">—</span>
+                          )}
+                        </div>
+
+                        <div className="text-teal-100">
+                          {gymLogs[selectedDate].yogaMinutes != null ? (
+                            <>{gymLogs[selectedDate].yogaMinutes} min</>
+                          ) : (
+                            <span className="text-teal-300/50">—</span>
+                          )}
+                        </div>
+
+                        <div className="text-emerald-100/90 truncate">
+                          {gymLogs[selectedDate].mood || "🙂"}{" "}
+                          {gymLogs[selectedDate].running?.notes &&
+                          !["😄", "🙂", "😐", "😣", "😴"].includes(
+                            gymLogs[selectedDate].running.notes
+                          ) ? (
+                            <span className="ml-1">
+                              {gymLogs[selectedDate].running.notes}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="text-emerald-100/90 text-right truncate">
+                          {gymLogs[selectedDate].otherExercises || "—"}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-[11px] text-emerald-200/70 italic">
+                    No gym data logged for this day.
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
-                  <span className="text-2xl opacity-50">💪</span>
-                </div>
-                <div className="text-sm text-[#9FF2E8]/50">
-                  No workout logged
-                </div>
-                <div className="text-xs text-[#9FF2E8]/30 mt-1">
-                  Track your exercises for{" "}
-                  {selectedDate
-                    ? dayjs(selectedDate).format("MMM DD")
-                    : "this day"}
-                </div>
-              </div>
-            )}
+
+              {/* Custom Scrollbar Styles */}
+              <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                  width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                  background: rgba(47, 107, 96, 0.1);
+                  border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                  background: rgba(63, 167, 150, 0.4);
+                  border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background: rgba(63, 167, 150, 0.6);
+                }
+              `}</style>
+            </div>
           </div>
         </div>
-
-        {/* Custom Scrollbar Styles */}
-        <style jsx>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(47, 107, 96, 0.1);
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(63, 167, 150, 0.4);
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(63, 167, 150, 0.6);
-          }
-        `}</style>
       </div>
     </div>
   );

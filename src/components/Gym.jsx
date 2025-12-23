@@ -266,19 +266,59 @@ function DailySummaryMerged({ date, logs, mode }) {
       ? "Great job! Keep pushing! 💪"
       : "You showed up. That's what matters. 🚀";
 
+  const getNextWorkoutInfo = (date) => {
+    const today = dayjs(date);
+    const tomorrow = today.add(1, "day");
+    const wd = tomorrow.format("dddd");
+    const plan = DEFAULT_PLAN[wd];
+
+    if (!plan) {
+      return { label: "Tomorrow", title: "No plan", wd };
+    }
+
+    return {
+      label: tomorrow.isSame(dayjs().add(1, "day"), "day") ? "Tomorrow" : wd,
+      title: plan.title || "No plan",
+      wd,
+    };
+  };
+
+  const nextInfo = getNextWorkoutInfo(date);
+
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
-    "rounded-xl p-3 sm:rounded-2xl sm:p-4 h-full text-[#E8FFFA] flex flex-col justify-between";
+    "rounded-xl p-3 sm:rounded-2xl sm:p-x-4  h-full text-[#E8FFFA] flex flex-col justify-even";
 
   return (
     <div className={`${cardClass}`}>
       <div>
-        <div className="flex items-center justify-between mb-2 pb-2 border-b border-emerald-500/20">
-          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-base sm:text-xl">
+        <div className="flex items-center justify-between mb-2 pb-2 border-b border-emerald-500/20 gap-3">
+          {/* Title */}
+          <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-sm sm:text-base md:text-lg">
             {mode === "old" ? "Daily Summary" : "Enhanced Summary"}
           </h3>
+
+          {/* Next workout (compact pill, no extra rows) */}
+          <div className="hidden sm:flex items-center gap-2 text-[10px]">
+            <span className="uppercase tracking-wide text-emerald-200/60 font-semibold">
+              Next
+            </span>
+            <div className="flex items-center gap-2 bg-white/5 rounded-full px-2.5 py-1 border border-emerald-400/20">
+              <div className="flex flex-col leading-tight">
+                <span className="text-[11px] font-semibold text-emerald-200">
+                  {nextInfo.label}
+                </span>
+                <span className="text-[9px] text-emerald-100/80">
+                  {nextInfo.title}
+                </span>
+              </div>
+              <span className="text-lg">💪</span>
+            </div>
+          </div>
+
+          {/* Done / Not done badge */}
           <span
-            className={`text-[10px] px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg font-semibold transition-all ${
+            className={`text-[10px] px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap ${
               entry?.done
                 ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                 : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 border border-gray-600/40"
@@ -322,7 +362,6 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
               </div>
             </div>
-
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
               {/* CALORIES */}
@@ -369,7 +408,6 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
               </div>
             </div>
-
             {/* Exercises Card */}
             <div className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header */}
@@ -402,25 +440,84 @@ function DailySummaryMerged({ date, logs, mode }) {
                 )}
               </div>
             </div>
+            {/*Extra Exercises*/}
+            <div className="bg-gradient-to-br from-0F766E50 via-0c4a4230 to-0a383250 dark:from-0F162270 dark:via-13203350 dark:to-0A0F1C70 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-emerald-400/30 mt-2 ">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] uppercase tracking-wider text-emerald-200/80 font-semibold">
+                  Extra Activity
+                </span>
+                {entry?.running?.distanceKm ||
+                entry?.yogaMinutes ||
+                entry?.otherExercises ? (
+                  <span className="text-[10px] text-emerald-200/70">
+                    Logged
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-gray-400/70 italic">
+                    None
+                  </span>
+                )}
+              </div>
 
-            {/* Shows next scheduled workout */}
-            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-emerald-500/20">
-              <div className="text-[10px] text-emerald-200/70 uppercase tracking-wide font-semibold mb-2">
-                Next Workout
-              </div>
-              <div className="bg-white/5 rounded-lg p-2.5 sm:p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-emerald-200">
-                      Tomorrow
-                    </div>
-                    <div className="text-[10px] text-gray-400">
-                      Chest + Triceps
-                    </div>
+              {(entry?.running?.distanceKm ||
+                entry?.running?.durationMinutes ||
+                entry?.yogaMinutes != null ||
+                entry?.otherExercises) && (
+                <div className="grid grid-cols-4 gap-x-4 gap-y-1 text-[11px] sm:text-xs">
+                  {/* Row 1: labels */}
+                  <div className="text-emerald-200/80 font-semibold">Run</div>
+                  <div className="text-teal-200/80 font-semibold">Yoga</div>
+                  <div className="text-emerald-200/80 font-semibold">Felt</div>
+                  <div className="text-emerald-200/80 font-semibold ">
+                    Other
                   </div>
-                  <div className="text-2xl">💪</div>
+
+                  {/* Row 2: values */}
+                  <div className="text-emerald-100">
+                    {entry?.running?.distanceKm != null && (
+                      <span>{entry.running.distanceKm} km</span>
+                    )}
+                    {entry?.running?.durationMinutes != null && (
+                      <span>
+                        {entry.running.distanceKm != null ? " · " : ""}
+                        {entry.running.durationMinutes} min
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-teal-100">
+                    {entry?.yogaMinutes != null
+                      ? `${entry.yogaMinutes} min`
+                      : "-"}
+                  </div>
+
+                  {/* Felt = short summary from runningNotes or mood */}
+                  <div className="text-emerald-100/90 truncate w-48">
+                    {entry?.running?.notes || entry?.mood ? (
+                      <>
+                        {/* emoji part */}
+                        <span className="mr-1.5">{entry?.mood || "🙂"}</span>
+                        {/* text part */}
+                        <span className="h-44 align-middle">
+                          {entry?.running?.notes &&
+                          !["😄", "🙂", "😐", "😣", "😴"].includes(
+                            entry.running.notes
+                          )
+                            ? entry.running.notes
+                            : "Felt good overall"}
+                        </span>
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+
+                  <div className="text-emerald-100/90 truncate">
+                    {entry?.otherExercises || "-"}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -797,6 +894,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [isEditingCurrent, setIsEditingCurrent] = useState(false);
   const [showExerciseEditor, setShowExerciseEditor] = useState(false);
 
+  const [runningDistance, setRunningDistance] = useState("");
+  const [runningDuration, setRunningDuration] = useState("");
+  const [runningNotes, setRunningNotes] = useState("");
+  const [yogaMinutesInput, setYogaMinutesInput] = useState("");
+  const [otherExercisesInput, setOtherExercisesInput] = useState("");
+
   useEffect(() => {
     if (!dashboardState) return;
 
@@ -894,40 +997,40 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const getEntry = useCallback(
     (dateKey) => {
       const entryWeekday = dayjs(dateKey).format("dddd");
-      const plan = DEFAULT_PLAN[entryWeekday] || {
-        left: [],
-        right: [],
-        finisher: [],
-      };
+      const plan = DEFAULT_PLAN[entryWeekday];
+      const existing = logs[dateKey];
 
-      const existing = logs[dateKey] || {};
-
-      const normalize = (planList = [], savedList = []) => {
+      const normalize = (planList, savedList) => {
         return planList.map((name, i) => {
           const saved = savedList?.[i];
 
-          // already object {name, done}
           if (saved && typeof saved === "object") return saved;
-
-          // boolean true/false old format
           if (typeof saved === "boolean") return { name, done: saved };
-
-          // nothing saved => default object
           return { name, done: false };
         });
       };
 
       return {
-        weekday: existing.weekday || entryWeekday,
-        left: normalize(plan.left || [], existing.left || []),
-        right: normalize(plan.right || [], existing.right || []),
-        finisher: normalize(plan.finisher || [], existing.finisher || []),
-        calories: existing.calories ?? null,
-        weight: existing.weight ?? null,
-        bmi: existing.bmi ?? null,
-        done: existing.done || false,
-        duration: existing.duration || null,
-        mood: existing.mood || null,
+        weekday: existing?.weekday ?? entryWeekday,
+        left: normalize(plan.left, existing?.left),
+        right: normalize(plan.right, existing?.right),
+        finisher: normalize(plan.finisher, existing?.finisher),
+
+        calories: existing?.calories ?? null,
+        weight: existing?.weight ?? null,
+        bmi: existing?.bmi ?? null,
+        done: existing?.done ?? false,
+        duration: existing?.duration ?? null,
+        mood: existing?.mood ?? null,
+
+        // NEW FIELDS
+        running: existing?.running ?? {
+          distanceKm: null,
+          durationMinutes: null,
+          notes: "",
+        },
+        otherExercises: existing?.otherExercises ?? "", // free‑text
+        yogaMinutes: existing?.yogaMinutes ?? null,
       };
     },
     [logs]
@@ -1005,7 +1108,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
       return;
     }
     const dateKey = dayjs(date).format("YYYY-MM-DD");
-
     const entry = logs[dateKey] || getEntry(dateKey);
 
     // load inputs (strings for inputs)
@@ -1020,16 +1122,29 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setEditRight((entry.right || []).map((it) => ({ ...it })));
     setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
 
+    setRunningDistance(
+      entry?.running?.distanceKm != null ? String(entry.running.distanceKm) : ""
+    );
+    setRunningDuration(
+      entry?.running?.durationMinutes != null
+        ? String(entry.running.durationMinutes)
+        : ""
+    );
+    setRunningNotes(entry?.running?.notes ?? "");
+    setYogaMinutesInput(
+      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : ""
+    );
+    setOtherExercisesInput(entry?.otherExercises ?? "");
     setShowModal(true);
   };
 
   /* -------------------- Save workout (from modal) -------------------- */
   const saveWorkout = useCallback(async () => {
     const dateKey = dayjs(date).format("YYYY-MM-DD");
-    const existing = logs[dateKey] || getEntry(dateKey);
+    const existing = logs[dateKey] ?? getEntry(dateKey);
 
-    const caloriesVal = caloriesInput === "" ? null : Number(caloriesInput);
-    const parsedWeight = weightInput === "" ? null : Number(weightInput);
+    const caloriesVal = caloriesInput ? Number(caloriesInput) : null;
+    const parsedWeight = weightInput ? Number(weightInput) : null;
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
       : existing.weight ?? null;
@@ -1039,62 +1154,71 @@ export default function Gym({ dashboardState, updateDashboard }) {
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
         : existing.bmi ?? null;
 
+    // NEW parsed values
+    const runningDistanceVal = runningDistance ? Number(runningDistance) : null;
+    const runningDurationVal = runningDuration ? Number(runningDuration) : null;
+    const yogaMinutesVal = yogaMinutesInput ? Number(yogaMinutesInput) : null;
+
     const isDone =
       editLeft.some((e) => e.done) ||
       editRight.some((e) => e.done) ||
       editFinisher.some((e) => e.done) ||
-      caloriesVal != null ||
-      weightVal != null ||
-      (Number(durationHours) || 0) > 0 ||
-      (Number(durationMinutes) || 0) > 0 ||
-      (moodInput !== "🙂" && moodInput !== ""); // ✅ Fix: Only if mood is actually changed
+      runningDistanceVal != null ||
+      runningDurationVal != null ||
+      yogaMinutesVal != null ||
+      !!otherExercisesInput;
 
-    // ✅ Update logs
-    const updatedLogs = {
-      ...logs,
-      [dateKey]: {
-        weekday: existing.weekday || weekday,
-        left: editLeft.length ? editLeft : existing.left,
-        right: editRight.length ? editRight : existing.right,
-        finisher: editFinisher.length ? editFinisher : existing.finisher,
-        calories: caloriesVal,
-        weight: weightVal,
-        bmi: newBmi,
-        done: isDone,
-        duration: {
-          hours: Number(durationHours) || 0,
-          minutes: Number(durationMinutes) || 0,
-        },
-        mood: moodInput,
+    const updatedEntry = {
+      weekday: existing.weekday,
+      left: editLeft.length ? editLeft : existing.left,
+      right: editRight.length ? editRight : existing.right,
+      finisher: editFinisher.length ? editFinisher : existing.finisher,
+      calories: caloriesVal,
+      weight: weightVal,
+      bmi: newBmi,
+      done: isDone,
+      duration: {
+        hours: Number(durationHours || 0),
+        minutes: Number(durationMinutes || 0),
       },
+      mood: moodInput || existing.mood || null,
+
+      // NEW
+      running: {
+        distanceKm: runningDistanceVal,
+        durationMinutes: runningDurationVal,
+        notes: runningNotes || "",
+      },
+      yogaMinutes: yogaMinutesVal,
+      otherExercises: otherExercisesInput || "",
     };
 
-    // ✅ Update doneState - THIS WAS MISSING!
+    const updatedLogs = {
+      ...logs,
+      [dateKey]: updatedEntry,
+    };
+
     const updatedDone = {
       ...doneState,
       [dateKey]: isDone,
     };
 
-    // Update local state
     setLogs(updatedLogs);
-    setDoneState(updatedDone); // ✅ ADD THIS LINE
+    setDoneState(updatedDone);
     setShowModal(false);
 
-    // Sync to backend - SINGLE SOURCE OF TRUTH
     await updateDashboard({
       wd_gym_logs: updatedLogs,
-      wd_done: updatedDone, // ✅ ADD THIS
+      wd_done: updatedDone,
       wd_goals: {
         targetWeight,
         currentWeight: currWeight,
       },
     });
-
-    console.log(`✅ Workout saved for ${dateKey}, isDone: ${isDone}`);
   }, [
     date,
     logs,
-    getEntry,
+    doneState,
     caloriesInput,
     weightInput,
     editLeft,
@@ -1103,11 +1227,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
     durationHours,
     durationMinutes,
     moodInput,
-    weekday,
-    doneState,
+    runningDistance,
+    runningDuration,
+    runningNotes,
+    yogaMinutesInput,
+    otherExercisesInput,
     targetWeight,
     currWeight,
     updateDashboard,
+    getEntry,
   ]);
 
   /* -------------------- Edit existing workout (open modal with values) -------------------- */
@@ -1477,7 +1605,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
     countDone(entry.finisher) === entry.finisher.length;
 
   // 🔓 FIX: unlock ghost-locked days like yesterday
-  // 🔓 FIX: unlock ghost-locked days like Nov 16
   useEffect(() => {
     const key = dayjs(date).format("YYYY-MM-DD");
 
@@ -1993,6 +2120,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </section>
+
       {/* Calendar + Daily Summary */}
       <section
         className="grid gap-4 lg:grid-cols-2 w-full align-center
@@ -2015,6 +2143,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </section>
+
       {/* Workout Section */}
       <section className="mb-6 mt-2">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
@@ -2224,26 +2353,22 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     {!doneState[dateKey] && (
                       <button
                         onClick={openModal}
-                        disabled={
-                          !(
-                            countDone(entry.left) > 0 ||
-                            countDone(entry.right) > 0 ||
-                            countDone(entry.finisher) > 0
-                          )
+                        className={
+                          `w-full rounded-xl px-4 py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300 ` +
+                          (countDone(entry.left) === 0 &&
+                          countDone(entry.right) === 0 &&
+                          countDone(entry.finisher) === 0
+                            ? "bg-gray-600/40 text-gray-100 hover:bg-gray-500/60"
+                            : "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-105 shadow-md shadow-emerald-600/30")
                         }
-                        className={`
-          w-full rounded-xl px-4 py-3 font-semibold text-sm 
-          flex items-center justify-center gap-2 transition-all duration-300
-          ${
-            countDone(entry.left) > 0 ||
-            countDone(entry.right) > 0 ||
-            countDone(entry.finisher) > 0
-              ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:scale-[1.02] shadow-md shadow-emerald-600/30"
-              : "bg-gray-600/30 text-gray-500 cursor-not-allowed"
-          }
-        `}
                       >
-                        ✅ Mark Workout Done
+                        <span className="text-xs sm:text-sm">
+                          {countDone(entry.left) === 0 &&
+                          countDone(entry.right) === 0 &&
+                          countDone(entry.finisher) === 0
+                            ? "Log Today's Activity"
+                            : "Mark Workout Done / Edit"}
+                        </span>
                       </button>
                     )}
 
@@ -2296,7 +2421,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
           <h2 className="text-xl font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent mb-5">
             Log Today's Workout
           </h2>
-
           {/* -------------------- QUICK STATS GRID -------------------- */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             {/* CALORIES */}
@@ -2415,6 +2539,131 @@ export default function Gym({ dashboardState, updateDashboard }) {
                   {m}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* RUNNING BLOCK */}
+          <div className="mb-4">
+            <p className="block text-xs uppercase tracking-wide text-emerald-200/70 mb-1.5 font-semibold">
+              Running
+            </p>
+
+            {/* Part 1: distance + duration */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-[11px] text-emerald-200/60 mb-1">
+                  Distance (km)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={runningDistance}
+                  onChange={(e) => setRunningDistance(e.target.value)}
+                  className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                   border border-emerald-400/30 rounded-xl p-2.5 
+                   text-emerald-100 placeholder:text-emerald-300/40
+                   outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                   transition-all duration-200"
+                  placeholder="3.5"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-emerald-200/60 mb-1">
+                  Duration (min)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={runningDuration}
+                  onChange={(e) => setRunningDuration(e.target.value)}
+                  className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                   border border-emerald-400/30 rounded-xl p-2.5 
+                   text-emerald-100 placeholder:text-emerald-300/40
+                   outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                   transition-all duration-200"
+                  placeholder="25"
+                />
+              </div>
+            </div>
+
+            {/* Part 2: how it felt (emoji mood + optional note) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="block text-[11px] uppercase tracking-wide text-emerald-200/70 font-semibold">
+                  How it felt
+                </span>
+                {/* running-specific mood: reuse gym emoji style but separate state */}
+                <div className="flex gap-1.5">
+                  {["😄", "🙂", "😐", "😣", "😴"].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setRunningNotes(m)}
+                      className={`
+              w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center
+              text-lg rounded-lg border backdrop-blur-xl
+              transition-all duration-200
+              ${
+                runningNotes === m
+                  ? "border-emerald-400 bg-emerald-500/20 text-emerald-100 shadow-md shadow-emerald-500/30 scale-105"
+                  : "border-white/10 bg-white/5 text-emerald-100/80 opacity-70 hover:opacity-100 hover:border-white/30"
+              }
+            `}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                rows={2}
+                value={
+                  ["😄", "🙂", "😐", "😣", "😴"].includes(runningNotes)
+                    ? "" // if only emoji selected, keep textarea empty
+                    : runningNotes
+                }
+                onChange={(e) => setRunningNotes(e.target.value)}
+                className="w-full bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/15 to-[#0a3832]/20 
+                 border border-emerald-400/25 rounded-xl p-2.5 
+                 text-emerald-100 placeholder:text-emerald-300/40
+                 outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                 text-xs transition-all duration-200"
+                placeholder="Route, pace, intervals, extra notes..."
+              />
+            </div>
+          </div>
+
+          {/* YOGA + OTHER EXERCISES */}
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs uppercase tracking-wide text-cyan-200/70 mb-1.5 font-semibold">
+                Yoga (minutes)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={yogaMinutesInput}
+                onChange={(e) => setYogaMinutesInput(e.target.value)}
+                className="w-full bg-gradient-to-br from-183D3D30 via-0F2A2A20 to-0A1F1F30 border border-cyan-400/30 rounded-xl p-2.5 text-cyan-100 placeholder:text-cyan-300/40 outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400"
+                placeholder="20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wide text-emerald-200/70 mb-1.5 font-semibold">
+                Other Exercises
+              </label>
+              <textarea
+                rows={2}
+                value={otherExercisesInput}
+                onChange={(e) => setOtherExercisesInput(e.target.value)}
+                className="w-full bg-gradient-to-br from-0F766E20 via-0c4a4215 to-0a383220 border border-emerald-400/25 rounded-xl p-2.5 text-emerald-100 placeholder:text-emerald-300/40 outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400 text-xs"
+                placeholder="e.g. 15 min skipping + 3 sets push‑ups"
+              />
             </div>
           </div>
 
@@ -2621,25 +2870,25 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
 
     const checkArray = (arr) => {
       if (!Array.isArray(arr) || arr.length === 0) return false;
-
-      // Check if array contains exercise objects with 'done' property
-      if (arr.some((item) => typeof item === "object" && item !== null)) {
+      if (arr.some((item) => typeof item === "object" && item != null))
         return arr.some((e) => e?.done === true);
-      }
-
-      // Check if array contains boolean values directly
-      if (arr.every((item) => typeof item === "boolean")) {
-        return arr.some(Boolean);
-      }
-
+      if (arr.every((item) => typeof item === "boolean"))
+        return arr.some((b) => b === true);
       return false;
     };
+
+    const manualActivity =
+      (entry.running?.distanceKm != null ||
+        entry.running?.durationMinutes != null ||
+        entry.yogaMinutes != null ||
+        !!entry.otherExercises) ??
+      false;
 
     return (
       checkArray(entry.left) ||
       checkArray(entry.right) ||
       checkArray(entry.finisher) ||
-      checkArray(entry.exercises) // Add this if you have exercises array
+      manualActivity
     );
   };
 
@@ -2695,7 +2944,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
       "
     >
       {/* Header */}
-      <div className="mb-4">
+      <div className="mb-[1.3rem]">
         <div className="flex items-center justify-between mb-3 gap-2">
           <button
             onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
