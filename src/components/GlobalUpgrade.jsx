@@ -36,13 +36,13 @@ export default function GlobalUpgradeDashboard({
           { name: "₹5L Relocation Fund", done: false },
         ],
       },
+      projectQuality: {}, // NEW: Store quality checkboxes here
       dds: {},
-    }),
+    })
   );
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // Initialize today's DDS if not exists
   useEffect(() => {
     if (!data.dds[today]) {
       const newData = {
@@ -69,7 +69,48 @@ export default function GlobalUpgradeDashboard({
     save(STORAGE_KEY, next);
   };
 
-  // Load projects from dashboardState
+  // Get completed topics from syllabus
+  const completedTopics = useMemo(() => {
+    if (!dashboardState?.syllabus_tree_v2) return new Set();
+
+    const topics = new Set();
+
+    const traverse = (node) => {
+      if (!node || typeof node !== "object") return;
+
+      if (node.title && node.done) {
+        const normalized = node.title.toLowerCase();
+        // Extract key technologies
+        if (normalized.includes("html")) topics.add("HTML");
+        if (normalized.includes("css")) topics.add("CSS");
+        if (normalized.includes("tailwind")) topics.add("TAILWIND");
+        if (normalized.includes("javascript") || normalized.includes("js"))
+          topics.add("JAVASCRIPT");
+        if (normalized.includes("react")) topics.add("REACT");
+        if (normalized.includes("node") || normalized.includes("express"))
+          topics.add("NODE+MONGO");
+        if (normalized.includes("mongo") || normalized.includes("database"))
+          topics.add("NODE+MONGO");
+        if (
+          normalized.includes("mern") ||
+          normalized.includes("full stack") ||
+          normalized.includes("fullstack")
+        )
+          topics.add("MERN");
+      }
+
+      // Recursively check children
+      Object.values(node).forEach((child) => {
+        if (typeof child === "object" && child !== null) {
+          traverse(child);
+        }
+      });
+    };
+
+    traverse(dashboardState.syllabus_tree_v2);
+    return topics;
+  }, [dashboardState?.syllabus_tree_v2]);
+
   const portfolioProjects = useMemo(() => {
     if (!dashboardState?.wd_projects) return [];
 
@@ -174,30 +215,36 @@ export default function GlobalUpgradeDashboard({
 
           const projectName = sectionList[projectIdx];
           const completionDate = sectionData.completionDates?.[idx];
+          const projectId = `${section}-${idx}`;
 
           if (completed === true) {
-            projects.push({
-              id: `${section}-${idx}`,
-              name: projectName,
-              section: section,
-              skills: [section],
+            // Get saved quality data
+            const quality = data.projectQuality?.[projectId] || {
               github: false,
               live: false,
               caseStudy: false,
               readme: false,
               mobile: false,
               accessibility: false,
+            };
+
+            projects.push({
+              id: projectId,
+              name: projectName,
+              section: section,
+              skills: [section],
               completionDate: completionDate || null,
+              ...quality, // Spread the quality checkboxes
+              isRecommended: completedTopics.has(section), // NEW: Flag if study is complete
             });
           }
         });
-      },
+      }
     );
 
     return projects;
-  }, [dashboardState]);
+  }, [dashboardState, data.projectQuality, completedTopics]);
 
-  // Calculate readiness dynamically
   const readiness = useMemo(() => {
     const skillsDone = data.checklists.skills.filter((s) => s.done).length;
     const langDone = data.checklists.language.filter((l) => l.done).length;
@@ -212,7 +259,7 @@ export default function GlobalUpgradeDashboard({
         p.caseStudy &&
         p.readme &&
         p.mobile &&
-        p.accessibility,
+        p.accessibility
     ).length;
 
     const totalItems =
@@ -228,7 +275,6 @@ export default function GlobalUpgradeDashboard({
     return Math.round((doneItems / totalItems) * 100);
   }, [data.checklists, portfolioProjects]);
 
-  // Calculate today's DDS score
   const todayScore = useMemo(() => {
     const todayData = data.dds[today] || {
       gym: false,
@@ -246,7 +292,6 @@ export default function GlobalUpgradeDashboard({
     );
   }, [data.dds, today]);
 
-  // Calculate weekly average
   const weeklyAverage = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -269,14 +314,12 @@ export default function GlobalUpgradeDashboard({
     return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
   }, [data.dds]);
 
-  // Get status text
   const getStatusText = () => {
     if (readiness < 50) return "❌ Not Ready";
     if (readiness < 80) return "⚠️ Interview Ready";
     return "✅ Relocation Ready";
   };
 
-  // Toggle checklist item
   const toggleChecklistItem = (category, index) => {
     const nextChecklists = { ...data.checklists };
     nextChecklists[category] = [...nextChecklists[category]];
@@ -287,7 +330,6 @@ export default function GlobalUpgradeDashboard({
     updateData({ checklists: nextChecklists });
   };
 
-  // Toggle DDS habit with proper state immutability
   const toggleHabit = (habit) => {
     setData((prev) => {
       const todayData = prev.dds[today] || {
@@ -312,15 +354,34 @@ export default function GlobalUpgradeDashboard({
     });
   };
 
-  // Toggle project field
-  const toggleProjectField = (id, field) => {
-    const updatedProjects = portfolioProjects.map((p) =>
-      p.id === id ? { ...p, [field]: !p[field] } : p,
-    );
-    setData({ ...data });
+  // FIXED: Proper state management for project quality checkboxes
+  const toggleProjectField = (projectId, field) => {
+    setData((prev) => {
+      const currentQuality = prev.projectQuality?.[projectId] || {
+        github: false,
+        live: false,
+        caseStudy: false,
+        readme: false,
+        mobile: false,
+        accessibility: false,
+      };
+
+      const next = {
+        ...prev,
+        projectQuality: {
+          ...prev.projectQuality,
+          [projectId]: {
+            ...currentQuality,
+            [field]: !currentQuality[field],
+          },
+        },
+      };
+
+      save(STORAGE_KEY, next);
+      return next;
+    });
   };
 
-  // Generate insight message
   const getInsightMessage = () => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -342,27 +403,37 @@ export default function GlobalUpgradeDashboard({
 
     if (lowDays === 0) return "🔥 Perfect consistency! Keep this up.";
     if (lowDays < 3) return `⚠️ ${lowDays} low days this week. Stay focused.`;
-    return `🚨 ${lowDays} low days delay relocation by ~${Math.ceil(lowDays * 0.5)} weeks`;
+    return `🚨 ${lowDays} low days delay relocation by ~${Math.ceil(
+      lowDays * 0.5
+    )} weeks`;
   };
 
+  // Get suggested projects based on completed study topics
+  const suggestedProjects = useMemo(() => {
+    return Array.from(completedTopics).map((tech) => ({
+      tech,
+      message: `You've mastered ${tech}! Build a project to showcase your skills.`,
+    }));
+  }, [completedTopics]);
+
   return (
-    <div className="space-y-8 md:mt-10 lg:mt-0">
+    <div className="space-y-6 md:mt-10 lg:mt-0">
       {/* SECTION 1: Global Career Roadmap */}
-      <section className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 p-5 shadow-xl backdrop-blur">
-        <h2 className="mb-5 flex items-center gap-2 text-lg font-bold uppercase tracking-wide text-slate-100">
+      <section className="rounded-2xl border border-[#2F6B60]/40 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-6 shadow-xl backdrop-blur-md">
+        <h2 className="mb-6 flex items-center gap-2 text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent">
           🌍 Global Career Roadmap
         </h2>
 
         {/* Target Selector */}
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-emerald-200/70">
               Target Country
             </label>
             <select
               value={data.country}
               onChange={(e) => updateData({ country: e.target.value })}
-              className="w-full rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              className=" w-full rounded-xl border border-emerald-400/30 bg-[#0F766E] px-4 py-2.5 text-sm text-emerald-100 shadow-md transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
             >
               <option>Germany</option>
               <option>Finland</option>
@@ -373,13 +444,13 @@ export default function GlobalUpgradeDashboard({
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-teal-200/70">
               Target Role
             </label>
             <select
               value={data.role}
               onChange={(e) => updateData({ role: e.target.value })}
-              className="w-full rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              className="w-full rounded-xl border border-teal-400/30 bg-[#0F766E] px-4 py-2.5 text-sm text-teal-100 shadow-md transition focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
             >
               <option>Frontend</option>
               <option>Full Stack</option>
@@ -387,13 +458,13 @@ export default function GlobalUpgradeDashboard({
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-cyan-200/70">
               Migration Path
             </label>
             <select
               value={data.path}
               onChange={(e) => updateData({ path: e.target.value })}
-              className="w-full rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              className="w-full rounded-xl border border-cyan-400/30 bg-[#0F766E] px-4 py-2.5 text-sm text-cyan-100 shadow-md transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
             >
               <option>Job</option>
               <option>Study</option>
@@ -403,15 +474,20 @@ export default function GlobalUpgradeDashboard({
         </div>
 
         {/* Readiness Meter */}
-        <div className="mb-6 flex flex-col items-center gap-4 rounded-xl border border-slate-700/40 bg-slate-900/60 p-5 sm:flex-row">
-          <div className="relative h-32 w-32 flex-shrink-0">
-            <svg viewBox="0 0 36 36" className="h-full w-full">
+        <div className="mb-6 flex flex-col items-center gap-6 rounded-2xl border border-emerald-500/30 bg-black/30 p-6 backdrop-blur-sm sm:flex-row">
+          <div className="relative h-40 w-40 flex-shrink-0">
+            {/* Outer glow ring */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400/20 to-teal-400/20 blur-xl animate-pulse" />
+
+            <svg viewBox="0 0 36 36" className="relative h-full w-full">
+              {/* Background circle */}
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#1e293b"
+                stroke="rgba(15, 118, 110, 0.2)"
                 strokeWidth="3"
               />
+              {/* Progress circle */}
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
@@ -419,39 +495,46 @@ export default function GlobalUpgradeDashboard({
                   readiness < 50
                     ? "#ef4444"
                     : readiness < 80
-                      ? "#f59e0b"
-                      : "#10b981"
+                    ? "#f59e0b"
+                    : "#10b981"
                 }
-                strokeWidth="3"
+                strokeWidth="3.5"
                 strokeDasharray={`${readiness}, 100`}
                 strokeLinecap="round"
-                className="transition-all duration-700"
+                className="transition-all duration-700 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]"
               />
               <text
                 x="18"
                 y="20.5"
                 textAnchor="middle"
-                fontSize="8"
+                fontSize="9"
                 fontWeight="bold"
-                fill="#fff"
+                fill="#E8FFFA"
+                className="drop-shadow-md"
               >
                 {readiness}%
               </text>
             </svg>
           </div>
-          <div className="flex-1">
-            <div className="mb-1 text-xl font-bold text-slate-100">
+          <div className="flex-1 text-center sm:text-left">
+            <div className="mb-2 text-2xl font-black bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent">
               {getStatusText()}
             </div>
-            <div className="mb-3 text-xs text-slate-400">
-              Based on {portfolioProjects.length} completed projects,{" "}
-              {Object.keys(data.checklists).reduce(
-                (acc, key) => acc + data.checklists[key].length,
-                0,
-              )}{" "}
+            <div className="mb-4 text-xs text-emerald-200/70">
+              Based on{" "}
+              <span className="font-semibold text-emerald-300">
+                {portfolioProjects.length}
+              </span>{" "}
+              completed projects,{" "}
+              <span className="font-semibold text-emerald-300">
+                {Object.keys(data.checklists).reduce(
+                  (acc, key) => acc + data.checklists[key].length,
+                  0
+                )}
+              </span>{" "}
               checklist items
             </div>
-            <div className="rounded-lg bg-indigo-500/10 px-3 py-2 text-sm text-indigo-300">
+            <div className="rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 px-4 py-3 text-sm text-emerald-100 shadow-lg">
               <span className="font-semibold">This week:</span>{" "}
               {data.weeklyFocus}
             </div>
@@ -463,24 +546,30 @@ export default function GlobalUpgradeDashboard({
           {Object.keys(data.checklists).map((category) => (
             <details
               key={category}
-              className="group rounded-lg border border-slate-700/40 bg-slate-900/60"
+              className="group rounded-xl border border-emerald-500/30 bg-black/20 backdrop-blur-sm transition-all hover:border-emerald-400/50"
             >
-              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold capitalize text-slate-200 transition hover:text-indigo-400">
-                {category} (
-                {data.checklists[category].filter((i) => i.done).length}/
-                {data.checklists[category].length})
+              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold capitalize text-emerald-200 transition hover:text-emerald-300 flex items-center justify-between">
+                <span>{category}</span>
+                <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
+                  {data.checklists[category].filter((i) => i.done).length}/
+                  {data.checklists[category].length}
+                </span>
               </summary>
-              <ul className="space-y-2 px-4 pb-3">
+              <ul className="space-y-2 px-4 pb-4">
                 {data.checklists[category].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
+                  <li key={idx} className="flex items-center gap-3 group/item">
                     <input
                       type="checkbox"
                       checked={item.done}
                       onChange={() => toggleChecklistItem(category, idx)}
-                      className="h-4 w-4 accent-indigo-500"
+                      className="h-4 w-4 rounded accent-emerald-500 transition cursor-pointer"
                     />
                     <span
-                      className={`text-xs ${item.done ? "text-slate-500 line-through" : "text-slate-300"}`}
+                      className={`text-xs transition ${
+                        item.done
+                          ? "text-emerald-400/50 line-through"
+                          : "text-emerald-100 group-hover/item:text-emerald-200"
+                      }`}
                     >
                       {item.name}
                     </span>
@@ -493,40 +582,72 @@ export default function GlobalUpgradeDashboard({
       </section>
 
       {/* SECTION 2: Portfolio & Proof Builder */}
-      <section className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 p-5 shadow-xl backdrop-blur">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-bold uppercase tracking-wide text-slate-100">
+      <section className="rounded-2xl border border-[#2F6B60]/40 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-6 shadow-xl backdrop-blur-md">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-xl font-bold tracking-wide bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 bg-clip-text text-transparent">
             🎯 Portfolio & Proof Builder
           </h2>
         </div>
 
-        <div className="mb-4 text-sm text-slate-400">
-          <span className="font-semibold text-slate-200">
+        {/* Study-based recommendations */}
+        {suggestedProjects.length > 0 && (
+          <div className="mb-5 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 px-4 py-3">
+            <div className="text-sm font-bold text-yellow-200 mb-2">
+              💡 Based on your completed studies:
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedProjects.map((item) => (
+                <span
+                  key={item.tech}
+                  className="rounded-full bg-yellow-500/20 border border-yellow-400/30 px-3 py-1 text-xs font-medium text-yellow-300"
+                >
+                  Build a {item.tech} project!
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mb-5 rounded-xl bg-gradient-to-r from-teal-500/10 to-emerald-500/10 border border-teal-400/30 px-4 py-3 text-sm text-teal-100">
+          <span className="font-bold text-teal-200">
             {portfolioProjects.length}
           </span>{" "}
           projects completed • Synced from your Projects page
         </div>
 
         {portfolioProjects.length === 0 ? (
-          <div className="rounded-lg border border-slate-700/40 bg-slate-900/60 p-8 text-center text-sm text-slate-400">
-            No completed projects yet. Mark projects as complete on your
-            Projects page to see them here.
+          <div className="rounded-xl border border-emerald-500/20 bg-black/20 p-12 text-center backdrop-blur-sm">
+            <div className="text-4xl mb-4">📦</div>
+            <div className="text-sm text-emerald-200/70">
+              No completed projects yet. Mark projects as complete on your
+              Projects page to see them here.
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {portfolioProjects.map((project) => (
               <article
                 key={project.id}
-                className="group relative overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80 p-4 shadow-lg transition hover:border-indigo-500/50"
+                className={`group relative overflow-hidden rounded-xl border p-4 backdrop-blur-sm shadow-lg transition ${
+                  project.isRecommended
+                    ? "border-yellow-400/50 bg-gradient-to-br from-yellow-600/10 to-orange-600/10 ring-2 ring-yellow-400/20"
+                    : "border-teal-500/30 bg-gradient-to-br from-[#0F766E]/20 to-black/40 hover:border-teal-400/60"
+                } hover:shadow-[0_0_20px_rgba(45,212,191,0.3)]`}
               >
-                <h3 className="mb-2 font-semibold text-slate-100">
+                {project.isRecommended && (
+                  <div className="absolute top-2 right-2 rounded-lg bg-yellow-500/90 px-2 py-1 text-xs font-bold text-black">
+                    ⭐ Study Complete!
+                  </div>
+                )}
+
+                <h3 className="mb-3 font-bold text-emerald-100 line-clamp-2 pr-20">
                   {project.name}
                 </h3>
-                <div className="mb-3 flex flex-wrap gap-1">
+                <div className="mb-3 flex flex-wrap gap-1.5">
                   {project.skills.map((skill, i) => (
                     <span
                       key={i}
-                      className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300"
+                      className="rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-medium text-emerald-300"
                     >
                       {skill}
                     </span>
@@ -534,109 +655,52 @@ export default function GlobalUpgradeDashboard({
                 </div>
 
                 {project.completionDate && (
-                  <div className="mb-2 text-xs text-slate-400">
-                    Completed:{" "}
+                  <div className="mb-3 text-xs text-teal-200/60">
+                    ✓ Completed:{" "}
                     {project.completionDate.split("-").reverse().join("-")}
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={project.github}
-                      onChange={() => toggleProjectField(project.id, "github")}
-                      className="accent-indigo-500"
-                    />
-                    <span
-                      className={
-                        project.github ? "text-green-400" : "text-slate-500"
-                      }
-                    >
-                      GitHub
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={project.live}
-                      onChange={() => toggleProjectField(project.id, "live")}
-                      className="accent-indigo-500"
-                    />
-                    <span
-                      className={
-                        project.live ? "text-green-400" : "text-slate-500"
-                      }
-                    >
-                      Live
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={project.caseStudy}
-                      onChange={() =>
-                        toggleProjectField(project.id, "caseStudy")
-                      }
-                      className="accent-indigo-500"
-                    />
-                    <span
-                      className={
-                        project.caseStudy ? "text-green-400" : "text-slate-500"
-                      }
-                    >
-                      Case Study
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={project.readme}
-                      onChange={() => toggleProjectField(project.id, "readme")}
-                      className="accent-indigo-500"
-                    />
-                    <span
-                      className={
-                        project.readme ? "text-green-400" : "text-slate-500"
-                      }
-                    >
-                      README
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={project.mobile}
-                      onChange={() => toggleProjectField(project.id, "mobile")}
-                      className="accent-indigo-500"
-                    />
-                    <span
-                      className={
-                        project.mobile ? "text-green-400" : "text-slate-500"
-                      }
-                    >
-                      Mobile
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={project.accessibility}
-                      onChange={() =>
-                        toggleProjectField(project.id, "accessibility")
-                      }
-                      className="accent-indigo-500"
-                    />
-                    <span
-                      className={
-                        project.accessibility
-                          ? "text-green-400"
-                          : "text-slate-500"
-                      }
-                    >
-                      A11y
-                    </span>
-                  </label>
+                  {[
+                    "github",
+                    "live",
+                    "caseStudy",
+                    "readme",
+                    "mobile",
+                    "accessibility",
+                  ].map((field) => {
+                    const labels = {
+                      github: "GitHub",
+                      live: "Live",
+                      caseStudy: "Case Study",
+                      readme: "README",
+                      mobile: "Mobile",
+                      accessibility: "A11y",
+                    };
+                    return (
+                      <label
+                        key={field}
+                        className="flex items-center gap-2 cursor-pointer group/checkbox"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={project[field] || false}
+                          onChange={() => toggleProjectField(project.id, field)}
+                          className="h-3.5 w-3.5 rounded accent-emerald-500 cursor-pointer"
+                        />
+                        <span
+                          className={`transition ${
+                            project[field]
+                              ? "text-emerald-300 font-medium"
+                              : "text-teal-200/50 group-hover/checkbox:text-teal-200/70"
+                          }`}
+                        >
+                          {labels[field]}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </article>
             ))}
@@ -644,56 +708,77 @@ export default function GlobalUpgradeDashboard({
         )}
       </section>
 
-      {/* SECTION 3: Daily Discipline Score */}
-      <section className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 p-5 shadow-xl backdrop-blur">
-        <h2 className="mb-5 flex items-center gap-2 text-lg font-bold uppercase tracking-wide text-slate-100">
+      {/* SECTION 3: Daily Discipline Score - Keep existing code */}
+      <section className="rounded-2xl border border-[#2F6B60]/40 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-6 shadow-xl backdrop-blur-md">
+        <h2 className="mb-6 flex items-center gap-2 text-xl font-bold tracking-wide bg-gradient-to-r from-orange-300 via-red-200 to-pink-300 bg-clip-text text-transparent">
           🔥 Daily Discipline Score
         </h2>
 
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-slate-700/40 bg-slate-900/60 p-5">
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-orange-500/30 bg-black/30 p-6 backdrop-blur-sm">
           <div>
-            <div className="text-4xl font-bold text-slate-100">
-              {todayScore} / 100
+            <div className="text-5xl font-black bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent">
+              {todayScore}
+              <span className="text-2xl text-orange-200/50">/100</span>
             </div>
-            <div className="mt-1 text-xs text-slate-400">
-              Today's Score • {today}
+            <div className="mt-2 text-xs text-orange-200/60 font-medium">
+              Today's Score •{" "}
+              {new Date(today).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-slate-300">
+            <div className="text-3xl font-black text-orange-200">
               {weeklyAverage}
             </div>
-            <div className="mt-1 text-xs text-slate-400">7-Day Avg</div>
+            <div className="mt-2 text-xs text-orange-200/60">7-Day Avg</div>
           </div>
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {["gym", "coding", "english", "portfolio", "sleep"].map((habit) => {
             const isChecked = data.dds[today]?.[habit] || false;
+            const points = {
+              gym: 20,
+              coding: 30,
+              english: 20,
+              portfolio: 20,
+              sleep: 10,
+            };
+            const icons = {
+              gym: "💪",
+              coding: "💻",
+              english: "🗣️",
+              portfolio: "🎨",
+              sleep: "😴",
+            };
+
             return (
               <label
                 key={habit}
-                className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border p-3 transition ${
+                className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border p-4 transition-all ${
                   isChecked
-                    ? "border-indigo-500 bg-indigo-500/20"
-                    : "border-slate-700/60 bg-slate-900/60 hover:border-slate-600"
+                    ? "border-emerald-400 bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105"
+                    : "border-emerald-500/20 bg-black/20 hover:border-emerald-400/50 hover:bg-emerald-500/10"
                 }`}
               >
+                <div className="text-2xl">{icons[habit]}</div>
                 <input
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => toggleHabit(habit)}
-                  className="h-5 w-5 accent-indigo-500"
+                  className="h-5 w-5 rounded accent-emerald-500"
                 />
-                <span className="text-xs font-semibold capitalize text-slate-200">
+                <span className="text-xs font-bold capitalize text-emerald-100">
                   {habit}
                 </span>
-                <span className="text-xs text-slate-500">
-                  {habit === "gym" && "20 pts"}
-                  {habit === "coding" && "30 pts"}
-                  {habit === "english" && "20 pts"}
-                  {habit === "portfolio" && "20 pts"}
-                  {habit === "sleep" && "10 pts"}
+                <span
+                  className={`text-xs font-medium ${
+                    isChecked ? "text-emerald-300" : "text-emerald-200/50"
+                  }`}
+                >
+                  {points[habit]} pts
                 </span>
               </label>
             );
@@ -701,11 +786,11 @@ export default function GlobalUpgradeDashboard({
         </div>
 
         {/* Weekly Trend */}
-        <div className="mb-4 rounded-lg border border-slate-700/40 bg-slate-900/60 p-4">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <div className="mb-5 rounded-xl border border-emerald-500/30 bg-black/20 p-5 backdrop-blur-sm">
+          <div className="mb-4 text-xs font-bold uppercase tracking-wider text-emerald-200/70">
             Last 7 Days
           </div>
-          <div className="flex items-end justify-between gap-1">
+          <div className="flex items-end justify-between gap-2">
             {Array.from({ length: 7 }, (_, i) => {
               const d = new Date();
               d.setDate(d.getDate() - (6 - i));
@@ -723,22 +808,26 @@ export default function GlobalUpgradeDashboard({
               return (
                 <div
                   key={dateStr}
-                  className="flex flex-1 flex-col items-center gap-1"
+                  className="flex flex-1 flex-col items-center gap-2"
                 >
                   <div
-                    className={`w-full rounded-t transition ${
+                    className={`w-full rounded-t-lg transition-all duration-300 ${
                       score >= 80
-                        ? "bg-green-500"
+                        ? "bg-gradient-to-t from-emerald-500 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
                         : score >= 65
-                          ? "bg-yellow-500"
-                          : score > 0
-                            ? "bg-red-500"
-                            : "bg-slate-700"
+                        ? "bg-gradient-to-t from-yellow-500 to-yellow-400"
+                        : score > 0
+                        ? "bg-gradient-to-t from-red-500 to-red-400"
+                        : "bg-gray-700/50"
                     }`}
-                    style={{ height: `${Math.max(score, 10)}px` }}
+                    style={{ height: `${Math.max(score * 1.2, 12)}px` }}
                   ></div>
                   <div
-                    className={`text-xs ${isToday ? "font-bold text-indigo-400" : "text-slate-500"}`}
+                    className={`text-xs font-medium transition ${
+                      isToday
+                        ? "text-emerald-300 font-bold scale-110"
+                        : "text-emerald-200/60"
+                    }`}
                   >
                     {d.toLocaleDateString("en-US", { weekday: "short" })[0]}
                   </div>
@@ -748,7 +837,7 @@ export default function GlobalUpgradeDashboard({
           </div>
         </div>
 
-        <div className="rounded-lg bg-slate-900/60 px-4 py-3 text-xs text-slate-400">
+        <div className="rounded-xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-400/30 px-4 py-3 text-sm text-orange-100">
           💡 <span className="font-semibold">{getInsightMessage()}</span>
         </div>
       </section>

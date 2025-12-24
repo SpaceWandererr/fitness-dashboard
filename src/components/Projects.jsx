@@ -616,43 +616,80 @@ export default function StudyProjectsAdvanced({
           <div className="flex flex-col sm:flex-row gap-3 ">
             {/* LEFT: Difficulty Filter */}
             <div className="relative flex-1 sm:flex-initial ">
-              <select
-                value={filterDifficulty}
-                onChange={(e) => setFilterDifficulty(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 pr-10
-                 rounded-xl border border-emerald-500/30 
-                 bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-100 shadow-lg shadow-emerald-500/20 hover:border-emerald-400/50 
-                 transition-all text-sm font-medium 
-                 dark:text-emerald-100                  
-                 focus:outline-none 
-                 focus:ring-2 focus:ring-emerald-400/50 
-                 cursor-pointer appearance-none"
-              >
-                <option
-                  value="All"
-                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100 rounded-xl"
+              <div className="relative w-full sm:w-auto group">
+                {/* Badge indicator */}
+                <div className="pointer-events-none absolute -top-1 -right-1 z-10">
+                  <div className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
+                </div>
+
+                {/* Dropdown arrow */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 z-10">
+                  <svg
+                    className="h-4 w-4 text-white/90 dark:text-emerald-300 transition-transform duration-200 group-hover:translate-y-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+
+                <select
+                  value={filterDifficulty}
+                  onChange={(e) => setFilterDifficulty(e.target.value)}
+                  className="w-full sm:w-auto px-4 py-2.5 pr-10
+     rounded-xl border-2 border-emerald-400/40 
+     bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500
+     dark:from-[#0F766E]/50 dark:via-[#0D9488]/40 dark:to-[#14B8A6]/30
+     text-white dark:text-emerald-50
+     shadow-[0_0_20px_rgba(16,185,129,0.25)] dark:shadow-[0_0_15px_rgba(16,185,129,0.15)]
+     hover:border-emerald-300/60 dark:hover:border-emerald-400/60
+     hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] dark:hover:shadow-[0_0_25px_rgba(16,185,129,0.25)]
+     backdrop-blur-md
+     transition-all duration-300
+     text-sm font-bold tracking-wide
+     focus:outline-none 
+     focus:ring-2 focus:ring-emerald-300/60 dark:focus:ring-emerald-400/50
+     focus:border-emerald-300 dark:focus:border-emerald-300
+     focus:shadow-[0_0_40px_rgba(16,185,129,0.5)] dark:focus:shadow-[0_0_30px_rgba(16,185,129,0.3)]
+     cursor-pointer appearance-none
+     hover:scale-[1.02] active:scale-[0.98]
+     relative z-0"
                 >
-                  All Levels
-                </option>
-                <option
-                  value="Beginner"
-                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100"
-                >
-                  Beginner
-                </option>
-                <option
-                  value="Intermediate"
-                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100"
-                >
-                  Intermediate
-                </option>
-                <option
-                  value="Advanced"
-                  className="bg-[#C9E9E0] dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100"
-                >
-                  Advanced
-                </option>
-              </select>
+                  <option
+                    value="All"
+                    className="bg-emerald-50 dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100 font-semibold py-2"
+                  >
+                    🌟 All Levels
+                  </option>
+                  <option
+                    value="Beginner"
+                    className="bg-emerald-50 dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100 font-semibold py-2"
+                  >
+                    🌱 Beginner
+                  </option>
+                  <option
+                    value="Intermediate"
+                    className="bg-emerald-50 dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100 font-semibold py-2"
+                  >
+                    ⚡ Intermediate
+                  </option>
+                  <option
+                    value="Advanced"
+                    className="bg-emerald-50 dark:bg-[#0A1F1C] text-emerald-900 dark:text-emerald-100 font-semibold py-2"
+                  >
+                    🔥 Advanced
+                  </option>
+                </select>
+
+                {/* Glow effect on hover */}
+                <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-br from-emerald-400/0 to-teal-400/0 group-hover:from-emerald-400/20 group-hover:to-teal-400/20 blur-xl transition-all duration-300" />
+              </div>
 
               {/* Custom Arrow - Theme Aware */}
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -950,7 +987,7 @@ export default function StudyProjectsAdvanced({
                                     {remaining === "Expired"
                                       ? `Expired: ${formatDate(deadline)}`
                                       : `Due: ${formatDate(
-                                          deadline,
+                                          deadline
                                         )} (${remaining})`}
                                   </div>
                                 )}
@@ -962,7 +999,7 @@ export default function StudyProjectsAdvanced({
                                     <div className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
                                       Completed:{" "}
                                       {formatDate(
-                                        progress[sec].completionDates[canonIdx],
+                                        progress[sec].completionDates[canonIdx]
                                       )}
                                     </div>
                                   )}
@@ -1575,7 +1612,7 @@ export default function StudyProjectsAdvanced({
                           {Object.entries(completionDates)
                             .sort(
                               ([, dateA], [, dateB]) =>
-                                new Date(dateB) - new Date(dateA),
+                                new Date(dateB) - new Date(dateA)
                             ) // Sort by date, newest first
                             .map(([idx, date]) => {
                               const projectName =
@@ -1641,7 +1678,7 @@ export default function StudyProjectsAdvanced({
                   .filter(([section]) => section !== "_meta")
                   .every(
                     ([, tasks]) =>
-                      Object.keys(tasks?.completionDates || {}).length === 0,
+                      Object.keys(tasks?.completionDates || {}).length === 0
                   ) && (
                   <div className="p-8 rounded-xl bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border border-emerald-500/20 text-center">
                     <p className="text-sm text-emerald-200/60">
@@ -1681,7 +1718,7 @@ export default function StudyProjectsAdvanced({
                           (acc, tasks) =>
                             acc +
                             Object.keys(tasks?.completionDates || {}).length,
-                          0,
+                          0
                         )}{" "}
                         projects
                       </div>
@@ -1723,7 +1760,7 @@ export default function StudyProjectsAdvanced({
                                 ) {
                                   latestDate = date;
                                 }
-                              },
+                              }
                             );
                           });
                           return latestDate

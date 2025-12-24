@@ -98,6 +98,7 @@ export default function App() {
   const themeBtnRef = useRef(null);
   const [flashOrigin, setFlashOrigin] = useState({ x: 0, y: 0 });
   const [dashboardState, setDashboardState] = useState({});
+  const [isLoadingBackend, setIsLoadingBackend] = useState(true);
 
   const [stats, setStats] = useState({
     weight: "—",
@@ -113,23 +114,6 @@ export default function App() {
   // weight | gym | topics | streak
 
   const accent = "hsl(180, 100%, 50%)";
-
-  // // 🔥 Load dashboard instantly from local cache (ONCE)
-  // useEffect(() => {
-  //   const cached = localStorage.getItem("lifeos_state");
-  //   if (!cached) return;
-
-  //   try {
-  //     const parsed = JSON.parse(cached);
-
-  //     if (parsed && typeof parsed === "object") {
-  //       console.log("⚡ Loaded dashboard from local cache");
-  //       setDashboardState(parsed);
-  //     }
-  //   } catch (err) {
-  //     console.warn("❌ Invalid cached dashboard ignored", err);
-  //   }
-  // }, []);
 
   // In App.jsx - Replace your FloatingScrollControl with this:
   const FloatingScrollControl = React.memo(function FloatingScrollControl({
@@ -238,6 +222,7 @@ export default function App() {
 
     async function loadState() {
       console.log("📡 Loading dashboard from backend...");
+      setIsLoadingBackend(true); // ✅ Start loading
 
       try {
         const res = await fetch(API_URL);
@@ -261,7 +246,7 @@ export default function App() {
 
         if (!hasBackendSyllabus) {
           console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)",
+            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
           );
         }
 
@@ -273,7 +258,7 @@ export default function App() {
         ) {
           console.log("🔧 Normalizing syllabus now...");
           state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2),
+            structuredClone(state.syllabus_tree_v2)
           );
           state.syllabus_tree_v2.__normalized = true;
         } else {
@@ -285,9 +270,18 @@ export default function App() {
         if (!cancelled) {
           console.log("✅ Applying backend state");
           setDashboardState(state);
+
+          // Cache to localStorage for next load
+          try {
+            localStorage.setItem("lifeosstate", JSON.stringify(state));
+          } catch (err) {
+            console.warn("⚠️ Could not cache to localStorage", err);
+          }
         }
       } catch (err) {
         if (!cancelled) console.error("🔥 Load error:", err);
+      } finally {
+        if (!cancelled) setIsLoadingBackend(false); // ✅ Done loading
       }
     }
 
@@ -421,7 +415,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    [],
+    []
   );
 
   return (
@@ -464,7 +458,7 @@ export default function App() {
 
       {/* subtle background blobs */}
       <div className="pointer-events-none fixed inset-0 opacity-40">
-        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-xl" />
+        <div className="absolute -top-82 -left-62 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-xl" />
         <div className="absolute bottom-0 right-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle_at_center,#b82132aa,transparent_60%)] blur-xl" />
       </div>
 
@@ -1087,22 +1081,99 @@ export default function App() {
             <Route
               path="/"
               element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <HomeDashboard
-                    stats={stats}
-                    weightHistory={weightHistory}
-                    gymLogDates={gymLogDates}
-                    activePanel={activePanel}
-                    setActivePanel={setActivePanel}
-                  />
-                </motion.div>
+                isLoadingBackend ? (
+                  <div
+                    className="flex items-center justify-center"
+                    style={{ height: "80vh" }}
+                  >
+                    <div className="relative">
+                      {/* Outer glow ring */}
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 opacity-20 blur-xl animate-pulse" />
+
+                      {/* Main spinner card */}
+                      <div
+                        className="relative bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
+                    border border-emerald-500/30 rounded-2xl p-8 backdrop-blur-xl
+                    shadow-[0_0_40px_rgba(16,185,129,0.3)]"
+                      >
+                        {/* Spinning circle */}
+                        <div className="flex flex-col items-center gap-6">
+                          <div className="relative">
+                            {/* Outer ring */}
+                            <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full" />
+
+                            {/* Spinning gradient ring */}
+                            <div
+                              className="absolute inset-0 w-16 h-16 border-4 border-transparent 
+                          border-t-emerald-400 border-r-teal-400 
+                          rounded-full animate-spin"
+                            />
+
+                            {/* Inner pulse dot */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
+                              <div className="absolute w-3 h-3 bg-emerald-400 rounded-full" />
+                            </div>
+                          </div>
+
+                          {/* Text */}
+                          <div className="text-center space-y-2">
+                            <h3
+                              className="text-lg font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 
+                         bg-clip-text text-transparent"
+                            >
+                              Loading Dashboard
+                            </h3>
+                            <p className="text-xs text-emerald-400/70 font-mono tracking-wider">
+                              Syncing your data...
+                            </p>
+                          </div>
+
+                          {/* Progress bar */}
+                          <div className="w-48 h-1 bg-emerald-500/10 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 
+                          animate-[loading_1.5s_ease-in-out_infinite]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <style jsx>{`
+                      @keyframes loading {
+                        0% {
+                          width: 0%;
+                          margin-left: 0%;
+                        }
+                        50% {
+                          width: 60%;
+                          margin-left: 20%;
+                        }
+                        100% {
+                          width: 0%;
+                          margin-left: 100%;
+                        }
+                      }
+                    `}</style>
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <HomeDashboard
+                      stats={stats}
+                      weightHistory={weightHistory}
+                      gymLogDates={gymLogDates}
+                      activePanel={activePanel}
+                      setActivePanel={setActivePanel}
+                    />
+                  </motion.div>
+                )
               }
             />
             {/* OTHER PAGES WITH SLIDE ANIMATION */}
@@ -1143,9 +1214,9 @@ export default function App() {
                     isHome ? { duration: 0.5, ease: "easeInOut" } : {}
                   }
                 >
-                  <GlobalUpgrade 
-                    dashboardState={dashboardState} 
-                    updateDashboard={updateDashboard} 
+                  <GlobalUpgrade
+                    dashboardState={dashboardState}
+                    updateDashboard={updateDashboard}
                   />
                 </motion.div>
               }
