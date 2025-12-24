@@ -287,45 +287,42 @@ function DailySummaryMerged({ date, logs, mode }) {
 
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
-    "rounded-xl p-3 sm:rounded-2xl sm:p-x-4  h-full text-[#E8FFFA] flex flex-col justify-even";
+    "rounded-xl p-1 sm:rounded-2xl sm:p-x-4  h-full text-[#E8FFFA] flex flex-col justify-even";
 
   return (
     <div className={`${cardClass}`}>
-      <div>
-        <div className="flex items-center justify-between mb-2 pb-2 border-b border-emerald-500/20 gap-3">
+      <div className="w-full max-w-full overflow-x-hidden px-3 sm:px-4 ">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 pb-2 border-b border-emerald-500/20 gap-2 ">
           {/* Title */}
           <h3 className="font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent text-sm sm:text-base md:text-lg">
             {mode === "old" ? "Daily Summary" : "Enhanced Summary"}
           </h3>
 
-          {/* Next workout (compact pill, no extra rows) */}
-          <div className="hidden sm:flex items-center gap-2 text-[10px]">
-            <span className="uppercase tracking-wide text-emerald-200/60 font-semibold">
-              Next
-            </span>
-            <div className="flex items-center gap-2 bg-white/5 rounded-full px-2.5 py-1 border border-emerald-400/20">
-              <div className="flex flex-col leading-tight">
-                <span className="text-[11px] font-semibold text-emerald-200">
+          {/* Next workout - now visible on mobile */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 bg-white/5 rounded-xl px-2.5 py-1.5 sm:py-1 border border-emerald-400/20 flex-1 sm:flex-none sm:w-48 justify-between">
+              <div className="flex flex-col leading-tight min-w-0 flex-1">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-200 truncate">
                   {nextInfo.label}
                 </span>
-                <span className="text-[9px] text-emerald-100/80">
+                <span className="text-[9px] text-emerald-100/80 truncate">
                   {nextInfo.title}
                 </span>
               </div>
-              <span className="text-lg">💪</span>
+              <span className="text-base sm:text-lg flex-shrink-0">💪</span>
             </div>
-          </div>
 
-          {/* Done / Not done badge */}
-          <span
-            className={`text-[10px] px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap ${
-              entry?.done
-                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
-                : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 border border-gray-600/40"
-            }`}
-          >
-            {entry?.done ? "✅ Done" : "⭕ Not Done"}
-          </span>
+            {/* Done / Not done badge */}
+            <span
+              className={`text-[10px] px-2.5 py-1.5 sm:px-3 rounded-lg font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
+                entry?.done
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
+                  : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 border border-gray-600/40"
+              }`}
+            >
+              {entry?.done ? "✅ Done" : "⭕ Not Done"}
+            </span>
+          </div>
         </div>
 
         {/* -------- OLD CARD -------- */}
@@ -335,14 +332,14 @@ function DailySummaryMerged({ date, logs, mode }) {
             <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header Row */}
               <div className="flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
-                <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
+                <div className="text-[11px] sm:text-xs text-emerald-200 font-medium flex items-center gap-1.5">
                   📅 {fmtDisp(date)}
                 </div>
               </div>
 
               {/* Muscles Tags */}
-              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold sm:border-r sm:border-emerald-400/40 sm:pr-3 sm:mr-3">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col gap-2">
+                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold">
                   MUSCLES
                 </div>
 
@@ -362,6 +359,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
               </div>
             </div>
+
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
               {/* CALORIES */}
@@ -371,10 +369,10 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <span className="hidden xs:inline">Calories</span>
                   <span className="xs:hidden">Cal</span>
                 </div>
-                <div className="text-sm sm:text-base md:text-xl font-bold text-orange-100 dark:text-orange-200 flex items-baseline gap-0.5 sm:gap-1">
-                  {entry?.calories ?? "—"}
+                <div className="text-sm sm:text-base md:text-xl font-bold text-orange-100 dark:text-orange-200 flex flex-wrap items-baseline gap-0.5">
+                  <span className="break-all">{entry?.calories ?? "—"}</span>
                   {entry?.calories && (
-                    <span className="text-[9px] sm:text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal">
+                    <span className="text-[8px] sm:text-[9px] md:text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal whitespace-nowrap">
                       kcal
                     </span>
                   )}
@@ -387,10 +385,10 @@ function DailySummaryMerged({ date, logs, mode }) {
                   <span>⚖️</span>
                   <span>Weight</span>
                 </div>
-                <div className="text-sm sm:text-base md:text-xl font-bold text-cyan-100 dark:text-cyan-200 flex items-baseline gap-0.5 sm:gap-1">
-                  {entry?.weight ?? "—"}
+                <div className="text-sm sm:text-base md:text-xl font-bold text-cyan-100 dark:text-cyan-200 flex flex-wrap items-baseline gap-0.5">
+                  <span>{entry?.weight ?? "—"}</span>
                   {entry?.weight && (
-                    <span className="text-[9px] sm:text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal">
+                    <span className="text-[8px] sm:text-[9px] md:text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal whitespace-nowrap">
                       kg
                     </span>
                   )}
@@ -408,11 +406,12 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
               </div>
             </div>
+
             {/* Exercises Card */}
             <div className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header */}
               <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
-                <div className="text-[9px] uppercase tracking-wider text-emerald-200/80 font-semibold">
+                <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-emerald-200/80 font-semibold">
                   EXERCISES COMPLETED
                 </div>
               </div>
@@ -425,10 +424,12 @@ function DailySummaryMerged({ date, logs, mode }) {
                       performed[i]?.done ? (
                         <div
                           key={i}
-                          className="flex items-center gap-2 text-xs text-emerald-200"
+                          className="flex items-start gap-2 text-[11px] sm:text-xs text-emerald-200"
                         >
-                          <span className="text-emerald-400">✓</span>
-                          <span>{ex}</span>
+                          <span className="text-emerald-400 flex-shrink-0 mt-0.5">
+                            ✓
+                          </span>
+                          <span className="break-words">{ex}</span>
                         </div>
                       ) : null
                     )}
@@ -440,11 +441,12 @@ function DailySummaryMerged({ date, logs, mode }) {
                 )}
               </div>
             </div>
-            {/*Extra Exercises*/}
-            <div className="bg-gradient-to-br from-0F766E50 via-0c4a4230 to-0a383250 dark:from-0F162270 dark:via-13203350 dark:to-0A0F1C70 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-emerald-400/30 mt-2 ">
+
+            {/* Extra Exercises */}
+            <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 px-2.5 py-2 sm:px-4 sm:py-3 rounded-xl border border-emerald-400/30 mt-2">
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] uppercase tracking-wider text-emerald-200/80 font-semibold">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-emerald-200/80 font-semibold">
                   Extra Activity
                 </span>
                 {entry?.running?.distanceKm ||
@@ -464,57 +466,77 @@ function DailySummaryMerged({ date, logs, mode }) {
                 entry?.running?.durationMinutes ||
                 entry?.yogaMinutes != null ||
                 entry?.otherExercises) && (
-                <div className="grid grid-cols-4 gap-x-4 gap-y-1 text-[11px] sm:text-xs">
-                  {/* Row 1: labels */}
-                  <div className="text-emerald-200/80 font-semibold">Run</div>
-                  <div className="text-teal-200/80 font-semibold">Yoga</div>
-                  <div className="text-emerald-200/80 font-semibold">Felt</div>
-                  <div className="text-emerald-200/80 font-semibold ">
-                    Other
-                  </div>
+                <div className="space-y-2">
+                  {/* Mobile: Stacked layout */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-2 text-[11px] sm:text-xs">
+                    {/* Run */}
+                    <div className="col-span-2 sm:col-span-1">
+                      <div className="text-emerald-200/80 font-semibold mb-0.5">
+                        Run
+                      </div>
+                      <div className="text-emerald-100">
+                        {entry?.running?.distanceKm != null && (
+                          <span className="whitespace-nowrap">
+                            {entry.running.distanceKm} km
+                          </span>
+                        )}
+                        {entry?.running?.durationMinutes != null && (
+                          <span className="whitespace-nowrap">
+                            {entry.running.distanceKm != null ? " · " : ""}
+                            {entry.running.durationMinutes} min
+                          </span>
+                        )}
+                        {!entry?.running?.distanceKm &&
+                          !entry?.running?.durationMinutes &&
+                          "-"}
+                      </div>
+                    </div>
 
-                  {/* Row 2: values */}
-                  <div className="text-emerald-100">
-                    {entry?.running?.distanceKm != null && (
-                      <span>{entry.running.distanceKm} km</span>
-                    )}
-                    {entry?.running?.durationMinutes != null && (
-                      <span>
-                        {entry.running.distanceKm != null ? " · " : ""}
-                        {entry.running.durationMinutes} min
-                      </span>
-                    )}
-                  </div>
+                    {/* Yoga */}
+                    <div>
+                      <div className="text-teal-200/80 font-semibold mb-0.5">
+                        Yoga
+                      </div>
+                      <div className="text-teal-100">
+                        {entry?.yogaMinutes != null
+                          ? `${entry.yogaMinutes} min`
+                          : "-"}
+                      </div>
+                    </div>
 
-                  <div className="text-teal-100">
-                    {entry?.yogaMinutes != null
-                      ? `${entry.yogaMinutes} min`
-                      : "-"}
-                  </div>
+                    {/* Felt */}
+                    <div className="col-span-2 sm:col-span-1">
+                      <div className="text-emerald-200/80 font-semibold mb-0.5">
+                        Felt
+                      </div>
+                      <div className="text-emerald-100/90 line-clamp-2 break-words">
+                        {entry?.running?.notes || entry?.mood ? (
+                          <>
+                            <span className="mr-1">{entry?.mood || "🙂"}</span>
+                            <span>
+                              {entry?.running?.notes &&
+                              !["😄", "🙂", "😐", "😣", "😴"].includes(
+                                entry.running.notes
+                              )
+                                ? entry.running.notes
+                                : "Felt good overall"}
+                            </span>
+                          </>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </div>
 
-                  {/* Felt = short summary from runningNotes or mood */}
-                  <div className="text-emerald-100/90 truncate w-48">
-                    {entry?.running?.notes || entry?.mood ? (
-                      <>
-                        {/* emoji part */}
-                        <span className="mr-1.5">{entry?.mood || "🙂"}</span>
-                        {/* text part */}
-                        <span className="h-44 align-middle">
-                          {entry?.running?.notes &&
-                          !["😄", "🙂", "😐", "😣", "😴"].includes(
-                            entry.running.notes
-                          )
-                            ? entry.running.notes
-                            : "Felt good overall"}
-                        </span>
-                      </>
-                    ) : (
-                      "-"
-                    )}
-                  </div>
-
-                  <div className="text-emerald-100/90 truncate">
-                    {entry?.otherExercises || "-"}
+                    {/* Other */}
+                    <div className="col-span-2 sm:col-span-1">
+                      <div className="text-emerald-200/80 font-semibold mb-0.5">
+                        Other
+                      </div>
+                      <div className="text-emerald-100/90 line-clamp-2 break-words">
+                        {entry?.otherExercises || "-"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -529,14 +551,14 @@ function DailySummaryMerged({ date, logs, mode }) {
             <div className="mb-1 bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
               {/* Header Row */}
               <div className="flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
-                <div className="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
+                <div className="text-[11px] sm:text-xs text-emerald-200 font-medium flex items-center gap-1.5">
                   📅 {fmtDisp(date)}
                 </div>
               </div>
 
               {/* Muscles Tags */}
-              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold sm:border-r sm:border-emerald-400/40 sm:pr-3 sm:mr-3">
+              <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 flex flex-col gap-2">
+                <div className="text-[11px] sm:text-[13px] uppercase tracking-wider text-emerald-200/80 font-semibold">
                   MUSCLES
                 </div>
 
@@ -564,7 +586,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                 <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold mb-0.5">
                   Sets
                 </div>
-                <div className="text-base sm:text-lg font-bold text-emerald-100">
+                <div className="text-base sm:text-lg font-bold text-emerald-100 break-all">
                   {doneSets}
                   <span className="text-xs sm:text-sm text-emerald-300/60">
                     /{totalSets}
@@ -610,7 +632,7 @@ function DailySummaryMerged({ date, logs, mode }) {
 
             {/* CALORIE STATS */}
             <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-orange-400/30">
-              <div className="text-[9px] uppercase tracking-wider text-orange-200/80 font-semibold mb-1.5 flex items-center gap-1">
+              <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-orange-200/80 font-semibold mb-1.5 flex items-center gap-1">
                 🔥 Calories
               </div>
 
@@ -676,11 +698,11 @@ function DailySummaryMerged({ date, logs, mode }) {
             {/* WEIGHT TREND */}
             <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-emerald-400/30">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[9px] uppercase tracking-wider text-emerald-200/70 font-semibold">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-emerald-200/70 font-semibold">
                     Weight Trend
                   </div>
-                  <div className="text-base sm:text-lg font-bold text-emerald-100">
+                  <div className="text-base sm:text-lg font-bold text-emerald-100 truncate">
                     {weightTrend != null
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
@@ -692,7 +714,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
                 {weightTrend != null && (
                   <div
-                    className={`text-xl sm:text-2xl ${
+                    className={`text-xl sm:text-2xl flex-shrink-0 ml-2 ${
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
@@ -709,9 +731,11 @@ function DailySummaryMerged({ date, logs, mode }) {
             {/* MESSAGE */}
             {message && (
               <div className="bg-gradient-to-br from-[#0F766E]/50 via-[#0c4a42]/30 to-[#0a3832]/50 dark:from-[#0F1622]/70 dark:via-[#132033]/50 dark:to-[#0A0F1C]/70 p-2.5 sm:p-3 rounded-xl border border-emerald-400/30">
-                <div className="flex items-center gap-2">
-                  <span className="text-base sm:text-lg flex-shrink-0">💪</span>
-                  <p className="text-emerald-100 italic text-xs leading-snug flex-1">
+                <div className="flex items-start gap-2">
+                  <span className="text-base sm:text-lg flex-shrink-0 mt-0.5">
+                    💪
+                  </span>
+                  <p className="text-emerald-100 italic text-[11px] sm:text-xs leading-snug flex-1 break-words">
                     {message}
                   </p>
                 </div>
@@ -1732,6 +1756,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
           </div>
         </div>
       </header>
+
       {/* Progress / Weight Section */}
       <section
         className="mb-2 border border-emerald-500/30 rounded-3xl p-5 space-y-4 
@@ -2122,32 +2147,34 @@ export default function Gym({ dashboardState, updateDashboard }) {
       </section>
 
       {/* Calendar + Daily Summary */}
-      <section
-        className="grid gap-4 lg:grid-cols-2 w-full align-center
-      "
-      >
-        <div className="w-full flex">
-          <div className="w-full">
-            <MiniCalendar
-              date={date}
-              setDate={setDate}
-              doneState={doneState}
-              logs={logs} // ✅ ADD THIS
-            />
-          </div>
+      <section className="grid gap-4 lg:grid-cols-2 w-full max-w-full overflow-hidden px-0 sm:px-4">
+        {/* Calendar Section */}
+        <div className="w-full min-w-0">
+          <MiniCalendar
+            date={date}
+            setDate={setDate}
+            doneState={doneState}
+            logs={logs}
+          />
         </div>
 
-        <div className="w-full flex">
-          <div className="w-full">
-            <DailySummaryCarousel date={date} logs={logs} />
-          </div>
+        {/* Summary Section */}
+        <div className="w-full min-w-0">
+          <DailySummaryCarousel date={date} logs={logs} />
         </div>
       </section>
 
       {/* Workout Section */}
       <section className="mb-6 mt-2">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600 p-[1px] shadow-2xl dark:shadow-black/50">
-          <div className="relative bg-gradient-to-br from-[#B82132]/95 via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] backdrop-blur-sm rounded-3xl p-5 md:p-6">
+        <div
+          className="relative overflow-hidden rounded-3xl
+         bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-600
+         p-[1px] shadow-2xl dark:shadow-black/50"
+        >
+          <div
+            className="relative
+          bg-gradient-to-br from-[#B82132]/95 via-[#183D3D] to-[#0F0F0F] dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] backdrop-blur-sm rounded-3xl p-5 md:p-6"
+          >
             {/* BG DECOR */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 dark:bg-emerald-400/5 rounded-full blur-3xl -z-10"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 dark:bg-cyan-400/5 rounded-full blur-3xl -z-10"></div>
