@@ -1669,7 +1669,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       className="rounded-2xl p-6 backdrop-blur-md border shadow-lg transition-all duration-500
      bg-gradient-to-br from-[#183D3D] via-[#5a2d2d] to-[#0F766E]
       dark:bg-gradient-to-br dark:from-[#0F1622] dark:via-[#132033] dark:to- 
-      [#0A0F1C]
+      [#0A0F1C] md:mt-7 lg:mt-0
       border-gray-800 text-emerald-100 font-medium"
     >
       {/* Header */}

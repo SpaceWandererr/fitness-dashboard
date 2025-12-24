@@ -192,8 +192,8 @@ export default function App() {
   // live clock
   useEffect(() => {
     const update = () => setTime(new Date());
-    update();
-    const t = setInterval(update, 60000);
+    update(); // Initial call
+    const t = setInterval(update, 1000); // Update every 1 second
     return () => clearInterval(t);
   }, []);
 
@@ -505,7 +505,12 @@ export default function App() {
 
               <div className="flex items-center gap-3 ">
                 <span className="text-xs font-mono text-teal-200/80 mr-6">
-                  {time.toLocaleTimeString()}
+                  {time.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                  })}
                 </span>
 
                 <button
@@ -529,17 +534,18 @@ export default function App() {
                     setThemeFlash((prev) => prev + 1);
                   }}
                   className="relative group rounded-full w-10 h-10 flex
-                  items-center justify-center border
-                  border-yellow-400/30 dark:border-white/30
-                  bg-transparent backdrop-blur-xl
-                  shadow-[0_0_25px_rgba(255,193,7,0.6)]
-                  dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
-                  hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
-                  dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
-                  transition-all duration-400"
+  items-center justify-center border
+  border-yellow-400/30 dark:border-white/30
+  bg-transparent backdrop-blur-xl
+  shadow-[0_0_25px_rgba(255,193,7,0.6)]
+  dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+  hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+  dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+  transition-all duration-400"
                   aria-label="Toggle dark mode"
                 >
                   <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+
                   <AnimatePresence>
                     <motion.div
                       key={dark ? "eclipse-dark" : "eclipse-light"}
@@ -557,6 +563,7 @@ export default function App() {
                       }}
                     />
                   </AnimatePresence>
+
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <span className="relative text-xl z-10">
                       <AnimatePresence mode="wait">
@@ -567,7 +574,9 @@ export default function App() {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
                             transition={
-                              isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                              isHome
+                                ? { duration: 0.9, ease: "easeOut" }
+                                : undefined
                             }
                             className="relative flex items-center justify-center"
                           >
@@ -575,7 +584,9 @@ export default function App() {
                               initial={{ scale: 0, opacity: 0 }}
                               animate={{ scale: 1.5, opacity: 0.35 }}
                               transition={
-                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                                isHome
+                                  ? { duration: 1.2, ease: "easeOut" }
+                                  : undefined
                               }
                               className="absolute w-8 h-8 rounded-full pointer-events-none"
                               style={{
@@ -595,7 +606,9 @@ export default function App() {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.6, opacity: 0 }}
                             transition={
-                              isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                              isHome
+                                ? { duration: 0.9, ease: "easeOut" }
+                                : undefined
                             }
                             className="relative flex items-center justify-center"
                           >
@@ -603,7 +616,9 @@ export default function App() {
                               initial={{ scale: 0, opacity: 0.2 }}
                               animate={{ scale: 1.6, opacity: 0.4 }}
                               transition={
-                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                                isHome
+                                  ? { duration: 1.2, ease: "easeOut" }
+                                  : undefined
                               }
                               className="absolute w-8 h-8 rounded-full"
                               style={{
@@ -619,12 +634,17 @@ export default function App() {
                         )}
                       </AnimatePresence>
                     </span>
+
+                    {/* ROTATING DECORATION - Always rotates */}
                     <motion.div
                       className="absolute inset-0 pointer-events-none"
-                      style={{ transformOrigin: "50% 50%" }}
-                      animate={isHome ? { rotate: 360 } : false}
+                      style={{
+                        transformOrigin: "50% 50%",
+                        willChange: "transform",
+                      }}
+                      animate={{ rotate: 360 }}
                       transition={{
-                        duration: 26,
+                        duration: 30,
                         ease: "linear",
                         repeat: Infinity,
                       }}
@@ -641,7 +661,8 @@ export default function App() {
                             : "drop-shadow(0 0 6px #FFFFFF)",
                         }}
                       >
-                        {dark ? "☀️" : "🌙"}
+                        {/* FIXED: Show stars/sparkles, not the opposite icon */}
+                        {dark ? "⭐" : "✨"}
                       </div>
                     </motion.div>
                   </div>
@@ -686,7 +707,12 @@ export default function App() {
 
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono text-teal-200/80 mr-4">
-                {time.toLocaleTimeString()}
+                {time.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hour12: true,
+                })}
               </span>
               <button
                 ref={themeBtnRef}
@@ -774,7 +800,9 @@ export default function App() {
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.6, opacity: 0 }}
                           transition={
-                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                            isHome
+                              ? { duration: 0.9, ease: "easeOut" }
+                              : undefined
                           }
                           className="relative flex items-center justify-center"
                         >
@@ -801,9 +829,9 @@ export default function App() {
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
                     style={{ transformOrigin: "50% 50%" }}
-                    animate={isHome ? { rotate: 360 } : false}
+                    animate={{ rotate: 360 }}
                     transition={{
-                      duration: 26,
+                      duration: 30,
                       ease: "linear",
                       repeat: Infinity,
                     }}
@@ -870,7 +898,12 @@ export default function App() {
 
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono text-teal-200/80 mr-6">
-                {time.toLocaleTimeString()}
+                {time.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hour12: true,
+                })}
               </span>
 
               <button
@@ -959,7 +992,9 @@ export default function App() {
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.6, opacity: 0 }}
                           transition={
-                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                            isHome
+                              ? { duration: 0.9, ease: "easeOut" }
+                              : undefined
                           }
                           className="relative flex items-center justify-center"
                         >
@@ -986,9 +1021,9 @@ export default function App() {
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
                     style={{ transformOrigin: "50% 50%" }}
-                    animate={isHome ? { rotate: 360 } : false}
+                    animate={{ rotate: 360 }}
                     transition={{
-                      duration: 26,
+                      duration: 30,
                       ease: "linear",
                       repeat: Infinity,
                     }}
@@ -1632,10 +1667,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -1822,10 +1857,11 @@ function HomeDashboard({
                     NO ZERO DAYS • DISCIPLINE = FREEDOM • 2026-2027
                   </span>
                   <span className="text-teal-300/90 dark:text-emerald-300/90">
-                    {new Date().toLocaleTimeString([], {
+                    {new Date().toLocaleTimeString("en-US", {
                       hour: "2-digit",
                       minute: "2-digit",
                       second: "2-digit",
+                      hour12: true,
                     })}
                   </span>
                 </div>
