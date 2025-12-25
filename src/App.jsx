@@ -216,76 +216,66 @@ export default function App() {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
-  // ----------------- LOAD DASHBOARD STATE FROM BACKEND -----------------
+  // ----------------- LOAD DASHBOARD STATE (OFFLINE-FIRST) -----------------
   useEffect(() => {
     let cancelled = false;
 
     async function loadState() {
-      console.log("📡 Loading dashboard from backend...");
-      setIsLoadingBackend(true); // ✅ Start loading
+      console.log("📡 Booting LifeOS...");
 
+      setIsLoadingBackend(true);
+
+      // 1️⃣ LOAD LOCAL FIRST (INSTANT BOOT)
+      let localState = null;
       try {
-        const res = await fetch(API_URL);
-
-        if (!res.ok) {
-          console.error("❌ Backend error:", res.status);
-          return;
+        const cached = localStorage.getItem("lifeosstate");
+        if (cached) {
+          localState = JSON.parse(cached);
+          console.log("⚡ Loaded from localStorage");
+          setDashboardState(localState);
         }
+      } catch (e) {
+        console.warn("⚠ Failed to read localStorage", e);
+      }
+
+      // 2️⃣ TRY BACKEND (BEST EFFORT)
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        const res = await fetch(API_URL, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error("Backend error");
 
         const data = await res.json();
+        const backendState = data.dashboardState || data || {};
 
-        // Backend may send wrapper or raw
-        let state = data.dashboardState || data || {};
+        // 3️⃣ COMPARE UPDATED TIME
+        const backendTime = backendState?.updatedAt
+          ? new Date(backendState.updatedAt).getTime()
+          : 0;
 
-        // ---------------- SYLLABUS FIX ----------------
+        const localTime = localState?.updatedAt
+          ? new Date(localState.updatedAt).getTime()
+          : 0;
 
-        const hasBackendSyllabus =
-          state.syllabus_tree_v2 &&
-          typeof state.syllabus_tree_v2 === "object" &&
-          Object.keys(state.syllabus_tree_v2).length > 0;
-
-        if (!hasBackendSyllabus) {
-          console.warn(
-            "📌 Backend empty → Leaving syllabus empty (Syllabus.jsx will seed)"
-          );
-        }
-
-        // 🚨 Normalize only ONCE
-        if (
-          state.syllabus_tree_v2 &&
-          typeof state.syllabus_tree_v2 === "object" &&
-          !state.syllabus_tree_v2.__normalized
-        ) {
-          console.log("🔧 Normalizing syllabus now...");
-          state.syllabus_tree_v2 = normalizeSection(
-            structuredClone(state.syllabus_tree_v2)
-          );
-          state.syllabus_tree_v2.__normalized = true;
-        } else {
-          console.log("✔ Syllabus already normalized. Skipping.");
-        }
-        // ------------------------------------------------
-
-        // ✅ FIXED: Always apply backend state (removed broken logic)
-        if (!cancelled) {
-          console.log("✅ Applying backend state");
-          setDashboardState(state);
-
-          // Cache to localStorage for next load
-          try {
-            localStorage.setItem("lifeosstate", JSON.stringify(state));
-          } catch (err) {
-            console.warn("⚠️ Could not cache to localStorage", err);
+        if (!localState || backendTime > localTime) {
+          console.log("🟢 Backend is newer → applying backend state");
+          if (!cancelled) {
+            setDashboardState(backendState);
+            localStorage.setItem("lifeosstate", JSON.stringify(backendState));
           }
+        } else {
+          console.log("🟡 Local state is newer → keeping local");
         }
       } catch (err) {
-        if (!cancelled) console.error("🔥 Load error:", err);
+        console.warn("⚠ Backend unavailable, running offline", err);
       } finally {
-        if (!cancelled) setIsLoadingBackend(false); // ✅ Done loading
+        if (!cancelled) setIsLoadingBackend(false);
       }
     }
 
-    // ✅ Load once on mount only
     loadState();
 
     return () => {
@@ -382,28 +372,34 @@ export default function App() {
   };
 
   // ----------------- GLOBAL BACKEND SAVE ENGINE -----------------
+  // ----------------- GLOBAL STATE UPDATE (LOCAL-FIRST) -----------------
   const updateDashboard = useCallback((updates) => {
     setDashboardState((prev) => {
       if (!prev) return prev;
 
-      // Resolve functional or object updates SAFELY
       const resolvedUpdates =
         typeof updates === "function" ? updates(prev) : updates;
 
-      // Merge once
       const nextState = {
         ...prev,
         ...resolvedUpdates,
         updatedAt: new Date().toISOString(),
       };
 
-      // 🔥 IMMEDIATE backend sync (NO delay)
+      // ✅ SAVE LOCALLY FIRST (SOURCE OF TRUTH)
+      try {
+        localStorage.setItem("lifeosstate", JSON.stringify(nextState));
+      } catch (e) {
+        console.warn("⚠ Local save failed", e);
+      }
+
+      // 🔄 FIRE-AND-FORGET BACKEND SYNC
       fetch(API_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nextState), // send FULL state
-      }).catch((err) => {
-        console.error("❌ Sync failed:", err);
+        body: JSON.stringify(nextState),
+      }).catch(() => {
+        console.warn("⚠ Backend sync failed (offline)");
       });
 
       return nextState;
@@ -415,7 +411,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    []
+    [],
   );
 
   return (
@@ -1667,10 +1663,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}

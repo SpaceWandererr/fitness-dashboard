@@ -4295,15 +4295,7 @@ export default function Syllabus({
   updateDashboard,
 }) {
   // ==================== ALL HOOKS AT TOP ====================
-  const treeRef = useRef(null);
-  const saveTimeoutRef = useRef(null);
-
   // Control flags
-  const [ready, setReady] = useState(false);
-
-  // Force UI refresh when ref mutates
-  const [, forceRender] = useState(0);
-
   // UI state
   const [showLastStudied, setShowLastStudied] = useState(true);
   const [query, setQuery] = useState("");
@@ -4311,11 +4303,6 @@ export default function Syllabus({
   const [milestone, setMilestone] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  // Backend
-  const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://fitness-backend-laoe.onrender.com/api/state";
 
   // Derived data (SAFE)
   const meta = dashboardState?.syllabus_meta || {};
@@ -4325,61 +4312,9 @@ export default function Syllabus({
   const LAST_STUDIED_HIDE_MINUTES = 10;
 
   // Single source of truth
-  const tree = treeRef.current;
-
-  // ==================== ALL EFFECTS (CONSOLIDATED) ====================
+  const tree = dashboardState?.syllabus_tree_v2 || null;
 
   // ==================== ALL EFFECTS (CLEAN & CORRECT) ====================
-
-  // 🔹 EFFECT 1: LOAD SYLLABUS FROM BACKEND (RUNS ONCE)
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadSyllabus() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-
-        if (cancelled) return;
-
-        if (
-          data?.syllabus_tree_v2 &&
-          typeof data.syllabus_tree_v2 === "object" &&
-          Object.keys(data.syllabus_tree_v2).length > 0
-        ) {
-          // ✅ Existing user → load backend data
-          treeRef.current = structuredClone(data.syllabus_tree_v2);
-        } else {
-          // 🆕 First-time user → seed from TREE
-          treeRef.current = structuredClone(TREE);
-        }
-
-        setReady(true);
-        forceRender((v) => v + 1);
-      } catch (err) {
-        console.error("❌ Failed to load syllabus:", err);
-
-        // Fallback to TREE if backend fails
-        treeRef.current = structuredClone(TREE);
-        setReady(true);
-        forceRender((v) => v + 1);
-      }
-    }
-
-    loadSyllabus();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // 🔹 EFFECT 2: CLEANUP DEBOUNCED SAVE ON UNMOUNT
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // 🔹 EFFECT 3: AUTO-HIDE "LAST STUDIED"
   useEffect(() => {
@@ -4768,7 +4703,7 @@ export default function Syllabus({
 
   /* ==================== EARLY RETURNS ==================== */
 
-  if (!ready || !treeRef.current) {
+  if (!dashboardState || !tree) {
     return (
       <div
         className="
