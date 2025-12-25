@@ -8,6 +8,13 @@ import React, {
 
 import dayjs from "dayjs";
 
+const countDone = (arr) => {
+  if (!Array.isArray(arr)) return 0;
+
+  return arr.filter((item) => (typeof item === "boolean" ? item : item?.done))
+    .length;
+};
+
 /* ---------------------- Constants ---------------------- */
 const WEEK = [
   "Monday",
@@ -65,7 +72,7 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
             ts: Date.now(),
             text: txt,
             source: "api",
-          })
+          }),
         );
       } catch {}
     }
@@ -207,7 +214,7 @@ function DailySummaryMerged({ date, logs, mode }) {
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
   const doneSets = performed.reduce(
     (a, b, i) => a + (b?.done ? parseSets(planExercises[i]) : 0),
-    0
+    0,
   );
 
   const MUSCLES = {
@@ -263,8 +270,8 @@ function DailySummaryMerged({ date, logs, mode }) {
     pctDone === 1
       ? "🔥 Perfect workout!"
       : pctDone > 0.5
-      ? "Great job! Keep pushing! 💪"
-      : "You showed up. That's what matters. 🚀";
+        ? "Great job! Keep pushing! 💪"
+        : "You showed up. That's what matters. 🚀";
 
   const getNextWorkoutInfo = (date) => {
     const today = dayjs(date);
@@ -431,7 +438,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           </span>
                           <span className="break-words">{ex}</span>
                         </div>
-                      ) : null
+                      ) : null,
                     )}
                   </div>
                 ) : (
@@ -516,7 +523,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                             <span>
                               {entry?.running?.notes &&
                               !["😄", "🙂", "😐", "😣", "😴"].includes(
-                                entry.running.notes
+                                entry.running.notes,
                               )
                                 ? entry.running.notes
                                 : "Felt good overall"}
@@ -707,8 +714,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                        ? `↘️ ${weightTrend}kg`
-                        : "→ 0kg"
+                          ? `↘️ ${weightTrend}kg`
+                          : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -718,8 +725,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                        ? "text-emerald-300"
-                        : "text-gray-300"
+                          ? "text-emerald-300"
+                          : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -771,7 +778,7 @@ function DailySummaryCarousel({ date, logs }) {
       setIndex((i) =>
         diff < 0
           ? (i + 1) % modes.length
-          : (i - 1 + modes.length) % modes.length
+          : (i - 1 + modes.length) % modes.length,
       );
     }
   };
@@ -893,7 +900,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   // Modal inputs + editing states
@@ -956,13 +963,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
-        : ""
+        : "",
     );
 
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
-        : ""
+        : "",
     );
 
     // Mark as loaded after first run
@@ -1011,7 +1018,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger."
+            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
           );
         });
     }
@@ -1057,7 +1064,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         yogaMinutes: existing?.yogaMinutes ?? null,
       };
     },
-    [logs]
+    [logs],
   );
 
   /* -------------------- Toggle single exercise (click in UI) -------------------- */
@@ -1081,20 +1088,25 @@ export default function Gym({ dashboardState, updateDashboard }) {
         left,
         right,
         finisher,
-        done: base.done, // 🔑 FIX
+        done: base.done,
       };
 
-      return {
+      const next = {
         ...prev,
         [dateKey]: updated,
       };
+
+      // 🔑 SYNC UPWARD
+      updateDashboard({ wd_gym_logs: next });
+
+      return next;
     });
   };
 
   /* -------------------- Toggle mark all / unmark all (DRAFT ONLY) -------------------- */
-  const toggleMarkAll = (dateKey) => {
+  const toggleMarkAll = (targetDateKey) => {
     // Always start from a safe entry
-    const base = logs?.[dateKey] || getEntry(dateKey);
+    const base = logs?.[targetDateKey] || getEntry(targetDateKey);
 
     // Normalize arrays (VERY IMPORTANT)
     const left = Array.isArray(base.left) ? base.left : [];
@@ -1118,11 +1130,17 @@ export default function Gym({ dashboardState, updateDashboard }) {
       done: false, // 🔒 NEVER finalize here
     };
 
-    // UI-only draft update
-    setLogs((prev) => ({
-      ...prev,
-      [dateKey]: updatedEntry,
-    }));
+    setLogs((prev) => {
+      const next = {
+        ...prev,
+        [targetDateKey]: updatedEntry,
+      };
+
+      // 🔑 SYNC UPWARD
+      updateDashboard({ wd_gym_logs: next });
+
+      return next;
+    });
   };
 
   /* -------------------- Modal open (preload modal inputs) -------------------- */
@@ -1147,16 +1165,18 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
 
     setRunningDistance(
-      entry?.running?.distanceKm != null ? String(entry.running.distanceKm) : ""
+      entry?.running?.distanceKm != null
+        ? String(entry.running.distanceKm)
+        : "",
     );
     setRunningDuration(
       entry?.running?.durationMinutes != null
         ? String(entry.running.durationMinutes)
-        : ""
+        : "",
     );
     setRunningNotes(entry?.running?.notes ?? "");
     setYogaMinutesInput(
-      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : ""
+      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : "",
     );
     setOtherExercisesInput(entry?.otherExercises ?? "");
     setShowModal(true);
@@ -1171,12 +1191,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const parsedWeight = weightInput ? Number(weightInput) : null;
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : existing.weight ?? null;
+      : (existing.weight ?? null);
 
     const newBmi =
       weightVal != null
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-        : existing.bmi ?? null;
+        : (existing.bmi ?? null);
 
     // NEW parsed values
     const runningDistanceVal = runningDistance ? Number(runningDistance) : null;
@@ -1396,7 +1416,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   const entry = useMemo(
     () => logs[dateKey] || getEntry(dateKey),
-    [logs, dateKey, getEntry]
+    [logs, dateKey, getEntry],
   );
 
   const dayWeekday = useMemo(() => dayjs(date).format("dddd"), [date]);
@@ -1409,7 +1429,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         right: [],
         finisher: [],
       },
-    [dayWeekday]
+    [dayWeekday],
   );
 
   const totalExercises = useMemo(
@@ -1417,7 +1437,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       (dayPlan.left?.length || 0) +
       (dayPlan.right?.length || 0) +
       (dayPlan.finisher?.length || 0),
-    [dayPlan]
+    [dayPlan],
   );
 
   const completedExercises = useMemo(
@@ -1425,7 +1445,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       (entry.left ?? []).filter((e) => e?.done).length +
       (entry.right ?? []).filter((e) => e?.done).length +
       (entry.finisher ?? []).filter((e) => e?.done).length,
-    [entry]
+    [entry],
   );
 
   const canComplete = useMemo(() => {
@@ -1496,13 +1516,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
   // ============================================
   // Clean, Safe, Tailwind-Compatible Column Component
   // ============================================
-
-  const countDone = (arr) => {
-    if (!Array.isArray(arr)) return 0;
-
-    return arr.filter((item) => (typeof item === "boolean" ? item : item?.done))
-      .length;
-  };
 
   function ExerciseColumn({
     title,
@@ -1884,11 +1897,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 const hasWeight = entry?.weight != null;
                 const isToday = useMemo(
                   () => dayjs(date).isSame(dayjs(), "day"),
-                  [date]
+                  [date],
                 );
                 const isFuture = useMemo(
                   () => dayjs(date).isAfter(dayjs(), "day"),
-                  [date]
+                  [date],
                 );
 
                 if (isFuture) {
@@ -2026,7 +2039,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -2052,7 +2065,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -2131,7 +2144,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 16px)`,
             }}
           >
@@ -2276,9 +2289,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0)
+                                  (dayPlan.finisher?.length || 0),
                               )) *
-                              100
+                              100,
                           )}
                           %
                         </p>
@@ -2301,10 +2314,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0)
+                                  (dayPlan.finisher?.length || 0),
                               )) *
-                              100
-                          )
+                              100,
+                          ),
                         )}%`,
                       }}
                     ></div>
@@ -2368,8 +2381,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
           doneState[dateKey]
             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed opacity-50"
             : allDone
-            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
         }
       `}
                     >
@@ -2420,7 +2433,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                         onClick={() => {
                           if (
                             window.confirm(
-                              "⚠️ Clear this workout? This cannot be undone."
+                              "⚠️ Clear this workout? This cannot be undone.",
                             )
                           ) {
                             deleteWorkout(dateKey);
@@ -3053,7 +3066,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>
+              </div>,
             );
           }
 
@@ -3138,7 +3151,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>
+              </div>,
             );
           }
 
@@ -3177,8 +3190,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                        ? "bg-yellow-500/60"
-                        : "bg-gray-700"
+                          ? "bg-yellow-500/60"
+                          : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -3189,7 +3202,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
       </div>
       {/* Monthly Stats */}
       <div className="mt-4 md:p-3 border-t border-emerald-500/20">
-        <div className="grid grid-cols-3 sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-0">
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-0 mt-2 sm:mt-0">
           {/* This Month - ✅ FIXED */}
           <div className="bg-white/5 rounded-xl p-2">
             <div className="text-[8px] sm:text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
