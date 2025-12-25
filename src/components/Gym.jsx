@@ -2900,7 +2900,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       {/* Reset Modal */}
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
-          <div className="w-[90%] max-w-md rounded-2xl border border-red-500/30 bg-gradient-to-br from-[#2a0a0f] via-[#1a0a0f] to-[#0a0a0f] shadow-[0_25px_60px_rgba(220,38,38,0.4),0_0_80px_rgba(220,38,38,0.2)] p-6">
+          <div className="w-[90%] absolute top-[10rem] max-w-md rounded-2xl border border-red-500/30 bg-gradient-to-br from-[#2a0a0f] via-[#1a0a0f] to-[#0a0a0f] shadow-[0_25px_60px_rgba(220,38,38,0.4),0_0_80px_rgba(220,38,38,0.2)] p-6">
             {/* Icon & Title */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
@@ -2972,7 +2972,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
               {/* Cancel Button */}
               <button
                 onClick={() => {
-                  showResetModal(false);
+                  setShowResetModal(false);
                   showToast("✓ Action cancelled safely", "success");
                 }}
                 className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-br from-slate-700 to-slate-800 text-white border border-slate-600/50 hover:from-slate-600 hover:to-slate-700 transition-all duration-200 active:scale-95"
