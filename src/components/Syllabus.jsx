@@ -4324,7 +4324,7 @@ export default function Syllabus({
 
     const timer = setTimeout(
       () => setShowLastStudied(false),
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000
     );
 
     return () => clearTimeout(timer);
@@ -4340,7 +4340,7 @@ export default function Syllabus({
 
   // ==================== MEMOS ====================
 
-  // ✅ GRAND TOTALS — ALWAYS USE treeRef (NOT dashboardState)
+  // ✅ GRAND TOTALS — derived from syllabus_tree_v2 (single source of truth)
   const grand = useMemo(() => {
     if (!tree) return { total: 0, done: 0, pct: 0 };
     return totalsOf(tree, new WeakSet());
@@ -4356,7 +4356,7 @@ export default function Syllabus({
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q),
+          (it.title || "").toLowerCase().includes(q)
         );
         return items.length ? items : null;
       }
@@ -4398,7 +4398,7 @@ export default function Syllabus({
         };
       });
     },
-    [setDashboardState],
+    [setDashboardState]
   );
 
   // =========================================================
@@ -4424,7 +4424,7 @@ export default function Syllabus({
     // 2️⃣ Clone notes safely
     const newNotes = { ...(nr || {}) };
 
-    // 3️⃣ Cascade through treeRef ONLY
+    // 3️⃣ Cascade through TREE FROM APP STATE (NO REFS)
     const cascade = (node, currentPath) => {
       const currentKey = pathKey(currentPath);
       setMetaForKey(currentKey, date);
@@ -4453,7 +4453,10 @@ export default function Syllabus({
       }
     };
 
-    const subtree = getRefAtPath(treeRef.current, path);
+    // 🔑 READ TREE FROM DASHBOARD STATE
+    const tree = dashboardState?.syllabus_tree_v2;
+    const subtree = tree ? getRefAtPath(tree, path) : null;
+
     if (subtree) cascade(subtree, path);
 
     // 4️⃣ Persist ONLY what changed
@@ -4484,43 +4487,62 @@ export default function Syllabus({
   // 🔥 Mark / Unmark ALL tasks in a section
   // =========================================================
   const setAllAtPath = (path, val) => {
-    const node = getRefAtPath(treeRef.current, path);
+    // 🔑 Always read tree from App-owned state
+    const tree = dashboardState?.syllabus_tree_v2;
+    if (!tree) return;
+
+    // 🧬 Clone the tree so we NEVER mutate state directly
+    const updatedTree = structuredClone(tree);
+
+    // Get the subtree at the given path
+    const node = getRefAtPath(updatedTree, path);
+
+    // Will track the last completed item (for streak / last studied)
     let lastItem = null;
 
+    // 🔁 Recursive helper to mark everything under this node
     function mark(n) {
       if (!n) return;
 
+      // Case 1️⃣: Leaf array (actual syllabus items)
       if (Array.isArray(n)) {
         n.forEach((it) => {
           if (it && typeof it === "object") {
             it.done = val;
             it.completedOn = val ? todayISO() : "";
+
+            // Keep reference to last completed item
             if (val) lastItem = it;
           }
         });
         return;
       }
 
-      if (n && typeof n === "object") {
+      // Case 2️⃣: Nested object (sections / sub-sections)
+      if (typeof n === "object") {
         Object.values(n).forEach(mark);
       }
     }
 
+    // Apply marking logic to the selected subtree
     mark(node);
 
-    // UI refresh
-    forceRender((n) => n + 1);
+    // 🧠 Prepare updates (ONLY what changed)
+    const updates = {
+      syllabus_tree_v2: updatedTree,
+    };
 
-    // Persist ONLY what changed
-    const updates = { syllabus_tree_v2: treeRef.current };
-
+    // 📌 If marking as done, update last studied + streak
     if (val && lastItem) {
       updates.syllabus_lastStudied = `${
         lastItem.title
       } @ ${new Date().toLocaleString("en-IN")}`;
+
+      // Ensure streak has unique days only
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
+    // 🚀 Persist through App.jsx (local + backend handled there)
     updateDashboard(updates);
   };
 
@@ -4528,25 +4550,41 @@ export default function Syllabus({
   // 🔥 Mark / Unmark SINGLE task
   // =========================================================
   const markTask = (path, idx, val) => {
-    const parent = getRefAtPath(treeRef.current, path.slice(0, -1));
+    // 🔑 Always read tree from App-owned state
+    const tree = dashboardState?.syllabus_tree_v2;
+    if (!tree) return;
+
+    // 🧬 Clone tree to avoid mutating state directly
+    const updatedTree = structuredClone(tree);
+
+    // Get parent node of the leaf array
+    const parentPath = path.slice(0, -1);
     const leafKey = path[path.length - 1];
+
+    const parent = getRefAtPath(updatedTree, parentPath);
     const item = parent?.[leafKey]?.[idx];
     if (!item) return;
 
+    // ✅ Update task state immutably (on cloned tree)
     item.done = val;
     item.completedOn = val ? todayISO() : "";
 
-    forceRender((x) => x + 1);
+    // 🧠 Prepare updates (ONLY what changed)
+    const updates = {
+      syllabus_tree_v2: updatedTree,
+    };
 
-    const updates = { syllabus_tree_v2: treeRef.current };
-
+    // 📌 If marking as done, update last studied + streak
     if (val) {
       updates.syllabus_lastStudied = `${
         item.title
       } @ ${new Date().toLocaleString("en-IN")}`;
+
+      // Ensure streak has unique days only
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
+    // 🚀 Persist through App.jsx (local + backend handled there)
     updateDashboard(updates);
   };
 
@@ -4590,58 +4628,76 @@ export default function Syllabus({
         syllabus_notes: updatedNotes,
       });
     },
-    [nr, updateDashboard],
+    [nr, updateDashboard]
   );
 
   /* ======================= EXPORT ======================= */
   function exportProgress() {
+    // 🔑 Always read from App-owned state (single source of truth)
+    const tree = dashboardState?.syllabus_tree_v2;
+    if (!tree) return;
+
+    // 📦 Prepare export payload
     const payload = {
-      syllabus_tree_v2: treeRef.current,
-      syllabus_meta: meta,
-      syllabus_notes: nr,
-      syllabus_streak: Array.from(daySet),
-      syllabus_lastStudied: lastStudied,
+      syllabus_tree_v2: tree,
+      syllabus_meta: meta || {},
+      syllabus_notes: nr || {},
+      syllabus_streak: Array.from(daySet || []),
+      syllabus_lastStudied: lastStudied || "",
     };
 
+    // 🧾 Create a downloadable JSON blob
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
     });
 
+    // ⬇️ Trigger file download in browser
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "syllabus_backup.json";
     a.click();
+
+    // 🧹 Cleanup object URL (good practice)
+    URL.revokeObjectURL(a.href);
   }
 
   /* ======================= IMPORT ======================= */
   function importProgress(e) {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
 
     reader.onload = async (event) => {
       try {
+        // 🧾 Parse uploaded JSON
         const data = JSON.parse(event.target.result);
 
-        // 🔥 Validate minimal shape
-        if (!data.syllabus_tree_v2) {
+        // 🔥 Minimal validation (tree is mandatory)
+        if (
+          !data?.syllabus_tree_v2 ||
+          typeof data.syllabus_tree_v2 !== "object"
+        ) {
           alert("❌ Invalid syllabus file");
           return;
         }
 
-        // Update ref FIRST
-        treeRef.current = structuredClone(data.syllabus_tree_v2);
-        forceRender((v) => v + 1);
+        // 🧬 Clone imported tree to avoid shared references
+        const importedTree = structuredClone(data.syllabus_tree_v2);
 
-        // Save EVERYTHING properly
-        await updateDashboard({
-          syllabus_tree_v2: treeRef.current,
+        // 📦 Prepare full update payload
+        const updates = {
+          syllabus_tree_v2: importedTree,
           syllabus_meta: data.syllabus_meta || {},
           syllabus_notes: data.syllabus_notes || {},
-          syllabus_streak: data.syllabus_streak || [],
+          syllabus_streak: Array.isArray(data.syllabus_streak)
+            ? data.syllabus_streak
+            : [],
           syllabus_lastStudied: data.syllabus_lastStudied || "",
-        });
+        };
+
+        // 🚀 Persist via App.jsx (local + backend handled there)
+        updateDashboard(updates);
 
         alert("✅ Syllabus imported successfully");
       } catch (err) {
@@ -4650,23 +4706,35 @@ export default function Syllabus({
       }
     };
 
+    // 📂 Read file as text
     reader.readAsText(file);
+
+    // 🔁 Reset input so the same file can be re-imported if needed
+    e.target.value = "";
   }
 
   /* ======================= GENERATE SMART PLAN ======================= */
   const generateSmartPlan = (availableMins) => {
     const leaves = [];
 
+    // 🔑 Always read syllabus tree from App-owned state
+    const tree = dashboardState?.syllabus_tree_v2;
+    if (!tree) return { plan: [], remaining: availableMins };
+
+    // 🔁 Walk the syllabus tree and collect unfinished leaf tasks
     function walk(node, path = []) {
+      // Case 1️⃣: Leaf array (actual tasks)
       if (Array.isArray(node)) {
         node.forEach((it, idx) => {
           if (!it.done) {
             const itemK = itemKey(path, idx);
-            const noteData = nr[itemK];
+            const noteData = nr?.[itemK];
 
             leaves.push({
               title: it.title,
+              // Use deadline from notes if available
               deadline: noteData?.deadline || null,
+              // Default estimate in hours (can be improved later)
               estimate: 0.5,
             });
           }
@@ -4674,13 +4742,18 @@ export default function Syllabus({
         return;
       }
 
-      for (const [key, v] of Object.entries(node || {})) {
-        walk(v, [...path, key]);
+      // Case 2️⃣: Nested object (sections / sub-sections)
+      if (node && typeof node === "object") {
+        for (const [key, v] of Object.entries(node)) {
+          walk(v, [...path, key]);
+        }
       }
     }
 
-    walk(treeRef.current, []);
+    // Start walking from root of syllabus
+    walk(tree, []);
 
+    // ⏳ Sort tasks by earliest deadline first
     const sorted = leaves.sort((a, b) => {
       const da = a.deadline ? Date.parse(a.deadline) : Infinity;
       const db = b.deadline ? Date.parse(b.deadline) : Infinity;
@@ -4690,6 +4763,7 @@ export default function Syllabus({
     const plan = [];
     let remaining = availableMins;
 
+    // 🧠 Greedy fill based on available time
     for (const t of sorted) {
       const mins = Math.round(t.estimate * 60);
       if (remaining >= mins) {
@@ -4879,21 +4953,19 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                 {/* Reset */}
                 <button
                   onClick={async () => {
+                    // ⚠️ Strong confirmation – irreversible action
                     if (
                       !confirm(
-                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
+                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
                       )
                     )
                       return;
 
+                    // 🧬 Fresh copy of the original syllabus tree
                     const resetTree = structuredClone(TREE);
 
-                    // Clear refs + UI immediately
-                    treeRef.current = resetTree;
-                    forceRender((v) => v + 1);
-
-                    // Proper single-source update
-                    await updateDashboard({
+                    // 🚀 Single source of truth update (App.jsx handles persistence)
+                    updateDashboard({
                       syllabus_tree_v2: resetTree,
                       syllabus_meta: {},
                       syllabus_notes: {},
@@ -4904,14 +4976,12 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                     alert("✅ RESET COMPLETE");
                   }}
                   className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
-bg-gradient-to-r from-red-600 to-red-500
-text-white border border-red-400/80
-shadow-[0_0_10px_rgba(248,113,113,0.7)]
-transition
-hover:brightness-110 hover:-translate-y-[1px] hover:shadow-[0_0_18px_rgba(248,113,113,0.95)]
-active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
-
-  "
+    bg-gradient-to-r from-red-600 to-red-500
+    text-white border border-red-400/80
+    shadow-[0_0_10px_rgba(248,113,113,0.7)]
+    transition
+    hover:brightness-110 hover:-translate-y-[1px] hover:shadow-[0_0_18px_rgba(248,113,113,0.95)]
+    active:translate-y-[1px] active:scale-[0.97] active:shadow-sm"
                 >
                   Reset
                 </button>
@@ -4975,10 +5045,10 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                 grand.pct < 25
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-300 shadow-[0_0_6px_#22c55e]"
                   : grand.pct < 50
-                    ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
-                    : grand.pct < 75
-                      ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
-                      : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
+                  ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
+                  : grand.pct < 75
+                  ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
+                  : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
               }
             `}
                   style={{
@@ -6021,8 +6091,8 @@ function SubNode({
                 deadlineStatus.type === "ontime"
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                   : deadlineStatus.type === "late"
-                    ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
-                    : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+                  ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                  : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
               }`}
             >
               {deadlineStatus.label}
@@ -6075,7 +6145,6 @@ function SubNode({
           </div>
         </div>
       </div>
-
       {showDatePicker &&
         createPortal(
           <div
@@ -6096,7 +6165,7 @@ function SubNode({
               inline
             />
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6535,7 +6604,7 @@ function SmartSuggest({ generateSmartPlan, tree }) {
                 key={`${item.title}-${item.deadline || "no-deadline"}`} // ✅ stable key
                 className={`
                   group relative rounded-xl border p-3 text-sm
-                  transition-all duration-300
+                  transition-all duration-300 overflow-hidden
                   ${item.done ? "opacity-50 line-through" : "bg-white/5"}
                   ${urgency.border}
                 `}
