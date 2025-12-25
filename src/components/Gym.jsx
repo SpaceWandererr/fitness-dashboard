@@ -892,7 +892,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote...",
+    "Fetching your motivational quote..."
   );
 
   // Modal inputs + editing states
@@ -957,13 +957,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
-        : "",
+        : ""
     );
 
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
-        : "",
+        : ""
     );
 
     // Mark as loaded after first run
@@ -1012,7 +1012,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
+            "Recovery is just as important as training. Rest, recharge, and come back stronger."
           );
         });
     }
@@ -1058,7 +1058,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         yogaMinutes: existing?.yogaMinutes ?? null,
       };
     },
-    [logs],
+    [logs]
   );
 
   /* -------------------- Toggle single exercise (click in UI) -------------------- */
@@ -1159,19 +1159,17 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
 
     setRunningDistance(
-      entry?.running?.distanceKm != null
-        ? String(entry.running.distanceKm)
-        : "",
+      entry?.running?.distanceKm != null ? String(entry.running.distanceKm) : ""
     );
     setRunningDuration(
       entry?.running?.durationMinutes != null
         ? String(entry.running.durationMinutes)
-        : "",
+        : ""
     );
     setRunningMood(entry?.running?.mood ?? "");
     setRunningNotes(entry?.running?.notes ?? "");
     setYogaMinutesInput(
-      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : "",
+      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : ""
     );
     setOtherExercisesInput(entry?.otherExercises ?? "");
     setShowModal(true);
@@ -1382,27 +1380,23 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   /* -------------------- Reset full progress -------------------- */
   const resetProgress = async () => {
+    // ⚠️ Strong confirmation
     const confirmReset = window.confirm("Reset ALL gym data?");
     if (!confirmReset) return;
 
-    const outgoing = {
+    // 🔑 SINGLE SOURCE OF TRUTH RESET
+    const updates = {
       wd_gym_logs: {},
       wd_done: {},
       wd_goals: {
         targetWeight: "",
         currentWeight: "",
       },
+      wd_weight_overrides: {}, // include if you use overrides
     };
 
-    // 🔑 SINGLE SOURCE OF TRUTH
-    await updateDashboard(outgoing);
-
-    // local UI reset (instant feedback)
-    setLogs((prev) => ({}));
-    setDoneState((prev) => ({}));
-    setCurrWeight("");
-    setTargetWeight("");
-    setSundayQuote("Fetching your motivational quote...");
+    // 🚀 App.jsx handles localStorage + backend sync
+    updateDashboard(updates);
 
     alert("FULL RESET DONE ✅");
   };
@@ -1412,7 +1406,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   const entry = useMemo(
     () => logs[dateKey] || getEntry(dateKey),
-    [logs, dateKey, getEntry],
+    [logs, dateKey, getEntry]
   );
 
   const dayWeekday = useMemo(() => dayjs(date).format("dddd"), [date]);
@@ -1425,7 +1419,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         right: [],
         finisher: [],
       },
-    [dayWeekday],
+    [dayWeekday]
   );
 
   const totalExercises = useMemo(
@@ -1433,7 +1427,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       (dayPlan.left?.length || 0) +
       (dayPlan.right?.length || 0) +
       (dayPlan.finisher?.length || 0),
-    [dayPlan],
+    [dayPlan]
   );
 
   const completedExercises = useMemo(
@@ -1441,7 +1435,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       (entry.left ?? []).filter((e) => e?.done).length +
       (entry.right ?? []).filter((e) => e?.done).length +
       (entry.finisher ?? []).filter((e) => e?.done).length,
-    [entry],
+    [entry]
   );
 
   const canComplete = useMemo(() => {
@@ -3058,7 +3052,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>,
+              </div>
             );
           }
 
@@ -3143,7 +3137,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>,
+              </div>
             );
           }
 
@@ -3182,8 +3176,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                          ? "bg-yellow-500/60"
-                          : "bg-gray-700"
+                        ? "bg-yellow-500/60"
+                        : "bg-gray-700"
                     }`}
                   />
                 </div>
@@ -3193,10 +3187,10 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
         </div>
       </div>
       {/* Monthly Stats */}
-      <div className="mt-4 md:p-3 border-t border-emerald-500/20">
-        <div className="grid grid-cols-3 sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-0 mt-2 sm:mt-0">
+      <div className="mt-4 md:p-3 border-t border-emerald-500/20  ">
+        <div className="md:h-[7rem] grid grid-cols-3 align-middle sm:grid-cols-3 gap-1.5 sm:gap-2 text-center pb-0 mt-2 sm:mt-0">
           {/* This Month - ✅ FIXED */}
-          <div className="bg-white/5 rounded-xl p-2">
+          <div className="bg-white/5 rounded-xl p-2 flex flex-col justify-center">
             <div className="text-[8px] sm:text-[9px] text-emerald-200/60 uppercase tracking-wide font-semibold mb-0.5">
               This Month
             </div>
@@ -3210,7 +3204,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           </div>
 
           {/* Streak - ✅ FIXED */}
-          <div className="bg-white/5 rounded-xl p-2">
+          <div className="bg-white/5 rounded-xl p-2 flex flex-col justify-center">
             <div className="text-[9px] text-cyan-200/60 uppercase tracking-wide font-semibold mb-0.5">
               Streak
             </div>
@@ -3221,7 +3215,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
           </div>
 
           {/* Monthly Goal - ✅ FIXED */}
-          <div className="bg-white/5 rounded-xl p-2">
+          <div className="bg-white/5 rounded-xl p-2 flex flex-col justify-center">
             <div className="text-[9px] text-teal-200/60 uppercase tracking-wide font-semibold mb-0.5">
               Monthly Goal
             </div>
