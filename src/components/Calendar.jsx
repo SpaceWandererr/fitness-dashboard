@@ -256,7 +256,7 @@ export default function CalendarFullDarkUpdated({
   async function resetGymProgress() {
     if (
       !confirm(
-        "Reset all gym logs and wd_done calendar marks? This cannot be undone.",
+        "Reset all gym logs and wd_done calendar marks? This cannot be undone."
       )
     )
       return;
@@ -799,13 +799,7 @@ export default function CalendarFullDarkUpdated({
       <div className="lg:col-span-3">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Calendar Section */}
-          <div
-            className=" rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3
-               w-full md:h-[590px]
-               bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-               shadow-2xl"
-          >
+          <div className=" lg:col-span-1 rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3 h-[584px] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] shadow-2xl overflow-hidden flex flex-col">
             {/* Compact Header */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
               {/* Month Navigation */}
@@ -1204,448 +1198,411 @@ export default function CalendarFullDarkUpdated({
             </div>
           </div>
 
-          {/* Topics Panel */}
-          <div
-            className="rounded-2xl border border-[#2F6B60]/30 p-3 space-y-3
-               w-full md:h-[590px]
-               bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F]
-               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
-          >
-            <div className="text-sm text-white font-bold mb-2">
-              {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
-            </div>
+          {/*Day Summary & Gym*/}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Day Summary Header - Shared for both panels */}
+            <div className="rounded-2xl border border-[#2F6B60]/30 p-4 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
+              {/* Stats Grid */}
+              <div className="rounded-2xl p-3 border bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] border-green-600/40 dark:border-gray-700 transition-colors">
+                <h4 className="font-semibold text-[#00e5ff] mb-3 flex justify-between items-center">
+                  Day Summary
+                  <div className="text-sm font-normal text-[#9FF2E8]/70 border-l-2 border-[#00e5ff]/40 pl-2">
+                    {dayjs(selectedDate).format("dddd, DD MMM YYYY")}
+                  </div>
+                </h4>
 
-            {/* Selected date stats */}
-            <div
-              className="rounded-2xl p-2 border
-         bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
-         dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] 
-          border-green-600/40 dark:border-gray-700 transition-colors
-         "
-            >
-              <h4 className="font-semibold text-[#00e5ff] mb-2">Day Summary</h4>
-              <div className="grid grid-cols-5 text-center mt-0 min-h-[20px]">
-                <div>
-                  <p className="text-[#38bdf8] font-semibold">
-                    {(studyMap[selectedDate] || []).length}
-                  </p>
-                  <p className="text-xs opacity-70">Topics</p>
-                </div>
-                <div>
-                  <p className="text-[#22c55e] font-semibold">
-                    {
-                      combinedExercisesForDateWrapper(selectedDate, gymLogs)
-                        .length
-                    }
-                  </p>
-                  <p className="text-xs opacity-70">Exercises</p>
-                </div>
-                <div>
-                  <p className="text-[#facc15] font-semibold">
-                    {selectedGym.calories || "—"}
-                  </p>
-                  <p className="text-xs opacity-70">Calories</p>
-                </div>
-                <div>
-                  <p className="text-[#f472b6] font-semibold">
-                    {selectedGym.weight || "—"}
-                  </p>
-                  <p className="text-xs opacity-70">Weight</p>
-                </div>
-                <div>
-                  <p className="text-[#34d399] font-semibold">
-                    {selectedGym.bmi || "—"}
-                  </p>
-                  <p className="text-xs opacity-70">BMI</p>
+                <div className="grid grid-cols-5 text-center gap-2">
+                  <div>
+                    <p className="text-[#38bdf8] font-semibold text-lg">
+                      {(studyMap[selectedDate] || []).length}
+                    </p>
+                    <p className="text-xs opacity-70">Topics</p>
+                  </div>
+                  <div>
+                    <p className="text-[#22c55e] font-semibold text-lg">
+                      {
+                        combinedExercisesForDateWrapper(selectedDate, gymLogs)
+                          .length
+                      }
+                    </p>
+                    <p className="text-xs opacity-70">Exercises</p>
+                  </div>
+                  <div>
+                    <p className="text-[#facc15] font-semibold text-lg">
+                      {selectedGym.calories || "—"}
+                    </p>
+                    <p className="text-xs opacity-70">Calories</p>
+                  </div>
+                  <div>
+                    <p className="text-[#f472b6] font-semibold text-lg">
+                      {selectedGym.weight || "—"}
+                    </p>
+                    <p className="text-xs opacity-70">Weight</p>
+                  </div>
+                  <div>
+                    <p className="text-[#34d399] font-semibold text-lg">
+                      {selectedGym.bmi || "—"}
+                    </p>
+                    <p className="text-xs opacity-70">BMI</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Topics studied - Sticky Header & Footer */}
-            <div
-              className="rounded-xl border border-green-600/40 dark:border-gray-700
-          bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]      
-          dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]        
-          transition-all duration-300
-          md:h-[430px]
-          flex flex-col overflow-hidden"
-            >
-              {/* Sticky Header */}
-              <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-green-400 flex items-center gap-2">
-                    📚 Topics Studied
-                  </h4>
-                  {selectedStudy.length > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
-                        {selectedStudy.length} topics
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-[#10b981]/20 border border-[#10b981]/30 text-[10px] text-[#10b981] font-semibold">
-                        ✓ Complete
-                      </span>
+            {/* Two Column Layout: Topics Studied | Gym Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Topics Studied Panel */}
+              <div className="rounded-xl border border-green-600/40 dark:border-gray-700 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] transition-all duration-300 h-[430px] flex flex-col overflow-hidden">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-green-400 flex items-center gap-2">
+                      📚 Topics Studied
+                    </h4>
+                    {selectedStudy.length > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
+                          {selectedStudy.length} topics
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-[#10b981]/20 border border-[#10b981]/30 text-[10px] text-[#10b981] font-semibold">
+                          ✓ Complete
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto px-3 pt-2 custom-scrollbar-green">
+                  {selectedStudy.length > 0 ? (
+                    <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] pb-2">
+                      {selectedStudy.map((t, i) => (
+                        <li key={i}>{t}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
+                        <span className="text-2xl opacity-50">📖</span>
+                      </div>
+                      <div className="text-sm text-[#9FF2E8]/50">
+                        No topics studied
+                      </div>
+                      <div className="text-xs text-[#9FF2E8]/30 mt-1">
+                        Add study topics for{" "}
+                        {selectedDate
+                          ? dayjs(selectedDate).format("MMM DD")
+                          : "this day"}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Scrollable Content - Only Topics */}
-              <div className="flex-1 overflow-y-auto px-3 pt-2 custom-scrollbar-green">
-                {selectedStudy.length > 0 ? (
-                  <ul className="list-disc list-inside text-sm space-y-1 text-[#bbf7d0] pb-2">
-                    {selectedStudy.map((t, i) => (
-                      <li key={i}>{t}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
-                      <span className="text-2xl opacity-50">📖</span>
+                {/* Sticky Footer */}
+                {selectedStudy.length > 0 && (
+                  <div className="sticky bottom-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] px-3 pb-3 pt-2 border-t border-[#2F6B60]/20">
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                      <div className="flex items-center justify-between bg-gradient-to-r from-[#4ade80]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#4ade80]/20">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px]">✓</span>
+                          <span className="text-[#9FF2E8]/60 text-[10px]">
+                            Done
+                          </span>
+                        </div>
+                        <span className="font-bold text-[#4ade80] text-sm">
+                          {selectedStudy.length}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between bg-gradient-to-r from-[#60A5FA]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#60A5FA]/20">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px]">📊</span>
+                          <span className="text-[#9FF2E8]/60 text-[10px]">
+                            Progress
+                          </span>
+                        </div>
+                        <span className="font-bold text-[#60A5FA] text-sm">
+                          {Math.round((selectedStudy.length / 621) * 100)}%
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-sm text-[#9FF2E8]/50">
-                      No topics studied
-                    </div>
-                    <div className="text-xs text-[#9FF2E8]/30 mt-1">
-                      Add study topics for{" "}
-                      {selectedDate
-                        ? dayjs(selectedDate).format("MMM DD")
-                        : "this day"}
-                    </div>
+
+                    {/* Study Categories */}
+                    {getStudyCategories(selectedStudy).length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {getStudyCategories(selectedStudy).map(
+                          (category, idx) => (
+                            <span
+                              key={idx}
+                              className="px-1.5 py-0.5 rounded text-[10px] bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30"
+                            >
+                              {category}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Sticky Footer - Stats & Categories */}
-              {selectedStudy.length > 0 && (
-                <div className="sticky bottom-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] px-3 pb-3 pt-2 border-t border-[#2F6B60]/20">
-                  <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                    <div className="flex items-center justify-between bg-gradient-to-r from-[#4ade80]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#4ade80]/20">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px]">✓</span>
-                        <span className="text-[#9FF2E8]/60 text-[10px]">
-                          Done
+              {/* Gym Summary Panel */}
+              <div className="rounded-xl border border-green-600/40 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] h-[430px] flex flex-col overflow-hidden">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-10 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-[#ff6b6b] flex items-center gap-2">
+                      🏋️ Gym Summary
+                    </h4>
+                    {gymLogs[selectedDate] && (
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md bg-[#60A5FA]/20 border border-[#60A5FA]/30 text-[10px] text-[#60A5FA] font-semibold">
+                          {combinedExercisesForDateWrapper(selectedDate).length}{" "}
+                          exercises
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
+                          ✓ Complete
                         </span>
                       </div>
-                      <span className="font-bold text-[#4ade80] text-sm">
-                        {selectedStudy.length}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between bg-gradient-to-r from-[#60A5FA]/10 to-transparent backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-[#60A5FA]/20">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px]">📊</span>
-                        <span className="text-[#9FF2E8]/60 text-[10px]">
-                          Progress
-                        </span>
-                      </div>
-                      <span className="font-bold text-[#60A5FA] text-sm">
-                        {Math.round((selectedStudy.length / 621) * 100)}%
-                      </span>
-                    </div>
+                    )}
                   </div>
+                </div>
 
-                  {/* Study Categories */}
-                  {getStudyCategories(selectedStudy).length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {getStudyCategories(selectedStudy).map(
-                        (category, idx) => (
-                          <span
-                            key={idx}
-                            className="px-1.5 py-0.5 rounded text-[10px] bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30"
-                          >
-                            {category}
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-3 pt-2 custom-scrollbar">
+                  {gymLogs[selectedDate] ? (
+                    <div className="space-y-3">
+                      {/* Exercise List */}
+                      <div className="text-sm space-y-1 text-[#e2e8f0]">
+                        {renderExercises(selectedDate, gymLogs)}
+                      </div>
+
+                      {/* Workout Analytics */}
+                      <div className="pt-3 border-t border-[#2F6B60]/30">
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
+                            <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
+                              Total Sets
+                            </div>
+                            <div className="text-lg font-bold text-[#60A5FA]">
+                              {combinedExercisesForDateWrapper(
+                                selectedDate
+                              ).reduce((sum, ex) => {
+                                const sets = ex.match(/(\d+)\s*×/);
+                                return sum + (sets ? parseInt(sets[1]) : 0);
+                              }, 0)}
+                            </div>
+                          </div>
+                          <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
+                            <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
+                              Total Reps
+                            </div>
+                            <div className="text-lg font-bold text-[#4ade80]">
+                              {combinedExercisesForDateWrapper(
+                                selectedDate
+                              ).reduce((sum, ex) => {
+                                const reps = ex.match(/×\s*(\d+)/);
+                                return sum + (reps ? parseInt(reps[1]) : 0);
+                              }, 0)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Target Muscle Groups */}
+                        <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
+                          <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
+                            Target Muscles
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {getTargetMuscles(selectedDate).map(
+                              (muscle, idx) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 rounded-md bg-[#ff6b6b]/20 border border-[#ff6b6b]/30 text-[10px] text-[#ff6b6b] font-medium"
+                                >
+                                  {muscle}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Today's Gym Summary Details */}
+                      <div className="bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/10 to-[#0a3832]/20 border border-emerald-400/30 rounded-xl p-3 text-[#E8FFFA]">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] uppercase tracking-wider text-emerald-200/80 font-semibold">
+                            Today's Details
                           </span>
-                        )
-                      )}
+                          <span
+                            className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${
+                              gymLogs[selectedDate]?.done
+                                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-500/40"
+                                : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-200 border border-gray-600/40"
+                            }`}
+                          >
+                            {gymLogs[selectedDate]?.done
+                              ? "✅ Done"
+                              : "⭕ Not Done"}
+                          </span>
+                        </div>
+
+                        {/* Metrics Grid */}
+
+                        {/* Extra Activity - Redesigned */}
+                        <div className="mt-2 bg-gradient-to-br from-[#0F766E]/15 via-[#0c4a42]/10 to-[#0a3832]/15 border border-emerald-400/20 rounded-lg p-2">
+                          <div className="text-[8px] text-emerald-200/80 uppercase tracking-wider font-bold mb-1.5 flex items-center gap-1">
+                            <span className="text-xs">⚡</span>
+                            Extra Activity
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Run Card */}
+                            <div className="bg-black/20 rounded-md p-1.5 border border-emerald-500/20">
+                              <div className="text-[8px] text-emerald-300/70 font-semibold mb-0.5 flex items-center gap-0.5">
+                                <span>🏃</span> Run
+                              </div>
+                              <div className="text-[9px] text-emerald-100 font-medium">
+                                {gymLogs[selectedDate].running?.distanceKm !=
+                                  null ||
+                                gymLogs[selectedDate].running
+                                  ?.durationMinutes != null ? (
+                                  <div className="flex flex-wrap gap-x-1">
+                                    {gymLogs[selectedDate].running
+                                      ?.distanceKm != null && (
+                                      <span className="bg-emerald-500/10 px-1 py-0.5 rounded">
+                                        {
+                                          gymLogs[selectedDate].running
+                                            .distanceKm
+                                        }
+                                        km
+                                      </span>
+                                    )}
+                                    {gymLogs[selectedDate].running
+                                      ?.durationMinutes != null && (
+                                      <span className="bg-emerald-500/10 px-1 py-0.5 rounded">
+                                        {
+                                          gymLogs[selectedDate].running
+                                            .durationMinutes
+                                        }
+                                        m
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-emerald-300/40">—</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Yoga Card */}
+                            <div className="bg-black/20 rounded-md p-1.5 border border-teal-500/20">
+                              <div className="text-[8px] text-teal-300/70 font-semibold mb-0.5 flex items-center gap-0.5">
+                                <span>🧘</span> Yoga
+                              </div>
+                              <div className="text-[9px] text-teal-100 font-medium">
+                                {gymLogs[selectedDate].yogaMinutes != null ? (
+                                  <span className="bg-teal-500/10 px-1 py-0.5 rounded inline-block">
+                                    {gymLogs[selectedDate].yogaMinutes}m
+                                  </span>
+                                ) : (
+                                  <span className="text-teal-300/40">—</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Felt Card */}
+                            <div className="bg-black/20 rounded-md p-1.5 border border-emerald-500/20">
+                              <div className="text-[8px] text-emerald-300/70 font-semibold mb-0.5 flex items-center gap-0.5">
+                                <span>💭</span> Felt
+                              </div>
+                              <div className="text-[9px] text-emerald-100/90 font-medium truncate">
+                                {gymLogs[selectedDate].running?.mood && (
+                                  <span className="text-sm mr-1">
+                                    {gymLogs[selectedDate].running.mood}
+                                  </span>
+                                )}
+                                {gymLogs[selectedDate].running?.notes && (
+                                  <span className="text-[8px] italic">
+                                    {gymLogs[selectedDate].running.notes}
+                                  </span>
+                                )}
+                                {!gymLogs[selectedDate].running?.mood &&
+                                  !gymLogs[selectedDate].running?.notes && (
+                                    <span className="text-emerald-300/40">
+                                      —
+                                    </span>
+                                  )}
+                              </div>
+                            </div>
+
+                            {/* Other Card */}
+                            <div className="bg-black/20 rounded-md p-1.5 border border-emerald-500/20">
+                              <div className="text-[8px] text-emerald-300/70 font-semibold mb-0.5 flex items-center gap-0.5">
+                                <span>➕</span> Other
+                              </div>
+                              <div className="text-[9px] text-emerald-100/90 font-medium truncate">
+                                {gymLogs[selectedDate].otherExercises ? (
+                                  <span className="text-[8px]">
+                                    {gymLogs[selectedDate].otherExercises}
+                                  </span>
+                                ) : (
+                                  <span className="text-emerald-300/40">—</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
+                        <span className="text-2xl opacity-50">💪</span>
+                      </div>
+                      <div className="text-sm text-[#9FF2E8]/50">
+                        No workout logged
+                      </div>
+                      <div className="text-xs text-[#9FF2E8]/30 mt-1">
+                        Track your exercises for{" "}
+                        {selectedDate
+                          ? dayjs(selectedDate).format("MMM DD")
+                          : "this day"}
+                      </div>
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Custom Scrollbar - Green theme */}
+            {/* Custom Scrollbar Styles */}
             <style jsx>{`
-              .custom-scrollbar-green::-webkit-scrollbar {
+              .custom-scrollbar-green::-webkit-scrollbar,
+              .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
               }
               .custom-scrollbar-green::-webkit-scrollbar-track {
                 background: rgba(16, 185, 129, 0.1);
                 border-radius: 10px;
               }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: rgba(47, 107, 96, 0.1);
+                border-radius: 10px;
+              }
               .custom-scrollbar-green::-webkit-scrollbar-thumb {
                 background: rgba(74, 222, 128, 0.4);
+                border-radius: 10px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(63, 167, 150, 0.4);
                 border-radius: 10px;
               }
               .custom-scrollbar-green::-webkit-scrollbar-thumb:hover {
                 background: rgba(74, 222, 128, 0.6);
               }
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: rgba(63, 167, 150, 0.6);
+              }
             `}</style>
-          </div>
-
-          {/* Gym Exercises - Sticky Header */}
-          <div
-            className="relative rounded-2xl border border-green-600/40
-               p-3 space-y-3 w-full md:h-[590px]
-               bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F]
-               dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]"
-          >
-            {/* Sticky Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] p-3 pb-2 border-b border-[#2F6B60]/20">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-[#ff6b6b] flex items-center gap-2">
-                  🏋️ Gym Summary
-                </h4>
-                {gymLogs[selectedDate] && (
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-[#60A5FA]/20 border border-[#60A5FA]/30 text-[10px] text-[#60A5FA] font-semibold">
-                      {combinedExercisesForDateWrapper(selectedDate).length}{" "}
-                      exercises
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-[#4ade80]/20 border border-[#4ade80]/30 text-[10px] text-[#4ade80] font-semibold">
-                      ✓ Complete
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-3 pt-2 custom-scrollbar">
-              {gymLogs[selectedDate] ? (
-                <div className="space-y-2">
-                  {/* Exercise List */}
-                  <div className="text-sm space-y-1 text-[#e2e8f0]">
-                    {renderExercises(selectedDate, gymLogs)}
-                  </div>
-
-                  {/* Workout Analytics */}
-                  <div className="mt-3 pt-3 border-t border-[#2F6B60]/30">
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Total Sets */}
-                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
-                        <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
-                          Total Sets
-                        </div>
-                        <div className="text-lg font-bold text-[#60A5FA]">
-                          {combinedExercisesForDateWrapper(selectedDate).reduce(
-                            (sum, ex) => {
-                              const sets = ex.match(/(\d+)\s*×/);
-                              return sum + (sets ? parseInt(sets[1]) : 0);
-                            },
-                            0
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Total Reps */}
-                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
-                        <div className="text-[10px] text-[#9FF2E8]/50 mb-1">
-                          Total Reps
-                        </div>
-                        <div className="text-lg font-bold text-[#4ade80]">
-                          {combinedExercisesForDateWrapper(selectedDate).reduce(
-                            (sum, ex) => {
-                              const reps = ex.match(/×\s*(\d+)/);
-                              return sum + (reps ? parseInt(reps[1]) : 0);
-                            },
-                            0
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Target Muscle Groups */}
-                    <div className="mt-2 bg-black/20 backdrop-blur-sm rounded-lg p-2 border border-[#2F6B60]/20">
-                      <div className="text-[10px] text-[#9FF2E8]/50 mb-1.5">
-                        Target Muscles
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {getTargetMuscles(selectedDate).map((muscle, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-0.5 rounded-md bg-[#ff6b6b]/20 border border-[#ff6b6b]/30 text-[10px] text-[#ff6b6b] font-medium"
-                          >
-                            {muscle}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#2F6B60]/20 flex items-center justify-center mb-2">
-                    <span className="text-2xl opacity-50">💪</span>
-                  </div>
-                  <div className="text-sm text-[#9FF2E8]/50">
-                    No workout logged
-                  </div>
-                  <div className="text-xs text-[#9FF2E8]/30 mt-1">
-                    Track your exercises for{" "}
-                    {selectedDate
-                      ? dayjs(selectedDate).format("MMM DD")
-                      : "this day"}
-                  </div>
-                </div>
-              )}
-
-              {/* 🔹 Selected Day Gym Summary */}
-              <div className="mt-4 bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/10 to-[#0a3832]/20 border border-emerald-400/30 rounded-xl p-3 sm:p-4 text-[#E8FFFA]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] uppercase tracking-wider text-emerald-200/80 font-semibold">
-                    Today&apos;s Gym Summary
-                  </span>
-                  <span
-                    className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${
-                      gymLogs[selectedDate]?.done
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-500/40"
-                        : "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-200 border border-gray-600/40"
-                    }`}
-                  >
-                    {gymLogs[selectedDate]?.done ? "✅ Done" : "⭕ Not Done"}
-                  </span>
-                </div>
-
-                {gymLogs[selectedDate] ? (
-                  <>
-                    {/* Top metrics row */}
-                    <div className="grid grid-cols-3 gap-2 text-[11px] sm:text-xs mb-2">
-                      <div className="bg-black/20 rounded-lg px-2 py-1.5 border border-orange-400/30">
-                        <div className="text-[9px] text-orange-200/70 uppercase tracking-wide">
-                          Calories
-                        </div>
-                        <div className="text-sm font-semibold text-orange-100">
-                          {gymLogs[selectedDate].calories ?? "—"}{" "}
-                          <span className="text-[10px] text-orange-200/70">
-                            kcal
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-black/20 rounded-lg px-2 py-1.5 border border-cyan-400/30">
-                        <div className="text-[9px] text-cyan-200/70 uppercase tracking-wide">
-                          Weight
-                        </div>
-                        <div className="text-sm font-semibold text-cyan-100">
-                          {gymLogs[selectedDate].weight ?? "—"}{" "}
-                          <span className="text-[10px] text-cyan-200/70">
-                            kg
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-black/20 rounded-lg px-2 py-1.5 border border-purple-400/30">
-                        <div className="text-[9px] text-purple-200/70 uppercase tracking-wide">
-                          BMI
-                        </div>
-                        <div className="text-sm font-semibold text-purple-100">
-                          {gymLogs[selectedDate].bmi ?? "—"}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Extra activity row: Run | Yoga | Felt | Other */}
-                    <div className="mt-1">
-                      <div className="text-[9px] text-emerald-200/70 uppercase tracking-wide font-semibold mb-1">
-                        Extra Activity
-                      </div>
-                      <div className="grid grid-cols-4 gap-x-3 gap-y-1 text-[11px] sm:text-xs">
-                        {/* Labels */}
-                        <div className="text-emerald-200/80 font-semibold">
-                          Run
-                        </div>
-                        <div className="text-teal-200/80 font-semibold">
-                          Yoga
-                        </div>
-                        <div className="text-emerald-200/80 font-semibold">
-                          Felt
-                        </div>
-                        <div className="text-emerald-200/80 font-semibold text-right">
-                          Other
-                        </div>
-
-                        {/* Values */}
-                        <div className="text-emerald-100">
-                          {gymLogs[selectedDate].running?.distanceKm != null ||
-                          gymLogs[selectedDate].running?.durationMinutes !=
-                            null ? (
-                            <>
-                              {gymLogs[selectedDate].running?.distanceKm !=
-                                null && (
-                                <span>
-                                  {gymLogs[selectedDate].running.distanceKm} km
-                                </span>
-                              )}
-                              {gymLogs[selectedDate].running?.durationMinutes !=
-                                null && (
-                                <span>
-                                  {gymLogs[selectedDate].running?.distanceKm !=
-                                  null
-                                    ? " · "
-                                    : ""}
-                                  {
-                                    gymLogs[selectedDate].running
-                                      .durationMinutes
-                                  }{" "}
-                                  min
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-emerald-300/50">—</span>
-                          )}
-                        </div>
-
-                        <div className="text-teal-100">
-                          {gymLogs[selectedDate].yogaMinutes != null ? (
-                            <>{gymLogs[selectedDate].yogaMinutes} min</>
-                          ) : (
-                            <span className="text-teal-300/50">—</span>
-                          )}
-                        </div>
-
-                        <div className="text-emerald-100/90 truncate">
-                          {gymLogs[selectedDate].mood || "🙂"}{" "}
-                          {gymLogs[selectedDate].running?.notes &&
-                          !["😄", "🙂", "😐", "😣", "😴"].includes(
-                            gymLogs[selectedDate].running.notes
-                          ) ? (
-                            <span className="ml-1">
-                              {gymLogs[selectedDate].running.notes}
-                            </span>
-                          ) : null}
-                        </div>
-
-                        <div className="text-emerald-100/90 text-right truncate">
-                          {gymLogs[selectedDate].otherExercises || "—"}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-[11px] text-emerald-200/70 italic">
-                    No gym data logged for this day.
-                  </div>
-                )}
-              </div>
-
-              {/* Custom Scrollbar Styles */}
-              <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                  width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                  background: rgba(47, 107, 96, 0.1);
-                  border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                  background: rgba(63, 167, 150, 0.4);
-                  border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                  background: rgba(63, 167, 150, 0.6);
-                }
-              `}</style>
-            </div>
           </div>
         </div>
       </div>

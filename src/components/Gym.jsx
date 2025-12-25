@@ -438,7 +438,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           </span>
                           <span className="break-words">{ex}</span>
                         </div>
-                      ) : null,
+                      ) : null
                     )}
                   </div>
                 ) : (
@@ -516,22 +516,14 @@ function DailySummaryMerged({ date, logs, mode }) {
                       <div className="text-emerald-200/80 font-semibold mb-0.5">
                         Felt
                       </div>
-                      <div className="text-emerald-100/90 line-clamp-2 break-words">
-                        {entry?.running?.notes || entry?.mood ? (
-                          <>
-                            <span className="mr-1">{entry?.mood || "🙂"}</span>
-                            <span>
-                              {entry?.running?.notes &&
-                              !["😄", "🙂", "😐", "😣", "😴"].includes(
-                                entry.running.notes,
-                              )
-                                ? entry.running.notes
-                                : "Felt good overall"}
-                            </span>
-                          </>
-                        ) : (
-                          "-"
+                      <div className="text-emerald-100/90 truncate text-[10px]">
+                        {entry?.running?.mood && (
+                          <span className="mr-1">{entry.running.mood}</span>
                         )}
+                        {entry?.running?.notes && (
+                          <span>{entry.running.notes}</span>
+                        )}
+                        {!entry?.running?.mood && !entry?.running?.notes && "—"}
                       </div>
                     </div>
 
@@ -714,8 +706,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                          ? `↘️ ${weightTrend}kg`
-                          : "→ 0kg"
+                        ? `↘️ ${weightTrend}kg`
+                        : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -725,8 +717,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                          ? "text-emerald-300"
-                          : "text-gray-300"
+                        ? "text-emerald-300"
+                        : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -927,7 +919,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   const [runningDistance, setRunningDistance] = useState("");
   const [runningDuration, setRunningDuration] = useState("");
+  const [runningMood, setRunningMood] = useState("");
   const [runningNotes, setRunningNotes] = useState("");
+
   const [yogaMinutesInput, setYogaMinutesInput] = useState("");
   const [otherExercisesInput, setOtherExercisesInput] = useState("");
 
@@ -1174,6 +1168,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         ? String(entry.running.durationMinutes)
         : "",
     );
+    setRunningMood(entry?.running?.mood ?? "");
     setRunningNotes(entry?.running?.notes ?? "");
     setYogaMinutesInput(
       entry?.yogaMinutes != null ? String(entry.yogaMinutes) : "",
@@ -1191,12 +1186,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const parsedWeight = weightInput ? Number(weightInput) : null;
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : (existing.weight ?? null);
+      : existing.weight ?? null;
 
     const newBmi =
       weightVal != null
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-        : (existing.bmi ?? null);
+        : existing.bmi ?? null;
 
     // NEW parsed values
     const runningDistanceVal = runningDistance ? Number(runningDistance) : null;
@@ -1231,6 +1226,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       running: {
         distanceKm: runningDistanceVal,
         durationMinutes: runningDurationVal,
+        mood: runningMood,
         notes: runningNotes || "",
       },
       yogaMinutes: yogaMinutesVal,
@@ -1273,6 +1269,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     moodInput,
     runningDistance,
     runningDuration,
+    runningMood, // ← NEW: Add this
     runningNotes,
     yogaMinutesInput,
     otherExercisesInput,
@@ -1410,7 +1407,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
     alert("FULL RESET DONE ✅");
   };
 
-  /* --------------- Derived values (entry/dayPlan/completion) --------------- */
   /* --------------- Derived values (MEMOIZED) --------------- */
   const dateKey = useMemo(() => dayjs(date).format("YYYY-MM-DD"), [date]);
 
@@ -1897,11 +1893,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 const hasWeight = entry?.weight != null;
                 const isToday = useMemo(
                   () => dayjs(date).isSame(dayjs(), "day"),
-                  [date],
+                  [date]
                 );
                 const isFuture = useMemo(
                   () => dayjs(date).isAfter(dayjs(), "day"),
-                  [date],
+                  [date]
                 );
 
                 if (isFuture) {
@@ -2039,7 +2035,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -2065,7 +2061,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D",
+                            "MMM D"
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -2144,7 +2140,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal),
+                Math.abs(pctToGoal)
               )}% - 16px)`,
             }}
           >
@@ -2289,9 +2285,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0),
+                                  (dayPlan.finisher?.length || 0)
                               )) *
-                              100,
+                              100
                           )}
                           %
                         </p>
@@ -2314,10 +2310,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0),
+                                  (dayPlan.finisher?.length || 0)
                               )) *
-                              100,
-                          ),
+                              100
+                          )
                         )}%`,
                       }}
                     ></div>
@@ -2381,8 +2377,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
           doneState[dateKey]
             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed opacity-50"
             : allDone
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
         }
       `}
                     >
@@ -2433,7 +2429,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                         onClick={() => {
                           if (
                             window.confirm(
-                              "⚠️ Clear this workout? This cannot be undone.",
+                              "⚠️ Clear this workout? This cannot be undone."
                             )
                           ) {
                             deleteWorkout(dateKey);
@@ -2629,29 +2625,29 @@ export default function Gym({ dashboardState, updateDashboard }) {
               </div>
             </div>
 
-            {/* Part 2: how it felt (emoji mood + optional note) */}
+            {/* Part 2: how it felt - emoji + mood + optional note */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="block text-[11px] uppercase tracking-wide text-emerald-200/70 font-semibold">
                   How it felt
                 </span>
-                {/* running-specific mood: reuse gym emoji style but separate state */}
+
+                {/* Emoji selector for running mood */}
                 <div className="flex gap-1.5">
                   {["😄", "🙂", "😐", "😣", "😴"].map((m) => (
                     <button
                       key={m}
                       type="button"
-                      onClick={() => setRunningNotes(m)}
+                      onClick={() => setRunningMood(m)}
                       className={`
-              w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center
-              text-lg rounded-lg border backdrop-blur-xl
-              transition-all duration-200
-              ${
-                runningNotes === m
-                  ? "border-emerald-400 bg-emerald-500/20 text-emerald-100 shadow-md shadow-emerald-500/30 scale-105"
-                  : "border-white/10 bg-white/5 text-emerald-100/80 opacity-70 hover:opacity-100 hover:border-white/30"
-              }
-            `}
+            w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-lg
+            rounded-lg border backdrop-blur-xl transition-all duration-200
+            ${
+              runningMood === m
+                ? "border-emerald-400 bg-emerald-500/20 text-emerald-100 shadow-md shadow-emerald-500/30 scale-105"
+                : "border-white/10 bg-white/5 text-emerald-100/80 opacity-70 hover:opacity-100 hover:border-white/30"
+            }
+          `}
                     >
                       {m}
                     </button>
@@ -2659,19 +2655,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 </div>
               </div>
 
+              {/* Text area for additional notes */}
               <textarea
                 rows={2}
-                value={
-                  ["😄", "🙂", "😐", "😣", "😴"].includes(runningNotes)
-                    ? "" // if only emoji selected, keep textarea empty
-                    : runningNotes
-                }
+                value={runningNotes}
                 onChange={(e) => setRunningNotes(e.target.value)}
-                className="w-full bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/15 to-[#0a3832]/20 
-                 border border-emerald-400/25 rounded-xl p-2.5 
-                 text-emerald-100 placeholder:text-emerald-300/40
-                 outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
-                 text-xs transition-all duration-200"
+                className="w-full bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/15 to-[#0a3832]/20
+      border border-emerald-400/25 rounded-xl p-2.5 text-emerald-100
+      placeholder:text-emerald-300/40 outline-none focus:ring-2 focus:ring-emerald-400/60
+      focus:border-emerald-400 text-xs transition-all duration-200"
                 placeholder="Route, pace, intervals, extra notes..."
               />
             </div>
