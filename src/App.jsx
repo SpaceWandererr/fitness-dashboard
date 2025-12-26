@@ -275,15 +275,11 @@ export default function App() {
             setDashboardState(backendState);
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("Backend synced successfully");
-            toastOnce("backend_synced", () => {
-              toast.success("Backend synced successfully");
-            });
+            toast.success("Backend synced successfully");
           }
         } else {
           console.log("Local state is newer — no sync needed");
-          toastOnce("backend_synced", () => {
-            toast.success("Local state is newer — no sync needed");
-          });
+          toast.success("Local state is newer — no sync needed");
         }
       } catch (err) {
         const msg =
@@ -292,9 +288,7 @@ export default function App() {
             : "🔴 Backend not responding — running offline";
 
         console.warn(msg, err);
-        toastOnce("backend_error", () => {
-          toast(msg);
-        });
+        toast(msg);
       }
     }
 
@@ -538,7 +532,7 @@ export default function App() {
         >
           <div className="mx-auto max-w-7xl px-4 py-3">
             {/* TABLET LAYOUT: Logo on top, links below (640px - 1023px) */}
-            <div className="hidden sm:flex lg:hidden flex-col gap-3">
+            <div className="hidden sm:flex min-[1160px]:hidden flex-col gap-3">
               {/* Top row: Logo + Right controls */}
               <div className="flex items-center justify-between">
                 <Link
@@ -725,7 +719,7 @@ export default function App() {
                           }}
                         >
                           {/* FIXED: Show stars/sparkles, not the opposite icon */}
-                          {dark ? "⭐" : "✨"}
+                          {dark ? "☀️" : "🌙"}
                         </div>
                       </motion.div>
                     </div>
@@ -734,7 +728,7 @@ export default function App() {
               </div>
 
               {/* Bottom row: Links */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 justify-center flex-wrap">
                 {links.map((l) => (
                   <NavLink key={l.to} {...l} current={location.pathname} />
                 ))}
@@ -927,7 +921,7 @@ export default function App() {
             </div>
 
             {/* DESKTOP LAYOUT: Horizontal single row (1024px+) */}
-            <div className="hidden lg:flex items-center justify-between">
+            <div className="hidden min-[1160px]:flex  items-center justify-between">
               <Link
                 to="/"
                 onClick={() => setMenuOpen(false)}
