@@ -413,259 +413,218 @@ export default function HairCare({ dashboardState, updateDashboard }) {
 
   // PDF Export Function
   // Updated PDF Export Function - Matches Screen Design
-  const exportToPDF = () => {
-    const allLogDates = Object.keys(hairLogs)
-      .filter((date) => {
-        const log = hairLogs[date];
-        return (
-          log &&
-          Object.keys(log).some(
-            (key) =>
-              [
-                "minoxidil",
-                "minimalist",
-                "biotin",
-                "supradyn",
-                "seeds",
-                "shampoo",
-                "oil",
-                "herbal",
-              ].includes(key) && log[key]
-          )
-        );
-      })
-      .sort();
+ const exportToPDF = () => {
+   const allLogDates = Object.keys(hairLogs)
+     .filter((date) => {
+       const log = hairLogs[date];
+       return (
+         log &&
+         Object.keys(log).some(
+           (key) =>
+             [
+               "minoxidil",
+               "minimalist",
+               "biotin",
+               "supradyn",
+               "seeds",
+               "shampoo",
+               "oil",
+               "herbal",
+             ].includes(key) && log[key]
+         )
+       );
+     })
+     .sort();
 
-    const actualStartDate =
-      allLogDates.length > 0
-        ? dayjs(allLogDates[0])
-        : dayjs().subtract(180, "days");
-    const actualEndDate = dayjs();
-    const totalDays = actualEndDate.diff(actualStartDate, "day") + 1;
-    const data = analytics.days180;
+   const actualStartDate =
+     allLogDates.length > 0
+       ? dayjs(allLogDates[0])
+       : dayjs().subtract(180, "days");
+   const actualEndDate = dayjs();
+   const totalDays = actualEndDate.diff(actualStartDate, "day") + 1;
+   const data = analytics.days180;
 
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
+   const printWindow = window.open("", "_blank");
+
+   if (!printWindow) {
+     alert("Please allow popups to export PDF");
+     return;
+   }
+
+   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Dermatologist Report - ${dayjs().format("MMM DD, YYYY")}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Emoji', Arial, sans-serif;
-          background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
-          padding: 30px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+          background: #f0f9ff;
+          padding: 20px;
           color: #1a1a1a;
         }
         
         .container {
-          max-width: 1200px;
+          max-width: 900px;
           margin: 0 auto;
-          background: linear-gradient(to bottom, #f8f9fa, #ffffff);
-          border-radius: 20px;
-          padding: 40px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+          background: white;
+          border-radius: 12px;
+          padding: 30px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
-        /* Header */
         .header {
-          margin-bottom: 30px;
+          margin-bottom: 24px;
+          border-bottom: 3px solid #14b8a6;
+          padding-bottom: 16px;
         }
         
         .header-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
           color: #0f766e;
-          font-size: 36px;
+          font-size: 28px;
           font-weight: 700;
-          margin-bottom: 8px;
+          margin-bottom: 6px;
         }
         
         .header-subtitle {
           color: #6b7280;
-          font-size: 15px;
-          font-weight: 500;
+          font-size: 14px;
         }
         
-        /* Info Grid */
         .info-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
           background: #f0fdfa;
-          padding: 20px;
-          border-radius: 12px;
-          margin-bottom: 30px;
+          padding: 16px;
+          border-radius: 8px;
+          margin-bottom: 24px;
           border: 2px solid #5eead4;
         }
         
         .info-item {
           border-left: 3px solid #14b8a6;
-          padding-left: 12px;
+          padding-left: 10px;
         }
         
         .info-label {
-          font-size: 11px;
+          font-size: 10px;
           color: #6b7280;
           text-transform: uppercase;
           font-weight: 600;
-          margin-bottom: 4px;
+          margin-bottom: 3px;
         }
         
         .info-value {
-          font-size: 14px;
+          font-size: 13px;
           color: #0f172a;
           font-weight: 700;
         }
         
-        /* Treatment Schedule Box */
         .schedule-box {
-          background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-          padding: 16px 20px;
-          border-radius: 12px;
-          margin-bottom: 30px;
+          background: #ccfbf1;
+          padding: 14px 16px;
+          border-radius: 8px;
+          margin-bottom: 24px;
           border: 2px solid #5eead4;
         }
         
         .schedule-title {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
           color: #0f766e;
-          margin-bottom: 10px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
+          margin-bottom: 8px;
         }
         
         .schedule-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-          font-size: 12px;
+          grid-template-columns: 1fr;
+          gap: 6px;
+          font-size: 11px;
           color: #0f766e;
         }
         
-        .schedule-item {
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
-        }
-        
-        .schedule-item strong {
-          font-weight: 700;
-        }
-        
-        /* Section */
         .section {
-          margin-bottom: 30px;
+          margin-bottom: 24px;
           page-break-inside: avoid;
         }
         
         .section-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
           color: #0f172a;
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 700;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
+          border-bottom: 2px solid #e5e7eb;
+          padding-bottom: 6px;
         }
         
         .section-subtitle {
           color: #6b7280;
-          font-size: 13px;
-          margin-bottom: 20px;
+          font-size: 12px;
+          margin-bottom: 16px;
         }
         
-        /* Compliance Grid */
         .compliance-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
         }
         
         .stat-card {
-          border-radius: 14px;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
+          border-radius: 10px;
+          padding: 14px;
           page-break-inside: avoid;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
         }
         
-        .stat-card-blue {
-          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-          border: 2px solid #60a5fa;
-        }
-        
-        .stat-card-purple {
-          background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-          border: 2px solid #a855f7;
-        }
-        
-        .stat-card-pink {
-          background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-          border: 2px solid #ec4899;
-        }
-        
-        .stat-card-orange {
-          background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
-          border: 2px solid #f97316;
-        }
-        
-        .stat-card-amber {
-          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-          border: 2px solid #f59e0b;
-        }
-        
-        .stat-card-green {
-          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-          border: 2px solid #10b981;
-        }
+        .stat-card-blue { background: #dbeafe; border: 2px solid #60a5fa; }
+        .stat-card-purple { background: #f3e8ff; border: 2px solid #a855f7; }
+        .stat-card-pink { background: #fce7f3; border: 2px solid #ec4899; }
+        .stat-card-orange { background: #fed7aa; border: 2px solid #f97316; }
+        .stat-card-amber { background: #fef3c7; border: 2px solid #f59e0b; }
+        .stat-card-green { background: #d1fae5; border: 2px solid #10b981; }
         
         .stat-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
+          margin-bottom: 8px;
         }
         
         .stat-label {
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.3px;
-          line-height: 1.3;
         }
         
         .stat-sublabel {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 500;
           margin-top: 2px;
         }
         
         .stat-value {
-          font-size: 40px;
+          font-size: 32px;
           font-weight: 800;
           line-height: 1;
         }
         
         .stat-footer {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
+          margin-bottom: 6px;
         }
         
         .stat-progress {
           width: 100%;
-          height: 6px;
+          height: 5px;
           background: rgba(0,0,0,0.15);
           border-radius: 3px;
           overflow: hidden;
-          margin-top: 4px;
         }
         
         .stat-progress-bar {
@@ -673,7 +632,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           border-radius: 3px;
         }
         
-        /* Colors */
         .color-blue { color: #2563eb; }
         .color-purple { color: #7c3aed; }
         .color-pink { color: #db2777; }
@@ -689,40 +647,32 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         .bg-amber { background: #d97706; }
         .bg-green { background: #059669; }
         
-        /* Chart */
         .chart-container {
           background: #f8fafc;
-          padding: 20px;
-          border-radius: 12px;
+          padding: 16px;
+          border-radius: 8px;
           border: 2px solid #e2e8f0;
         }
         
         .chart-empty {
           text-align: center;
-          padding: 40px;
+          padding: 30px;
           color: #94a3b8;
-          font-size: 14px;
+          font-size: 13px;
         }
         
-        .chart-empty-icon {
-          font-size: 48px;
-          margin-bottom: 12px;
-          opacity: 0.3;
-        }
-        
-        /* Lists */
         .list {
           list-style: none;
           padding: 0;
         }
         
         .list-item {
-          padding: 14px 16px;
-          margin-bottom: 10px;
-          border-radius: 10px;
-          font-size: 13px;
+          padding: 12px 14px;
+          margin-bottom: 8px;
+          border-radius: 8px;
+          font-size: 12px;
           display: flex;
-          gap: 14px;
+          gap: 12px;
           page-break-inside: avoid;
         }
         
@@ -738,8 +688,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         
         .list-date {
           font-weight: 700;
-          min-width: 110px;
-          font-size: 12px;
+          min-width: 100px;
+          font-size: 11px;
         }
         
         .list-date-red { color: #dc2626; }
@@ -750,41 +700,40 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           flex: 1;
         }
         
-        /* Footer */
         .footer {
-          margin-top: 40px;
-          padding: 20px;
+          margin-top: 30px;
+          padding: 16px;
           background: #f3f4f6;
-          border-radius: 12px;
+          border-radius: 8px;
           text-align: center;
           border: 2px dashed #9ca3af;
         }
         
         .footer p {
           color: #6b7280;
-          font-size: 12px;
+          font-size: 11px;
           margin-bottom: 4px;
         }
         
         @media print {
-          body { padding: 10px; background: white; }
-          .container { box-shadow: none; }
+          body { padding: 0; background: white; }
+          .container { box-shadow: none; padding: 20px; }
+        }
+        
+        @media (min-width: 768px) {
+          .info-grid { grid-template-columns: repeat(3, 1fr); }
+          .compliance-grid { grid-template-columns: repeat(3, 1fr); }
+          .schedule-grid { grid-template-columns: repeat(2, 1fr); }
         }
       </style>
     </head>
     <body>
       <div class="container">
-        <!-- Header -->
         <div class="header">
-          <div class="header-title">
-            🩺 Dermatologist Report
-          </div>
-          <div class="header-subtitle">
-            Clinical Hair Care Progress Summary
-          </div>
+          <div class="header-title">🩺 Dermatologist Report</div>
+          <div class="header-subtitle">Clinical Hair Care Progress Summary</div>
         </div>
         
-        <!-- Patient Info -->
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Patient Name</div>
@@ -805,41 +754,36 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           <div class="info-item">
             <div class="info-label">Total Duration</div>
             <div class="info-value">${totalDays} days (${Math.floor(
-      totalDays / 30
-    )} months)</div>
+     totalDays / 30
+   )}mo)</div>
           </div>
           <div class="info-item">
             <div class="info-label">Treatment Protocol</div>
-            <div class="info-value">Minoxidil + Minimalist (AM/PM)</div>
+            <div class="info-value">Minoxidil + Minimalist</div>
           </div>
           <div class="info-item">
             <div class="info-label">Generated On</div>
-            <div class="info-value">${dayjs().format(
-              "MMM DD, YYYY • HH:mm A"
-            )}</div>
+            <div class="info-value">${dayjs().format("MMM DD, YYYY")}</div>
           </div>
         </div>
         
-        <!-- Treatment Schedule -->
         <div class="schedule-box">
           <div class="schedule-title">📋 Current Treatment Schedule</div>
           <div class="schedule-grid">
-            <div class="schedule-item">• <strong>AM (Morning):</strong> Minimalist 18% Serum</div>
-            <div class="schedule-item">• <strong>PM (Night):</strong> Minoxidil 5%</div>
-            <div class="schedule-item">• <strong>Daily:</strong> Biotin Gummies + SupraDyn + Seed Mix</div>
-            <div class="schedule-item">• <strong>Weekly:</strong> Shampoo (1-2x) + Oil/Herbal (1x each)</div>
+            <div>• <strong>AM:</strong> Minimalist 18% Serum</div>
+            <div>• <strong>PM:</strong> Minoxidil 5%</div>
+            <div>• <strong>Daily:</strong> Biotin + SupraDyn + Seeds</div>
+            <div>• <strong>Weekly:</strong> Shampoo + Oil/Herbal</div>
           </div>
         </div>
         
-        <!-- Treatment Compliance -->
         <div class="section">
           <div class="section-header">📊 Treatment Compliance</div>
-          <div class="section-subtitle">${totalDays}-day adherence since treatment started (${actualStartDate.format(
-      "MMM DD, YYYY"
-    )})</div>
+          <div class="section-subtitle">${totalDays}-day adherence since ${actualStartDate.format(
+     "MMM DD, YYYY"
+   )}</div>
           
           <div class="compliance-grid">
-            <!-- Minoxidil -->
             <div class="stat-card stat-card-blue">
               <div class="stat-header">
                 <div>
@@ -854,9 +798,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     : "red"
                 }">${data.minoxidil.compliance}%</div>
               </div>
-              <div class="stat-footer color-blue">${data.minoxidil.count} of ${
-      data.minoxidil.expected
-    } days</div>
+              <div class="stat-footer color-blue">${data.minoxidil.count}/${
+     data.minoxidil.expected
+   } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-blue" style="width: ${
                   data.minoxidil.compliance
@@ -864,12 +808,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               </div>
             </div>
             
-            <!-- Minimalist -->
             <div class="stat-card stat-card-purple">
               <div class="stat-header">
                 <div>
-                  <div class="stat-label color-purple">MINIMALIST 18% SERUM</div>
-                  <div class="stat-sublabel color-purple">Daily (AM + PM)</div>
+                  <div class="stat-label color-purple">MINIMALIST 18%</div>
+                  <div class="stat-sublabel color-purple">Daily (AM+PM)</div>
                 </div>
                 <div class="stat-value color-${
                   data.minimalist.compliance >= 80
@@ -879,9 +822,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     : "red"
                 }">${data.minimalist.compliance}%</div>
               </div>
-              <div class="stat-footer color-purple">${
-                data.minimalist.count
-              } of ${data.minimalist.expected} applications</div>
+              <div class="stat-footer color-purple">${data.minimalist.count}/${
+     data.minimalist.expected
+   } apps</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-purple" style="width: ${
                   data.minimalist.compliance
@@ -889,11 +832,10 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               </div>
             </div>
             
-            <!-- Biotin -->
             <div class="stat-card stat-card-pink">
               <div class="stat-header">
                 <div>
-                  <div class="stat-label color-pink">BIOTIN GUMMIES</div>
+                  <div class="stat-label color-pink">BIOTIN</div>
                   <div class="stat-sublabel color-pink">Daily supplement</div>
                 </div>
                 <div class="stat-value color-${
@@ -904,9 +846,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     : "red"
                 }">${data.biotin.compliance}%</div>
               </div>
-              <div class="stat-footer color-pink">${data.biotin.count} of ${
-      data.biotin.expected
-    } days</div>
+              <div class="stat-footer color-pink">${data.biotin.count}/${
+     data.biotin.expected
+   } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-pink" style="width: ${
                   data.biotin.compliance
@@ -914,12 +856,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               </div>
             </div>
             
-            <!-- SupraDyn -->
             <div class="stat-card stat-card-orange">
               <div class="stat-header">
                 <div>
                   <div class="stat-label color-orange">SUPRADYN</div>
-                  <div class="stat-sublabel color-orange">Daily multivitamin</div>
+                  <div class="stat-sublabel color-orange">Multivitamin</div>
                 </div>
                 <div class="stat-value color-${
                   data.supradyn.compliance >= 80
@@ -929,9 +870,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     : "red"
                 }">${data.supradyn.compliance}%</div>
               </div>
-              <div class="stat-footer color-orange">${data.supradyn.count} of ${
-      data.supradyn.expected
-    } days</div>
+              <div class="stat-footer color-orange">${data.supradyn.count}/${
+     data.supradyn.expected
+   } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-orange" style="width: ${
                   data.supradyn.compliance
@@ -939,7 +880,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               </div>
             </div>
             
-            <!-- Seed Mix -->
             <div class="stat-card stat-card-amber">
               <div class="stat-header">
                 <div>
@@ -954,9 +894,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     : "red"
                 }">${data.seeds.compliance}%</div>
               </div>
-              <div class="stat-footer color-amber">${data.seeds.count} of ${
-      data.seeds.expected
-    } days</div>
+              <div class="stat-footer color-amber">${data.seeds.count}/${
+     data.seeds.expected
+   } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-amber" style="width: ${
                   data.seeds.compliance
@@ -964,52 +904,42 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               </div>
             </div>
             
-            <!-- Perfect Days -->
             <div class="stat-card stat-card-green">
               <div class="stat-header">
                 <div>
-                  <div class="stat-label color-green">PERFECT COMPLIANCE</div>
-                  <div class="stat-sublabel color-green">All protocols followed</div>
+                  <div class="stat-label color-green">PERFECT DAYS</div>
+                  <div class="stat-sublabel color-green">All protocols</div>
                 </div>
                 <div class="stat-value color-green">${data.perfect}</div>
               </div>
               <div class="stat-footer color-green">${(
                 (data.perfect / totalDays) *
                 100
-              ).toFixed(0)}% of ${totalDays} days 🏆</div>
+              ).toFixed(0)}% of ${totalDays} days</div>
             </div>
           </div>
         </div>
         
-        <!-- Hair Fall -->
         <div class="section">
           <div class="section-header">📉 Hair Fall Progression</div>
-          <div class="section-subtitle">Weekly average hair fall count over ${totalDays} days</div>
-          
+          <div class="section-subtitle">Weekly average over ${totalDays} days</div>
           <div class="chart-container">
             ${
               data.hairFall.avg > 0
-                ? `<div style="text-align: center; color: #0f766e; font-size: 14px; font-weight: 600;">
-                Average Daily Fall: ${data.hairFall.avg} strands | Total Recorded: ${data.hairFall.total} strands | Data Points: ${data.hairFall.days} days
-              </div>`
-                : `<div class="chart-empty">
-                <div class="chart-empty-icon">📉</div>
-                <div>No hair fall data recorded in this period</div>
-              </div>`
+                ? `<div style="text-align: center; color: #0f766e; font-size: 13px; font-weight: 600;">Avg: ${data.hairFall.avg} strands/day | Total: ${data.hairFall.total} | Data: ${data.hairFall.days} days</div>`
+                : `<div class="chart-empty">📉<br>No hair fall data recorded</div>`
             }
           </div>
         </div>
         
-        <!-- Side Effects -->
         ${
           data.sideEffects.length > 0
             ? `
           <div class="section">
-            <div class="section-header">⚠️ Reported Side Effects</div>
+            <div class="section-header">⚠️ Side Effects</div>
             <div class="section-subtitle">${
               data.sideEffects.length
-            } incidents reported</div>
-            
+            } incidents</div>
             <ul class="list">
               ${data.sideEffects
                 .slice(0, 10)
@@ -1030,16 +960,14 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             : ""
         }
         
-        <!-- Notes -->
         ${
           data.notes.length > 0
             ? `
           <div class="section">
-            <div class="section-header">📝 Patient Observations</div>
+            <div class="section-header">📝 Patient Notes</div>
             <div class="section-subtitle">${
               data.notes.length
-            } progress notes recorded</div>
-            
+            } observations</div>
             <ul class="list">
               ${data.notes
                 .slice(0, 10)
@@ -1060,22 +988,25 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             : ""
         }
         
-        <!-- Footer -->
         <div class="footer">
-          <p>⚕️ This report is auto-generated from patient's self-tracked data.</p>
-          <p>For clinical use, verify data accuracy with patient consultation. Generated by LifeOS Hair Care Tracker.</p>
+          <p>⚕️ Auto-generated from self-tracked data</p>
+          <p>Verify accuracy with patient. Generated by LifeOS Hair Care Tracker</p>
         </div>
       </div>
     </body>
     </html>
   `);
 
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
-  };
+   printWindow.document.close();
+   printWindow.focus();
+
+   // Longer delay for mobile + don't auto-close
+   setTimeout(() => {
+     printWindow.print();
+     // Don't close automatically - let user close it
+   }, 1000);
+ };
+
 
   // Compact Calendar
   const renderCompactCalendar = () => {
