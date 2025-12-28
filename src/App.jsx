@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -33,6 +34,17 @@ import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
 import GlobalUpgrade from "./components/GlobalUpgrade";
+
+// ⬇️ PUT THIS HERE (top of App.jsx, after imports)
+function fetchWithTimeout(url, options = {}, timeout = 8000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  return fetch(url, {
+    ...options,
+    signal: controller.signal,
+  }).finally(() => clearTimeout(id));
+}
 
 function normalizeSection(section, visited = new WeakSet()) {
   // Base cases
@@ -111,8 +123,14 @@ export default function App() {
   const [weightHistory, setWeightHistory] = useState([]);
   const [gymLogDates, setGymLogDates] = useState([]);
   const [activePanel, setActivePanel] = useState("weight");
-  // weight | gym | topics | streak
+  const toastOnceRef = useRef(new Set());
+  function toastOnce(key, fn) {
+    if (toastOnceRef.current.has(key)) return;
+    toastOnceRef.current.add(key);
+    fn();
+  }
 
+  // weight | gym | topics | streak
   const accent = "hsl(180, 100%, 50%)";
 
   // In App.jsx - Replace your FloatingScrollControl with this:
@@ -222,68 +240,62 @@ export default function App() {
 
     async function loadState() {
       console.log("📡 Booting LifeOS...");
-
       setIsLoadingBackend(true);
 
-      // 1️⃣ LOAD LOCAL FIRST (INSTANT BOOT)
       let localState = null;
+
+      // 1️⃣ LOAD LOCAL FIRST
       try {
         const cached = localStorage.getItem("lifeosstate");
         if (cached) {
           localState = JSON.parse(cached);
-          console.log("⚡ Loaded from localStorage");
           setDashboardState(localState);
         }
       } catch (e) {
-        console.warn("⚠ Failed to read localStorage", e);
+        console.error("Local read failed", e);
       }
 
-      // 2️⃣ TRY BACKEND (BEST EFFORT)
+      setIsLoadingBackend(false);
+
+      // 2️⃣ TRY BACKEND
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
-
-        const res = await fetch(API_URL, { signal: controller.signal });
-        clearTimeout(timeout);
-
-        if (!res.ok) throw new Error("Backend error");
+        const res = await fetchWithTimeout(API_URL, {}, 8000);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
         const backendState = data.dashboardState || data || {};
 
-        // 3️⃣ COMPARE UPDATED TIME
-        const backendTime = backendState?.updatedAt
-          ? new Date(backendState.updatedAt).getTime()
-          : 0;
+        if (!backendState || Object.keys(backendState).length === 0) return;
 
-        const localTime = localState?.updatedAt
-          ? new Date(localState.updatedAt).getTime()
-          : 0;
+        const backendTime = new Date(backendState.updatedAt || 0).getTime();
+        const localTime = new Date(localState?.updatedAt || 0).getTime();
 
         if (!localState || backendTime > localTime) {
-          console.log("🟢 Backend is newer → applying backend state");
           if (!cancelled) {
             setDashboardState(backendState);
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
+            console.log("Backend synced successfully");
+            toast.success("Backend synced successfully");
           }
         } else {
-          console.log("🟡 Local state is newer → keeping local");
+          console.log("Local state is newer — no sync needed");
+          toast.success("Local state is newer — no sync needed");
         }
       } catch (err) {
-        console.warn("⚠ Backend unavailable, running offline", err);
-      } finally {
-        if (!cancelled) setIsLoadingBackend(false);
+        const msg =
+          err.name === "AbortError"
+            ? "🟡 Backend timeout — using local"
+            : "🔴 Backend not responding — running offline";
+
+        console.warn(msg, err);
+        toast(msg);
       }
     }
 
     loadState();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => (cancelled = true);
   }, []);
 
-  // Load stats from BACKEND ONLY
   // When dashboardState changes → recalc stats
   useEffect(() => {
     const gymLogs = dashboardState?.wd_gym_logs || {};
@@ -371,7 +383,6 @@ export default function App() {
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
-  // ----------------- GLOBAL BACKEND SAVE ENGINE -----------------
   // ----------------- GLOBAL STATE UPDATE (LOCAL-FIRST) -----------------
   const updateDashboard = useCallback((updates) => {
     setDashboardState((prev) => {
@@ -415,65 +426,317 @@ export default function App() {
   );
 
   return (
-    <div
-      className={`min-h-screen text-[#E5F9F6] ${bgClass} relative overflow-x-hidden`}
-      style={{ "--accent": accent }}
-    >
-      <AnimatePresence>
-        {themeFlash > 0 && (
-          <motion.div
-            key={themeFlash}
-            className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none"
-          >
+    <>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+            color: "#f1f5f9",
+            border: "1px solid rgba(16, 185, 129, 0.2)",
+            borderRadius: "12px",
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.1)",
+            padding: "16px",
+            fontSize: "14px",
+            fontWeight: "500",
+            backdropFilter: "blur(8px)",
+            maxWidth: "420px",
+          },
+          success: {
+            style: {
+              background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)",
+              border: "1px solid rgba(16, 185, 129, 0.4)",
+              color: "#d1fae5",
+            },
+            iconTheme: {
+              primary: "#10b981",
+              secondary: "#d1fae5",
+            },
+          },
+          error: {
+            style: {
+              background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)",
+              border: "1px solid rgba(239, 68, 68, 0.4)",
+              color: "#fee2e2",
+            },
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#fee2e2",
+            },
+          },
+          loading: {
+            style: {
+              background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
+              border: "1px solid rgba(59, 130, 246, 0.4)",
+              color: "#dbeafe",
+            },
+          },
+        }}
+      />
+
+      <div
+        className={`min-h-screen text-[#E5F9F6] ${bgClass} relative overflow-x-hidden`}
+        style={{ "--accent": accent }}
+      >
+        <AnimatePresence>
+          {themeFlash > 0 && (
             <motion.div
-              className="absolute rounded-full"
-              style={{
-                left: flashOrigin.x - 70,
-                top: flashOrigin.y - 60,
-                width: 160,
-                height: 160,
-                background: dark
-                  ? "radial-gradient(circle, rgba(180,210,255,0.95), rgba(180,210,255,0.4), transparent 70%)"
-                  : "radial-gradient(circle, rgba(255,200,0,0.95), rgba(255,200,0,0.4), transparent 70%)",
-                filter: "blur(8px)",
-                willChange: "transform, opacity",
-              }}
-              initial={{ scale: 0.2, opacity: 1 }}
-              animate={{
-                scale: 12,
-                opacity: 0,
-              }}
-              transition={{
-                duration: 1.4,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+              key={themeFlash}
+              className="fixed top-0 left-0 w-screen h-screen z-[9999] pointer-events-none"
+            >
+              <motion.div
+                className="absolute rounded-full"
+                style={{
+                  left: flashOrigin.x - 70,
+                  top: flashOrigin.y - 60,
+                  width: 160,
+                  height: 160,
+                  background: dark
+                    ? "radial-gradient(circle, rgba(180,210,255,0.95), rgba(180,210,255,0.4), transparent 70%)"
+                    : "radial-gradient(circle, rgba(255,200,0,0.95), rgba(255,200,0,0.4), transparent 70%)",
+                  filter: "blur(8px)",
+                  willChange: "transform, opacity",
+                }}
+                initial={{ scale: 0.2, opacity: 1 }}
+                animate={{
+                  scale: 12,
+                  opacity: 0,
+                }}
+                transition={{
+                  duration: 1.4,
+                  ease: [0.25, 0.1, 0.25, 1],
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* subtle background blobs */}
-      <div className="pointer-events-none fixed inset-0 opacity-40">
-        <div className="absolute -top-82 -left-62 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-xl" />
-        <div className="absolute bottom-0 right-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle_at_center,#b82132aa,transparent_60%)] blur-xl" />
-      </div>
+        {/* subtle background blobs */}
+        <div className="pointer-events-none fixed inset-0 opacity-40">
+          <div className="absolute -top-82 -left-62 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,hsl(180,100%,50%,0.25),transparent_70%)] blur-xl" />
+          <div className="absolute bottom-0 right-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle_at_center,#b82132aa,transparent_60%)] blur-xl" />
+        </div>
 
-      {/* NAVBAR */}
-      <nav
-        ref={navRef}
-        className="
+        {/* NAVBAR */}
+        <nav
+          ref={navRef}
+          className="
     fixed top-0 left-0 right-0 z-40
     border-b border-teal-400/25
     bg-gradient-to-r from-slate-950/90 via-teal-950/85 to-slate-950/90
     backdrop-blur-xl
     shadow-[0_10px_30px_rgba(15,118,110,0.45)]
   "
-      >
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          {/* TABLET LAYOUT: Logo on top, links below (640px - 1023px) */}
-          <div className="hidden sm:flex lg:hidden flex-col gap-3">
-            {/* Top row: Logo + Right controls */}
-            <div className="flex items-center justify-between">
+        >
+          <div className="mx-auto max-w-7xl px-4 py-3">
+            {/* TABLET LAYOUT: Logo on top, links below (640px - 1023px) */}
+            <div className="hidden sm:flex min-[1160px]:hidden flex-col gap-3">
+              {/* Top row: Logo + Right controls */}
+              <div className="flex items-center justify-between">
+                <Link
+                  to="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex-shrink-0"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: -12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={isHome ? { duration: 0.5 } : {}}
+                    className="group relative"
+                  >
+                    <h1
+                      className="text-lg font-bold tracking-[0.2em] 
+                    bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                    hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
+                    >
+                      JAY SINH THAKUR
+                    </h1>
+                    <div
+                      className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
+                    scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+                    />
+                  </motion.div>
+                </Link>
+
+                <div className="flex items-center gap-3 ">
+                  <span className="text-xs font-mono text-teal-200/80 mr-6">
+                    {time.toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: true,
+                    })}
+                  </span>
+
+                  <button
+                    ref={themeBtnRef}
+                    onClick={() => {
+                      const rect = themeBtnRef.current.getBoundingClientRect();
+                      const x = rect.left + rect.width / 2 - 10;
+                      const y = rect.top + rect.height / 2 - 10;
+
+                      setFlashOrigin({ x, y });
+                      setDark((prev) => {
+                        const next = !prev;
+                        updateDashboard({
+                          ui: {
+                            ...(dashboardState.ui || {}),
+                            theme: next ? "dark" : "light",
+                          },
+                        });
+                        return next;
+                      });
+                      setThemeFlash((prev) => prev + 1);
+                    }}
+                    className="relative group rounded-full w-10 h-10 flex
+  items-center justify-center border
+  border-yellow-400/30 dark:border-white/30
+  bg-transparent backdrop-blur-xl
+  shadow-[0_0_25px_rgba(255,193,7,0.6)]
+  dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+  hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+  dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+  transition-all duration-400"
+                    aria-label="Toggle dark mode"
+                  >
+                    <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+
+                    <AnimatePresence>
+                      <motion.div
+                        key={dark ? "eclipse-dark" : "eclipse-light"}
+                        initial={{ scale: 0, opacity: 0.8 }}
+                        animate={{ scale: 1.4, opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={
+                          isHome ? { duration: 0.5, ease: "easeOut" } : {}
+                        }
+                        className="absolute inset-2 rounded-full pointer-events-none"
+                        style={{
+                          background: dark
+                            ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
+                            : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
+                        }}
+                      />
+                    </AnimatePresence>
+
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="relative text-xl z-10">
+                        <AnimatePresence mode="wait">
+                          {dark ? (
+                            <motion.div
+                              key="moon"
+                              initial={{ scale: 0.7, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.8, opacity: 0 }}
+                              transition={
+                                isHome
+                                  ? { duration: 0.9, ease: "easeOut" }
+                                  : undefined
+                              }
+                              className="relative flex items-center justify-center"
+                            >
+                              <motion.span
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1.5, opacity: 0.35 }}
+                                transition={
+                                  isHome
+                                    ? { duration: 1.2, ease: "easeOut" }
+                                    : undefined
+                                }
+                                className="absolute w-8 h-8 rounded-full pointer-events-none"
+                                style={{
+                                  background:
+                                    "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
+                                  filter: "blur(7px)",
+                                }}
+                              />
+                              <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
+                                🌙
+                              </span>
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="sun"
+                              initial={{ scale: 0.4, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.6, opacity: 0 }}
+                              transition={
+                                isHome
+                                  ? { duration: 0.9, ease: "easeOut" }
+                                  : undefined
+                              }
+                              className="relative flex items-center justify-center"
+                            >
+                              <motion.span
+                                initial={{ scale: 0, opacity: 0.2 }}
+                                animate={{ scale: 1.6, opacity: 0.4 }}
+                                transition={
+                                  isHome
+                                    ? { duration: 1.2, ease: "easeOut" }
+                                    : undefined
+                                }
+                                className="absolute w-8 h-8 rounded-full"
+                                style={{
+                                  background:
+                                    "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
+                                  filter: "blur(8px)",
+                                }}
+                              />
+                              <span className="drop-shadow-[0_0_18px_#FFB800]">
+                                ☀️
+                              </span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </span>
+
+                      {/* ROTATING DECORATION - Always rotates */}
+                      <motion.div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          transformOrigin: "50% 50%",
+                          willChange: "transform",
+                        }}
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 30,
+                          ease: "linear",
+                          repeat: Infinity,
+                        }}
+                      >
+                        <div
+                          className="absolute select-none transition-all duration-300"
+                          style={{
+                            top: "-6px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            fontSize: "8px",
+                            filter: dark
+                              ? "drop-shadow(0 0 6px #FFD700)"
+                              : "drop-shadow(0 0 6px #FFFFFF)",
+                          }}
+                        >
+                          {/* FIXED: Show stars/sparkles, not the opposite icon */}
+                          {dark ? "☀️" : "🌙"}
+                        </div>
+                      </motion.div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bottom row: Links */}
+              <div className="flex gap-2 justify-center flex-wrap">
+                {links.map((l) => (
+                  <NavLink key={l.to} {...l} current={location.pathname} />
+                ))}
+              </div>
+            </div>
+
+            {/* MOBILE LAYOUT: Single row with hamburger */}
+            <div className="flex sm:hidden items-center justify-between">
               <Link
                 to="/"
                 onClick={() => setMenuOpen(false)}
@@ -486,21 +749,21 @@ export default function App() {
                   className="group relative"
                 >
                   <h1
-                    className="text-lg font-bold tracking-[0.2em] 
-                    bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
-                    hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
+                    className="text-base font-bold tracking-[0.15em] 
+                  bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                  hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
                   >
                     JAY SINH THAKUR
                   </h1>
                   <div
                     className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
-                    scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+                  scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
                   />
                 </motion.div>
               </Link>
 
-              <div className="flex items-center gap-3 ">
-                <span className="text-xs font-mono text-teal-200/80 mr-6">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-teal-200/80 mr-4">
                   {time.toLocaleTimeString("en-US", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -508,14 +771,12 @@ export default function App() {
                     hour12: true,
                   })}
                 </span>
-
                 <button
                   ref={themeBtnRef}
                   onClick={() => {
                     const rect = themeBtnRef.current.getBoundingClientRect();
                     const x = rect.left + rect.width / 2 - 10;
                     const y = rect.top + rect.height / 2 - 10;
-
                     setFlashOrigin({ x, y });
                     setDark((prev) => {
                       const next = !prev;
@@ -529,19 +790,18 @@ export default function App() {
                     });
                     setThemeFlash((prev) => prev + 1);
                   }}
-                  className="relative group rounded-full w-10 h-10 flex
-  items-center justify-center border
-  border-yellow-400/30 dark:border-white/30
-  bg-transparent backdrop-blur-xl
-  shadow-[0_0_25px_rgba(255,193,7,0.6)]
-  dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
-  hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
-  dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
-  transition-all duration-400"
+                  className="relative group rounded-full w-9 h-9 flex
+                items-center justify-center border
+                border-yellow-400/30 dark:border-white/30
+                bg-transparent backdrop-blur-xl
+                shadow-[0_0_25px_rgba(255,193,7,0.6)]
+                dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+                hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+                dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+                transition-all duration-400"
                   aria-label="Toggle dark mode"
                 >
                   <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
-
                   <AnimatePresence>
                     <motion.div
                       key={dark ? "eclipse-dark" : "eclipse-light"}
@@ -559,7 +819,6 @@ export default function App() {
                       }}
                     />
                   </AnimatePresence>
-
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <span className="relative text-xl z-10">
                       <AnimatePresence mode="wait">
@@ -570,9 +829,7 @@ export default function App() {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
                             transition={
-                              isHome
-                                ? { duration: 0.9, ease: "easeOut" }
-                                : undefined
+                              isHome ? { duration: 0.9, ease: "easeOut" } : {}
                             }
                             className="relative flex items-center justify-center"
                           >
@@ -580,9 +837,7 @@ export default function App() {
                               initial={{ scale: 0, opacity: 0 }}
                               animate={{ scale: 1.5, opacity: 0.35 }}
                               transition={
-                                isHome
-                                  ? { duration: 1.2, ease: "easeOut" }
-                                  : undefined
+                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
                               }
                               className="absolute w-8 h-8 rounded-full pointer-events-none"
                               style={{
@@ -612,9 +867,7 @@ export default function App() {
                               initial={{ scale: 0, opacity: 0.2 }}
                               animate={{ scale: 1.6, opacity: 0.4 }}
                               transition={
-                                isHome
-                                  ? { duration: 1.2, ease: "easeOut" }
-                                  : undefined
+                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
                               }
                               className="absolute w-8 h-8 rounded-full"
                               style={{
@@ -630,14 +883,9 @@ export default function App() {
                         )}
                       </AnimatePresence>
                     </span>
-
-                    {/* ROTATING DECORATION - Always rotates */}
                     <motion.div
                       className="absolute inset-0 pointer-events-none"
-                      style={{
-                        transformOrigin: "50% 50%",
-                        willChange: "transform",
-                      }}
+                      style={{ transformOrigin: "50% 50%" }}
                       animate={{ rotate: 360 }}
                       transition={{
                         duration: 30,
@@ -657,400 +905,213 @@ export default function App() {
                             : "drop-shadow(0 0 6px #FFFFFF)",
                         }}
                       >
-                        {/* FIXED: Show stars/sparkles, not the opposite icon */}
-                        {dark ? "⭐" : "✨"}
+                        {dark ? "☀️" : "🌙"}
+                      </div>
+                    </motion.div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="rounded-md border border-teal-500/40 bg-black/40 p-1.5 text-teal-100"
+                >
+                  {menuOpen ? <X size={18} /> : <Menu size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* DESKTOP LAYOUT: Horizontal single row (1024px+) */}
+            <div className="hidden min-[1160px]:flex  items-center justify-between">
+              <Link
+                to="/"
+                onClick={() => setMenuOpen(false)}
+                className="flex-shrink-0"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={isHome ? { duration: 0.5 } : {}}
+                  className="group relative"
+                >
+                  <h1
+                    className="text-xl font-bold tracking-[0.2em] 
+                  bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
+                  hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
+                  >
+                    JAY SINH THAKUR
+                  </h1>
+                  <div
+                    className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
+                  scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
+                  />
+                </motion.div>
+              </Link>
+
+              <div className="flex gap-2">
+                {links.map((l) => (
+                  <NavLink key={l.to} {...l} current={location.pathname} />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-teal-200/80 mr-6">
+                  {time.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+
+                <button
+                  ref={themeBtnRef}
+                  onClick={() => {
+                    const rect = themeBtnRef.current.getBoundingClientRect();
+                    const x = rect.left + rect.width / 2 - 10;
+                    const y = rect.top + rect.height / 2 - 10;
+                    setFlashOrigin({ x, y });
+                    setDark((prev) => {
+                      const next = !prev;
+                      updateDashboard({
+                        ui: {
+                          ...(dashboardState.ui || {}),
+                          theme: next ? "dark" : "light",
+                        },
+                      });
+                      return next;
+                    });
+                    setThemeFlash((prev) => prev + 1);
+                  }}
+                  className="relative group rounded-full w-10 h-10 flex
+                items-center justify-center border
+                border-yellow-400/30 dark:border-white/30
+                bg-transparent backdrop-blur-xl
+                shadow-[0_0_25px_rgba(255,193,7,0.6)]
+                dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
+                hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
+                dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
+                transition-all duration-400"
+                  aria-label="Toggle dark mode"
+                >
+                  <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+                  <AnimatePresence>
+                    <motion.div
+                      key={dark ? "eclipse-dark" : "eclipse-light"}
+                      initial={{ scale: 0, opacity: 0.8 }}
+                      animate={{ scale: 1.4, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={
+                        isHome ? { duration: 0.5, ease: "easeOut" } : {}
+                      }
+                      className="absolute inset-2 rounded-full pointer-events-none"
+                      style={{
+                        background: dark
+                          ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
+                          : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
+                      }}
+                    />
+                  </AnimatePresence>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="relative text-xl z-10">
+                      <AnimatePresence mode="wait">
+                        {dark ? (
+                          <motion.div
+                            key="moon"
+                            initial={{ scale: 0.7, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={
+                              isHome ? { duration: 0.9, ease: "easeOut" } : {}
+                            }
+                            className="relative flex items-center justify-center"
+                          >
+                            <motion.span
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1.5, opacity: 0.35 }}
+                              transition={
+                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                              }
+                              className="absolute w-8 h-8 rounded-full pointer-events-none"
+                              style={{
+                                background:
+                                  "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
+                                filter: "blur(7px)",
+                              }}
+                            />
+                            <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
+                              🌙
+                            </span>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="sun"
+                            initial={{ scale: 0.4, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.6, opacity: 0 }}
+                            transition={
+                              isHome
+                                ? { duration: 0.9, ease: "easeOut" }
+                                : undefined
+                            }
+                            className="relative flex items-center justify-center"
+                          >
+                            <motion.span
+                              initial={{ scale: 0, opacity: 0.2 }}
+                              animate={{ scale: 1.6, opacity: 0.4 }}
+                              transition={
+                                isHome ? { duration: 1.2, ease: "easeOut" } : {}
+                              }
+                              className="absolute w-8 h-8 rounded-full"
+                              style={{
+                                background:
+                                  "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
+                                filter: "blur(8px)",
+                              }}
+                            />
+                            <span className="drop-shadow-[0_0_18px_#FFB800]">
+                              ☀️
+                            </span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </span>
+                    <motion.div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ transformOrigin: "50% 50%" }}
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 30,
+                        ease: "linear",
+                        repeat: Infinity,
+                      }}
+                    >
+                      <div
+                        className="absolute select-none transition-all duration-300"
+                        style={{
+                          top: "-6px",
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          fontSize: "8px",
+                          filter: dark
+                            ? "drop-shadow(0 0 6px #FFD700)"
+                            : "drop-shadow(0 0 6px #FFFFFF)",
+                        }}
+                      >
+                        {dark ? "☀️" : "🌙"}
                       </div>
                     </motion.div>
                   </div>
                 </button>
               </div>
             </div>
-
-            {/* Bottom row: Links */}
-            <div className="flex gap-2 flex-wrap">
-              {links.map((l) => (
-                <NavLink key={l.to} {...l} current={location.pathname} />
-              ))}
-            </div>
           </div>
 
-          {/* MOBILE LAYOUT: Single row with hamburger */}
-          <div className="flex sm:hidden items-center justify-between">
-            <Link
-              to="/"
-              onClick={() => setMenuOpen(false)}
-              className="flex-shrink-0"
-            >
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={isHome ? { duration: 0.5 } : {}}
-                className="group relative"
-              >
-                <h1
-                  className="text-base font-bold tracking-[0.15em] 
-                  bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
-                  hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
-                >
-                  JAY SINH THAKUR
-                </h1>
+          {/* MOBILE MENU DROPDOWN */}
+          {menuOpen && (
+            <div className="sm:hidden px-3 pb-3 pt-2">
+              <div className="flex justify-end">
                 <div
-                  className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
-                  scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
-                />
-              </motion.div>
-            </Link>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-teal-200/80 mr-4">
-                {time.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: true,
-                })}
-              </span>
-              <button
-                ref={themeBtnRef}
-                onClick={() => {
-                  const rect = themeBtnRef.current.getBoundingClientRect();
-                  const x = rect.left + rect.width / 2 - 10;
-                  const y = rect.top + rect.height / 2 - 10;
-                  setFlashOrigin({ x, y });
-                  setDark((prev) => {
-                    const next = !prev;
-                    updateDashboard({
-                      ui: {
-                        ...(dashboardState.ui || {}),
-                        theme: next ? "dark" : "light",
-                      },
-                    });
-                    return next;
-                  });
-                  setThemeFlash((prev) => prev + 1);
-                }}
-                className="relative group rounded-full w-9 h-9 flex
-                items-center justify-center border
-                border-yellow-400/30 dark:border-white/30
-                bg-transparent backdrop-blur-xl
-                shadow-[0_0_25px_rgba(255,193,7,0.6)]
-                dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
-                hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
-                dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
-                transition-all duration-400"
-                aria-label="Toggle dark mode"
-              >
-                <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
-                <AnimatePresence>
-                  <motion.div
-                    key={dark ? "eclipse-dark" : "eclipse-light"}
-                    initial={{ scale: 0, opacity: 0.8 }}
-                    animate={{ scale: 1.4, opacity: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={
-                      isHome ? { duration: 0.5, ease: "easeOut" } : {}
-                    }
-                    className="absolute inset-2 rounded-full pointer-events-none"
-                    style={{
-                      background: dark
-                        ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
-                        : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
-                    }}
-                  />
-                </AnimatePresence>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="relative text-xl z-10">
-                    <AnimatePresence mode="wait">
-                      {dark ? (
-                        <motion.div
-                          key="moon"
-                          initial={{ scale: 0.7, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.8, opacity: 0 }}
-                          transition={
-                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
-                          }
-                          className="relative flex items-center justify-center"
-                        >
-                          <motion.span
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1.5, opacity: 0.35 }}
-                            transition={
-                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
-                            }
-                            className="absolute w-8 h-8 rounded-full pointer-events-none"
-                            style={{
-                              background:
-                                "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
-                              filter: "blur(7px)",
-                            }}
-                          />
-                          <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
-                            🌙
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="sun"
-                          initial={{ scale: 0.4, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.6, opacity: 0 }}
-                          transition={
-                            isHome
-                              ? { duration: 0.9, ease: "easeOut" }
-                              : undefined
-                          }
-                          className="relative flex items-center justify-center"
-                        >
-                          <motion.span
-                            initial={{ scale: 0, opacity: 0.2 }}
-                            animate={{ scale: 1.6, opacity: 0.4 }}
-                            transition={
-                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
-                            }
-                            className="absolute w-8 h-8 rounded-full"
-                            style={{
-                              background:
-                                "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
-                              filter: "blur(8px)",
-                            }}
-                          />
-                          <span className="drop-shadow-[0_0_18px_#FFB800]">
-                            ☀️
-                          </span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </span>
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{ transformOrigin: "50% 50%" }}
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 30,
-                      ease: "linear",
-                      repeat: Infinity,
-                    }}
-                  >
-                    <div
-                      className="absolute select-none transition-all duration-300"
-                      style={{
-                        top: "-6px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        fontSize: "8px",
-                        filter: dark
-                          ? "drop-shadow(0 0 6px #FFD700)"
-                          : "drop-shadow(0 0 6px #FFFFFF)",
-                      }}
-                    >
-                      {dark ? "☀️" : "🌙"}
-                    </div>
-                  </motion.div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setMenuOpen((v) => !v)}
-                className="rounded-md border border-teal-500/40 bg-black/40 p-1.5 text-teal-100"
-              >
-                {menuOpen ? <X size={18} /> : <Menu size={18} />}
-              </button>
-            </div>
-          </div>
-
-          {/* DESKTOP LAYOUT: Horizontal single row (1024px+) */}
-          <div className="hidden lg:flex items-center justify-between">
-            <Link
-              to="/"
-              onClick={() => setMenuOpen(false)}
-              className="flex-shrink-0"
-            >
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={isHome ? { duration: 0.5 } : {}}
-                className="group relative"
-              >
-                <h1
-                  className="text-xl font-bold tracking-[0.2em] 
-                  bg-gradient-to-r from-teal-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent
-                  hover:from-teal-200 hover:via-emerald-100 hover:to-cyan-200 transition-all duration-300"
-                >
-                  JAY SINH THAKUR
-                </h1>
-                <div
-                  className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400/0 via-teal-400/60 to-teal-400/0 
-                  scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out rounded-full"
-                />
-              </motion.div>
-            </Link>
-
-            <div className="flex gap-2">
-              {links.map((l) => (
-                <NavLink key={l.to} {...l} current={location.pathname} />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-teal-200/80 mr-6">
-                {time.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: true,
-                })}
-              </span>
-
-              <button
-                ref={themeBtnRef}
-                onClick={() => {
-                  const rect = themeBtnRef.current.getBoundingClientRect();
-                  const x = rect.left + rect.width / 2 - 10;
-                  const y = rect.top + rect.height / 2 - 10;
-                  setFlashOrigin({ x, y });
-                  setDark((prev) => {
-                    const next = !prev;
-                    updateDashboard({
-                      ui: {
-                        ...(dashboardState.ui || {}),
-                        theme: next ? "dark" : "light",
-                      },
-                    });
-                    return next;
-                  });
-                  setThemeFlash((prev) => prev + 1);
-                }}
-                className="relative group rounded-full w-10 h-10 flex
-                items-center justify-center border
-                border-yellow-400/30 dark:border-white/30
-                bg-transparent backdrop-blur-xl
-                shadow-[0_0_25px_rgba(255,193,7,0.6)]
-                dark:shadow-[0_0_25px_rgba(255,255,255,0.6)]
-                hover:shadow-[0_0_40px_rgba(255,193,7,0.9)]              
-                dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.8)]
-                transition-all duration-400"
-                aria-label="Toggle dark mode"
-              >
-                <div className="absolute inset-1 rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
-                <AnimatePresence>
-                  <motion.div
-                    key={dark ? "eclipse-dark" : "eclipse-light"}
-                    initial={{ scale: 0, opacity: 0.8 }}
-                    animate={{ scale: 1.4, opacity: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={
-                      isHome ? { duration: 0.5, ease: "easeOut" } : {}
-                    }
-                    className="absolute inset-2 rounded-full pointer-events-none"
-                    style={{
-                      background: dark
-                        ? "radial-gradient(circle,rgba(255,255,255,0.6), transparent 70%)"
-                        : "radial-gradient(circle, rgba(255,215,0,0.6), transparent 70%)",
-                    }}
-                  />
-                </AnimatePresence>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="relative text-xl z-10">
-                    <AnimatePresence mode="wait">
-                      {dark ? (
-                        <motion.div
-                          key="moon"
-                          initial={{ scale: 0.7, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.8, opacity: 0 }}
-                          transition={
-                            isHome ? { duration: 0.9, ease: "easeOut" } : {}
-                          }
-                          className="relative flex items-center justify-center"
-                        >
-                          <motion.span
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1.5, opacity: 0.35 }}
-                            transition={
-                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
-                            }
-                            className="absolute w-8 h-8 rounded-full pointer-events-none"
-                            style={{
-                              background:
-                                "radial-gradient(circle, rgba(200,220,255,0.8), rgba(120,160,255,0.2), transparent)",
-                              filter: "blur(7px)",
-                            }}
-                          />
-                          <span className="drop-shadow-[0_0_16px_rgba(210,230,255,0.9)]">
-                            🌙
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="sun"
-                          initial={{ scale: 0.4, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.6, opacity: 0 }}
-                          transition={
-                            isHome
-                              ? { duration: 0.9, ease: "easeOut" }
-                              : undefined
-                          }
-                          className="relative flex items-center justify-center"
-                        >
-                          <motion.span
-                            initial={{ scale: 0, opacity: 0.2 }}
-                            animate={{ scale: 1.6, opacity: 0.4 }}
-                            transition={
-                              isHome ? { duration: 1.2, ease: "easeOut" } : {}
-                            }
-                            className="absolute w-8 h-8 rounded-full"
-                            style={{
-                              background:
-                                "radial-gradient(circle, rgba(255,200,0,0.8), rgba(255,140,0,0.3), transparent)",
-                              filter: "blur(8px)",
-                            }}
-                          />
-                          <span className="drop-shadow-[0_0_18px_#FFB800]">
-                            ☀️
-                          </span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </span>
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{ transformOrigin: "50% 50%" }}
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 30,
-                      ease: "linear",
-                      repeat: Infinity,
-                    }}
-                  >
-                    <div
-                      className="absolute select-none transition-all duration-300"
-                      style={{
-                        top: "-6px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        fontSize: "8px",
-                        filter: dark
-                          ? "drop-shadow(0 0 6px #FFD700)"
-                          : "drop-shadow(0 0 6px #FFFFFF)",
-                      }}
-                    >
-                      {dark ? "☀️" : "🌙"}
-                    </div>
-                  </motion.div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* MOBILE MENU DROPDOWN */}
-        {menuOpen && (
-          <div className="sm:hidden px-3 pb-3 pt-2">
-            <div className="flex justify-end">
-              <div
-                className="
+                  className="
           relative
           w-[250px]           /* control width */
           rounded-2xl
@@ -1061,24 +1122,24 @@ export default function App() {
           px-2.5 py-2
           space-y-1
         "
-              >
-                {/* small arrow pointing to hamburger */}
-                <div
-                  className="
+                >
+                  {/* small arrow pointing to hamburger */}
+                  <div
+                    className="
             absolute -top-1 right-4
             h-2 w-2
             rotate-45
             bg-slate-950/95
             border-t border-l border-teal-400/30
           "
-                />
+                  />
 
-                {links.map((l) => (
-                  <Link
-                    key={l.to}
-                    to={l.to}
-                    onClick={() => setMenuOpen(false)}
-                    className="
+                  {links.map((l) => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      onClick={() => setMenuOpen(false)}
+                      className="
               flex items-center
               rounded-lg px-3 py-2
               text-[13px] text-slate-100
@@ -1090,104 +1151,153 @@ export default function App() {
               hover:shadow-[0_0_14px_rgba(45,212,191,0.7)]
               active:scale-[0.98] active:translate-y-[1px]
             "
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-teal-400 mr-2 shadow-[0_0_6px_rgba(45,212,191,0.9)]" />
-                    <span>{l.label}</span>
-                  </Link>
-                ))}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-teal-400 mr-2 shadow-[0_0_6px_rgba(45,212,191,0.9)]" />
+                      <span>{l.label}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </nav>
+          )}
+        </nav>
 
-      {/* ROUTES */}
-      <main
-        style={{ paddingTop: "calc(var(--nav-height) + 12px)" }}
-        className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-6"
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <Routes location={location} key={location.pathname}>
-            {/* HOME */}
-            <Route
-              path="/"
-              element={
-                isLoadingBackend ? (
-                  <div
-                    className="flex items-center justify-center"
-                    style={{ height: "80vh" }}
-                  >
-                    <div className="relative">
-                      {/* Outer glow ring */}
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 opacity-20 blur-xl animate-pulse" />
+        {/* ROUTES */}
+        <main
+          style={{ paddingTop: "calc(var(--nav-height) + 12px)" }}
+          className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-6"
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <Routes location={location} key={location.pathname}>
+              {/* HOME */}
+              <Route
+                path="/"
+                element={
+                  isLoadingBackend ? (
+                    <div
+                      className="flex items-center justify-center"
+                      style={{ height: "80vh" }}
+                    >
+                      <div className="relative">
+                        {/* Outer glow ring */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 opacity-20 blur-xl animate-pulse" />
 
-                      {/* Main spinner card */}
-                      <div
-                        className="relative bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
+                        {/* Main spinner card */}
+                        <div
+                          className="relative bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] 
                     border border-emerald-500/30 rounded-2xl p-8 backdrop-blur-xl
                     shadow-[0_0_40px_rgba(16,185,129,0.3)]"
-                      >
-                        {/* Spinning circle */}
-                        <div className="flex flex-col items-center gap-6">
-                          <div className="relative">
-                            {/* Outer ring */}
-                            <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full" />
+                        >
+                          {/* Spinning circle */}
+                          <div className="flex flex-col items-center gap-6">
+                            <div className="relative">
+                              {/* Outer ring */}
+                              <div className="w-16 h-16 border-4 border-emerald-500/20 rounded-full" />
 
-                            {/* Spinning gradient ring */}
-                            <div
-                              className="absolute inset-0 w-16 h-16 border-4 border-transparent 
+                              {/* Spinning gradient ring */}
+                              <div
+                                className="absolute inset-0 w-16 h-16 border-4 border-transparent 
                           border-t-emerald-400 border-r-teal-400 
                           rounded-full animate-spin"
-                            />
+                              />
 
-                            {/* Inner pulse dot */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
-                              <div className="absolute w-3 h-3 bg-emerald-400 rounded-full" />
+                              {/* Inner pulse dot */}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
+                                <div className="absolute w-3 h-3 bg-emerald-400 rounded-full" />
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Text */}
-                          <div className="text-center space-y-2">
-                            <h3
-                              className="text-lg font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 
+                            {/* Text */}
+                            <div className="text-center space-y-2">
+                              <h3
+                                className="text-lg font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 
                          bg-clip-text text-transparent"
-                            >
-                              Loading Dashboard
-                            </h3>
-                            <p className="text-xs text-emerald-400/70 font-mono tracking-wider">
-                              Syncing your data...
-                            </p>
-                          </div>
+                              >
+                                Loading Dashboard
+                              </h3>
+                              <p className="text-xs text-emerald-400/70 font-mono tracking-wider">
+                                Syncing your data...
+                              </p>
+                            </div>
 
-                          {/* Progress bar */}
-                          <div className="w-48 h-1 bg-emerald-500/10 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 
+                            {/* Progress bar */}
+                            <div className="w-48 h-1 bg-emerald-500/10 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 
                           animate-[loading_1.5s_ease-in-out_infinite]"
-                            />
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <style jsx>{`
+                        @keyframes loading {
+                          0% {
+                            width: 0%;
+                            margin-left: 0%;
+                          }
+                          50% {
+                            width: 60%;
+                            margin-left: 20%;
+                          }
+                          100% {
+                            width: 0%;
+                            margin-left: 100%;
+                          }
+                        }
+                      `}</style>
                     </div>
-                    <style jsx>{`
-                      @keyframes loading {
-                        0% {
-                          width: 0%;
-                          margin-left: 0%;
-                        }
-                        50% {
-                          width: 60%;
-                          margin-left: 20%;
-                        }
-                        100% {
-                          width: 0%;
-                          margin-left: 100%;
-                        }
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, x: 300 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={
+                        isHome ? { duration: 0.5, ease: "easeInOut" } : {}
                       }
-                    `}</style>
-                  </div>
-                ) : (
+                    >
+                      <HomeDashboard
+                        stats={stats}
+                        weightHistory={weightHistory}
+                        gymLogDates={gymLogDates}
+                        activePanel={activePanel}
+                        setActivePanel={setActivePanel}
+                      />
+                    </motion.div>
+                  )
+                }
+              />
+              {/* OTHER PAGES WITH SLIDE ANIMATION */}
+              <Route
+                path="/syllabus"
+                element={
+                  dashboardState ? (
+                    <motion.div
+                      initial={{ opacity: 0, x: 300 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={
+                        isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                      }
+                    >
+                      <Syllabus
+                        dashboardState={dashboardState}
+                        setDashboardState={setDashboardState}
+                        updateDashboard={updateDashboard}
+                      />
+                    </motion.div>
+                  ) : (
+                    <div className="flex h-screen items-center justify-center text-emerald-400 text-sm">
+                      Loading syllabus…
+                    </div>
+                  )
+                }
+              />
+
+              <Route
+                path="/GlobalUpgrade"
+                element={
                   <motion.div
                     initial={{ opacity: 0, x: 300 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -1196,22 +1306,17 @@ export default function App() {
                       isHome ? { duration: 0.5, ease: "easeInOut" } : {}
                     }
                   >
-                    <HomeDashboard
-                      stats={stats}
-                      weightHistory={weightHistory}
-                      gymLogDates={gymLogDates}
-                      activePanel={activePanel}
-                      setActivePanel={setActivePanel}
+                    <GlobalUpgrade
+                      dashboardState={dashboardState}
+                      updateDashboard={updateDashboard}
                     />
                   </motion.div>
-                )
-              }
-            />
-            {/* OTHER PAGES WITH SLIDE ANIMATION */}
-            <Route
-              path="/syllabus"
-              element={
-                dashboardState ? (
+                }
+              />
+              {/* GYM */}
+              <Route
+                path="/gym"
+                element={
                   <motion.div
                     initial={{ opacity: 0, x: 300 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -1220,191 +1325,148 @@ export default function App() {
                       isHome ? { duration: 0.5, ease: "easeInOut" } : {}
                     }
                   >
-                    <Syllabus
+                    <Gym
+                      dashboardState={dashboardState}
+                      updateDashboard={updateDashboard}
+                    />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/projects"
+                element={
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Projects
+                      dashboardState={dashboardState}
+                      updateDashboard={updateDashboard}
+                    />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Calendar
+                      syllabus_tree_v2={dashboardState.syllabus_tree_v2}
+                      gymLogs={dashboardState.wd_gym_logs}
+                      doneMap={dashboardState.wd_done}
+                      notesMap={dashboardState.wd_notes_v1}
+                      bmiLogs={dashboardState.bmi_logs}
+                      updateDashboard={updateDashboard}
+                    />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/planner"
+                element={
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Planner
+                      dashboardState={dashboardState}
+                      updateDashboard={updateDashboard}
+                    />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/gallery"
+                element={
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Gallery />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/control"
+                element={
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Control
                       dashboardState={dashboardState}
                       setDashboardState={setDashboardState}
                       updateDashboard={updateDashboard}
                     />
                   </motion.div>
-                ) : (
-                  <div className="flex h-screen items-center justify-center text-emerald-400 text-sm">
-                    Loading syllabus…
-                  </div>
-                )
-              }
-            />
+                }
+              />
+              <Route
+                path="/goals"
+                element={
+                  <motion.div
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={
+                      isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                    }
+                  >
+                    <Goals
+                      dashboardState={dashboardState}
+                      updateDashboard={updateDashboard}
+                    />
+                  </motion.div>
+                }
+              />
+              {/* 404 */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
+        </main>
 
-            <Route
-              path="/GlobalUpgrade"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <GlobalUpgrade
-                    dashboardState={dashboardState}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            {/* GYM */}
-            <Route
-              path="/gym"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Gym
-                    dashboardState={dashboardState}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/projects"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Projects
-                    dashboardState={dashboardState}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/calendar"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Calendar
-                    syllabus_tree_v2={dashboardState.syllabus_tree_v2}
-                    gymLogs={dashboardState.wd_gym_logs}
-                    doneMap={dashboardState.wd_done}
-                    notesMap={dashboardState.wd_notes_v1}
-                    bmiLogs={dashboardState.bmi_logs}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/planner"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Planner
-                    dashboardState={dashboardState}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/gallery"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Gallery />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/control"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Control
-                    dashboardState={dashboardState}
-                    setDashboardState={setDashboardState}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/goals"
-              element={
-                <motion.div
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={
-                    isHome ? { duration: 0.5, ease: "easeInOut" } : {}
-                  }
-                >
-                  <Goals
-                    dashboardState={dashboardState}
-                    updateDashboard={updateDashboard}
-                  />
-                </motion.div>
-              }
-            />
-            {/* 404 */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
-      </main>
+        <footer className="relative z-10 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-lg border-t border-cyan-500/20 py-4 text-center shadow-[0_-10px_30px_rgba(6,182,212,0.1)]">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm px-4">
+            <span className="text-cyan-300 font-bold tracking-wider drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+              🌟 Jay
+            </span>
+            <span className="text-cyan-500/50">|</span>
+            <span className="text-cyan-200/80 font-medium">
+              💪 Fitness • 💻 Code • 📈 Growth
+            </span>
+            <span className="text-cyan-500/50">|</span>
+            <span className="text-cyan-400/70 font-medium">
+              {new Date().getFullYear()}
+            </span>
+          </div>
+        </footer>
 
-      <footer className="relative z-10 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-lg border-t border-cyan-500/20 py-4 text-center shadow-[0_-10px_30px_rgba(6,182,212,0.1)]">
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm px-4">
-          <span className="text-cyan-300 font-bold tracking-wider drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-            🌟 Jay
-          </span>
-          <span className="text-cyan-500/50">|</span>
-          <span className="text-cyan-200/80 font-medium">
-            💪 Fitness • 💻 Code • 📈 Growth
-          </span>
-          <span className="text-cyan-500/50">|</span>
-          <span className="text-cyan-400/70 font-medium">
-            {new Date().getFullYear()}
-          </span>
-        </div>
-      </footer>
-
-      <FloatingScrollControl />
-    </div>
+        <FloatingScrollControl />
+      </div>
+    </>
   );
 }
 
