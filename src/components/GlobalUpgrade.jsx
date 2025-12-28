@@ -33,6 +33,8 @@ import {
   BarChart3,
   Bell,
   Share2,
+  Sparkles,
+  CalendarDays,
 } from "lucide-react";
 
 const API_URL =
@@ -48,15 +50,13 @@ const PRODUCTS = {
       color: "blue",
       frequency: "daily-night",
       schedule: "Once daily (night)",
-      conflict: ["minimalist"],
     },
     minimalist: {
       name: "Minimalist 18% Serum",
       icon: "✨",
       color: "purple",
-      frequency: "2-3-weekly",
-      schedule: "2-3 nights/week (NOT on minoxidil nights)",
-      conflict: ["minoxidil"],
+      frequency: "daily-morning",
+      schedule: "Once daily (Morning)",
     },
   },
   supplements: {
@@ -203,7 +203,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     weekly: true,
   });
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
-  const [photoNotes, setPhotoNotes] = useState("");
+  const [photoNotes, setPhotoNotes] = useState({
+    photoData: null,
+    fileName: null,
+    notes: "",
+  });
   const [showReminders, setShowReminders] = useState(false);
   const reportRef = useRef(null);
 
@@ -226,6 +230,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     sideEffects: todayLog.sideEffects || "",
     scalpCondition: todayLog.scalpCondition || "normal",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    show: false,
+    photoIdx: null,
+    photoDate: null,
+  });
 
   useEffect(() => {
     const log = hairLogs[selectedDate] || {};
@@ -247,12 +256,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
   }, [selectedDate, hairLogs]);
 
   const saveLog = (updates = {}) => {
+    Object.entries(updates).forEach(([k, v]) => {
+      if (typeof v === "object" && v !== null) {
+        console.error("❌ Non-serializable value in", k, v);
+      }
+    });
     const finalData = { ...todayData, ...updates };
-
-    if (finalData.minoxidil && finalData.minimalist) {
-      alert("⚠️ Don't use Minimalist serum on Minoxidil nights!");
-      return;
-    }
 
     updateDashboard({
       hair_logs: {
@@ -267,29 +276,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
 
   const toggleProduct = (productKey) => {
     const newValue = !todayData[productKey];
-    const product = Object.values(PRODUCTS)
-      .flatMap((cat) => Object.entries(cat))
-      .find(([key]) => key === productKey)?.[1];
-
-    if (newValue && product?.conflict) {
-      const hasConflict = product.conflict.some((c) => todayData[c]);
-      if (hasConflict) {
-        const conflictNames = product.conflict
-          .map(
-            (c) =>
-              Object.values(PRODUCTS)
-                .flatMap((cat) => Object.entries(cat))
-                .find(([key]) => key === c)?.[1]?.name
-          )
-          .filter(Boolean)
-          .join(", ");
-        alert(
-          `⚠️ Conflict detected! Don't use ${product.name} with ${conflictNames} on the same night.`
-        );
-        return;
-      }
-    }
-
     const updated = { ...todayData, [productKey]: newValue };
     setTodayData(updated);
     saveLog(updated);
@@ -309,7 +295,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     const calculateForPeriod = (days) => {
       const stats = {
         minoxidil: { count: 0, expected: days, target: 100 },
-        minimalist: { count: 0, expected: Math.floor(days * 0.33), target: 33 },
+        minimalist: { count: 0, expected: days, target: 100 },
         biotin: { count: 0, expected: days, target: 100 },
         supradyn: { count: 0, expected: days, target: 100 },
         seeds: { count: 0, expected: days, target: 100 },
@@ -413,45 +399,45 @@ export default function HairCare({ dashboardState, updateDashboard }) {
 
   // PDF Export Function
   // Updated PDF Export Function - Matches Screen Design
- const exportToPDF = () => {
-   const allLogDates = Object.keys(hairLogs)
-     .filter((date) => {
-       const log = hairLogs[date];
-       return (
-         log &&
-         Object.keys(log).some(
-           (key) =>
-             [
-               "minoxidil",
-               "minimalist",
-               "biotin",
-               "supradyn",
-               "seeds",
-               "shampoo",
-               "oil",
-               "herbal",
-             ].includes(key) && log[key]
-         )
-       );
-     })
-     .sort();
+  const exportToPDF = () => {
+    const allLogDates = Object.keys(hairLogs)
+      .filter((date) => {
+        const log = hairLogs[date];
+        return (
+          log &&
+          Object.keys(log).some(
+            (key) =>
+              [
+                "minoxidil",
+                "minimalist",
+                "biotin",
+                "supradyn",
+                "seeds",
+                "shampoo",
+                "oil",
+                "herbal",
+              ].includes(key) && log[key]
+          )
+        );
+      })
+      .sort();
 
-   const actualStartDate =
-     allLogDates.length > 0
-       ? dayjs(allLogDates[0])
-       : dayjs().subtract(180, "days");
-   const actualEndDate = dayjs();
-   const totalDays = actualEndDate.diff(actualStartDate, "day") + 1;
-   const data = analytics.days180;
+    const actualStartDate =
+      allLogDates.length > 0
+        ? dayjs(allLogDates[0])
+        : dayjs().subtract(180, "days");
+    const actualEndDate = dayjs();
+    const totalDays = actualEndDate.diff(actualStartDate, "day") + 1;
+    const data = analytics.days180;
 
-   const printWindow = window.open("", "_blank");
+    const printWindow = window.open("", "_blank");
 
-   if (!printWindow) {
-     alert("Please allow popups to export PDF");
-     return;
-   }
+    if (!printWindow) {
+      alert("Please allow popups to export PDF");
+      return;
+    }
 
-   printWindow.document.write(`
+    printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -628,7 +614,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         }
         
         .stat-progress-bar {
-          height: 100%;
+          height: 70%;
           border-radius: 3px;
         }
         
@@ -754,8 +740,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           <div class="info-item">
             <div class="info-label">Total Duration</div>
             <div class="info-value">${totalDays} days (${Math.floor(
-     totalDays / 30
-   )}mo)</div>
+      totalDays / 30
+    )}mo)</div>
           </div>
           <div class="info-item">
             <div class="info-label">Treatment Protocol</div>
@@ -772,7 +758,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           <div class="schedule-grid">
             <div>• <strong>AM:</strong> Minimalist 18% Serum</div>
             <div>• <strong>PM:</strong> Minoxidil 5%</div>
-            <div>• <strong>Daily:</strong> Biotin + SupraDyn + Seeds</div>
+            <div>• <strong>Daily:</strong> Biotin Gummies + SupraDyn + Seeds</div>
             <div>• <strong>Weekly:</strong> Shampoo + Oil/Herbal</div>
           </div>
         </div>
@@ -780,8 +766,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         <div class="section">
           <div class="section-header">📊 Treatment Compliance</div>
           <div class="section-subtitle">${totalDays}-day adherence since ${actualStartDate.format(
-     "MMM DD, YYYY"
-   )}</div>
+      "MMM DD, YYYY"
+    )}</div>
           
           <div class="compliance-grid">
             <div class="stat-card stat-card-blue">
@@ -799,8 +785,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 }">${data.minoxidil.compliance}%</div>
               </div>
               <div class="stat-footer color-blue">${data.minoxidil.count}/${
-     data.minoxidil.expected
-   } days</div>
+      data.minoxidil.expected
+    } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-blue" style="width: ${
                   data.minoxidil.compliance
@@ -823,8 +809,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 }">${data.minimalist.compliance}%</div>
               </div>
               <div class="stat-footer color-purple">${data.minimalist.count}/${
-     data.minimalist.expected
-   } apps</div>
+      data.minimalist.expected
+    } apps</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-purple" style="width: ${
                   data.minimalist.compliance
@@ -847,8 +833,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 }">${data.biotin.compliance}%</div>
               </div>
               <div class="stat-footer color-pink">${data.biotin.count}/${
-     data.biotin.expected
-   } days</div>
+      data.biotin.expected
+    } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-pink" style="width: ${
                   data.biotin.compliance
@@ -871,8 +857,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 }">${data.supradyn.compliance}%</div>
               </div>
               <div class="stat-footer color-orange">${data.supradyn.count}/${
-     data.supradyn.expected
-   } days</div>
+      data.supradyn.expected
+    } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-orange" style="width: ${
                   data.supradyn.compliance
@@ -895,8 +881,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 }">${data.seeds.compliance}%</div>
               </div>
               <div class="stat-footer color-amber">${data.seeds.count}/${
-     data.seeds.expected
-   } days</div>
+      data.seeds.expected
+    } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-amber" style="width: ${
                   data.seeds.compliance
@@ -997,16 +983,18 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     </html>
   `);
 
-   printWindow.document.close();
-   printWindow.focus();
+    printWindow.document.close();
+    printWindow.focus();
 
-   // Longer delay for mobile + don't auto-close
-   setTimeout(() => {
-     printWindow.print();
-     // Don't close automatically - let user close it
-   }, 1000);
- };
+    setTimeout(() => {
+      printWindow.print();
 
+      // Close after print dialog interaction
+      printWindow.onafterprint = function () {
+        printWindow.close();
+      };
+    }, 1000);
+  };
 
   // Compact Calendar
   const renderCompactCalendar = () => {
@@ -1203,17 +1191,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           </div>
         </button>
 
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="px-6 pb-6 space-y-3"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden" // ✅ ADD THIS
             >
-              {products.map(([key, product]) =>
-                renderProductCard(key, product, categoryKey)
-              )}
+              <div className="px-6 pt-4 pb-6 space-y-2">
+                {products.map(([key, product]) =>
+                  renderProductCard(key, product, categoryKey)
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1221,7 +1212,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     );
   };
 
-  // DOCTOR MODE VIEW
   // DOCTOR MODE VIEW
   if (doctorMode) {
     const data = analytics.days180;
@@ -1356,7 +1346,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 <div className="flex items-start gap-1">
                   <span>•</span>
                   <span>
-                    <strong>Daily:</strong> Biotin + SupraDyn + Seed Mix
+                    <strong>Daily:</strong> Biotin Gummies + SupraDyn + Seed Mix
                   </span>
                 </div>
                 <div className="flex items-start gap-1">
@@ -1435,9 +1425,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       <div className="text-xs font-medium text-purple-600 uppercase tracking-wide mb-1">
                         Minimalist 18% Serum
                       </div>
-                      <div className="text-sm text-purple-700">
-                        Daily (AM + PM)
-                      </div>
+                      <div className="text-sm text-purple-700">Daily (AM)</div>
                     </div>
                     <div
                       className={`text-3xl font-bold ${
@@ -1829,8 +1817,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         </motion.div>
 
         {/* View Tabs - Icons only on mobile, full labels on desktop */}
-        <div className="mb-6">
-          <div className="flex justify-around sm:justify-start overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+        <div className="mb-6 ">
+          <div className="flex justify-around sm:justify-start overflow-x-auto pb-2 -mx-4 px-4 gap-2 sm:mx-0 sm:px-0 scrollbar-hide">
             {[
               { id: "today", label: "Today", icon: Target },
               { id: "calendar", label: "Calendar", icon: Calendar },
@@ -1845,7 +1833,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-w-[44px] sm:min-w-auto
           ${
             viewMode === mode.id
-              ? "bg-teal-500/30 text-teal-100 border-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+              ? "bg-teal-500/30 text-teal-100 border-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.3)] rounded-xl"
               : "bg-black/20 text-teal-300/60 border-teal-700/30 hover:bg-teal-500/10 active:bg-teal-500/20"
           }
           border
@@ -1861,61 +1849,144 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         {/* TODAY VIEW */}
         {viewMode === "today" && (
           <div className="space-y-6">
-            {/* Date selector */}
-            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() =>
-                    setSelectedDate(
-                      dayjs(selectedDate)
-                        .subtract(1, "day")
-                        .format("YYYY-MM-DD")
-                    )
-                  }
-                  className="p-2 hover:bg-teal-500/10 rounded-lg transition"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-teal-200">
-                    {dayjs(selectedDate).format("MMM DD, YYYY")}
-                  </h2>
-                  <div className="text-sm text-teal-400/60">
-                    {dayjs(selectedDate).format("dddd")}
+            {/* Enhanced Date Selector with Stats */}
+            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-4 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Left: Quick Stats */}
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 rounded-lg border border-purple-400/40">
+                      <Target size={16} className="text-purple-400" />
+                      <div className="text-xs">
+                        <span className="text-purple-400/70">30-day:</span>
+                        <span className="ml-1 font-bold text-purple-200">
+                          {analytics.days30.minoxidil.compliance}%
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={() =>
-                    setSelectedDate(
-                      dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD")
-                    )
-                  }
-                  disabled={dayjs(selectedDate).isSame(dayjs(), "day")}
-                  className="p-2 hover:bg-teal-500/10 rounded-lg transition disabled:opacity-30"
-                >
-                  <ChevronRight size={20} />
-                </button>
+
+                {/* Center: Date Navigation */}
+                <div className="flex items-center justify-between md:justify-center gap-4">
+                  <button
+                    onClick={() =>
+                      setSelectedDate(
+                        dayjs(selectedDate)
+                          .subtract(1, "day")
+                          .format("YYYY-MM-DD")
+                      )
+                    }
+                    className="p-2 hover:bg-teal-500/10 rounded-lg transition active:scale-95"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <div className="text-center">
+                    <h2 className="text-xl sm:text-2xl font-bold text-teal-200">
+                      {dayjs(selectedDate).format("MMM DD, YYYY")}
+                    </h2>
+                    <div className="text-xs sm:text-sm text-teal-400/60">
+                      {dayjs(selectedDate).format("dddd")}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setSelectedDate(
+                        dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD")
+                      )
+                    }
+                    disabled={dayjs(selectedDate).isSame(dayjs(), "day")}
+                    className="p-2 hover:bg-teal-500/10 rounded-lg transition disabled:opacity-30 active:scale-95"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+
+                {/* Right: Quick Actions */}
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    onClick={() =>
+                      setSelectedDate(dayjs().format("YYYY-MM-DD"))
+                    }
+                    className="flex items-center gap-1.5 px-3 py-2 bg-teal-500/20 hover:bg-teal-500/30 rounded-lg border border-teal-400/40 transition text-xs font-medium text-teal-200"
+                  >
+                    <CalendarDays size={14} />
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setViewMode("calendar")}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg border border-blue-400/40 transition text-xs font-medium text-blue-200"
+                  >
+                    <Calendar size={14} />
+                    View
+                  </button>
+                </div>
               </div>
 
-              {(todayData.minoxidil || todayData.minimalist) &&
-                todayData.biotin &&
-                todayData.supradyn &&
-                todayData.seeds && (
+              {/* Perfect Day Banner */}
+              <AnimatePresence>
+                {(todayData.minoxidil || todayData.minimalist) &&
+                  todayData.biotin &&
+                  todayData.supradyn &&
+                  todayData.seeds && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="mt-4 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/60 rounded-xl"
+                    >
+                      <Award className="text-green-300" size={20} />
+                      <span className="text-green-200 font-semibold">
+                        Perfect Day!
+                      </span>
+                      <Sparkles className="text-yellow-300" size={16} />
+                    </motion.div>
+                  )}
+              </AnimatePresence>
+
+              {/* Mini Progress Bar - Overall Completion */}
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-teal-400/70">Today's Progress</span>
+                  <span className="font-semibold text-teal-200">
+                    {(() => {
+                      const completed = [
+                        todayData.minoxidil,
+                        todayData.minimalist,
+                        todayData.biotin,
+                        todayData.supradyn,
+                        todayData.seeds,
+                      ].filter(Boolean).length;
+                      const total = 5;
+                      return `${completed}/${total}`;
+                    })()}
+                  </span>
+                </div>
+                <div className="h-2 bg-black/40 rounded-full overflow-hidden">
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center justify-center gap-2 py-3 bg-green-500/20 border border-green-400/60 rounded-xl mb-4"
-                  >
-                    <Award className="text-green-300" size={20} />
-                    <span className="text-green-200 font-semibold">
-                      Perfect Day! 🎯
-                    </span>
-                  </motion.div>
-                )}
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: `${
+                        ([
+                          todayData.minoxidil,
+                          todayData.minimalist,
+                          todayData.biotin,
+                          todayData.supradyn,
+                          todayData.seeds,
+                        ].filter(Boolean).length /
+                          5) *
+                        100
+                      }%`,
+                    }}
+                    className="h-full bg-gradient-to-r from-teal-500 to-green-500 rounded-full transition-all duration-500"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Categories */}
-            <div className="space-y-4">
+            {/* Categories - 2x2 Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {renderCategory(
                 "treatments",
                 PRODUCTS.treatments,
@@ -1953,7 +2024,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       hairFallCount: e.target.value,
                     })
                   }
-                  onBlur={saveLog}
+                  onBlur={(e) => saveLog({ hairFallCount: e.target.value })}
                   placeholder="e.g., 15"
                   className="w-full px-4 py-3 bg-black/40 border border-teal-700/40 rounded-xl text-teal-100 text-lg placeholder-teal-400/30 focus:border-teal-400 focus:outline-none transition-colors"
                 />
@@ -2010,7 +2081,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   onChange={(e) =>
                     setTodayData({ ...todayData, notes: e.target.value })
                   }
-                  onBlur={saveLog}
+                  onBlur={(e) => saveLog({ notes: e.target.value })}
                   placeholder="Baby hairs visible, less shedding, etc..."
                   rows={4}
                   className="w-full px-4 py-3 bg-black/40 border border-teal-700/40 rounded-xl text-teal-100 placeholder-teal-400/30 focus:border-teal-400 focus:outline-none resize-none transition-colors"
@@ -2027,7 +2098,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   onChange={(e) =>
                     setTodayData({ ...todayData, sideEffects: e.target.value })
                   }
-                  onBlur={saveLog}
+                  onBlur={(e) => saveLog({ sideEffects: e.target.value })}
                   placeholder="Scalp dryness, itching, forehead breakouts, etc..."
                   rows={4}
                   className="w-full px-4 py-3 bg-black/40 border border-red-700/40 rounded-xl text-teal-100 placeholder-red-400/30 focus:border-red-400 focus:outline-none resize-none transition-colors"
@@ -2420,7 +2491,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           </div>
         )}
 
-        {/* PHOTOS VIEW */}
         {viewMode === "photos" && (
           <div className="space-y-6">
             <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
@@ -2458,9 +2528,24 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       key={idx}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-black/40 border border-teal-700/30 rounded-xl overflow-hidden"
+                      className="bg-black/40 border border-teal-700/30 rounded-xl overflow-hidden group relative"
                     >
-                      {/* ✅ Display actual image */}
+                      {/* ✅ DELETE BUTTON */}
+                      <button
+                        onClick={() =>
+                          setDeleteConfirm({
+                            show: true,
+                            photoIdx: idx,
+                            photoDate: dayjs(photo.date).format("MMM DD, YYYY"),
+                          })
+                        }
+                        className="absolute top-2 right-2 z-10 p-2 bg-red-500/80 backdrop-blur-sm border border-red-400 rounded-lg text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-red-600 transition-all"
+                        title="Delete photo"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+
+                      {/* Display actual image */}
                       <div className="aspect-video bg-teal-900/20 overflow-hidden">
                         {photo.url ? (
                           <img
@@ -2476,6 +2561,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                           </div>
                         )}
                       </div>
+
                       <div className="p-4">
                         <div className="text-sm text-teal-200 font-medium mb-1">
                           {dayjs(photo.date).format("MMM DD, YYYY")}
@@ -2499,6 +2585,82 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 won't show!
               </div>
             </div>
+
+            {/* ✅ DELETE CONFIRMATION MODAL */}
+            <AnimatePresence>
+              {deleteConfirm.show && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                  onClick={() =>
+                    setDeleteConfirm({
+                      show: false,
+                      photoIdx: null,
+                      photoDate: null,
+                    })
+                  }
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-gradient-to-br from-slate-900 to-slate-950 border border-red-400/30 rounded-2xl p-6 max-w-md w-full"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-red-500/20 rounded-full">
+                        <AlertCircle className="text-red-400" size={24} />
+                      </div>
+                      <h3 className="text-xl font-bold text-red-200">
+                        Delete Photo?
+                      </h3>
+                    </div>
+
+                    <p className="text-teal-300/80 mb-6">
+                      Are you sure you want to delete the photo from{" "}
+                      <strong className="text-teal-100">
+                        {deleteConfirm.photoDate}
+                      </strong>
+                      ? This action cannot be undone.
+                    </p>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() =>
+                          setDeleteConfirm({
+                            show: false,
+                            photoIdx: null,
+                            photoDate: null,
+                          })
+                        }
+                        className="flex-1 px-4 py-3 bg-teal-500/20 border border-teal-400/40 rounded-xl text-teal-100 hover:bg-teal-500/30 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          const updated = [
+                            ...hairPhotos.slice(0, deleteConfirm.photoIdx),
+                            ...hairPhotos.slice(deleteConfirm.photoIdx + 1),
+                          ];
+                          updateDashboard({ hair_photos: updated });
+                          setDeleteConfirm({
+                            show: false,
+                            photoIdx: null,
+                            photoDate: null,
+                          });
+                        }}
+                        className="flex-1 px-4 py-3 bg-red-500 border border-red-400 rounded-xl text-white hover:bg-red-600 transition-colors font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
@@ -2685,11 +2847,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         : photoNotes?.notes || ""
                     }
                     onChange={(e) => {
-                      if (typeof photoNotes === "object") {
-                        setPhotoNotes({ ...photoNotes, notes: e.target.value });
-                      } else {
-                        setPhotoNotes(e.target.value);
-                      }
+                      const value = e.target.value;
+                      setPhotoNotes((prev) => ({
+                        ...prev,
+                        notes: value,
+                      }));
                     }}
                     placeholder="Describe what you notice: baby hairs, density changes, etc..."
                     rows={3}
