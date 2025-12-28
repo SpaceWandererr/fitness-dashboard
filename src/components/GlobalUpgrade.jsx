@@ -1897,32 +1897,34 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           </div>
         </motion.div>
 
-        {/* View Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {[
-            { id: "today", label: "Today", icon: Target },
-            { id: "calendar", label: "Calendar", icon: Calendar },
-            { id: "analytics", label: "Analytics", icon: Activity },
-            { id: "photos", label: "Photos", icon: Camera },
-            { id: "history", label: "History", icon: Clock },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setViewMode(mode.id)}
-              className={`
-                flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap
-                ${
-                  viewMode === mode.id
-                    ? "bg-teal-500/30 text-teal-100 border-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
-                    : "bg-black/20 text-teal-300/60 border-teal-700/30 hover:bg-teal-500/10"
-                }
-                border
-              `}
-            >
-              <mode.icon size={16} />
-              {mode.label}
-            </button>
-          ))}
+        {/* View Tabs - Icons only on mobile, full labels on desktop */}
+        <div className="mb-6">
+          <div className="flex justify-around sm:justify-start overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+            {[
+              { id: "today", label: "Today", icon: Target },
+              { id: "calendar", label: "Calendar", icon: Calendar },
+              { id: "analytics", label: "Analytics", icon: Activity },
+              { id: "photos", label: "Photos", icon: Camera },
+              { id: "history", label: "History", icon: Clock },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setViewMode(mode.id)}
+                className={`
+          flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-w-[44px] sm:min-w-auto
+          ${
+            viewMode === mode.id
+              ? "bg-teal-500/30 text-teal-100 border-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+              : "bg-black/20 text-teal-300/60 border-teal-700/30 hover:bg-teal-500/10 active:bg-teal-500/20"
+          }
+          border
+        `}
+              >
+                <mode.icon size={18} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{mode.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* TODAY VIEW */}
@@ -2376,312 +2378,299 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         )}
 
         {/* ANALYTICS VIEW */}
-        {
-          viewMode === "analytics" && (
-            <div className="space-y-6">
-              {/* Compliance breakdown */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {Object.entries(PRODUCTS).map(([catKey, catData]) =>
-                  Object.entries(catData).map(([prodKey, product]) => {
-                    const stat = analytics.days30[prodKey] || {}; // ✅ CHANGED: analytics.days30[prodKey]
-                    const colors = COLOR_SCHEMES[product.color];
-                    const compliance = stat.compliance || 0;
-                    const isGood = compliance >= 80;
-                    const isOk = compliance >= 60;
+        {viewMode === "analytics" && (
+          <div className="space-y-6">
+            {/* Compliance breakdown */}
+            <div className="grid md:grid-cols-3 gap-4">
+              {Object.entries(PRODUCTS).map(([catKey, catData]) =>
+                Object.entries(catData).map(([prodKey, product]) => {
+                  const stat = analytics.days30[prodKey] || {}; // ✅ CHANGED: analytics.days30[prodKey]
+                  const colors = COLOR_SCHEMES[product.color];
+                  const compliance = stat.compliance || 0;
+                  const isGood = compliance >= 80;
+                  const isOk = compliance >= 60;
+
+                  return (
+                    <motion.div
+                      key={prodKey}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`bg-gradient-to-br ${colors.gradient} border ${colors.border} rounded-2xl p-6 relative overflow-hidden`}
+                    >
+                      <div className="absolute top-0 right-0 text-6xl opacity-10">
+                        {product.icon}
+                      </div>
+                      <div className="relative z-10">
+                        <div
+                          className={`${colors.text} text-sm mb-2 font-medium`}
+                        >
+                          {product.name}
+                        </div>
+                        <div className="flex items-end gap-2 mb-3">
+                          <div className="text-4xl font-bold text-white">
+                            {compliance}%
+                          </div>
+                          <div className="text-sm text-white/60 mb-1">
+                            {stat.count}/{stat.expected}
+                          </div>
+                        </div>
+                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${compliance}%` }}
+                            transition={{ duration: 1, delay: 0.2 }}
+                            className={`h-full ${
+                              isGood
+                                ? "bg-green-400"
+                                : isOk
+                                ? "bg-amber-400"
+                                : "bg-red-400"
+                            }`}
+                          />
+                        </div>
+                        <div className="text-xs text-white/50 mt-2">
+                          {product.schedule}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Hair fall trend */}
+            {analytics.days30?.hairFall?.trend?.length > 0 && ( // ✅ CHANGED: analytics.days30.hairFall
+              <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-teal-200 mb-4 flex items-center gap-2">
+                  <TrendingDown size={20} />
+                  Hair Fall Trend (Weekly Average - Last 30 Days)
+                </h3>
+                <div className="flex items-end gap-2 h-64">
+                  {analytics.days30.hairFall.trend.map((bucket, idx) => {
+                    // ✅ CHANGED
+                    const maxFall = Math.max(
+                      ...analytics.days30.hairFall.trend.map((b) => b.avg) // ✅ CHANGED
+                    );
+                    const height = (bucket.avg / maxFall) * 100;
+                    const isRecent =
+                      idx >= analytics.days30.hairFall.trend.length - 2; // ✅ CHANGED
 
                     return (
-                      <motion.div
-                        key={prodKey}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`bg-gradient-to-br ${colors.gradient} border ${colors.border} rounded-2xl p-6 relative overflow-hidden`}
+                      <div
+                        key={bucket.week}
+                        className="flex-1 flex flex-col items-center gap-2"
                       >
-                        <div className="absolute top-0 right-0 text-6xl opacity-10">
-                          {product.icon}
+                        <div className="text-xs text-teal-300/60 font-bold">
+                          {bucket.avg}
                         </div>
-                        <div className="relative z-10">
-                          <div
-                            className={`${colors.text} text-sm mb-2 font-medium`}
-                          >
-                            {product.name}
-                          </div>
-                          <div className="flex items-end gap-2 mb-3">
-                            <div className="text-4xl font-bold text-white">
-                              {compliance}%
-                            </div>
-                            <div className="text-sm text-white/60 mb-1">
-                              {stat.count}/{stat.expected}
-                            </div>
-                          </div>
-                          <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${compliance}%` }}
-                              transition={{ duration: 1, delay: 0.2 }}
-                              className={`h-full ${
-                                isGood
-                                  ? "bg-green-400"
-                                  : isOk
-                                  ? "bg-amber-400"
-                                  : "bg-red-400"
-                              }`}
-                            />
-                          </div>
-                          <div className="text-xs text-white/50 mt-2">
-                            {product.schedule}
-                          </div>
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${height}%` }}
+                          transition={{ duration: 0.5, delay: idx * 0.1 }}
+                          className={`w-full rounded-t-lg ${
+                            isRecent
+                              ? "bg-gradient-to-t from-cyan-500 to-teal-400"
+                              : "bg-gradient-to-t from-teal-600 to-teal-700"
+                          }`}
+                          title={`Week ${bucket.week}: ${bucket.avg} strands/day`}
+                        />
+                        <div className="text-[10px] text-teal-400/40">
+                          W{bucket.week}
                         </div>
-                      </motion.div>
+                      </div>
                     );
-                  })
-                )}
+                  })}
+                </div>
+                <div className="text-xs text-teal-300/60 mt-4 text-center">
+                  Lower is better • Recent weeks highlighted in cyan
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PHOTOS VIEW */}
+        {viewMode === "photos" && (
+          <div className="space-y-6">
+            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-teal-200">
+                  Progress Photos
+                </h3>
+                <button
+                  onClick={() => setShowPhotoUpload(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-teal-500/30 border border-teal-400 rounded-xl text-teal-100 hover:bg-teal-500/40 transition-colors"
+                >
+                  <Plus size={18} />
+                  Add Photo
+                </button>
               </div>
 
-              {/* Hair fall trend */}
-              {analytics.days30?.hairFall?.trend?.length > 0 && ( // ✅ CHANGED: analytics.days30.hairFall
-                <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-teal-200 mb-4 flex items-center gap-2">
-                    <TrendingDown size={20} />
-                    Hair Fall Trend (Weekly Average - Last 30 Days)
-                  </h3>
-                  <div className="flex items-end gap-2 h-64">
-                    {analytics.days30.hairFall.trend.map((bucket, idx) => {
-                      // ✅ CHANGED
-                      const maxFall = Math.max(
-                        ...analytics.days30.hairFall.trend.map((b) => b.avg) // ✅ CHANGED
-                      );
-                      const height = (bucket.avg / maxFall) * 100;
-                      const isRecent =
-                        idx >= analytics.days30.hairFall.trend.length - 2; // ✅ CHANGED
-
-                      return (
-                        <div
-                          key={bucket.week}
-                          className="flex-1 flex flex-col items-center gap-2"
-                        >
-                          <div className="text-xs text-teal-300/60 font-bold">
-                            {bucket.avg}
-                          </div>
-                          <motion.div
-                            initial={{ height: 0 }}
-                            animate={{ height: `${height}%` }}
-                            transition={{ duration: 0.5, delay: idx * 0.1 }}
-                            className={`w-full rounded-t-lg ${
-                              isRecent
-                                ? "bg-gradient-to-t from-cyan-500 to-teal-400"
-                                : "bg-gradient-to-t from-teal-600 to-teal-700"
-                            }`}
-                            title={`Week ${bucket.week}: ${bucket.avg} strands/day`}
+              {hairPhotos.length === 0 ? (
+                <div className="text-center py-16">
+                  <Camera className="mx-auto mb-4 text-teal-400/30" size={64} />
+                  <p className="text-teal-300/50 mb-4">
+                    No progress photos yet. Take monthly photos to track visible
+                    growth!
+                  </p>
+                  <button
+                    onClick={() => setShowPhotoUpload(true)}
+                    className="px-6 py-3 bg-teal-500/30 border border-teal-400 rounded-xl text-teal-100 hover:bg-teal-500/40 transition-colors"
+                  >
+                    Take Your First Photo
+                  </button>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {hairPhotos.map((photo, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-black/40 border border-teal-700/30 rounded-xl overflow-hidden"
+                    >
+                      {/* ✅ Display actual image */}
+                      <div className="aspect-video bg-teal-900/20 overflow-hidden">
+                        {photo.url ? (
+                          <img
+                            src={photo.url}
+                            alt={`Progress photo from ${dayjs(
+                              photo.date
+                            ).format("MMM DD, YYYY")}`}
+                            className="w-full h-full object-cover"
                           />
-                          <div className="text-[10px] text-teal-400/40">
-                            W{bucket.week}
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Camera className="text-teal-400/30" size={48} />
                           </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <div className="text-sm text-teal-200 font-medium mb-1">
+                          {dayjs(photo.date).format("MMM DD, YYYY")}
                         </div>
-                      );
-                    })}
-                  </div>
-                  <div className="text-xs text-teal-300/60 mt-4 text-center">
-                    Lower is better • Recent weeks highlighted in cyan
-                  </div>
+                        <div className="text-xs text-teal-400/60">
+                          {photo.notes || "No notes"}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               )}
             </div>
-          )
-        }
 
-        {
-          /* PHOTOS VIEW */
-        }
-        {
-          viewMode === "photos" && (
-            <div className="space-y-6">
-              <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-teal-200">
-                    Progress Photos
-                  </h3>
-                  <button
-                    onClick={() => setShowPhotoUpload(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-teal-500/30 border border-teal-400 rounded-xl text-teal-100 hover:bg-teal-500/40 transition-colors"
-                  >
-                    <Plus size={18} />
-                    Add Photo
-                  </button>
-                </div>
+            <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4 flex gap-3">
+              <Info className="text-amber-300 flex-shrink-0" size={20} />
+              <div className="text-sm text-amber-200/80">
+                <strong>Pro tip:</strong> Take photos in the same lighting, same
+                angle, same time of day (morning works best). Compare photos
+                every 4 weeks to see real progress that daily mirror-checking
+                won't show!
+              </div>
+            </div>
+          </div>
+        )}
 
-                {hairPhotos.length === 0 ? (
-                  <div className="text-center py-16">
-                    <Camera
-                      className="mx-auto mb-4 text-teal-400/30"
-                      size={64}
-                    />
-                    <p className="text-teal-300/50 mb-4">
-                      No progress photos yet. Take monthly photos to track
-                      visible growth!
-                    </p>
-                    <button
-                      onClick={() => setShowPhotoUpload(true)}
-                      className="px-6 py-3 bg-teal-500/30 border border-teal-400 rounded-xl text-teal-100 hover:bg-teal-500/40 transition-colors"
+        {/* HISTORY VIEW */}
+        {viewMode === "history" && (
+          <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-teal-200 mb-6">
+              Complete History
+            </h3>
+            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              {Object.keys(hairLogs)
+                .sort()
+                .reverse()
+                .map((date) => {
+                  const log = hairLogs[date];
+                  const products = [];
+
+                  Object.entries(PRODUCTS).forEach(([catKey, catData]) => {
+                    Object.entries(catData).forEach(([prodKey, product]) => {
+                      if (log[prodKey]) {
+                        products.push({ key: prodKey, ...product });
+                      }
+                    });
+                  });
+
+                  return (
+                    <motion.div
+                      key={date}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="bg-black/40 border border-teal-700/30 rounded-xl p-5"
                     >
-                      Take Your First Photo
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {hairPhotos.map((photo, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-black/40 border border-teal-700/30 rounded-xl overflow-hidden"
-                      >
-                        {/* ✅ Display actual image */}
-                        <div className="aspect-video bg-teal-900/20 overflow-hidden">
-                          {photo.url ? (
-                            <img
-                              src={photo.url}
-                              alt={`Progress photo from ${dayjs(
-                                photo.date
-                              ).format("MMM DD, YYYY")}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Camera className="text-teal-400/30" size={48} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <div className="text-sm text-teal-200 font-medium mb-1">
-                            {dayjs(photo.date).format("MMM DD, YYYY")}
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <div className="font-semibold text-teal-200 text-lg">
+                            {dayjs(date).format("MMM DD, YYYY")}
                           </div>
                           <div className="text-xs text-teal-400/60">
-                            {photo.notes || "No notes"}
+                            {dayjs(date).format("dddd")}
                           </div>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4 flex gap-3">
-                <Info className="text-amber-300 flex-shrink-0" size={20} />
-                <div className="text-sm text-amber-200/80">
-                  <strong>Pro tip:</strong> Take photos in the same lighting,
-                  same angle, same time of day (morning works best). Compare
-                  photos every 4 weeks to see real progress that daily
-                  mirror-checking won't show!
-                </div>
-              </div>
-            </div>
-          )
-        }
-
-        {
-          /* HISTORY VIEW */
-        }
-        {
-          viewMode === "history" && (
-            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-teal-200 mb-6">
-                Complete History
-              </h3>
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                {Object.keys(hairLogs)
-                  .sort()
-                  .reverse()
-                  .map((date) => {
-                    const log = hairLogs[date];
-                    const products = [];
-
-                    Object.entries(PRODUCTS).forEach(([catKey, catData]) => {
-                      Object.entries(catData).forEach(([prodKey, product]) => {
-                        if (log[prodKey]) {
-                          products.push({ key: prodKey, ...product });
-                        }
-                      });
-                    });
-
-                    return (
-                      <motion.div
-                        key={date}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-black/40 border border-teal-700/30 rounded-xl p-5"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <div className="font-semibold text-teal-200 text-lg">
-                              {dayjs(date).format("MMM DD, YYYY")}
+                        {log.hairFallCount && (
+                          <div className="text-right bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/40">
+                            <div className="text-2xl font-bold text-red-300">
+                              {log.hairFallCount}
                             </div>
-                            <div className="text-xs text-teal-400/60">
-                              {dayjs(date).format("dddd")}
+                            <div className="text-xs text-red-300/60">
+                              strands
                             </div>
                           </div>
-                          {log.hairFallCount && (
-                            <div className="text-right bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/40">
-                              <div className="text-2xl font-bold text-red-300">
-                                {log.hairFallCount}
-                              </div>
-                              <div className="text-xs text-red-300/60">
-                                strands
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        )}
+                      </div>
 
-                        {products.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {products.map((product) => {
-                              const colors = COLOR_SCHEMES[product.color];
-                              return (
-                                <span
-                                  key={product.key}
-                                  className={`flex items-center gap-1.5 px-3 py-1.5 ${colors.bg} border ${colors.border} rounded-lg text-xs font-medium`}
-                                >
-                                  <span>{product.icon}</span>
-                                  <span className={colors.text}>
-                                    {product.name}
-                                  </span>
+                      {products.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {products.map((product) => {
+                            const colors = COLOR_SCHEMES[product.color];
+                            return (
+                              <span
+                                key={product.key}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 ${colors.bg} border ${colors.border} rounded-lg text-xs font-medium`}
+                              >
+                                <span>{product.icon}</span>
+                                <span className={colors.text}>
+                                  {product.name}
                                 </span>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {log.scalpCondition &&
-                          log.scalpCondition !== "normal" && (
-                            <div className="text-sm text-amber-300 mb-2">
-                              Scalp:{" "}
-                              <span className="capitalize">
-                                {log.scalpCondition}
                               </span>
-                            </div>
-                          )}
+                            );
+                          })}
+                        </div>
+                      )}
 
-                        {log.notes && (
-                          <div className="text-sm text-teal-100/80 bg-black/20 p-3 rounded-lg mb-2">
-                            <strong className="text-teal-300">Notes:</strong>{" "}
-                            {log.notes}
+                      {log.scalpCondition &&
+                        log.scalpCondition !== "normal" && (
+                          <div className="text-sm text-amber-300 mb-2">
+                            Scalp:{" "}
+                            <span className="capitalize">
+                              {log.scalpCondition}
+                            </span>
                           </div>
                         )}
 
-                        {log.sideEffects && (
-                          <div className="text-sm text-red-300/80 bg-red-500/10 p-3 rounded-lg border border-red-400/20">
-                            <strong className="text-red-300">
-                              Side Effects:
-                            </strong>{" "}
-                            {log.sideEffects}
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-              </div>
+                      {log.notes && (
+                        <div className="text-sm text-teal-100/80 bg-black/20 p-3 rounded-lg mb-2">
+                          <strong className="text-teal-300">Notes:</strong>{" "}
+                          {log.notes}
+                        </div>
+                      )}
+
+                      {log.sideEffects && (
+                        <div className="text-sm text-red-300/80 bg-red-500/10 p-3 rounded-lg border border-red-400/20">
+                          <strong className="text-red-300">
+                            Side Effects:
+                          </strong>{" "}
+                          {log.sideEffects}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
             </div>
-          )
-        }
+          </div>
+        )}
       </div>
 
       {/* Photo Upload Modal */}
