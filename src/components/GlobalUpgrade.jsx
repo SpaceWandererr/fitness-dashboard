@@ -331,8 +331,10 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             }
           });
 
+          // ✅ FIXED: Perfect day = ALL 5 daily protocols
           const isPerfect =
-            (log.minoxidil || log.minimalist) &&
+            log.minoxidil &&
+            log.minimalist &&
             log.biotin &&
             log.supradyn &&
             log.seeds;
@@ -377,12 +379,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       return stats;
     };
 
-    // Current streak
+    // ✅ FIXED: Current streak = BOTH minoxidil AND minimalist
     let streak = 0;
     for (let i = 0; i < 365; i++) {
       const date = dayjs().subtract(i, "day").format("YYYY-MM-DD");
       const log = hairLogs[date];
-      if (log && (log.minoxidil || log.minimalist)) {
+      if (log && log.minoxidil && log.minimalist) {
         streak++;
       } else {
         break;
@@ -396,6 +398,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       streak,
     };
   }, [hairLogs]);
+
 
   // PDF Export Function
   // Updated PDF Export Function - Matches Screen Design
@@ -1101,19 +1104,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
         className={`
-          relative w-full p-4 rounded-xl border transition-all duration-300
-          ${
-            isActive
-              ? `${colors.bg} ${colors.border} ${colors.glow}`
-              : "bg-black/20 border-teal-700/30 hover:border-teal-400/40"
-          }
-          ${hasConflict ? "ring-2 ring-red-500 animate-pulse" : ""}
-        `}
+      relative w-full p-4 rounded-xl border transition-all duration-300
+      ${
+        isActive
+          ? `${colors.bg} ${colors.border} ${colors.glow}`
+          : "bg-black/20 border-teal-700/30 hover:border-teal-400/40"
+      }
+      ${hasConflict ? "ring-2 ring-red-500 animate-pulse" : ""}
+    `}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 flex-1 text-left">
-            <div className="text-2xl mt-0.5">{product.icon}</div>
-            <div className="flex-1">
+          {/* Left side: Icon + Text */}
+          <div className="flex items-start gap-3 flex-1 text-left min-w-0">
+            <div className="text-2xl mt-0.5 flex-shrink-0">{product.icon}</div>
+            <div className="flex-1 min-w-0">
               <div
                 className={`font-semibold ${
                   isActive ? colors.text : "text-teal-100"
@@ -1132,11 +1136,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               )}
             </div>
           </div>
+
+          {/* Right side: Checkmark */}
           {isActive && (
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              className={`${colors.text}`}
+              className={`${colors.text} flex-shrink-0`}
             >
               <Check size={24} strokeWidth={3} />
             </motion.div>
@@ -1903,7 +1909,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 </div>
 
                 {/* Right: Quick Actions */}
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-evenly gap-2">
                   <button
                     onClick={() =>
                       setSelectedDate(dayjs().format("YYYY-MM-DD"))
