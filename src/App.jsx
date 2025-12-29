@@ -33,7 +33,7 @@ import Goals from "./components/Goals.jsx";
 import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
-import GlobalUpgrade from "./components/GlobalUpgrade";
+import HairCarePage from "./components/HairCarePage";
 
 // ⬇️ PUT THIS HERE (top of App.jsx, after imports)
 function fetchWithTimeout(url, options = {}, timeout = 8000) {
@@ -129,6 +129,7 @@ export default function App() {
     toastOnceRef.current.add(key);
     fn();
   }
+  const [isOffline, setIsOffline] = useState(false);
 
   // weight | gym | topics | streak
   const accent = "hsl(180, 100%, 50%)";
@@ -283,12 +284,11 @@ export default function App() {
         }
       } catch (err) {
         const msg =
-          err.name === "AbortError"
-            ? "🟡 Backend timeout — using local"
-            : "🔴 Backend not responding — running offline";
+          err.name === "AbortError" ? "🟡 Timeout — local mode" : "🔴 Offline";
 
         console.warn(msg, err);
         toast(msg);
+        setIsOffline(true);
       }
     }
 
@@ -422,7 +422,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    [],
+    []
   );
 
   return (
@@ -475,7 +475,6 @@ export default function App() {
           },
         }}
       />
-
       <div
         className={`min-h-screen text-[#E5F9F6] ${bgClass} relative overflow-x-hidden`}
         style={{ "--accent": accent }}
@@ -1162,6 +1161,41 @@ export default function App() {
           )}
         </nav>
 
+        {/* Offline Mode Indicator */}
+        {/* Ultra Minimal - Emoji Only */}
+        <AnimatePresence>
+          {isOffline && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="fixed bottom-1 left-1 sm:bottom-20 sm:right-4 sm:left-auto z-50"
+            >
+              {/* Mobile: Icon only */}
+              <div className="sm:hidden w-9 h-9 flex items-center justify-center bg-black/50 backdrop-blur-sm border border-orange-300 rounded-full">
+                <span className="text-lg">📡</span>
+              </div>
+
+              {/* Desktop: Text badge */}
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-2 backdrop-blur-md border border-orange-500/30 rounded-lg shadow-lg">
+                  {/* Small dot indicator */}
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                    <div className="absolute inset-0 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-75" />
+                  </div>
+
+                  {/* Text */}
+                  <span className="text-xs text-orange-300/80 font-medium">
+                    Offline
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ROUTES */}
         <main
           style={{ paddingTop: "calc(var(--nav-height) + 12px)" }}
@@ -1296,7 +1330,7 @@ export default function App() {
               />
 
               <Route
-                path="/GlobalUpgrade"
+                path="/HairCarePage"
                 element={
                   <motion.div
                     initial={{ opacity: 0, x: 300 }}
@@ -1306,7 +1340,7 @@ export default function App() {
                       isHome ? { duration: 0.5, ease: "easeInOut" } : {}
                     }
                   >
-                    <GlobalUpgrade
+                    <HairCarePage
                       dashboardState={dashboardState}
                       updateDashboard={updateDashboard}
                     />
@@ -1725,10 +1759,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                          ? "rotate-6"
-                          : i === 2
-                            ? "-rotate-6"
-                            : "rotate-12"
+                        ? "rotate-6"
+                        : i === 2
+                        ? "-rotate-6"
+                        : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -2378,10 +2412,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                    ? "Fat loss in progress ✅"
-                    : diff > 0
-                      ? "Weight increased ⚠️"
-                      : "Stable"
+                  ? "Fat loss in progress ✅"
+                  : diff > 0
+                  ? "Weight increased ⚠️"
+                  : "Stable"
               }
             />
           </div>
@@ -2921,7 +2955,7 @@ function NavLink({ to, label, current }) {
 const links = [
   { to: "/", label: "HOME" },
   { to: "/syllabus", label: "STUDY" },
-  { to: "/GlobalUpgrade", label: "MOVE" },
+  { to: "/HairCarePage", label: "HAIR" },
   { to: "/gym", label: "GYM" },
   { to: "/projects", label: "PROJECTS" },
   { to: "/calendar", label: "CALENDAR" },
