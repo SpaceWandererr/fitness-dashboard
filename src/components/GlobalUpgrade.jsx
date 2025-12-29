@@ -235,6 +235,104 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     photoIdx: null,
     photoDate: null,
   });
+  // Change from searchDate to searchQuery
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTreatment, setFilterTreatment] = useState("all");
+
+  // Enhanced filtering logic
+  const filteredLogs = useMemo(() => {
+    let logs = Object.keys(hairLogs).sort().reverse();
+
+    // Universal search - matches dates, treatments, notes, side effects, etc.
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      logs = logs.filter((date) => {
+        const log = hairLogs[date];
+
+        // Search in date (multiple formats)
+        const dateMatches =
+          dayjs(date).format("MMM DD, YYYY").toLowerCase().includes(query) ||
+          dayjs(date).format("MMMM DD, YYYY").toLowerCase().includes(query) ||
+          dayjs(date).format("dddd").toLowerCase().includes(query) ||
+          dayjs(date).format("YYYY-MM-DD").includes(query);
+
+        // Search in notes
+        const notesMatch = log.notes?.toLowerCase().includes(query);
+
+        // Search in side effects
+        const sideEffectsMatch = log.sideEffects?.toLowerCase().includes(query);
+
+        // Search in treatments
+        const treatmentMatches =
+          (query.includes("minoxidil") && log.minoxidil) ||
+          (query.includes("minimalist") && log.minimalist) ||
+          (query.includes("biotin") && log.biotin) ||
+          (query.includes("supradyn") && log.supradyn) ||
+          (query.includes("seed") && log.seeds) ||
+          (query.includes("shampoo") && log.shampoo) ||
+          (query.includes("oil") && log.oil) ||
+          (query.includes("herbal") && log.herbal);
+
+        // Search for "perfect day"
+        const perfectMatch =
+          query.includes("perfect") &&
+          log.minoxidil &&
+          log.minimalist &&
+          log.biotin &&
+          log.supradyn &&
+          log.seeds;
+
+        // Search for "hair fall"
+        const hairFallMatch =
+          (query.includes("hair") || query.includes("fall")) &&
+          log.hairFallCount;
+
+        return (
+          dateMatches ||
+          notesMatch ||
+          sideEffectsMatch ||
+          treatmentMatches ||
+          perfectMatch ||
+          hairFallMatch
+        );
+      });
+    }
+
+    // Filter by treatment type
+    logs = logs.filter((date) => {
+      const log = hairLogs[date];
+
+      switch (filterTreatment) {
+        case "perfect":
+          return (
+            log.minoxidil &&
+            log.minimalist &&
+            log.biotin &&
+            log.supradyn &&
+            log.seeds
+          );
+        case "minoxidil":
+          return log.minoxidil;
+        case "minimalist":
+          return log.minimalist;
+        case "hairfall":
+          return log.hairFallCount;
+        case "sideeffects":
+          return log.sideEffects;
+        case "notes":
+          return log.notes;
+        default:
+          return true;
+      }
+    });
+
+    // Show last 30 days by default if no search/filter
+    if (!searchQuery && filterTreatment === "all") {
+      return logs.slice(0, 30);
+    }
+
+    return logs;
+  }, [hairLogs, searchQuery, filterTreatment]);
 
   useEffect(() => {
     const log = hairLogs[selectedDate] || {};
@@ -398,7 +496,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       streak,
     };
   }, [hairLogs]);
-
 
   // PDF Export Function
   // Updated PDF Export Function - Matches Screen Design
@@ -1021,7 +1118,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div
               key={i}
-              className="w-10 h-8 flex items-center justify-center text-xs font-semibold text-teal-300/70"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold text-teal-300/70"
             >
               {d}
             </div>
@@ -1060,7 +1157,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 whileHover={!isFuture ? { scale: 1.05 } : {}}
                 whileTap={!isFuture ? { scale: 0.95 } : {}}
                 className={`
-            relative w-10 h-10 rounded-lg transition-all
+            relative w-10 h-10 rounded-full transition-all
             flex items-center justify-center
             ${isCurrentMonth ? "text-teal-100" : "text-teal-700/40"}
             ${isToday ? "ring-2 ring-cyan-400" : ""}
@@ -2119,7 +2216,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* LEFT:  Calendar*/}
             <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-              <div className="flex justify-between items-center mb-2">
+              <div className=" flex justify-between items-center mb-2">
                 <button
                   onClick={() =>
                     setCurrentMonth(currentMonth.subtract(1, "month"))
@@ -2447,56 +2544,228 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             </div>
 
             {/* Hair fall trend */}
-            {analytics.days30?.hairFall?.trend?.length > 0 && ( // ✅ CHANGED: analytics.days30.hairFall
+            {analytics.days30?.hairFall?.trend?.length > 0 && (
               <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-teal-200 mb-4 flex items-center gap-2">
-                  <TrendingDown size={20} />
-                  Hair Fall Trend (Weekly Average - Last 30 Days)
-                </h3>
-                <div className="flex items-end gap-2 h-64">
-                  {analytics.days30.hairFall.trend.map((bucket, idx) => {
-                    // ✅ CHANGED
-                    const maxFall = Math.max(
-                      ...analytics.days30.hairFall.trend.map((b) => b.avg) // ✅ CHANGED
-                    );
-                    const height = (bucket.avg / maxFall) * 100;
-                    const isRecent =
-                      idx >= analytics.days30.hairFall.trend.length - 2; // ✅ CHANGED
+                {/* Enhanced Header with Stats */}
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-teal-200 mb-1 flex items-center gap-2">
+                      <TrendingDown size={20} />
+                      Hair Fall Trend
+                    </h3>
+                    <p className="text-xs text-teal-400/60">
+                      Weekly average - Last 30 days
+                    </p>
+                  </div>
 
-                    return (
-                      <div
-                        key={bucket.week}
-                        className="flex-1 flex flex-col items-center gap-2"
-                      >
-                        <div className="text-xs text-teal-300/60 font-bold">
-                          {bucket.avg}
-                        </div>
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${height}%` }}
-                          transition={{ duration: 0.5, delay: idx * 0.1 }}
-                          className={`w-full rounded-t-lg ${
-                            isRecent
-                              ? "bg-gradient-to-t from-cyan-500 to-teal-400"
-                              : "bg-gradient-to-t from-teal-600 to-teal-700"
-                          }`}
-                          title={`Week ${bucket.week}: ${bucket.avg} strands/day`}
-                        />
-                        <div className="text-[10px] text-teal-400/40">
-                          W{bucket.week}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {/* Quick Stats */}
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-red-300">
+                      {analytics.days30.hairFall.avg}
+                    </div>
+                    <div className="text-[10px] text-red-400/60 uppercase">
+                      Avg/day
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-teal-300/60 mt-4 text-center">
-                  Lower is better • Recent weeks highlighted in cyan
+
+                {/* Chart with Grid Lines */}
+                <div className="relative">
+                  {/* Background Grid */}
+                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                    {[100, 75, 50, 25, 0].map((percent) => (
+                      <div
+                        key={percent}
+                        className="border-t border-teal-700/20 relative"
+                      >
+                        <span className="absolute -left-8 -top-2 text-[9px] text-teal-400/40">
+                          {Math.round(
+                            (percent / 100) *
+                              Math.max(
+                                ...analytics.days30.hairFall.trend.map(
+                                  (b) => b.avg
+                                )
+                              )
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Chart Bars */}
+                  <div className="flex items-end gap-2 h-64 relative z-10 pl-6">
+                    {analytics.days30.hairFall.trend.map((bucket, idx) => {
+                      const maxFall = Math.max(
+                        ...analytics.days30.hairFall.trend.map((b) => b.avg)
+                      );
+                      const height = (bucket.avg / maxFall) * 100;
+                      const isRecent =
+                        idx >= analytics.days30.hairFall.trend.length - 2;
+
+                      // Calculate trend (up/down from previous week)
+                      const prevBucket =
+                        analytics.days30.hairFall.trend[idx - 1];
+                      const trend = prevBucket
+                        ? ((bucket.avg - prevBucket.avg) / prevBucket.avg) * 100
+                        : 0;
+                      const isImproving = trend < 0;
+
+                      return (
+                        <div
+                          key={bucket.week}
+                          className="flex-1 flex flex-col items-center gap-2 group"
+                        >
+                          {/* Value on hover */}
+                          <div className="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span
+                              className={
+                                isImproving ? "text-green-300" : "text-red-300"
+                              }
+                            >
+                              {bucket.avg}
+                            </span>
+                            {prevBucket && (
+                              <div className="text-[9px] flex items-center gap-0.5 justify-center">
+                                {isImproving ? (
+                                  <>
+                                    <TrendingDown className="w-2.5 h-2.5 text-green-400" />
+                                    <span className="text-green-400">
+                                      {Math.abs(trend).toFixed(0)}%
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingUp className="w-2.5 h-2.5 text-red-400" />
+                                    <span className="text-red-400">
+                                      {trend.toFixed(0)}%
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Bar */}
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${height}%` }}
+                            transition={{ duration: 0.5, delay: idx * 0.1 }}
+                            className={`
+                  w-full rounded-t-lg relative cursor-pointer
+                  ${
+                    isRecent
+                      ? "bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                      : isImproving && prevBucket
+                      ? "bg-gradient-to-t from-green-500 to-green-600"
+                      : "bg-gradient-to-t from-teal-600 to-teal-700"
+                  }
+                  hover:opacity-80 transition-opacity
+                `}
+                          >
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              <div className="bg-black/90 border border-teal-400/60 rounded-lg px-2 py-1.5 text-[10px] whitespace-nowrap shadow-lg">
+                                <div className="text-teal-200 font-semibold mb-0.5">
+                                  Week {bucket.week}
+                                </div>
+                                <div className="text-teal-300">
+                                  {bucket.avg} strands/day
+                                </div>
+                                {prevBucket && (
+                                  <div
+                                    className={
+                                      isImproving
+                                        ? "text-green-400"
+                                        : "text-red-400"
+                                    }
+                                  >
+                                    {isImproving ? "↓" : "↑"}{" "}
+                                    {Math.abs(trend).toFixed(1)}% from prev
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+
+                          {/* Week Label */}
+                          <div className="text-[10px] text-teal-400/50 font-medium">
+                            W{bucket.week}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Legend & Insights */}
+                <div className="mt-6 pt-4 border-t border-teal-700/30">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-gradient-to-t from-cyan-500 to-teal-400" />
+                        <span className="text-teal-300/70">Recent weeks</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-gradient-to-t from-green-500 to-green-600" />
+                        <span className="text-teal-300/70">Improving</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingDown className="w-3 h-3 text-green-400" />
+                        <span className="text-teal-300/70">
+                          Lower is better
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Trend insight */}
+                    {analytics.days30.hairFall.trend.length >= 2 &&
+                      (() => {
+                        const latest =
+                          analytics.days30.hairFall.trend[
+                            analytics.days30.hairFall.trend.length - 1
+                          ];
+                        const previous =
+                          analytics.days30.hairFall.trend[
+                            analytics.days30.hairFall.trend.length - 2
+                          ];
+                        const change =
+                          ((latest.avg - previous.avg) / previous.avg) * 100;
+
+                        return (
+                          <div
+                            className={`
+              text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5
+              ${
+                change < 0
+                  ? "bg-green-500/10 border-green-400/40 text-green-300"
+                  : "bg-red-500/10 border-red-400/40 text-red-300"
+              }
+            `}
+                          >
+                            {change < 0 ? (
+                              <>
+                                <TrendingDown className="w-3.5 h-3.5" />
+                                <span>
+                                  Improving by {Math.abs(change).toFixed(1)}%
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <TrendingUp className="w-3.5 h-3.5" />
+                                <span>Increased by {change.toFixed(1)}%</span>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
+                  </div>
                 </div>
               </div>
             )}
           </div>
         )}
 
+        {/* PHOTOS VIEW */}
         {viewMode === "photos" && (
           <div className="space-y-6">
             <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
@@ -2672,22 +2941,232 @@ export default function HairCare({ dashboardState, updateDashboard }) {
 
         {/* HISTORY VIEW */}
         {viewMode === "history" && (
-          <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-teal-200 mb-6">
-              Complete History
-            </h3>
-            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-              {Object.keys(hairLogs)
-                .sort()
-                .reverse()
-                .map((date) => {
-                  const log = hairLogs[date];
-                  const products = [];
+          <div className="space-y-4">
+            {/* Enhanced Filter Bar */}
+            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-5">
+              {/* Universal Search Bar */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-teal-300/70 mb-2">
+                  Search History
+                </label>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    placeholder="Search anything: dates, treatments, notes, side effects..."
+                    className="w-full px-4 py-3 pl-10 pr-10 bg-black/50 border border-teal-700/40 rounded-xl text-teal-100 placeholder:text-teal-400/40 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-sm transition-all"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-400/60">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-400/60 hover:text-teal-300 transition-colors p-1 hover:bg-teal-500/10 rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
 
-                  Object.entries(PRODUCTS).forEach(([catKey, catData]) => {
+                {/* Search Hints */}
+                <div className="mt-2 flex flex-wrap gap-2 items-center">
+                  <span className="text-[10px] text-teal-400/50">Try:</span>
+                  {[
+                    "December",
+                    "minoxidil",
+                    "hair fall",
+                    "perfect",
+                    "side effects",
+                    "itching",
+                  ].map((hint) => (
+                    <button
+                      key={hint}
+                      onClick={() => setSearchQuery(hint)}
+                      className="text-[10px] px-2 py-1 bg-black/30 border border-teal-700/30 rounded-md text-teal-300/60 hover:text-teal-200 hover:border-teal-600/40 transition-all"
+                    >
+                      {hint}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filter Pills */}
+              <div>
+                <label className="block text-xs font-medium text-teal-300/70 mb-3">
+                  Quick Filters
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    {
+                      value: "all",
+                      label: "All Days",
+                      icon: null,
+                      color: "teal",
+                    },
+                    {
+                      value: "perfect",
+                      label: "Perfect Days",
+                      icon: Award,
+                      color: "green",
+                    },
+                    {
+                      value: "minoxidil",
+                      label: "Minoxidil",
+                      icon: Droplet,
+                      color: "blue",
+                    },
+                    {
+                      value: "minimalist",
+                      label: "Minimalist",
+                      icon: null,
+                      color: "purple",
+                    },
+                    {
+                      value: "hairfall",
+                      label: "Hair Fall Logged",
+                      icon: TrendingDown,
+                      color: "red",
+                    },
+                    {
+                      value: "sideeffects",
+                      label: "Side Effects",
+                      icon: AlertCircle,
+                      color: "orange",
+                    },
+                    {
+                      value: "notes",
+                      label: "With Notes",
+                      icon: FileText,
+                      color: "cyan",
+                    },
+                  ].map((filter) => {
+                    const isActive = filterTreatment === filter.value;
+                    const Icon = filter.icon;
+
+                    return (
+                      <button
+                        key={filter.value}
+                        onClick={() => setFilterTreatment(filter.value)}
+                        className={`
+                  inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium
+                  transition-all duration-200
+                  ${
+                    isActive
+                      ? `bg-${filter.color}-500/30 border-2 border-${filter.color}-400/60 text-${filter.color}-200 shadow-[0_0_12px_rgba(45,212,191,0.3)]`
+                      : `bg-black/40 border border-teal-700/30 text-teal-300/70 hover:bg-black/60 hover:border-teal-600/40 hover:text-teal-200`
+                  }
+                `}
+                      >
+                        {Icon && <Icon className="w-3.5 h-3.5" />}
+                        {filter.label}
+                        {isActive && filter.value !== "all" && (
+                          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-black/30 text-[10px]">
+                            {filteredLogs.length}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Active Filters Summary */}
+              {(searchQuery || filterTreatment !== "all") && (
+                <div className="mt-4 pt-4 border-t border-teal-700/30">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2 text-xs flex-wrap">
+                      <span className="text-teal-400/70">Active filters:</span>
+                      {searchQuery && (
+                        <span className="px-2 py-1 bg-teal-500/20 border border-teal-400/40 rounded-md text-teal-200 flex items-center gap-1">
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                          "{searchQuery}"
+                        </span>
+                      )}
+                      {filterTreatment !== "all" && (
+                        <span className="px-2 py-1 bg-purple-500/20 border border-purple-400/40 rounded-md text-purple-200 capitalize">
+                          {filterTreatment.replace(/([A-Z])/g, " $1").trim()}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setFilterTreatment("all");
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-red-500/20 border border-red-400/40 rounded-lg text-xs text-red-300 hover:bg-red-500/30 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Results */}
+            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-teal-200">
+                  {filterTreatment === "all" && !searchQuery
+                    ? "Recent History"
+                    : "Search Results"}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-teal-400/60">
+                    {filteredLogs.length}{" "}
+                    {filteredLogs.length === 1 ? "entry" : "entries"}
+                  </div>
+                  {filterTreatment === "all" && !searchQuery && (
+                    <span className="text-[10px] text-teal-500/60 px-2 py-1 bg-teal-500/10 rounded-md">
+                      Last 30 days
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Timeline View */}
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                {filteredLogs.map((date, idx) => {
+                  const log = hairLogs[date];
+
+                  const isPerfect =
+                    log.minoxidil &&
+                    log.minimalist &&
+                    log.biotin &&
+                    log.supradyn &&
+                    log.seeds;
+                  const treatments = [];
+
+                  Object.entries(PRODUCTS).forEach(([_, catData]) => {
                     Object.entries(catData).forEach(([prodKey, product]) => {
                       if (log[prodKey]) {
-                        products.push({ key: prodKey, ...product });
+                        treatments.push({ key: prodKey, ...product });
                       }
                     });
                   });
@@ -2695,78 +3174,151 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   return (
                     <motion.div
                       key={date}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="bg-black/40 border border-teal-700/30 rounded-xl p-5"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.02 }}
+                      className="relative pl-8"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="font-semibold text-teal-200 text-lg">
-                            {dayjs(date).format("MMM DD, YYYY")}
-                          </div>
-                          <div className="text-xs text-teal-400/60">
-                            {dayjs(date).format("dddd")}
-                          </div>
-                        </div>
-                        {log.hairFallCount && (
-                          <div className="text-right bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/40">
-                            <div className="text-2xl font-bold text-red-300">
-                              {log.hairFallCount}
+                      {/* Timeline connector */}
+                      {idx < filteredLogs.length - 1 && (
+                        <div className="absolute left-2 top-8 bottom-0 w-px bg-teal-700/30" />
+                      )}
+
+                      {/* Timeline dot */}
+                      <div
+                        className={`
+                absolute left-0 top-3 w-4 h-4 rounded-full border-2
+                ${
+                  isPerfect
+                    ? "bg-green-400 border-green-300 shadow-[0_0_12px_rgba(74,222,128,0.6)]"
+                    : "bg-teal-400 border-teal-300 shadow-[0_0_8px_rgba(45,212,191,0.4)]"
+                }
+              `}
+                      />
+
+                      {/* Card */}
+                      <div className="bg-black/40 border border-teal-700/30 rounded-xl p-4 hover:border-teal-500/50 transition-all">
+                        {/* Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="font-semibold text-teal-200">
+                                {dayjs(date).format("MMMM DD, YYYY")}
+                              </div>
+                              <span className="text-xs text-teal-400/60">
+                                {dayjs(date).format("dddd")}
+                              </span>
+                              {isPerfect && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/15 border border-green-400/40 text-[10px] font-medium text-green-300">
+                                  <Award className="w-3 h-3" />
+                                  Perfect Day
+                                </span>
+                              )}
                             </div>
-                            <div className="text-xs text-red-300/60">
-                              strands
+                          </div>
+
+                          {log.hairFallCount && (
+                            <div className="inline-flex flex-col items-end px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-400/40">
+                              <div className="text-[10px] uppercase tracking-wide text-red-300/70 mb-0.5">
+                                Hair Fall
+                              </div>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-xl font-bold text-red-300 leading-none">
+                                  {log.hairFallCount}
+                                </span>
+                                <span className="text-[10px] text-red-300/60">
+                                  strands
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Treatments */}
+                        {treatments.length > 0 && (
+                          <div className="mb-3">
+                            <div className="text-[10px] uppercase tracking-wide text-teal-400/70 mb-2">
+                              Treatments ({treatments.length})
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {treatments.map((product) => {
+                                const colors = COLOR_SCHEMES[product.color];
+                                return (
+                                  <span
+                                    key={product.key}
+                                    className={`
+                              inline-flex items-center gap-1.5 px-2.5 py-1
+                              rounded-lg text-[11px] font-medium
+                              ${colors.bg} border ${colors.border}
+                            `}
+                                  >
+                                    <span className="text-sm">
+                                      {product.icon}
+                                    </span>
+                                    <span className={colors.text}>
+                                      {product.name}
+                                    </span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Scalp Condition */}
+                        {log.scalpCondition &&
+                          log.scalpCondition !== "normal" && (
+                            <div className="flex items-center gap-2 mb-2 text-xs text-amber-300">
+                              <Activity className="w-3.5 h-3.5" />
+                              <span className="font-medium">Scalp:</span>
+                              <span className="capitalize">
+                                {log.scalpCondition}
+                              </span>
+                            </div>
+                          )}
+
+                        {/* Notes */}
+                        {log.notes && (
+                          <div className="mb-2">
+                            <div className="text-[10px] uppercase tracking-wide text-teal-400/70 mb-1.5 flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              Notes
+                            </div>
+                            <div className="text-xs text-teal-100/85 bg-black/25 border border-teal-700/40 p-3 rounded-lg leading-relaxed">
+                              {log.notes}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Side Effects */}
+                        {log.sideEffects && (
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wide text-red-400/70 mb-1.5 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Side Effects
+                            </div>
+                            <div className="text-xs text-red-200/90 bg-red-500/10 border border-red-400/30 p-3 rounded-lg leading-relaxed">
+                              {log.sideEffects}
                             </div>
                           </div>
                         )}
                       </div>
-
-                      {products.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {products.map((product) => {
-                            const colors = COLOR_SCHEMES[product.color];
-                            return (
-                              <span
-                                key={product.key}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 ${colors.bg} border ${colors.border} rounded-lg text-xs font-medium`}
-                              >
-                                <span>{product.icon}</span>
-                                <span className={colors.text}>
-                                  {product.name}
-                                </span>
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {log.scalpCondition &&
-                        log.scalpCondition !== "normal" && (
-                          <div className="text-sm text-amber-300 mb-2">
-                            Scalp:{" "}
-                            <span className="capitalize">
-                              {log.scalpCondition}
-                            </span>
-                          </div>
-                        )}
-
-                      {log.notes && (
-                        <div className="text-sm text-teal-100/80 bg-black/20 p-3 rounded-lg mb-2">
-                          <strong className="text-teal-300">Notes:</strong>{" "}
-                          {log.notes}
-                        </div>
-                      )}
-
-                      {log.sideEffects && (
-                        <div className="text-sm text-red-300/80 bg-red-500/10 p-3 rounded-lg border border-red-400/20">
-                          <strong className="text-red-300">
-                            Side Effects:
-                          </strong>{" "}
-                          {log.sideEffects}
-                        </div>
-                      )}
                     </motion.div>
                   );
                 })}
+
+                {filteredLogs.length === 0 && (
+                  <div className="text-center py-12">
+                    <Clock className="w-12 h-12 text-teal-400/30 mx-auto mb-3" />
+                    <p className="text-teal-300/60 font-medium">
+                      No entries found
+                    </p>
+                    <p className="text-xs text-teal-400/40 mt-1">
+                      Try adjusting your search or filters
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
