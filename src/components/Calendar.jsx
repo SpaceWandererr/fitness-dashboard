@@ -696,62 +696,73 @@ export default function CalendarFullDarkUpdated({
 
       {/* MAIN CONTENT ROW */}
       <div className="lg:col-span-3">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-3 gap-4">
           {/* Calendar Section */}
-          <div className="lg:col-span-1 rounded-2xl border border-[#2F6B60]/30 p-3 h-[584px] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] shadow-2xl flex flex-col">
+          <div className="md:col-span-5 lg:col-span-1 rounded-2xl border border-[#2F6B60]/30 p-1.5 xs:p-2 md:p-3 h-auto md:h-auto lg:h-[584px] overflow-hidden bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] shadow-2xl flex flex-col">
             {/* Fixed Header Section */}
-            <div className="flex-shrink-0 space-y-3">
+            <div className="flex-shrink-0 space-y-1.5 xs:space-y-2 md:space-y-3">
               {/* Compact Header */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-                {/* Month Navigation */}
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2">
+                {/* Month Navigation - Always Centered */}
+                <div className="flex items-center justify-center gap-1.5 md:gap-2">
                   <button
                     onClick={() => setMonth((m) => m.subtract(1, "month"))}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-black/20 backdrop-blur-sm text-[#9FF2E8] border border-[#2F6B60]/40 transition-all duration-200 hover:border-[#4ade80] hover:text-[#CFFFF7] hover:shadow-[0_0_8px_#4ade80] active:scale-95"
+                    className="w-7 h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 rounded-lg flex items-center justify-center bg-black/20 backdrop-blur-sm text-[#9FF2E8] border border-[#2F6B60]/40 transition-all duration-200 hover:border-[#4ade80] hover:text-[#CFFFF7] hover:shadow-[0_0_8px_#4ade80] active:scale-95 text-sm md:text-base"
                   >
                     ←
                   </button>
 
-                  <h2 className="px-3 py-1.5 rounded-lg text-sm sm:text-base font-semibold text-[#9FF2E8] border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm min-w-[140px] text-center">
-                    {month.format("MMMM YYYY")}
+                  <h2 className="px-1.5 xs:px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-[10px] xs:text-xs md:text-sm lg:text-base font-semibold text-[#9FF2E8] border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm min-w-[95px] xs:min-w-[110px] md:min-w-[130px] lg:min-w-[140px] text-center">
+                    {month.format("MMM YYYY")}
                   </h2>
 
                   <button
                     onClick={() => setMonth((m) => m.add(1, "month"))}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-black/20 backdrop-blur-sm text-[#9FF2E8] border border-[#2F6B60]/40 transition-all duration-200 hover:border-[#4ade80] hover:text-[#CFFFF7] hover:shadow-[0_0_8px_#4ade80] active:scale-95"
+                    className="w-7 h-7 md:w-8 md:h-8 lg:w-9 lg:h-9 rounded-lg flex items-center justify-center bg-black/20 backdrop-blur-sm text-[#9FF2E8] border border-[#2F6B60]/40 transition-all duration-200 hover:border-[#4ade80] hover:text-[#CFFFF7] hover:shadow-[0_0_8px_#4ade80] active:scale-95 text-sm md:text-base"
                   >
                     →
                   </button>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="flex items-center gap-2">
+                {/* Quick Actions - Centered Below */}
+                <div className="flex items-center justify-evenly gap-2">
                   <button
                     onClick={() => {
                       const today = dayjs();
                       setMonth(today);
                       setSelectedDate(today.format("YYYY-MM-DD"));
                     }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/20 text-[#9FF2E8] border border-[#2F6B60]/40 transition-all duration-200 hover:border-[#4ade80] hover:text-[#CFFFF7] hover:shadow-[0_0_8px_#4ade80] active:scale-95"
+                    className="px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-xs font-medium bg-black/20 text-[#9FF2E8] border border-[#2F6B60]/40 transition-all duration-200 hover:border-[#4ade80] hover:text-[#CFFFF7] hover:shadow-[0_0_8px_#4ade80] active:scale-95"
                   >
                     Today
                   </button>
 
-                  <div className="relative group">
+                  <div className="relative">
                     <input
                       type="date"
                       value={selectedDate}
                       onChange={(e) => {
-                        const newDate = dayjs(e.target.value);
-                        setMonth(newDate);
-                        setSelectedDate(e.target.value);
+                        const newValue = e.target.value;
+
+                        if (!newValue) {
+                          const today = dayjs();
+                          setMonth(today);
+                          setSelectedDate(today.format("YYYY-MM-DD"));
+                          return;
+                        }
+
+                        const newDate = dayjs(newValue);
+                        if (newDate.isValid()) {
+                          setMonth(newDate);
+                          setSelectedDate(newValue);
+                        }
                       }}
-                      className="peer w-9 h-8 rounded-lg bg-black/20 backdrop-blur-sm text-transparent border border-[#2F6B60]/40 cursor-pointer transition-all duration-200 hover:border-[#4ade80] hover:shadow-[0_0_8px_#4ade80] hover:text-[#9FF2E8] focus:text-[#9FF2E8] active:scale-95 [color-scheme:dark] px-2 sm:hover:w-32 sm:focus:w-32 focus:w-full"
+                      className="custom-date-input w-8 h-7 md:w-9 md:h-8 rounded-lg bg-black/20 backdrop-blur-sm text-transparent border border-[#2F6B60]/40 cursor-pointer transition-all duration-200 hover:border-[#4ade80] hover:shadow-[0_0_8px_#4ade80] hover:text-[#9FF2E8] focus:text-[#9FF2E8] active:scale-95 [color-scheme:dark] px-2"
                       title="Jump to date"
                     />
-                    <div className="absolute left-2.5 top-2 pointer-events-none peer-hover:opacity-0 peer-focus:opacity-0 transition-opacity">
+                    <div className="absolute left-2 top-1.5 md:left-2.5 md:top-2 pointer-events-none transition-opacity">
                       <svg
-                        className="w-4 h-4 text-[#9FF2E8]"
+                        className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#9FF2E8]"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -768,61 +779,60 @@ export default function CalendarFullDarkUpdated({
                 </div>
               </div>
 
-              {/* Dynamic Stats */}
-              <div className="flex items-center justify-center gap-3 sm:gap-4 px-3 py-1.5 rounded-lg bg-black/20 backdrop-blur-sm border border-[#2F6B60]/30 transition-all duration-300">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] sm:text-xs text-[#9FF2E8]/50 font-medium">
+              {/* Dynamic Stats - Balanced Responsive */}
+              <div className="flex items-center justify-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 rounded-lg bg-black/20 backdrop-blur-sm border border-[#2F6B60]/30 transition-all duration-300">
+                {/* Date Display */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] md:text-[11px] lg:text-xs text-[#9FF2E8]/50 font-medium truncate max-w-[55px] md:max-w-[70px]">
                     {selectedDate
                       ? dayjs(selectedDate).format("MMM DD")
                       : "Select"}
                   </span>
                 </div>
 
+                {/* Divider */}
                 <div className="w-px h-3 bg-[#2F6B60]/40" />
 
-                <div className="flex items-center gap-1.5">
+                {/* Topics Count */}
+                <div className="flex items-center gap-1 md:gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
-                  <span className="text-xs font-semibold text-[#4ADE80]">
+                  <span className="text-[11px] md:text-xs lg:text-sm font-semibold text-[#4ADE80]">
                     {selectedDate
                       ? (studyMap[selectedDate] || []).length
                       : monthlyStats.topics}
                   </span>
-                  <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 hidden sm:inline">
-                    {selectedDate ? "topics" : "monthly"}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 sm:hidden">
+                  <span className="text-[10px] md:text-[11px] text-[#9FF2E8]/60">
                     T
                   </span>
                 </div>
 
+                {/* Divider */}
                 <div className="w-px h-3 bg-[#2F6B60]/40" />
 
-                <div className="flex items-center gap-1.5">
+                {/* Exercises Count */}
+                <div className="flex items-center gap-1 md:gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_6px_#60A5FA]" />
-                  <span className="text-xs font-semibold text-[#60A5FA]">
+                  <span className="text-[11px] md:text-xs lg:text-sm font-semibold text-[#60A5FA]">
                     {selectedDate
                       ? gymLogs[selectedDate]
                         ? combinedExercisesForDateWrapper(selectedDate).length
                         : 0
                       : monthlyStats.exercises}
                   </span>
-                  <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 hidden sm:inline">
-                    {selectedDate ? "exercises" : "monthly"}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-[#9FF2E8]/60 sm:hidden">
+                  <span className="text-[10px] md:text-[11px] text-[#9FF2E8]/60">
                     E
                   </span>
                 </div>
               </div>
 
-              {/* Calendar Grid - Fixed for Mobile */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+              {/* Calendar Grid - Reduced spacing for tablets */}
+              <div className="grid grid-cols-7 gap-[2px] xs:gap-0.5 md:gap-1 lg:gap-1.5">
                 {/* Day Labels Row */}
-                <div className="col-span-7 grid grid-cols-7 gap-1 mb-1">
+                <div className="col-span-7 grid grid-cols-7 gap-[2px] xs:gap-0.5 md:gap-1 lg:gap-1.5 mb-0.5 md:mb-1">
                   {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
                     <div
                       key={idx}
-                      className="text-center text-[9px] sm:text-[10px] text-[#9FF2E8]/50 font-semibold"
+                      className="text-center text-[8px] md:text-[9px] lg:text-[10px] text-[#9FF2E8]/50 font-semibold"
                     >
                       {day}
                     </div>
@@ -837,7 +847,7 @@ export default function CalendarFullDarkUpdated({
                   const isToday = iso === todayISO();
                   const isSelected = iso === selectedDate;
 
-                  const base = `aspect-square w-full rounded-lg sm:rounded-xl flex items-center justify-center font-medium text-xs sm:text-sm transition-all duration-200 relative overflow-hidden select-none cursor-pointer`;
+                  const base = `aspect-square w-full rounded-md md:rounded-lg lg:rounded-xl flex items-center justify-center font-medium text-[10px] md:text-xs lg:text-sm transition-all duration-200 relative overflow-hidden select-none cursor-pointer`;
                   const notCur = !isCurMonth ? "opacity-30" : "";
                   const bgClass =
                     status === "both"
@@ -870,18 +880,18 @@ export default function CalendarFullDarkUpdated({
                           : "No activity"
                       }`}
                     >
-                      <span className="z-10 text-[11px] sm:text-sm">
+                      <span className="z-10 text-[10px] md:text-[11px] lg:text-sm">
                         {d.date()}
                       </span>
                       {(status === "study" ||
                         status === "gym" ||
                         status === "both") && (
-                        <div className="absolute bottom-0.5 sm:bottom-1 flex gap-0.5">
+                        <div className="absolute bottom-0.5 md:bottom-1 lg:bottom-1 flex gap-0.5 pb-0.5">
                           {(status === "study" || status === "both") && (
-                            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_4px_#4ADE80]" />
+                            <span className="w-1 h-1 md:w-1.5 md:h-1.5 lg:w-1.5 lg:h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_4px_#4ADE80]" />
                           )}
                           {(status === "gym" || status === "both") && (
-                            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_4px_#60A5FA]" />
+                            <span className="w-1 h-1 md:w-1.5 md:h-1.5 lg:w-1.5 lg:h-1.5 rounded-full bg-[#60A5FA] shadow-[0_0_4px_#60A5FA]" />
                           )}
                         </div>
                       )}
@@ -1025,7 +1035,7 @@ export default function CalendarFullDarkUpdated({
           </div>
 
           {/* Day Summary & Gym - Takes 2 columns */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="md:col-span-7 lg:col-span-2 space-y-4">
             {/* Day Summary Header */}
             <div className="rounded-2xl border border-[#2F6B60]/30 p-4 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]">
               <div className="rounded-2xl p-3 border bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] border-green-600/40 dark:border-gray-700 transition-colors">
@@ -1543,6 +1553,32 @@ export default function CalendarFullDarkUpdated({
 
       {/* Add these animations to your CSS/Tailwind config */}
       <style jsx>{`
+        .custom-date-input::-webkit-calendar-picker-indicator {
+          opacity: 0;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+        }
+
+        /* Firefox */
+        .custom-date-input::-moz-calendar-picker-indicator {
+          opacity: 0;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+        }
+
+        /* Your existing scrollbar styles */
+        .custom-scrollbar-green::-webkit-scrollbar,
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
         @keyframes slideIn {
           from {
             opacity: 0;
