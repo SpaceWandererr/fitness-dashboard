@@ -1992,7 +1992,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       setSelectedDate(
                         dayjs(selectedDate)
                           .subtract(1, "day")
-                          .format("YYYY-MM-DD"),
+                          .format("YYYY-MM-DD")
                       )
                     }
                     className="p-2 hover:bg-teal-500/10 rounded-lg transition active:scale-95"
@@ -2000,7 +2000,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     <ChevronLeft size={20} />
                   </button>
                   <div className="text-center">
-                    <h2 className="text-xl sm:text-2xl font-bold text-teal-200 flex-nowrap">
+                    <h2 className="text-xl sm:text-2xl font-bold text-teal-200 whitespace-nowrap">
                       {dayjs(selectedDate).format("MMM DD, YYYY")}
                     </h2>
                     <div className="text-xs sm:text-sm text-teal-400/60">
@@ -2010,7 +2010,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   <button
                     onClick={() =>
                       setSelectedDate(
-                        dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD"),
+                        dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD")
                       )
                     }
                     disabled={dayjs(selectedDate).isSame(dayjs(), "day")}
@@ -2087,9 +2087,16 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     initial={{ width: 0 }}
                     animate={{
                       width: `${
-                        (                    [todayData.minoxidil, todayData.minimalist, todayData.biotin, todayData.supradyn, todayData.healthtatva, todayData.seeds]
-                        .filter(Boolean).length /
-                        6)*100
+                        ([
+                          todayData.minoxidil,
+                          todayData.minimalist,
+                          todayData.biotin,
+                          todayData.supradyn,
+                          todayData.healthtatva,
+                          todayData.seeds,
+                        ].filter(Boolean).length /
+                          6) *
+                        100
                       }%`,
                     }}
                     className="h-full bg-gradient-to-r from-teal-500 to-green-500 rounded-full transition-all duration-500"
@@ -2105,20 +2112,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 "treatments",
                 PRODUCTS.treatments,
                 "Treatments",
-                "💧",
+                "💧"
               )}
               {renderCategory(
                 "supplements",
                 PRODUCTS.supplements,
                 "Supplements",
-                "💊",
+                "💊"
               )}
               {renderCategory("haircare", PRODUCTS.haircare, "Hair Care", "🧴")}
               {renderCategory(
                 "weekly",
                 PRODUCTS.weekly,
                 "Weekly Scalp Care",
-                "🌿",
+                "🌿"
               )}
             </div>
 
@@ -2260,7 +2267,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   <span className="text-teal-300/50">
                     {
                       Object.values(hairLogs).filter(
-                        (log) => log.minoxidil && log.minimalist && log.biotin && log.supradyn && log.healthtatva && log.seeds
+                        (log) =>
+                          log.minoxidil &&
+                          log.minimalist &&
+                          log.biotin &&
+                          log.supradyn &&
+                          log.healthtatva &&
+                          log.seeds
                       ).length
                     }{" "}
                     days
@@ -2275,8 +2288,18 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     {
                       Object.values(hairLogs).filter(
                         (log) =>
-                          (log.minoxidil || log.minimalist || log.biotin || log.supradyn) &&
-                          !(log.minoxidil && log.minimalist && log.biotin && log.supradyn && log.healthtatva && log.seeds)
+                          (log.minoxidil ||
+                            log.minimalist ||
+                            log.biotin ||
+                            log.supradyn) &&
+                          !(
+                            log.minoxidil &&
+                            log.minimalist &&
+                            log.biotin &&
+                            log.supradyn &&
+                            log.healthtatva &&
+                            log.seeds
+                          )
                       ).length
                     }{" "}
                     days
@@ -2306,7 +2329,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     <div className="text-2xl font-bold text-blue-200">
                       {
                         Object.keys(hairLogs).filter((date) =>
-                          dayjs(date).isSame(currentMonth, "month"),
+                          dayjs(date).isSame(currentMonth, "month")
                         ).length
                       }
                     </div>
@@ -2357,7 +2380,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       {Object.entries(PRODUCTS).flatMap(([catKey, catData]) =>
                         Object.entries(catData)
                           .filter(
-                            ([prodKey]) => hairLogs[selectedDate][prodKey],
+                            ([prodKey]) => hairLogs[selectedDate][prodKey]
                           )
                           .map(([prodKey, product]) => {
                             const colors = COLOR_SCHEMES[product.color];
@@ -2372,7 +2395,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                                 </span>
                               </span>
                             );
-                          }),
+                          })
                       )}
                       {Object.entries(PRODUCTS)
                         .flatMap(([catKey, catData]) => Object.keys(catData))
@@ -2448,12 +2471,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   )}
 
                   {/* Perfect Day Badge */}
-                    {hairLogs[selectedDate]?.minoxidil &&
-                      hairLogs[selectedDate]?.minimalist &&
-                      hairLogs[selectedDate]?.biotin &&
-                      hairLogs[selectedDate]?.supradyn &&
-                      hairLogs[selectedDate]?.healthtatva &&
-                      hairLogs[selectedDate]?.seeds && (
+                  {hairLogs[selectedDate]?.minoxidil &&
+                    hairLogs[selectedDate]?.minimalist &&
+                    hairLogs[selectedDate]?.biotin &&
+                    hairLogs[selectedDate]?.supradyn &&
+                    hairLogs[selectedDate]?.healthtatva &&
+                    hairLogs[selectedDate]?.seeds && (
                       <div className="flex items-center justify-center gap-2 py-3 bg-green-500/20 border border-green-400/60 rounded-xl">
                         <Award className="text-green-300" size={20} />
                         <span className="text-green-200 font-semibold">
@@ -2530,8 +2553,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                               isGood
                                 ? "bg-green-400"
                                 : isOk
-                                  ? "bg-amber-400"
-                                  : "bg-red-400"
+                                ? "bg-amber-400"
+                                : "bg-red-400"
                             }`}
                           />
                         </div>
@@ -2541,7 +2564,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       </div>
                     </motion.div>
                   );
-                }),
+                })
               )}
             </div>
 
@@ -2585,9 +2608,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                             (percent / 100) *
                               Math.max(
                                 ...analytics.days30.hairFall.trend.map(
-                                  (b) => b.avg,
-                                ),
-                              ),
+                                  (b) => b.avg
+                                )
+                              )
                           )}
                         </span>
                       </div>
@@ -2598,7 +2621,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   <div className="flex items-end gap-2 h-64 relative z-10 pl-6">
                     {analytics.days30.hairFall.trend.map((bucket, idx) => {
                       const maxFall = Math.max(
-                        ...analytics.days30.hairFall.trend.map((b) => b.avg),
+                        ...analytics.days30.hairFall.trend.map((b) => b.avg)
                       );
                       const height = (bucket.avg / maxFall) * 100;
                       const isRecent =
@@ -2658,8 +2681,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     isRecent
                       ? "bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                       : isImproving && prevBucket
-                        ? "bg-gradient-to-t from-green-500 to-green-600"
-                        : "bg-gradient-to-t from-teal-600 to-teal-700"
+                      ? "bg-gradient-to-t from-green-500 to-green-600"
+                      : "bg-gradient-to-t from-teal-600 to-teal-700"
                   }
                   hover:opacity-80 transition-opacity
                 `}
@@ -2828,7 +2851,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                           <img
                             src={photo.url}
                             alt={`Progress photo from ${dayjs(
-                              photo.date,
+                              photo.date
                             ).format("MMM DD, YYYY")}`}
                             className="w-full h-full object-cover"
                           />
