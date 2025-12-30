@@ -2000,7 +2000,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     <ChevronLeft size={20} />
                   </button>
                   <div className="text-center">
-                    <h2 className="text-xl sm:text-2xl font-bold text-teal-200">
+                    <h2 className="text-xl sm:text-2xl font-bold text-teal-200 flex-nowrap">
                       {dayjs(selectedDate).format("MMM DD, YYYY")}
                     </h2>
                     <div className="text-xs sm:text-sm text-teal-400/60">
@@ -2063,7 +2063,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               </AnimatePresence>
 
               {/* Mini Progress Bar - Overall Completion */}
-              <div className="mt-4 space-y-2">
+              <div className="mt-2 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-teal-400/70">Today's Progress</span>
                   <span className="font-semibold text-teal-200">
