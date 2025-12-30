@@ -1,4 +1,3 @@
-// components/HairCare.jsx
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from "dayjs";
@@ -71,6 +70,13 @@ const PRODUCTS = {
       name: "SupraDyn",
       icon: "💊",
       color: "orange",
+      frequency: "daily",
+      schedule: "1 tablet daily",
+    },
+    healthtatva: {
+      name: "Health Tatva",
+      icon: "💊",
+      color: "green",
       frequency: "daily",
       schedule: "1 tablet daily",
     },
@@ -192,7 +198,7 @@ const COLOR_SCHEMES = {
 export default function HairCare({ dashboardState, updateDashboard }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState(
-    dayjs().format("YYYY-MM-DD")
+    dayjs().format("YYYY-MM-DD"),
   );
   const [viewMode, setViewMode] = useState("today");
   const [doctorMode, setDoctorMode] = useState(false);
@@ -220,6 +226,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     minimalist: todayLog.minimalist || false,
     biotin: todayLog.biotin || false,
     supradyn: todayLog.supradyn || false,
+    healthtatva: todayLog.healthtatva || false,
     seeds: todayLog.seeds || false,
     shampoo: todayLog.shampoo || false,
     conditioner: todayLog.conditioner || false,
@@ -280,6 +287,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           log.minimalist &&
           log.biotin &&
           log.supradyn &&
+          log.healthtatva &&
           log.seeds;
 
         // Search for "hair fall"
@@ -309,6 +317,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             log.minimalist &&
             log.biotin &&
             log.supradyn &&
+            log.healthtatva &&
             log.seeds
           );
         case "minoxidil":
@@ -341,6 +350,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       minimalist: log.minimalist || false,
       biotin: log.biotin || false,
       supradyn: log.supradyn || false,
+      healthtatva: log.healthtatva || false,
       seeds: log.seeds || false,
       shampoo: log.shampoo || false,
       conditioner: log.conditioner || false,
@@ -383,7 +393,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
   const analytics = useMemo(() => {
     const getDaysArray = (days) =>
       Array.from({ length: days }, (_, i) =>
-        dayjs().subtract(i, "day").format("YYYY-MM-DD")
+        dayjs().subtract(i, "day").format("YYYY-MM-DD"),
       );
 
     const last30Days = getDaysArray(30);
@@ -396,6 +406,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         minimalist: { count: 0, expected: days, target: 100 },
         biotin: { count: 0, expected: days, target: 100 },
         supradyn: { count: 0, expected: days, target: 100 },
+        healthtatva: { count: 0, expected: days, target: 100 },
         seeds: { count: 0, expected: days, target: 100 },
         shampoo: { count: 0, expected: Math.floor(days / 7) * 2, target: 20 },
         oil: { count: 0, expected: Math.floor(days / 7), target: 13 },
@@ -435,6 +446,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             log.minimalist &&
             log.biotin &&
             log.supradyn &&
+            log.healthtatva &&
             log.seeds;
           if (isPerfect) stats.perfect++;
         }
@@ -443,7 +455,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       Object.keys(stats).forEach((key) => {
         if (stats[key].expected) {
           stats[key].compliance = Math.round(
-            (stats[key].count / stats[key].expected) * 100
+            (stats[key].count / stats[key].expected) * 100,
           );
         }
       });
@@ -516,7 +528,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 "shampoo",
                 "oil",
                 "herbal",
-              ].includes(key) && log[key]
+              ].includes(key) && log[key],
           )
         );
       })
@@ -546,14 +558,14 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       <title>Dermatologist Report - ${dayjs().format("MMM DD, YYYY")}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
           background: #f0f9ff;
           padding: 20px;
           color: #1a1a1a;
         }
-        
+
         .container {
           max-width: 900px;
           margin: 0 auto;
@@ -562,25 +574,25 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           padding: 30px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
+
         .header {
           margin-bottom: 24px;
           border-bottom: 3px solid #14b8a6;
           padding-bottom: 16px;
         }
-        
+
         .header-title {
           color: #0f766e;
           font-size: 28px;
           font-weight: 700;
           margin-bottom: 6px;
         }
-        
+
         .header-subtitle {
           color: #6b7280;
           font-size: 14px;
         }
-        
+
         .info-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -591,12 +603,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           margin-bottom: 24px;
           border: 2px solid #5eead4;
         }
-        
+
         .info-item {
           border-left: 3px solid #14b8a6;
           padding-left: 10px;
         }
-        
+
         .info-label {
           font-size: 10px;
           color: #6b7280;
@@ -604,13 +616,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           font-weight: 600;
           margin-bottom: 3px;
         }
-        
+
         .info-value {
           font-size: 13px;
           color: #0f172a;
           font-weight: 700;
         }
-        
+
         .schedule-box {
           background: #ccfbf1;
           padding: 14px 16px;
@@ -618,14 +630,14 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           margin-bottom: 24px;
           border: 2px solid #5eead4;
         }
-        
+
         .schedule-title {
           font-size: 11px;
           font-weight: 700;
           color: #0f766e;
           margin-bottom: 8px;
         }
-        
+
         .schedule-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -633,12 +645,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           font-size: 11px;
           color: #0f766e;
         }
-        
+
         .section {
           margin-bottom: 24px;
           page-break-inside: avoid;
         }
-        
+
         .section-header {
           color: #0f172a;
           font-size: 20px;
@@ -647,64 +659,64 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           border-bottom: 2px solid #e5e7eb;
           padding-bottom: 6px;
         }
-        
+
         .section-subtitle {
           color: #6b7280;
           font-size: 12px;
           margin-bottom: 16px;
         }
-        
+
         .compliance-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 12px;
         }
-        
+
         .stat-card {
           border-radius: 10px;
           padding: 14px;
           page-break-inside: avoid;
         }
-        
+
         .stat-card-blue { background: #dbeafe; border: 2px solid #60a5fa; }
         .stat-card-purple { background: #f3e8ff; border: 2px solid #a855f7; }
         .stat-card-pink { background: #fce7f3; border: 2px solid #ec4899; }
         .stat-card-orange { background: #fed7aa; border: 2px solid #f97316; }
         .stat-card-amber { background: #fef3c7; border: 2px solid #f59e0b; }
         .stat-card-green { background: #d1fae5; border: 2px solid #10b981; }
-        
+
         .stat-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           margin-bottom: 8px;
         }
-        
+
         .stat-label {
           font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.3px;
         }
-        
+
         .stat-sublabel {
           font-size: 11px;
           font-weight: 500;
           margin-top: 2px;
         }
-        
+
         .stat-value {
           font-size: 32px;
           font-weight: 800;
           line-height: 1;
         }
-        
+
         .stat-footer {
           font-size: 11px;
           font-weight: 600;
           margin-bottom: 6px;
         }
-        
+
         .stat-progress {
           width: 100%;
           height: 5px;
@@ -712,12 +724,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           border-radius: 3px;
           overflow: hidden;
         }
-        
+
         .stat-progress-bar {
           height: 70%;
           border-radius: 3px;
         }
-        
+
         .color-blue { color: #2563eb; }
         .color-purple { color: #7c3aed; }
         .color-pink { color: #db2777; }
@@ -725,33 +737,33 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         .color-amber { color: #d97706; }
         .color-green { color: #059669; }
         .color-red { color: #dc2626; }
-        
+
         .bg-blue { background: #2563eb; }
         .bg-purple { background: #7c3aed; }
         .bg-pink { background: #db2777; }
         .bg-orange { background: #ea580c; }
         .bg-amber { background: #d97706; }
         .bg-green { background: #059669; }
-        
+
         .chart-container {
           background: #f8fafc;
           padding: 16px;
           border-radius: 8px;
           border: 2px solid #e2e8f0;
         }
-        
+
         .chart-empty {
           text-align: center;
           padding: 30px;
           color: #94a3b8;
           font-size: 13px;
         }
-        
+
         .list {
           list-style: none;
           padding: 0;
         }
-        
+
         .list-item {
           padding: 12px 14px;
           margin-bottom: 8px;
@@ -761,31 +773,31 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           gap: 12px;
           page-break-inside: avoid;
         }
-        
+
         .list-item-red {
           background: #fef2f2;
           border-left: 4px solid #ef4444;
         }
-        
+
         .list-item-teal {
           background: #f0fdfa;
           border-left: 4px solid #14b8a6;
         }
-        
+
         .list-date {
           font-weight: 700;
           min-width: 100px;
           font-size: 11px;
         }
-        
+
         .list-date-red { color: #dc2626; }
         .list-date-teal { color: #0f766e; }
-        
+
         .list-text {
           color: #374151;
           flex: 1;
         }
-        
+
         .footer {
           margin-top: 30px;
           padding: 16px;
@@ -794,18 +806,18 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           text-align: center;
           border: 2px dashed #9ca3af;
         }
-        
+
         .footer p {
           color: #6b7280;
           font-size: 11px;
           margin-bottom: 4px;
         }
-        
+
         @media print {
           body { padding: 0; background: white; }
           .container { box-shadow: none; padding: 20px; }
         }
-        
+
         @media (min-width: 768px) {
           .info-grid { grid-template-columns: repeat(3, 1fr); }
           .compliance-grid { grid-template-columns: repeat(3, 1fr); }
@@ -819,7 +831,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           <div class="header-title">🩺 Dermatologist Report</div>
           <div class="header-subtitle">Clinical Hair Care Progress Summary</div>
         </div>
-        
+
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Patient Name</div>
@@ -828,20 +840,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           <div class="info-item">
             <div class="info-label">Treatment Started</div>
             <div class="info-value">${actualStartDate.format(
-              "MMM DD, YYYY"
+              "MMM DD, YYYY",
             )}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Current Date</div>
             <div class="info-value">${actualEndDate.format(
-              "MMM DD, YYYY"
+              "MMM DD, YYYY",
             )}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Total Duration</div>
             <div class="info-value">${totalDays} days (${Math.floor(
-      totalDays / 30
-    )}mo)</div>
+              totalDays / 30,
+            )}mo)</div>
           </div>
           <div class="info-item">
             <div class="info-label">Treatment Protocol</div>
@@ -852,7 +864,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             <div class="info-value">${dayjs().format("MMM DD, YYYY")}</div>
           </div>
         </div>
-        
+
         <div class="schedule-box">
           <div class="schedule-title">📋 Current Treatment Schedule</div>
           <div class="schedule-grid">
@@ -862,13 +874,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             <div>• <strong>Weekly:</strong> Shampoo + Oil/Herbal</div>
           </div>
         </div>
-        
+
         <div class="section">
           <div class="section-header">📊 Treatment Compliance</div>
           <div class="section-subtitle">${totalDays}-day adherence since ${actualStartDate.format(
-      "MMM DD, YYYY"
-    )}</div>
-          
+            "MMM DD, YYYY",
+          )}</div>
+
           <div class="compliance-grid">
             <div class="stat-card stat-card-blue">
               <div class="stat-header">
@@ -880,20 +892,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   data.minoxidil.compliance >= 80
                     ? "green"
                     : data.minoxidil.compliance >= 60
-                    ? "amber"
-                    : "red"
+                      ? "amber"
+                      : "red"
                 }">${data.minoxidil.compliance}%</div>
               </div>
               <div class="stat-footer color-blue">${data.minoxidil.count}/${
-      data.minoxidil.expected
-    } days</div>
+                data.minoxidil.expected
+              } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-blue" style="width: ${
                   data.minoxidil.compliance
                 }%"></div>
               </div>
             </div>
-            
+
             <div class="stat-card stat-card-purple">
               <div class="stat-header">
                 <div>
@@ -904,20 +916,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   data.minimalist.compliance >= 80
                     ? "green"
                     : data.minimalist.compliance >= 60
-                    ? "amber"
-                    : "red"
+                      ? "amber"
+                      : "red"
                 }">${data.minimalist.compliance}%</div>
               </div>
               <div class="stat-footer color-purple">${data.minimalist.count}/${
-      data.minimalist.expected
-    } apps</div>
+                data.minimalist.expected
+              } apps</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-purple" style="width: ${
                   data.minimalist.compliance
                 }%"></div>
               </div>
             </div>
-            
+
             <div class="stat-card stat-card-pink">
               <div class="stat-header">
                 <div>
@@ -928,20 +940,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   data.biotin.compliance >= 80
                     ? "green"
                     : data.biotin.compliance >= 60
-                    ? "amber"
-                    : "red"
+                      ? "amber"
+                      : "red"
                 }">${data.biotin.compliance}%</div>
               </div>
               <div class="stat-footer color-pink">${data.biotin.count}/${
-      data.biotin.expected
-    } days</div>
+                data.biotin.expected
+              } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-pink" style="width: ${
                   data.biotin.compliance
                 }%"></div>
               </div>
             </div>
-            
+
             <div class="stat-card stat-card-orange">
               <div class="stat-header">
                 <div>
@@ -952,20 +964,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   data.supradyn.compliance >= 80
                     ? "green"
                     : data.supradyn.compliance >= 60
-                    ? "amber"
-                    : "red"
+                      ? "amber"
+                      : "red"
                 }">${data.supradyn.compliance}%</div>
               </div>
               <div class="stat-footer color-orange">${data.supradyn.count}/${
-      data.supradyn.expected
-    } days</div>
+                data.supradyn.expected
+              } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-orange" style="width: ${
                   data.supradyn.compliance
                 }%"></div>
               </div>
             </div>
-            
+
             <div class="stat-card stat-card-amber">
               <div class="stat-header">
                 <div>
@@ -976,20 +988,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   data.seeds.compliance >= 80
                     ? "green"
                     : data.seeds.compliance >= 60
-                    ? "amber"
-                    : "red"
+                      ? "amber"
+                      : "red"
                 }">${data.seeds.compliance}%</div>
               </div>
               <div class="stat-footer color-amber">${data.seeds.count}/${
-      data.seeds.expected
-    } days</div>
+                data.seeds.expected
+              } days</div>
               <div class="stat-progress">
                 <div class="stat-progress-bar bg-amber" style="width: ${
                   data.seeds.compliance
                 }%"></div>
               </div>
             </div>
-            
+
             <div class="stat-card stat-card-green">
               <div class="stat-header">
                 <div>
@@ -1005,7 +1017,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             </div>
           </div>
         </div>
-        
+
         <div class="section">
           <div class="section-header">📉 Hair Fall Progression</div>
           <div class="section-subtitle">Weekly average over ${totalDays} days</div>
@@ -1017,7 +1029,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             }
           </div>
         </div>
-        
+
         ${
           data.sideEffects.length > 0
             ? `
@@ -1033,11 +1045,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   (item) => `
                 <li class="list-item list-item-red">
                   <span class="list-date list-date-red">${dayjs(
-                    item.date
+                    item.date,
                   ).format("MMM DD, YYYY")}</span>
                   <span class="list-text">${item.text}</span>
                 </li>
-              `
+              `,
                 )
                 .join("")}
             </ul>
@@ -1045,7 +1057,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         `
             : ""
         }
-        
+
         ${
           data.notes.length > 0
             ? `
@@ -1061,11 +1073,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   (item) => `
                 <li class="list-item list-item-teal">
                   <span class="list-date list-date-teal">${dayjs(
-                    item.date
+                    item.date,
                   ).format("MMM DD, YYYY")}</span>
                   <span class="list-text">${item.text}</span>
                 </li>
-              `
+              `,
                 )
                 .join("")}
             </ul>
@@ -1073,7 +1085,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         `
             : ""
         }
-        
+
         <div class="footer">
           <p>⚕️ Auto-generated from self-tracked data</p>
           <p>Verify accuracy with patient. Generated by LifeOS Hair Care Tracker</p>
@@ -1140,12 +1152,15 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             const hasBiotin = log?.biotin;
             const hasSupradyn = log?.supradyn;
             const hasSeeds = log?.seeds;
-
+            const hasHealthTatva = log?.healthtatva;
             const isPerfect =
-              (hasMinoxidil || hasMinimalist) &&
+              hasMinoxidil &&
+              hasMinimalist &&
               hasBiotin &&
               hasSupradyn &&
+              hasHealthTatva &&
               hasSeeds;
+
             const hasPartial =
               hasMinoxidil || hasMinimalist || hasBiotin || hasSupradyn;
 
@@ -1305,7 +1320,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             >
               <div className="px-6 pt-4 pb-6 space-y-2">
                 {products.map(([key, product]) =>
-                  renderProductCard(key, product, categoryKey)
+                  renderProductCard(key, product, categoryKey),
                 )}
               </div>
             </motion.div>
@@ -1336,7 +1351,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 "shampoo",
                 "oil",
                 "herbal",
-              ].includes(key) && log[key]
+              ].includes(key) && log[key],
           )
         );
       })
@@ -1501,8 +1516,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         data.minoxidil.compliance >= 80
                           ? "text-green-600"
                           : data.minoxidil.compliance >= 60
-                          ? "text-amber-600"
-                          : "text-red-600"
+                            ? "text-amber-600"
+                            : "text-red-600"
                       }`}
                     >
                       {data.minoxidil.compliance}%
@@ -1535,8 +1550,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         data.minimalist.compliance >= 80
                           ? "text-green-600"
                           : data.minimalist.compliance >= 60
-                          ? "text-amber-600"
-                          : "text-red-600"
+                            ? "text-amber-600"
+                            : "text-red-600"
                       }`}
                     >
                       {data.minimalist.compliance}%
@@ -1572,8 +1587,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         data.biotin.compliance >= 80
                           ? "text-green-600"
                           : data.biotin.compliance >= 60
-                          ? "text-amber-600"
-                          : "text-red-600"
+                            ? "text-amber-600"
+                            : "text-red-600"
                       }`}
                     >
                       {data.biotin.compliance}%
@@ -1608,8 +1623,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         data.supradyn.compliance >= 80
                           ? "text-green-600"
                           : data.supradyn.compliance >= 60
-                          ? "text-amber-600"
-                          : "text-red-600"
+                            ? "text-amber-600"
+                            : "text-red-600"
                       }`}
                     >
                       {data.supradyn.compliance}%
@@ -1644,8 +1659,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         data.seeds.compliance >= 80
                           ? "text-green-600"
                           : data.seeds.compliance >= 60
-                          ? "text-amber-600"
-                          : "text-red-600"
+                            ? "text-amber-600"
+                            : "text-red-600"
                       }`}
                     >
                       {data.seeds.compliance}%
@@ -1737,7 +1752,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     <div className="flex items-end justify-between gap-2 h-64">
                       {data.hairFall.trend.slice(0, 12).map((bucket, idx) => {
                         const maxFall = Math.max(
-                          ...data.hairFall.trend.slice(0, 12).map((b) => b.avg)
+                          ...data.hairFall.trend.slice(0, 12).map((b) => b.avg),
                         );
                         const height = (bucket.avg / maxFall) * 100;
                         const isRecent = idx >= data.hairFall.trend.length - 3;
@@ -1977,7 +1992,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       setSelectedDate(
                         dayjs(selectedDate)
                           .subtract(1, "day")
-                          .format("YYYY-MM-DD")
+                          .format("YYYY-MM-DD"),
                       )
                     }
                     className="p-2 hover:bg-teal-500/10 rounded-lg transition active:scale-95"
@@ -1995,7 +2010,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   <button
                     onClick={() =>
                       setSelectedDate(
-                        dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD")
+                        dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD"),
                       )
                     }
                     disabled={dayjs(selectedDate).isSame(dayjs(), "day")}
@@ -2058,9 +2073,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         todayData.minimalist,
                         todayData.biotin,
                         todayData.supradyn,
+                        todayData.healthtatva,
                         todayData.seeds,
                       ].filter(Boolean).length;
-                      const total = 5;
+                      const total = 6;
+
                       return `${completed}/${total}`;
                     })()}
                   </span>
@@ -2070,15 +2087,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     initial={{ width: 0 }}
                     animate={{
                       width: `${
-                        ([
-                          todayData.minoxidil,
-                          todayData.minimalist,
-                          todayData.biotin,
-                          todayData.supradyn,
-                          todayData.seeds,
-                        ].filter(Boolean).length /
-                          5) *
-                        100
+                        (                    [todayData.minoxidil, todayData.minimalist, todayData.biotin, todayData.supradyn, todayData.healthtatva, todayData.seeds]
+                        .filter(Boolean).length /
+                        6)*100
                       }%`,
                     }}
                     className="h-full bg-gradient-to-r from-teal-500 to-green-500 rounded-full transition-all duration-500"
@@ -2094,20 +2105,20 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 "treatments",
                 PRODUCTS.treatments,
                 "Treatments",
-                "💧"
+                "💧",
               )}
               {renderCategory(
                 "supplements",
                 PRODUCTS.supplements,
                 "Supplements",
-                "💊"
+                "💊",
               )}
               {renderCategory("haircare", PRODUCTS.haircare, "Hair Care", "🧴")}
               {renderCategory(
                 "weekly",
                 PRODUCTS.weekly,
                 "Weekly Scalp Care",
-                "🌿"
+                "🌿",
               )}
             </div>
 
@@ -2249,11 +2260,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   <span className="text-teal-300/50">
                     {
                       Object.values(hairLogs).filter(
-                        (log) =>
-                          (log.minoxidil || log.minimalist) &&
-                          log.biotin &&
-                          log.supradyn &&
-                          log.seeds
+                        (log) => log.minoxidil && log.minimalist && log.biotin && log.supradyn && log.healthtatva && log.seeds
                       ).length
                     }{" "}
                     days
@@ -2268,16 +2275,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     {
                       Object.values(hairLogs).filter(
                         (log) =>
-                          (log.minoxidil ||
-                            log.minimalist ||
-                            log.biotin ||
-                            log.supradyn) &&
-                          !(
-                            (log.minoxidil || log.minimalist) &&
-                            log.biotin &&
-                            log.supradyn &&
-                            log.seeds
-                          )
+                          (log.minoxidil || log.minimalist || log.biotin || log.supradyn) &&
+                          !(log.minoxidil && log.minimalist && log.biotin && log.supradyn && log.healthtatva && log.seeds)
                       ).length
                     }{" "}
                     days
@@ -2307,7 +2306,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     <div className="text-2xl font-bold text-blue-200">
                       {
                         Object.keys(hairLogs).filter((date) =>
-                          dayjs(date).isSame(currentMonth, "month")
+                          dayjs(date).isSame(currentMonth, "month"),
                         ).length
                       }
                     </div>
@@ -2321,9 +2320,11 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         Object.entries(hairLogs).filter(
                           ([date, log]) =>
                             dayjs(date).isSame(currentMonth, "month") &&
-                            (log.minoxidil || log.minimalist) &&
+                            log.minoxidil &&
+                            log.minimalist &&
                             log.biotin &&
                             log.supradyn &&
+                            log.healthtatva &&
                             log.seeds
                         ).length
                       }
@@ -2356,7 +2357,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       {Object.entries(PRODUCTS).flatMap(([catKey, catData]) =>
                         Object.entries(catData)
                           .filter(
-                            ([prodKey]) => hairLogs[selectedDate][prodKey]
+                            ([prodKey]) => hairLogs[selectedDate][prodKey],
                           )
                           .map(([prodKey, product]) => {
                             const colors = COLOR_SCHEMES[product.color];
@@ -2371,7 +2372,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                                 </span>
                               </span>
                             );
-                          })
+                          }),
                       )}
                       {Object.entries(PRODUCTS)
                         .flatMap(([catKey, catData]) => Object.keys(catData))
@@ -2447,11 +2448,12 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   )}
 
                   {/* Perfect Day Badge */}
-                  {(hairLogs[selectedDate].minoxidil ||
-                    hairLogs[selectedDate].minimalist) &&
-                    hairLogs[selectedDate].biotin &&
-                    hairLogs[selectedDate].supradyn &&
-                    hairLogs[selectedDate].seeds && (
+                    {hairLogs[selectedDate]?.minoxidil &&
+                      hairLogs[selectedDate]?.minimalist &&
+                      hairLogs[selectedDate]?.biotin &&
+                      hairLogs[selectedDate]?.supradyn &&
+                      hairLogs[selectedDate]?.healthtatva &&
+                      hairLogs[selectedDate]?.seeds && (
                       <div className="flex items-center justify-center gap-2 py-3 bg-green-500/20 border border-green-400/60 rounded-xl">
                         <Award className="text-green-300" size={20} />
                         <span className="text-green-200 font-semibold">
@@ -2528,8 +2530,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                               isGood
                                 ? "bg-green-400"
                                 : isOk
-                                ? "bg-amber-400"
-                                : "bg-red-400"
+                                  ? "bg-amber-400"
+                                  : "bg-red-400"
                             }`}
                           />
                         </div>
@@ -2539,7 +2541,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       </div>
                     </motion.div>
                   );
-                })
+                }),
               )}
             </div>
 
@@ -2583,9 +2585,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                             (percent / 100) *
                               Math.max(
                                 ...analytics.days30.hairFall.trend.map(
-                                  (b) => b.avg
-                                )
-                              )
+                                  (b) => b.avg,
+                                ),
+                              ),
                           )}
                         </span>
                       </div>
@@ -2596,7 +2598,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   <div className="flex items-end gap-2 h-64 relative z-10 pl-6">
                     {analytics.days30.hairFall.trend.map((bucket, idx) => {
                       const maxFall = Math.max(
-                        ...analytics.days30.hairFall.trend.map((b) => b.avg)
+                        ...analytics.days30.hairFall.trend.map((b) => b.avg),
                       );
                       const height = (bucket.avg / maxFall) * 100;
                       const isRecent =
@@ -2656,8 +2658,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     isRecent
                       ? "bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                       : isImproving && prevBucket
-                      ? "bg-gradient-to-t from-green-500 to-green-600"
-                      : "bg-gradient-to-t from-teal-600 to-teal-700"
+                        ? "bg-gradient-to-t from-green-500 to-green-600"
+                        : "bg-gradient-to-t from-teal-600 to-teal-700"
                   }
                   hover:opacity-80 transition-opacity
                 `}
@@ -2826,7 +2828,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                           <img
                             src={photo.url}
                             alt={`Progress photo from ${dayjs(
-                              photo.date
+                              photo.date,
                             ).format("MMM DD, YYYY")}`}
                             className="w-full h-full object-cover"
                           />
