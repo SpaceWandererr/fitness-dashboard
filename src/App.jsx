@@ -787,6 +787,7 @@ export default function App() {
               background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
               border: "1px solid rgba(59, 130, 246, 0.4)",
               color: "#dbeafe",
+              zIndex: 9999,
             },
           },
         }}

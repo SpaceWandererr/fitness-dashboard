@@ -439,13 +439,19 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             toast.error(
               `⏰ Wait until ${timeStr}\nMaintain ${product.minGapHours}hr gap between applications`,
               {
-                duration: 4000,
-                position: "top-right", // ✅ Better for errors
+                duration: 5000, // Longer for errors
+                position: "top-right",
                 style: {
+                  background:
+                    "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)", // Rich red gradient
+                  color: "#fee2e2", // Light red text
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
                   maxWidth: "90vw",
                   fontSize: "13px",
-                  padding: "10px 16px",
-                  whiteSpace: "pre-line", // ✅ Allow line breaks
+                  fontWeight: "600", // Bolder text
+                  padding: "12px 18px",
+                  whiteSpace: "pre-line",
+                  boxShadow: "0 8px 24px rgba(239, 68, 68, 0.3)", // Red glow
                 },
               }
             );
@@ -454,7 +460,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         }
       }
     }
-
 
     // SAVE WITH TIMESTAMP
     const updated = {
@@ -475,19 +480,32 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       });
 
       toast.success(`${product.icon} ${product.name} • ${timeStr}`, {
-        duration: 2000,
-        position: "top-right", // ✅ Better for success
+        duration: 3000,
+        position: "top-right",
         style: {
+          background: "linear-gradient(135deg, #064e3b 0%, #065f46 100%)",
+          color: "#d1fae5",
+          border: "1px solid rgba(16, 185, 129, 0.4)",
           maxWidth: "90vw",
           fontSize: "14px",
+          fontWeight: "600",
+          padding: "12px 18px",
+          boxShadow: "0 8px 24px rgba(16, 185, 129, 0.3)",
         },
       });
     } else {
       toast(`${product.icon} ${product.name} unmarked`, {
-        duration: 1500,
+        duration: 2000,
         position: "top-right",
         style: {
+          background: "linear-gradient(135deg, #374151 0%, #4b5563 100%)", // Gray gradient
+          color: "#f3f4f6", // Light gray text
+          border: "1px solid rgba(156, 163, 175, 0.4)",
           maxWidth: "90vw",
+          fontSize: "14px",
+          fontWeight: "600",
+          padding: "12px 18px",
+          boxShadow: "0 8px 24px rgba(107, 114, 128, 0.3)", // Gray glow
         },
       });
     }
@@ -1976,7 +1994,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
   return (
     <>
       <Toaster
-        position="top-center"
+        position="top-right"
         toastOptions={{
           // Default options
           duration: 3000,
@@ -1987,6 +2005,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             borderRadius: "12px",
             fontSize: "14px",
             maxWidth: "90vw", // ✅ Mobile responsive width
+            zIndex: 99999,
           },
           // Success
           success: {
@@ -2005,8 +2024,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           },
         }}
         containerStyle={{
-          top: 20,
-          // ✅ Mobile responsive positioning
+          top: 80, // ✅ Change from 20 to 80 (adjust based on your navbar height)
+          right: 20,
+          zIndex: 99999,
         }}
         // ✅ Mobile-specific responsive behavior
         gutter={8}
@@ -2381,47 +2401,123 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           )}
 
           {/* COMPACT CALENDAR VIEW */}
-          {
-            viewMode === "calendar" && (
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* LEFT:  Calendar*/}
-                <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-                  <div className=" flex justify-between items-center mb-2">
-                    <button
-                      onClick={() =>
-                        setCurrentMonth(currentMonth.subtract(1, "month"))
-                      }
-                      className="p-2 hover:bg-teal-500/10 rounded-xl transition-colors"
-                    >
-                      <ChevronLeft size={20} />
-                    </button>
-                    <h2 className="text-xl font-bold text-teal-200">
-                      {currentMonth.format("MMMM YYYY")}
-                    </h2>
-                    <button
-                      onClick={() =>
-                        setCurrentMonth(currentMonth.add(1, "month"))
-                      }
-                      disabled={currentMonth.isSame(dayjs(), "month")}
-                      className="p-2 hover:bg-teal-500/10 rounded-xl transition-colors disabled:opacity-30"
-                    >
-                      <ChevronRight size={20} />
-                    </button>
+          {viewMode === "calendar" && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* LEFT:  Calendar*/}
+              <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+                <div className=" flex justify-between items-center mb-2">
+                  <button
+                    onClick={() =>
+                      setCurrentMonth(currentMonth.subtract(1, "month"))
+                    }
+                    className="p-2 hover:bg-teal-500/10 rounded-xl transition-colors"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <h2 className="text-xl font-bold text-teal-200">
+                    {currentMonth.format("MMMM YYYY")}
+                  </h2>
+                  <button
+                    onClick={() =>
+                      setCurrentMonth(currentMonth.add(1, "month"))
+                    }
+                    disabled={currentMonth.isSame(dayjs(), "month")}
+                    className="p-2 hover:bg-teal-500/10 rounded-xl transition-colors disabled:opacity-30"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+
+                {renderCompactCalendar()}
+
+                {/* Legend */}
+                <div className="mt-2 pt-2 border-t border-teal-700/30 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
+                      <span className="text-teal-300/70">Perfect Day</span>
+                    </div>
+                    <span className="text-teal-300/50">
+                      {
+                        Object.values(hairLogs).filter(
+                          (log) =>
+                            log.minoxidil &&
+                            log.minimalist &&
+                            log.biotin &&
+                            log.supradyn &&
+                            log.healthtatva &&
+                            log.seeds
+                        ).length
+                      }{" "}
+                      days
+                    </span>
                   </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-400" />
+                      <span className="text-teal-300/70">
+                        Partial Compliance
+                      </span>
+                    </div>
+                    <span className="text-teal-300/50">
+                      {
+                        Object.values(hairLogs).filter(
+                          (log) =>
+                            (log.minoxidil ||
+                              log.minimalist ||
+                              log.biotin ||
+                              log.supradyn) &&
+                            !(
+                              log.minoxidil &&
+                              log.minimalist &&
+                              log.biotin &&
+                              log.supradyn &&
+                              log.healthtatva &&
+                              log.seeds
+                            )
+                        ).length
+                      }{" "}
+                      days
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full border border-cyan-400" />
+                      <span className="text-teal-300/70">Today</span>
+                    </div>
+                    <span className="text-teal-300/50">
+                      {dayjs().format("MMM DD")}
+                    </span>
+                  </div>
+                </div>
 
-                  {renderCompactCalendar()}
-
-                  {/* Legend */}
-                  <div className="mt-2 pt-2 border-t border-teal-700/30 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
-                        <span className="text-teal-300/70">Perfect Day</span>
+                {/* Quick Stats for Month */}
+                <div className="mt-2 pt-6 border-t border-teal-700/30">
+                  <div className="text-xs font-semibold text-teal-300 mb-3">
+                    This Month
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-3">
+                      <div className="text-xs text-blue-300/70 mb-1">
+                        Logged Days
                       </div>
-                      <span className="text-teal-300/50">
+                      <div className="text-2xl font-bold text-blue-200">
                         {
-                          Object.values(hairLogs).filter(
-                            (log) =>
+                          Object.keys(hairLogs).filter((date) =>
+                            dayjs(date).isSame(currentMonth, "month")
+                          ).length
+                        }
+                      </div>
+                    </div>
+                    <div className="bg-green-500/10 border border-green-400/30 rounded-lg p-3">
+                      <div className="text-xs text-green-300/70 mb-1">
+                        Perfect Days
+                      </div>
+                      <div className="text-2xl font-bold text-green-200">
+                        {
+                          Object.entries(hairLogs).filter(
+                            ([date, log]) =>
+                              dayjs(date).isSame(currentMonth, "month") &&
                               log.minoxidil &&
                               log.minimalist &&
                               log.biotin &&
@@ -2429,430 +2525,345 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                               log.healthtatva &&
                               log.seeds
                           ).length
-                        }{" "}
-                        days
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-amber-400" />
-                        <span className="text-teal-300/70">
-                          Partial Compliance
-                        </span>
-                      </div>
-                      <span className="text-teal-300/50">
-                        {
-                          Object.values(hairLogs).filter(
-                            (log) =>
-                              (log.minoxidil ||
-                                log.minimalist ||
-                                log.biotin ||
-                                log.supradyn) &&
-                              !(
-                                log.minoxidil &&
-                                log.minimalist &&
-                                log.biotin &&
-                                log.supradyn &&
-                                log.healthtatva &&
-                                log.seeds
-                              )
-                          ).length
-                        }{" "}
-                        days
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full border border-cyan-400" />
-                        <span className="text-teal-300/70">Today</span>
-                      </div>
-                      <span className="text-teal-300/50">
-                        {dayjs().format("MMM DD")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Quick Stats for Month */}
-                  <div className="mt-2 pt-6 border-t border-teal-700/30">
-                    <div className="text-xs font-semibold text-teal-300 mb-3">
-                      This Month
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-3">
-                        <div className="text-xs text-blue-300/70 mb-1">
-                          Logged Days
-                        </div>
-                        <div className="text-2xl font-bold text-blue-200">
-                          {
-                            Object.keys(hairLogs).filter((date) =>
-                              dayjs(date).isSame(currentMonth, "month")
-                            ).length
-                          }
-                        </div>
-                      </div>
-                      <div className="bg-green-500/10 border border-green-400/30 rounded-lg p-3">
-                        <div className="text-xs text-green-300/70 mb-1">
-                          Perfect Days
-                        </div>
-                        <div className="text-2xl font-bold text-green-200">
-                          {
-                            Object.entries(hairLogs).filter(
-                              ([date, log]) =>
-                                dayjs(date).isSame(currentMonth, "month") &&
-                                log.minoxidil &&
-                                log.minimalist &&
-                                log.biotin &&
-                                log.supradyn &&
-                                log.healthtatva &&
-                                log.seeds
-                            ).length
-                          }
-                        </div>
+                        }
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* RIGHT: Selected Day Details */}
-                <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-teal-200 mb-1">
-                      {dayjs(selectedDate).format("MMMM DD, YYYY")}
-                    </h2>
-                    <p className="text-sm text-teal-400/60">
-                      {dayjs(selectedDate).format("dddd")}
-                    </p>
-                  </div>
-
-                  {hairLogs[selectedDate] ? (
-                    <div className="space-y-4">
-                      {/* Products Used */}
-                      <div>
-                        <h3 className="text-sm font-semibold text-teal-300 mb-3 flex items-center gap-2">
-                          <Check size={16} />
-                          Products Used
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(PRODUCTS).flatMap(
-                            ([catKey, catData]) =>
-                              Object.entries(catData)
-                                .filter(
-                                  ([prodKey]) => hairLogs[selectedDate][prodKey]
-                                )
-                                .map(([prodKey, product]) => {
-                                  const colors = COLOR_SCHEMES[product.color];
-                                  return (
-                                    <span
-                                      key={prodKey}
-                                      className={`flex items-center gap-1.5 px-3 py-2 ${colors.bg} border ${colors.border} rounded-lg text-xs font-medium`}
-                                    >
-                                      <span>{product.icon}</span>
-                                      <span className={colors.text}>
-                                        {product.name}
-                                      </span>
-                                    </span>
-                                  );
-                                })
-                          )}
-                          {Object.entries(PRODUCTS)
-                            .flatMap(([catKey, catData]) =>
-                              Object.keys(catData)
-                            )
-                            .every((key) => !hairLogs[selectedDate][key]) && (
-                            <span className="text-teal-400/50 text-sm italic">
-                              No products logged
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Hair Fall Count */}
-                      {hairLogs[selectedDate].hairFallCount && (
-                        <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-4">
-                          <div className="text-xs text-red-300/70 mb-1">
-                            Hair Fall Count
-                          </div>
-                          <div className="flex items-end gap-2">
-                            <div className="text-3xl font-bold text-red-300">
-                              {hairLogs[selectedDate].hairFallCount}
-                            </div>
-                            <div className="text-sm text-red-300/60 mb-1">
-                              strands
-                            </div>
-                          </div>
-                          {analytics.days30.hairFall.avg > 0 && (
-                            <div className="text-xs text-red-300/50 mt-2">
-                              {hairLogs[selectedDate].hairFallCount >
-                              analytics.days30.hairFall.avg
-                                ? `↑ Above your 30-day avg (${analytics.days30.hairFall.avg})`
-                                : `↓ Below your 30-day avg (${analytics.days30.hairFall.avg})`}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Scalp Condition */}
-                      {hairLogs[selectedDate].scalpCondition &&
-                        hairLogs[selectedDate].scalpCondition !== "normal" && (
-                          <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4">
-                            <div className="text-xs text-amber-300/70 mb-1">
-                              Scalp Condition
-                            </div>
-                            <div className="text-lg font-semibold text-amber-300 capitalize">
-                              {hairLogs[selectedDate].scalpCondition}
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Notes */}
-                      {hairLogs[selectedDate].notes && (
-                        <div className="bg-teal-500/10 border border-teal-400/30 rounded-xl p-4">
-                          <div className="text-xs text-teal-300/70 mb-2 font-semibold">
-                            Notes
-                          </div>
-                          <p className="text-sm text-teal-100/90 leading-relaxed">
-                            {hairLogs[selectedDate].notes}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Side Effects */}
-                      {hairLogs[selectedDate].sideEffects && (
-                        <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-4">
-                          <div className="text-xs text-red-300/70 mb-2 font-semibold flex items-center gap-1">
-                            <AlertCircle size={14} />
-                            Side Effects
-                          </div>
-                          <p className="text-sm text-red-200/90 leading-relaxed">
-                            {hairLogs[selectedDate].sideEffects}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Perfect Day Badge */}
-                      {hairLogs[selectedDate]?.minoxidil &&
-                        hairLogs[selectedDate]?.minimalist &&
-                        hairLogs[selectedDate]?.biotin &&
-                        hairLogs[selectedDate]?.supradyn &&
-                        hairLogs[selectedDate]?.healthtatva &&
-                        hairLogs[selectedDate]?.seeds && (
-                          <div className="flex items-center justify-center gap-2 py-3 bg-green-500/20 border border-green-400/60 rounded-xl">
-                            <Award className="text-green-300" size={20} />
-                            <span className="text-green-200 font-semibold">
-                              Perfect Day! 🎯
-                            </span>
-                          </div>
-                        )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Calendar
-                        className="mx-auto mb-4 text-teal-400/30"
-                        size={48}
-                      />
-                      <p className="text-teal-300/50 mb-4">
-                        No data for this day
-                      </p>
-                      <button
-                        onClick={() => {
-                          setViewMode("today");
-                          setSelectedDate(
-                            dayjs(selectedDate).format("YYYY-MM-DD")
-                          );
-                        }}
-                        className="px-4 py-2 bg-teal-500/30 border border-teal-400 rounded-xl text-teal-100 hover:bg-teal-500/40 transition-colors text-sm"
-                      >
-                        Log Data for This Day
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
-            )
-          }
 
-          {
-            /* ANALYTICS VIEW */
-          }
-          {
-            viewMode === "analytics" && (
-              <div className="space-y-6">
-                {/* Compliance breakdown */}
-                <div className="grid md:grid-cols-3 gap-4">
-                  {Object.entries(PRODUCTS).map(([catKey, catData]) =>
-                    Object.entries(catData).map(([prodKey, product]) => {
-                      const stat = analytics.days30[prodKey] || {};
-                      const colors = COLOR_SCHEMES[product.color];
-                      const compliance = stat.compliance || 0;
-                      const isGood = compliance >= 80;
-                      const isOk = compliance >= 60;
-
-                      return (
-                        <motion.div
-                          key={prodKey}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`bg-gradient-to-br ${colors.gradient} border ${colors.border} rounded-2xl p-6 relative overflow-hidden`}
-                        >
-                          <div className="absolute top-0 right-0 text-6xl opacity-10">
-                            {product.icon}
-                          </div>
-                          <div className="relative z-10">
-                            <div
-                              className={`${colors.text} text-sm mb-2 font-medium`}
-                            >
-                              {product.name}
-                            </div>
-                            <div className="flex items-end gap-2 mb-3">
-                              <div className="text-4xl font-bold text-white">
-                                {compliance}%
-                              </div>
-                              <div className="text-sm text-white/60 mb-1">
-                                {stat.count}/{stat.expected}
-                              </div>
-                            </div>
-                            <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${compliance}%` }}
-                                transition={{ duration: 1, delay: 0.2 }}
-                                className={`h-full ${
-                                  isGood
-                                    ? "bg-green-400"
-                                    : isOk
-                                    ? "bg-amber-400"
-                                    : "bg-red-400"
-                                }`}
-                              />
-                            </div>
-                            <div className="text-xs text-white/50 mt-2">
-                              {product.schedule}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })
-                  )}
+              {/* RIGHT: Selected Day Details */}
+              <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-teal-200 mb-1">
+                    {dayjs(selectedDate).format("MMMM DD, YYYY")}
+                  </h2>
+                  <p className="text-sm text-teal-400/60">
+                    {dayjs(selectedDate).format("dddd")}
+                  </p>
                 </div>
 
-                {/* Hair fall trend */}
-                {analytics.days30?.hairFall?.trend?.length > 0 && (
-                  <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-                    {/* Enhanced Header with Stats */}
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-teal-200 mb-1 flex items-center gap-2">
-                          <TrendingDown size={20} />
-                          Hair Fall Trend
-                        </h3>
-                        <p className="text-xs text-teal-400/60">
-                          Weekly average - Last 30 days
-                        </p>
-                      </div>
-
-                      {/* Quick Stats */}
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-red-300">
-                          {analytics.days30.hairFall.avg}
-                        </div>
-                        <div className="text-[10px] text-red-400/60 uppercase">
-                          Avg/day
-                        </div>
+                {hairLogs[selectedDate] ? (
+                  <div className="space-y-4">
+                    {/* Products Used */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-teal-300 mb-3 flex items-center gap-2">
+                        <Check size={16} />
+                        Products Used
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(PRODUCTS).flatMap(([catKey, catData]) =>
+                          Object.entries(catData)
+                            .filter(
+                              ([prodKey]) => hairLogs[selectedDate][prodKey]
+                            )
+                            .map(([prodKey, product]) => {
+                              const colors = COLOR_SCHEMES[product.color];
+                              return (
+                                <span
+                                  key={prodKey}
+                                  className={`flex items-center gap-1.5 px-3 py-2 ${colors.bg} border ${colors.border} rounded-lg text-xs font-medium`}
+                                >
+                                  <span>{product.icon}</span>
+                                  <span className={colors.text}>
+                                    {product.name}
+                                  </span>
+                                </span>
+                              );
+                            })
+                        )}
+                        {Object.entries(PRODUCTS)
+                          .flatMap(([catKey, catData]) => Object.keys(catData))
+                          .every((key) => !hairLogs[selectedDate][key]) && (
+                          <span className="text-teal-400/50 text-sm italic">
+                            No products logged
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Chart with Grid Lines */}
-                    <div className="relative" style={{ height: "256px" }}>
-                      {/* Background Grid */}
-                      <div
-                        className="absolute inset-0 flex flex-col justify-between pointer-events-none"
-                        style={{ zIndex: 0 }}
-                      >
-                        {[100, 75, 50, 25, 0].map((percent) => (
-                          <div
-                            key={percent}
-                            className="border-t border-teal-700/20 relative"
-                          >
-                            <span className="absolute -left-8 -top-2 text-[9px] text-teal-400/40">
-                              {Math.round(
-                                (percent / 100) *
-                                  Math.max(
-                                    ...analytics.days30.hairFall.trend.map(
-                                      (b) => b.avg
-                                    )
-                                  )
-                              )}
-                            </span>
+                    {/* Hair Fall Count */}
+                    {hairLogs[selectedDate].hairFallCount && (
+                      <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-4">
+                        <div className="text-xs text-red-300/70 mb-1">
+                          Hair Fall Count
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <div className="text-3xl font-bold text-red-300">
+                            {hairLogs[selectedDate].hairFallCount}
                           </div>
-                        ))}
+                          <div className="text-sm text-red-300/60 mb-1">
+                            strands
+                          </div>
+                        </div>
+                        {analytics.days30.hairFall.avg > 0 && (
+                          <div className="text-xs text-red-300/50 mt-2">
+                            {hairLogs[selectedDate].hairFallCount >
+                            analytics.days30.hairFall.avg
+                              ? `↑ Above your 30-day avg (${analytics.days30.hairFall.avg})`
+                              : `↓ Below your 30-day avg (${analytics.days30.hairFall.avg})`}
+                          </div>
+                        )}
                       </div>
+                    )}
 
-                      {/* Chart Bars */}
-                      <div
-                        className="flex items-end gap-2 h-full relative pl-6"
-                        style={{ zIndex: 10 }}
+                    {/* Scalp Condition */}
+                    {hairLogs[selectedDate].scalpCondition &&
+                      hairLogs[selectedDate].scalpCondition !== "normal" && (
+                        <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-4">
+                          <div className="text-xs text-amber-300/70 mb-1">
+                            Scalp Condition
+                          </div>
+                          <div className="text-lg font-semibold text-amber-300 capitalize">
+                            {hairLogs[selectedDate].scalpCondition}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Notes */}
+                    {hairLogs[selectedDate].notes && (
+                      <div className="bg-teal-500/10 border border-teal-400/30 rounded-xl p-4">
+                        <div className="text-xs text-teal-300/70 mb-2 font-semibold">
+                          Notes
+                        </div>
+                        <p className="text-sm text-teal-100/90 leading-relaxed">
+                          {hairLogs[selectedDate].notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Side Effects */}
+                    {hairLogs[selectedDate].sideEffects && (
+                      <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-4">
+                        <div className="text-xs text-red-300/70 mb-2 font-semibold flex items-center gap-1">
+                          <AlertCircle size={14} />
+                          Side Effects
+                        </div>
+                        <p className="text-sm text-red-200/90 leading-relaxed">
+                          {hairLogs[selectedDate].sideEffects}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Perfect Day Badge */}
+                    {hairLogs[selectedDate]?.minoxidil &&
+                      hairLogs[selectedDate]?.minimalist &&
+                      hairLogs[selectedDate]?.biotin &&
+                      hairLogs[selectedDate]?.supradyn &&
+                      hairLogs[selectedDate]?.healthtatva &&
+                      hairLogs[selectedDate]?.seeds && (
+                        <div className="flex items-center justify-center gap-2 py-3 bg-green-500/20 border border-green-400/60 rounded-xl">
+                          <Award className="text-green-300" size={20} />
+                          <span className="text-green-200 font-semibold">
+                            Perfect Day! 🎯
+                          </span>
+                        </div>
+                      )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Calendar
+                      className="mx-auto mb-4 text-teal-400/30"
+                      size={48}
+                    />
+                    <p className="text-teal-300/50 mb-4">
+                      No data for this day
+                    </p>
+                    <button
+                      onClick={() => {
+                        setViewMode("today");
+                        setSelectedDate(
+                          dayjs(selectedDate).format("YYYY-MM-DD")
+                        );
+                      }}
+                      className="px-4 py-2 bg-teal-500/30 border border-teal-400 rounded-xl text-teal-100 hover:bg-teal-500/40 transition-colors text-sm"
+                    >
+                      Log Data for This Day
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ANALYTICS VIEW */}
+          {viewMode === "analytics" && (
+            <div className="space-y-6">
+              {/* Compliance breakdown */}
+              <div className="grid md:grid-cols-3 gap-4">
+                {Object.entries(PRODUCTS).map(([catKey, catData]) =>
+                  Object.entries(catData).map(([prodKey, product]) => {
+                    const stat = analytics.days30[prodKey] || {};
+                    const colors = COLOR_SCHEMES[product.color];
+                    const compliance = stat.compliance || 0;
+                    const isGood = compliance >= 80;
+                    const isOk = compliance >= 60;
+
+                    return (
+                      <motion.div
+                        key={prodKey}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`bg-gradient-to-br ${colors.gradient} border ${colors.border} rounded-2xl p-6 relative overflow-hidden`}
                       >
-                        {analytics.days30.hairFall.trend.map((bucket, idx) => {
-                          const maxFall = Math.max(
-                            ...analytics.days30.hairFall.trend.map((b) => b.avg)
-                          );
-                          const heightPercent = (bucket.avg / maxFall) * 100;
-                          const heightPx = (bucket.avg / maxFall) * 240;
-                          const isRecent =
-                            idx >= analytics.days30.hairFall.trend.length - 2;
+                        <div className="absolute top-0 right-0 text-6xl opacity-10">
+                          {product.icon}
+                        </div>
+                        <div className="relative z-10">
+                          <div
+                            className={`${colors.text} text-sm mb-2 font-medium`}
+                          >
+                            {product.name}
+                          </div>
+                          <div className="flex items-end gap-2 mb-3">
+                            <div className="text-4xl font-bold text-white">
+                              {compliance}%
+                            </div>
+                            <div className="text-sm text-white/60 mb-1">
+                              {stat.count}/{stat.expected}
+                            </div>
+                          </div>
+                          <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${compliance}%` }}
+                              transition={{ duration: 1, delay: 0.2 }}
+                              className={`h-full ${
+                                isGood
+                                  ? "bg-green-400"
+                                  : isOk
+                                  ? "bg-amber-400"
+                                  : "bg-red-400"
+                              }`}
+                            />
+                          </div>
+                          <div className="text-xs text-white/50 mt-2">
+                            {product.schedule}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
 
-                          // Calculate trend (up/down from previous week)
-                          const prevBucket =
-                            analytics.days30.hairFall.trend[idx - 1];
-                          const trend = prevBucket
-                            ? ((bucket.avg - prevBucket.avg) / prevBucket.avg) *
-                              100
-                            : 0;
-                          const isImproving = trend < 0;
+              {/* Hair fall trend */}
+              {analytics.days30?.hairFall?.trend?.length > 0 && (
+                <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
+                  {/* Enhanced Header with Stats */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-teal-200 mb-1 flex items-center gap-2">
+                        <TrendingDown size={20} />
+                        Hair Fall Trend
+                      </h3>
+                      <p className="text-xs text-teal-400/60">
+                        Weekly average - Last 30 days
+                      </p>
+                    </div>
 
-                          return (
-                            <div
-                              key={bucket.week}
-                              className="flex-1 flex flex-col items-center justify-end gap-2 group h-full"
-                            >
-                              {/* Value on hover */}
-                              <div className="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span
-                                  className={
-                                    isImproving
-                                      ? "text-green-300"
-                                      : "text-red-300"
-                                  }
-                                >
-                                  {bucket.avg}
-                                </span>
-                                {prevBucket && (
-                                  <div className="text-[9px] flex items-center gap-0.5 justify-center">
-                                    {isImproving ? (
-                                      <>
-                                        <TrendingDown className="w-2.5 h-2.5 text-green-400" />
-                                        <span className="text-green-400">
-                                          {Math.abs(trend).toFixed(0)}%
-                                        </span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <TrendingUp className="w-2.5 h-2.5 text-red-400" />
-                                        <span className="text-red-400">
-                                          {trend.toFixed(0)}%
-                                        </span>
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                    {/* Quick Stats */}
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-red-300">
+                        {analytics.days30.hairFall.avg}
+                      </div>
+                      <div className="text-[10px] text-red-400/60 uppercase">
+                        Avg/day
+                      </div>
+                    </div>
+                  </div>
+                  {/* Chart with Grid Lines */}
+                  <div className="relative" style={{ height: "256px" }}>
+                    {/* Background Grid */}
+                    <div
+                      className="absolute inset-0 flex flex-col justify-between pointer-events-none"
+                      style={{ zIndex: 0 }}
+                    >
+                      {[100, 75, 50, 25, 0].map((percent) => (
+                        <div
+                          key={percent}
+                          className="border-t border-teal-700/20 relative"
+                        >
+                          <span className="absolute -left-8 -top-2 text-[9px] text-teal-400/40">
+                            {Math.round(
+                              (percent / 100) *
+                                Math.max(
+                                  ...analytics.days30.hairFall.trend.map(
+                                    (b) => b.avg
+                                  )
+                                )
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-                              {/* Bar */}
-                              <motion.div
-                                initial={{ height: 0 }}
-                                animate={{ height: heightPx }}
-                                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                                className={`
+                    {/* Chart Bars */}
+                    <div
+                      className="flex items-end gap-2 h-full relative pl-6"
+                      style={{ zIndex: 10 }}
+                    >
+                      {analytics.days30.hairFall.trend.map((bucket, idx) => {
+                        const maxFall = Math.max(
+                          ...analytics.days30.hairFall.trend.map((b) => b.avg)
+                        );
+                        const heightPercent = (bucket.avg / maxFall) * 100;
+                        const heightPx = (bucket.avg / maxFall) * 240;
+                        const isRecent =
+                          idx >= analytics.days30.hairFall.trend.length - 2;
+
+                        // Calculate trend (up/down from previous week)
+                        const prevBucket =
+                          analytics.days30.hairFall.trend[idx - 1];
+                        const trend = prevBucket
+                          ? ((bucket.avg - prevBucket.avg) / prevBucket.avg) *
+                            100
+                          : 0;
+                        const isImproving = trend < 0;
+
+                        return (
+                          <div
+                            key={bucket.week}
+                            className="flex-1 flex flex-col items-center justify-end gap-2 group h-full"
+                          >
+                            {/* Value on hover */}
+                            <div className="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                              <span
+                                className={
+                                  isImproving
+                                    ? "text-green-300"
+                                    : "text-red-300"
+                                }
+                              >
+                                {bucket.avg}
+                              </span>
+                              {prevBucket && (
+                                <div className="text-[9px] flex items-center gap-0.5 justify-center">
+                                  {isImproving ? (
+                                    <>
+                                      <TrendingDown className="w-2.5 h-2.5 text-green-400" />
+                                      <span className="text-green-400">
+                                        {Math.abs(trend).toFixed(0)}%
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrendingUp className="w-2.5 h-2.5 text-red-400" />
+                                      <span className="text-red-400">
+                                        {trend.toFixed(0)}%
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Bar */}
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: heightPx }}
+                              transition={{ duration: 0.5, delay: idx * 0.1 }}
+                              className={`
                               w-full rounded-t-lg relative cursor-pointer
                               ${
                                 isRecent
@@ -2863,82 +2874,78 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                               }
                               hover:opacity-80 transition-opacity
                             `}
-                              >
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                  <div className="bg-black/90 border border-teal-400/60 rounded-lg px-2 py-1.5 text-[10px] whitespace-nowrap shadow-lg">
-                                    <div className="text-teal-200 font-semibold mb-0.5">
-                                      Week {bucket.week}
-                                    </div>
-                                    <div className="text-teal-300">
-                                      {bucket.avg} strands/day
-                                    </div>
-                                    {prevBucket && (
-                                      <div
-                                        className={
-                                          isImproving
-                                            ? "text-green-400"
-                                            : "text-red-400"
-                                        }
-                                      >
-                                        {isImproving ? "↓" : "↑"}{" "}
-                                        {Math.abs(trend).toFixed(1)}% from prev
-                                      </div>
-                                    )}
+                            >
+                              {/* Tooltip */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <div className="bg-black/90 border border-teal-400/60 rounded-lg px-2 py-1.5 text-[10px] whitespace-nowrap shadow-lg">
+                                  <div className="text-teal-200 font-semibold mb-0.5">
+                                    Week {bucket.week}
                                   </div>
+                                  <div className="text-teal-300">
+                                    {bucket.avg} strands/day
+                                  </div>
+                                  {prevBucket && (
+                                    <div
+                                      className={
+                                        isImproving
+                                          ? "text-green-400"
+                                          : "text-red-400"
+                                      }
+                                    >
+                                      {isImproving ? "↓" : "↑"}{" "}
+                                      {Math.abs(trend).toFixed(1)}% from prev
+                                    </div>
+                                  )}
                                 </div>
-                              </motion.div>
-
-                              {/* Week Label */}
-                              <div className="text-[10px] text-teal-400/50 font-medium">
-                                W{bucket.week}
                               </div>
+                            </motion.div>
+
+                            {/* Week Label */}
+                            <div className="text-[10px] text-teal-400/50 font-medium">
+                              W{bucket.week}
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
-
-                    {/* Legend & Insights */}
-                    <div className="mt-6 pt-4 border-t border-teal-700/30">
-                      <div className="flex items-center justify-between flex-wrap gap-3">
-                        <div className="flex items-center gap-4 text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded bg-gradient-to-t from-cyan-500 to-teal-400" />
-                            <span className="text-teal-300/70">
-                              Recent weeks
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded bg-gradient-to-t from-green-500 to-green-600" />
-                            <span className="text-teal-300/70">Improving</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <TrendingDown className="w-3 h-3 text-green-400" />
-                            <span className="text-teal-300/70">
-                              Lower is better
-                            </span>
-                          </div>
+                  </div>
+                  ;{/* Legend & Insights */}
+                  <div className="mt-6 pt-4 border-t border-teal-700/30">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded bg-gradient-to-t from-cyan-500 to-teal-400" />
+                          <span className="text-teal-300/70">Recent weeks</span>
                         </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded bg-gradient-to-t from-green-500 to-green-600" />
+                          <span className="text-teal-300/70">Improving</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <TrendingDown className="w-3 h-3 text-green-400" />
+                          <span className="text-teal-300/70">
+                            Lower is better
+                          </span>
+                        </div>
+                      </div>
 
-                        {/* Trend insight */}
-                        {analytics.days30.hairFall.trend.length >= 2 &&
-                          (() => {
-                            const latest =
-                              analytics.days30.hairFall.trend[
-                                analytics.days30.hairFall.trend.length - 1
-                              ];
-                            const previous =
-                              analytics.days30.hairFall.trend[
-                                analytics.days30.hairFall.trend.length - 2
-                              ];
-                            const change =
-                              ((latest.avg - previous.avg) / previous.avg) *
-                              100;
+                      {/* Trend insight */}
+                      {analytics.days30.hairFall.trend.length >= 2 &&
+                        (() => {
+                          const latest =
+                            analytics.days30.hairFall.trend[
+                              analytics.days30.hairFall.trend.length - 1
+                            ];
+                          const previous =
+                            analytics.days30.hairFall.trend[
+                              analytics.days30.hairFall.trend.length - 2
+                            ];
+                          const change =
+                            ((latest.avg - previous.avg) / previous.avg) * 100;
 
-                            return (
-                              <div
-                                className={`
+                          return (
+                            <div
+                              className={`
                               text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5
                               ${
                                 change < 0
@@ -2946,33 +2953,30 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                                   : "bg-red-500/10 border-red-400/40 text-red-300"
                               }
                             `}
-                              >
-                                {change < 0 ? (
-                                  <>
-                                    <TrendingDown className="w-3.5 h-3.5" />
-                                    <span>
-                                      Improving by {Math.abs(change).toFixed(1)}
-                                      %
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <TrendingUp className="w-3.5 h-3.5" />
-                                    <span>
-                                      Increased by {change.toFixed(1)}%
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            );
-                          })()}
-                      </div>
+                            >
+                              {change < 0 ? (
+                                <>
+                                  <TrendingDown className="w-3.5 h-3.5" />
+                                  <span>
+                                    Improving by {Math.abs(change).toFixed(1)}%
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <TrendingUp className="w-3.5 h-3.5" />
+                                  <span>Increased by {change.toFixed(1)}%</span>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
                     </div>
                   </div>
-                )}
-              </div>
-            )
-          }
+                  ; ;
+                </div>
+              )}
+            </div>
+          )}
 
           {/* PHOTOS VIEW */}
           {viewMode === "photos" && (
