@@ -201,7 +201,7 @@ export default function App() {
         onClick={handleClick}
         aria-label={showUpArrow ? "Scroll to top" : "Scroll to bottom"}
         title={showUpArrow ? "Go to Top" : "Go to Bottom"}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-sm border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
+        className="fixed bottom-1 md:bottom-6 right-1 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-sm border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
       >
         {showUpArrow ? "▲" : "▼"}
       </button>
@@ -296,7 +296,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend synced (no local state)");
             toastOnce("sync-backend", () =>
-              toast.success("Synced from backend"),
+              toast.success("Synced from backend")
             );
             setIsOffline(false);
           }
@@ -307,7 +307,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend is newer - synced");
             toastOnce("sync-newer", () =>
-              toast.success("Synced newer data from backend"),
+              toast.success("Synced newer data from backend")
             );
             setIsOffline(false);
           }
@@ -347,7 +347,7 @@ export default function App() {
 
                 console.log("✅ Local state pushed to backend");
                 toastOnce("sync-local", () =>
-                  toast.success("Local changes synced to backend"),
+                  toast.success("Local changes synced to backend")
                 );
                 setIsOffline(false);
               } catch (pushErr) {
@@ -355,7 +355,7 @@ export default function App() {
 
                 console.error(
                   "❌ Failed to push local state to backend",
-                  pushErr,
+                  pushErr
                 );
                 toast.error("Failed to sync local changes - working offline");
                 setIsOffline(true);
@@ -417,7 +417,7 @@ export default function App() {
           toastOnce("offline-cached", () =>
             toast(`${msg} - using cached data`, {
               icon: "⚠️",
-            }),
+            })
           );
         } else {
           toast.error("No cached data available");
@@ -578,7 +578,7 @@ export default function App() {
       setDashboardState(syncConflict.backendState);
       localStorage.setItem(
         "lifeosstate",
-        JSON.stringify(syncConflict.backendState),
+        JSON.stringify(syncConflict.backendState)
       );
       toast.success("Using backend version");
       setSyncConflict(null);
@@ -738,7 +738,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    [],
+    []
   );
 
   return (
@@ -1486,10 +1486,10 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="fixed bottom-4 left-4 sm:bottom-6 sm:left-auto sm:right-6 z-50"
+              className="fixed bottom-14 right-2.5 left-auto sm:bottom-6 sm:left-4 sm:right-auto z-50"
             >
               {/* Desktop - Text badge with sync button */}
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 flex-col">
                 <div className="flex items-center gap-2 px-3 py-2 backdrop-blur-md border border-orange-500/30 rounded-lg shadow-lg bg-black/50">
                   {/* Dot indicator */}
                   <div className="relative">
@@ -1527,7 +1527,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState),
+                        JSON.stringify(backendState)
                       );
                       toast.success("✅ Synced from backend");
                       setIsOffline(false);
@@ -1541,7 +1541,9 @@ export default function App() {
                   className="px-3 py-2 bg-teal-500/20 border border-teal-500/50 rounded-lg text-teal-200 text-xs font-medium hover:bg-teal-500/30 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   <svg
-                    className={`w-4 h-4 ${isLoadingBackend ? "animate-spin" : ""}`}
+                    className={`w-4 h-4 ${
+                      isLoadingBackend ? "animate-spin" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1558,15 +1560,26 @@ export default function App() {
               </div>
 
               {/* Mobile - Compact badge with sync button */}
-              <div className="sm:hidden flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 bg-black/70 backdrop-blur-md border border-orange-500/40 rounded-lg shadow-lg">
+              <div className="sm:hidden flex items-center gap-2 flex-col">
+                <div className="flex items-center justify-center p-2 bg-black/70 backdrop-blur-md border border-orange-500/40 rounded-lg shadow-lg">
                   <div className="relative">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-                    <div className="absolute inset-0 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-75" />
+                    <svg
+                      className="w-5 h-5 text-orange-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-75" />
+                    </div>
                   </div>
-                  <span className="text-xs text-orange-300 font-medium">
-                    Offline
-                  </span>
                 </div>
 
                 {/* Mobile Sync Button */}
@@ -1594,7 +1607,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState),
+                        JSON.stringify(backendState)
                       );
                       toast.success("✅ Synced");
                       setIsOffline(false);
@@ -1608,7 +1621,9 @@ export default function App() {
                   className="p-2 bg-teal-500/20 border border-teal-500/50 rounded-lg text-teal-200 hover:bg-teal-500/30 transition-colors disabled:opacity-50"
                 >
                   <svg
-                    className={`w-5 h-5 ${isLoadingBackend ? "animate-spin" : ""}`}
+                    className={`w-5 h-5 ${
+                      isLoadingBackend ? "animate-spin" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
