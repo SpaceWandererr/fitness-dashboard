@@ -98,7 +98,6 @@ export default function App() {
   }, []);
 
   const [dark, setDark] = useState(false);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === "/";
@@ -1487,11 +1486,11 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="fixed bottom-1 left-1 sm:bottom-20 sm:right-4 sm:left-auto z-50"
+              className="fixed bottom-4 left-4 sm:bottom-6 sm:left-auto sm:right-6 z-50"
             >
               {/* Desktop - Text badge with sync button */}
               <div className="hidden sm:flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 backdrop-blur-md border border-orange-500/30 rounded-lg shadow-lg">
+                <div className="flex items-center gap-2 px-3 py-2 backdrop-blur-md border border-orange-500/30 rounded-lg shadow-lg bg-black/50">
                   {/* Dot indicator */}
                   <div className="relative">
                     <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
@@ -1558,9 +1557,70 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Mobile - Icon only */}
-              <div className="sm:hidden w-9 h-9 flex items-center justify-center bg-black/50 backdrop-blur-sm border border-orange-300 rounded-full">
-                <span className="text-lg">⚠️</span>
+              {/* Mobile - Compact badge with sync button */}
+              <div className="sm:hidden flex items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-2 bg-black/70 backdrop-blur-md border border-orange-500/40 rounded-lg shadow-lg">
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                    <div className="absolute inset-0 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-75" />
+                  </div>
+                  <span className="text-xs text-orange-300 font-medium">
+                    Offline
+                  </span>
+                </div>
+
+                {/* Mobile Sync Button */}
+                <button
+                  onClick={async () => {
+                    setIsLoadingBackend(true);
+                    toast.loading("Syncing...");
+
+                    try {
+                      const res = await fetchWithTimeout(API_URL, {}, 8000);
+                      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                      const data = await res.json();
+                      const backendState = data.dashboardState || data || {};
+
+                      if (
+                        !backendState ||
+                        Object.keys(backendState).length === 0
+                      ) {
+                        toast.error("Backend is empty");
+                        setIsLoadingBackend(false);
+                        return;
+                      }
+
+                      setDashboardState(backendState);
+                      localStorage.setItem(
+                        "lifeosstate",
+                        JSON.stringify(backendState),
+                      );
+                      toast.success("✅ Synced");
+                      setIsOffline(false);
+                    } catch (err) {
+                      toast.error("Still offline");
+                    } finally {
+                      setIsLoadingBackend(false);
+                    }
+                  }}
+                  disabled={isLoadingBackend}
+                  className="p-2 bg-teal-500/20 border border-teal-500/50 rounded-lg text-teal-200 hover:bg-teal-500/30 transition-colors disabled:opacity-50"
+                >
+                  <svg
+                    className={`w-5 h-5 ${isLoadingBackend ? "animate-spin" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
               </div>
             </motion.div>
           )}
