@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  Upload,
 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -124,6 +125,8 @@ export default function App() {
   const [gymLogDates, setGymLogDates] = useState([]);
   const [activePanel, setActivePanel] = useState("weight");
   const toastOnceRef = useRef(new Set());
+  const [syncConflict, setSyncConflict] = useState(null);
+
   function toastOnce(key, fn) {
     if (toastOnceRef.current.has(key)) return;
     toastOnceRef.current.add(key);
@@ -235,7 +238,7 @@ export default function App() {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
-  // ----------------- LOAD DASHBOARD STATE (OFFLINE-FIRST) -----------------
+  // ----------------- LOAD DASHBOARD STATE (OFFLINE-FIRST WITH CONFLICT DETECTION) -----------------
   useEffect(() => {
     let cancelled = false;
 
@@ -244,59 +247,239 @@ export default function App() {
       setIsLoadingBackend(true);
 
       let localState = null;
+      let localTime = 0;
 
       // 1️⃣ LOAD LOCAL FIRST
       try {
         const cached = localStorage.getItem("lifeosstate");
         if (cached) {
           localState = JSON.parse(cached);
+          localTime = new Date(localState?.updatedAt || 0).getTime();
           setDashboardState(localState);
+          console.log("📂 Local state loaded");
         }
       } catch (e) {
-        console.error("Local read failed", e);
+        console.error("❌ Local read failed", e);
+        localStorage.removeItem("lifeosstate"); // Clear corrupted data
       }
 
-      setIsLoadingBackend(false);
-
-      // 2️⃣ TRY BACKEND
+      // 2️⃣ ALWAYS TRY BACKEND (even if local exists)
       try {
         const res = await fetchWithTimeout(API_URL, {}, 8000);
+
+        // Check if cancelled after async operation
+        if (cancelled) return;
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
+
+        // Check if cancelled after async operation
+        if (cancelled) return;
+
         const backendState = data.dashboardState || data || {};
 
-        if (!backendState || Object.keys(backendState).length === 0) return;
+        if (!backendState || Object.keys(backendState).length === 0) {
+          console.warn("⚠️ Backend returned empty state");
+          if (!cancelled) {
+            setIsLoadingBackend(false);
+          }
+          return;
+        }
 
         const backendTime = new Date(backendState.updatedAt || 0).getTime();
-        const localTime = new Date(localState?.updatedAt || 0).getTime();
 
-        if (!localState || backendTime > localTime) {
+        // 3️⃣ SYNC DECISION LOGIC
+        if (!localState) {
+          // No local state - use backend
           if (!cancelled) {
             setDashboardState(backendState);
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
-            console.log("Backend synced successfully");
-            toast.success("Backend synced successfully");
+            console.log("✅ Backend synced (no local state)");
+            toastOnce("sync-backend", () =>
+              toast.success("Synced from backend"),
+            );
+            setIsOffline(false);
+          }
+        } else if (backendTime > localTime) {
+          // Backend is NEWER - use it and overwrite local
+          if (!cancelled) {
+            setDashboardState(backendState);
+            localStorage.setItem("lifeosstate", JSON.stringify(backendState));
+            console.log("✅ Backend is newer - synced");
+            toastOnce("sync-newer", () =>
+              toast.success("Synced newer data from backend"),
+            );
+            setIsOffline(false);
+          }
+        } else if (backendTime < localTime) {
+          // ⚠️ Local is NEWER - check for conflicts
+          const timeDiff = localTime - backendTime;
+          const hasSignificantChanges = timeDiff > 60000; // More than 1 minute difference
+
+          if (hasSignificantChanges && isOffline) {
+            // CONFLICT DETECTED - Show resolution modal
+            if (!cancelled) {
+              setSyncConflict({
+                backendState,
+                localState,
+                backendTime,
+                localTime,
+              });
+              console.log("⚠️ Sync conflict detected");
+              toast.error("Sync conflict! Choose which version to keep.");
+              setIsLoadingBackend(false);
+            }
+          } else {
+            // No conflict - push local to backend
+            if (!cancelled) {
+              console.log("📤 Local is newer - pushing to backend");
+              try {
+                const pushRes = await fetch(API_URL, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(localState),
+                });
+
+                // Check if cancelled after async operation
+                if (cancelled) return;
+
+                if (!pushRes.ok) throw new Error(`HTTP ${pushRes.status}`);
+
+                console.log("✅ Local state pushed to backend");
+                toastOnce("sync-local", () =>
+                  toast.success("Local changes synced to backend"),
+                );
+                setIsOffline(false);
+              } catch (pushErr) {
+                if (cancelled) return;
+
+                console.error(
+                  "❌ Failed to push local state to backend",
+                  pushErr,
+                );
+                toast.error("Failed to sync local changes - working offline");
+                setIsOffline(true);
+              }
+            }
           }
         } else {
-          console.log("Local state is newer — no sync needed");
-          toast.success("Local state is newer — no sync needed");
+          // Same timestamp - verify backend has data
+          const backendHasData =
+            backendState.wd_gym_logs ||
+            backendState.syllabus_tree_v2 ||
+            Object.keys(backendState).length > 5;
+
+          if (backendHasData) {
+            console.log("✅ Already in sync");
+            toastOnce("sync-match", () => toast.success("Already in sync"));
+            setIsOffline(false);
+          } else {
+            // Backend is empty despite matching timestamp - restore from local
+            if (!cancelled && localState) {
+              console.log("⚠️ Backend empty - restoring from local");
+              try {
+                const restoreRes = await fetch(API_URL, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(localState),
+                });
+
+                if (cancelled) return;
+
+                if (!restoreRes.ok)
+                  throw new Error(`HTTP ${restoreRes.status}`);
+
+                console.log("✅ Backend restored from local");
+                toast.warning("Backend was empty - restored from local");
+                setIsOffline(false);
+              } catch (restoreErr) {
+                if (cancelled) return;
+
+                console.error("❌ Failed to restore backend", restoreErr);
+                toast.error("Failed to restore backend - working offline");
+                setIsOffline(true);
+              }
+            }
+          }
         }
       } catch (err) {
+        // Backend fetch failed
+        if (cancelled) return;
+
         const msg =
-          err.name === "AbortError" ? "🟡 Timeout — local mode" : "🔴 Offline";
+          err.name === "AbortError"
+            ? "⏱️ Backend timeout - using local data"
+            : "🔴 Offline mode";
 
         console.warn(msg, err);
-        toast(msg);
+
+        if (localState) {
+          toastOnce("offline-cached", () =>
+            toast.warning(`${msg} - using cached data`),
+          );
+        } else {
+          toast.error("No cached data available");
+        }
+
         setIsOffline(true);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingBackend(false);
+        }
       }
     }
 
     loadState();
-    return () => (cancelled = true);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // When dashboardState changes → recalc stats
+  // ----------------- GLOBAL STATE UPDATE (WITH BACKEND SYNC) -----------------
+  const updateDashboard = useCallback((updates) => {
+    setDashboardState((prev) => {
+      if (!prev) return prev;
+
+      const resolvedUpdates =
+        typeof updates === "function" ? updates(prev) : updates;
+      const nextState = {
+        ...prev,
+        ...resolvedUpdates,
+        updatedAt: new Date().toISOString(), // Fresh timestamp
+      };
+
+      // SAVE LOCALLY FIRST (source of truth)
+      try {
+        localStorage.setItem("lifeosstate", JSON.stringify(nextState));
+        console.log("💾 Saved to localStorage");
+      } catch (e) {
+        console.warn("❌ Local save failed", e);
+        toast.error("Failed to save locally");
+      }
+
+      // SYNC TO BACKEND (with error handling)
+      fetch(API_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextState),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          console.log("✅ Synced to backend");
+          setIsOffline(false);
+        })
+        .catch((err) => {
+          console.warn("⚠️ Backend sync failed - changes saved locally", err);
+          toast.warning("Offline - changes saved locally");
+          setIsOffline(true);
+        });
+
+      return nextState;
+    });
+  }, []);
+
+  // When dashboardState changes → recalc stats (your existing code stays the same)
   useEffect(() => {
     const gymLogs = dashboardState?.wd_gym_logs || {};
     const syllabus = dashboardState?.syllabus_tree_v2 || {};
@@ -383,46 +566,178 @@ export default function App() {
     window.dispatchEvent(new Event("lifeos:update"));
   };
 
-  // ----------------- GLOBAL STATE UPDATE (LOCAL-FIRST) -----------------
-  const updateDashboard = useCallback((updates) => {
-    setDashboardState((prev) => {
-      if (!prev) return prev;
+  // Conflict Resolution Modal
+  const ConflictResolutionModal = () => {
+    if (!syncConflict) return null;
 
-      const resolvedUpdates =
-        typeof updates === "function" ? updates(prev) : updates;
+    const backendDate = new Date(syncConflict.backendTime).toLocaleString();
+    const localDate = new Date(syncConflict.localTime).toLocaleString();
 
-      const nextState = {
-        ...prev,
-        ...resolvedUpdates,
-        updatedAt: new Date().toISOString(),
+    const handleUseBackend = async () => {
+      setDashboardState(syncConflict.backendState);
+      localStorage.setItem(
+        "lifeosstate",
+        JSON.stringify(syncConflict.backendState),
+      );
+      toast.success("Using backend version");
+      setSyncConflict(null);
+      setIsOffline(false);
+    };
+
+    const handleUseLocal = async () => {
+      try {
+        const res = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(syncConflict.localState),
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        toast.success("Local version saved to backend");
+        setSyncConflict(null);
+        setIsOffline(false);
+      } catch (err) {
+        toast.error("Failed to save local version");
+        setIsOffline(true);
+      }
+    };
+
+    const handleManualMerge = () => {
+      // Download both versions for manual inspection
+      const downloadJSON = (data, filename) => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
       };
 
-      // ✅ SAVE LOCALLY FIRST (SOURCE OF TRUTH)
-      try {
-        localStorage.setItem("lifeosstate", JSON.stringify(nextState));
-      } catch (e) {
-        console.warn("⚠ Local save failed", e);
-      }
+      downloadJSON(syncConflict.backendState, `backend-${backendDate}.json`);
+      downloadJSON(syncConflict.localState, `local-${localDate}.json`);
 
-      // 🔄 FIRE-AND-FORGET BACKEND SYNC
-      fetch(API_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nextState),
-      }).catch(() => {
-        console.warn("⚠ Backend sync failed (offline)");
-      });
+      toast.success("Both versions downloaded for manual merge");
+    };
 
-      return nextState;
-    });
-  }, []);
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            className="relative max-w-2xl w-full mx-4 bg-gradient-to-br from-slate-900 via-teal-900/20 to-slate-900 border-2 border-teal-500/50 rounded-2xl p-8 shadow-2xl"
+          >
+            {/* Alert Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
+                <AlertTriangle
+                  size={48}
+                  className="text-red-400 animate-pulse"
+                />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-center text-teal-100 mb-2">
+              Sync Conflict Detected
+            </h2>
+            <p className="text-center text-teal-300/70 mb-8">
+              Changes were made on multiple devices. Choose which version to
+              keep.
+            </p>
+
+            {/* Comparison Cards */}
+            <div className="grid md:grid-cols-2 gap-4 mb-8">
+              {/* Backend Version */}
+              <div className="bg-blue-500/10 border border-blue-500/50 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-3 h-3 rounded-full bg-blue-400 animate-pulse" />
+                  <h3 className="text-lg font-bold text-blue-300">
+                    Backend Version
+                  </h3>
+                </div>
+                <p className="text-sm text-blue-200/70 mb-2">
+                  Last updated: {backendDate}
+                </p>
+                <div className="text-xs text-blue-300/60">
+                  • From: Other device (mobile/desktop)
+                </div>
+              </div>
+
+              {/* Local Version */}
+              <div className="bg-teal-500/10 border border-teal-500/50 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-3 h-3 rounded-full bg-teal-400 animate-pulse" />
+                  <h3 className="text-lg font-bold text-teal-300">
+                    Local Version
+                  </h3>
+                </div>
+                <p className="text-sm text-teal-200/70 mb-2">
+                  Last updated: {localDate}
+                </p>
+                <div className="text-xs text-teal-300/60">
+                  • From: This device (current changes)
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleUseBackend}
+                className="w-full px-6 py-4 bg-blue-500/20 border-2 border-blue-500 rounded-xl text-blue-200 font-semibold hover:bg-blue-500/30 hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <Download size={20} />
+                Use Backend Version (Discard Local Changes)
+              </button>
+
+              <button
+                onClick={handleUseLocal}
+                className="w-full px-6 py-4 bg-teal-500/20 border-2 border-teal-500 rounded-xl text-teal-200 font-semibold hover:bg-teal-500/30 hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <Upload size={20} />
+                Use Local Version (Overwrite Backend)
+              </button>
+
+              <button
+                onClick={handleManualMerge}
+                className="w-full px-6 py-4 bg-amber-500/20 border-2 border-amber-500 rounded-xl text-amber-200 font-semibold hover:bg-amber-500/30 hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <FileText size={20} />
+                Download Both for Manual Merge
+              </button>
+            </div>
+
+            {/* Warning */}
+            <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-xs text-red-300/80 text-center">
+                ⚠️ Warning: Choosing one version will permanently discard the
+                other unless you download both.
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
 
   // ----------------- END GLOBAL BACKEND SYNC ENGINE -----------------
 
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    []
+    [],
   );
 
   return (
@@ -475,6 +790,7 @@ export default function App() {
           },
         }}
       />
+      <ConflictResolutionModal /> {/* Add this line */}
       <div
         className={`min-h-screen text-[#E5F9F6] ${bgClass} relative overflow-x-hidden`}
         style={{ "--accent": accent }}
@@ -1759,10 +2075,10 @@ function HomeDashboard({
                       i === 0
                         ? "-rotate-12"
                         : i === 1
-                        ? "rotate-6"
-                        : i === 2
-                        ? "-rotate-6"
-                        : "rotate-12"
+                          ? "rotate-6"
+                          : i === 2
+                            ? "-rotate-6"
+                            : "rotate-12"
                     } transition-all duration-700`}
                   >
                     {/* Holographic Card */}
@@ -2412,10 +2728,10 @@ function WeightPanel({ history }) {
                 diff == null
                   ? "—"
                   : diff < 0
-                  ? "Fat loss in progress ✅"
-                  : diff > 0
-                  ? "Weight increased ⚠️"
-                  : "Stable"
+                    ? "Fat loss in progress ✅"
+                    : diff > 0
+                      ? "Weight increased ⚠️"
+                      : "Stable"
               }
             />
           </div>
