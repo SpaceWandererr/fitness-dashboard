@@ -1992,45 +1992,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
   }
 
   return (
-    <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          // Default options
-          duration: 3000,
-          style: {
-            background: "#0f172a",
-            color: "#fff",
-            padding: "12px 20px",
-            borderRadius: "12px",
-            fontSize: "14px",
-            maxWidth: "90vw", // ✅ Mobile responsive width
-            zIndex: 99999,
-          },
-          // Success
-          success: {
-            iconTheme: {
-              primary: "#10b981",
-              secondary: "#fff",
-            },
-          },
-          // Error
-          error: {
-            duration: 4000,
-            iconTheme: {
-              primary: "#ef4444",
-              secondary: "#fff",
-            },
-          },
-        }}
-        containerStyle={{
-          top: 80, // ✅ Change from 20 to 80 (adjust based on your navbar height)
-          right: 20,
-          zIndex: 99999,
-        }}
-        // ✅ Mobile-specific responsive behavior
-        gutter={8}
-      />
       <div className="min-h-screen px-4 py-6 pb-20">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -3671,6 +3632,5 @@ export default function HairCare({ dashboardState, updateDashboard }) {
           )}
         </AnimatePresence>
       </div>
-    </>
   );
 }
