@@ -2514,7 +2514,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             <div className="grid md:grid-cols-3 gap-4">
               {Object.entries(PRODUCTS).map(([catKey, catData]) =>
                 Object.entries(catData).map(([prodKey, product]) => {
-                  const stat = analytics.days30[prodKey] || {}; // ✅ CHANGED: analytics.days30[prodKey]
+                  const stat = analytics.days30[prodKey] || {};
                   const colors = COLOR_SCHEMES[product.color];
                   const compliance = stat.compliance || 0;
                   const isGood = compliance >= 80;
@@ -2553,8 +2553,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                               isGood
                                 ? "bg-green-400"
                                 : isOk
-                                ? "bg-amber-400"
-                                : "bg-red-400"
+                                  ? "bg-amber-400"
+                                  : "bg-red-400"
                             }`}
                           />
                         </div>
@@ -2564,7 +2564,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       </div>
                     </motion.div>
                   );
-                })
+                }),
               )}
             </div>
 
@@ -2595,9 +2595,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 </div>
 
                 {/* Chart with Grid Lines */}
-                <div className="relative">
+                <div className="relative" style={{ height: '256px' }}>
                   {/* Background Grid */}
-                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none" style={{ zIndex: 0 }}>
                     {[100, 75, 50, 25, 0].map((percent) => (
                       <div
                         key={percent}
@@ -2608,9 +2608,9 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                             (percent / 100) *
                               Math.max(
                                 ...analytics.days30.hairFall.trend.map(
-                                  (b) => b.avg
-                                )
-                              )
+                                  (b) => b.avg,
+                                ),
+                              ),
                           )}
                         </span>
                       </div>
@@ -2618,12 +2618,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                   </div>
 
                   {/* Chart Bars */}
-                  <div className="flex items-end gap-2 h-64 relative z-10 pl-6">
+                  <div className="flex items-end gap-2 h-full relative pl-6" style={{ zIndex: 10 }}>
                     {analytics.days30.hairFall.trend.map((bucket, idx) => {
                       const maxFall = Math.max(
-                        ...analytics.days30.hairFall.trend.map((b) => b.avg)
+                        ...analytics.days30.hairFall.trend.map((b) => b.avg),
                       );
-                      const height = (bucket.avg / maxFall) * 100;
+                      const heightPercent = (bucket.avg / maxFall) * 100;
+                      const heightPx = (bucket.avg / maxFall) * 240;
                       const isRecent =
                         idx >= analytics.days30.hairFall.trend.length - 2;
 
@@ -2638,7 +2639,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       return (
                         <div
                           key={bucket.week}
-                          className="flex-1 flex flex-col items-center gap-2 group"
+                          className="flex-1 flex flex-col items-center justify-end gap-2 group h-full"
                         >
                           {/* Value on hover */}
                           <div className="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2673,19 +2674,19 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                           {/* Bar */}
                           <motion.div
                             initial={{ height: 0 }}
-                            animate={{ height: `${height}%` }}
+                            animate={{ height: heightPx }}
                             transition={{ duration: 0.5, delay: idx * 0.1 }}
                             className={`
-                  w-full rounded-t-lg relative cursor-pointer
-                  ${
-                    isRecent
-                      ? "bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
-                      : isImproving && prevBucket
-                      ? "bg-gradient-to-t from-green-500 to-green-600"
-                      : "bg-gradient-to-t from-teal-600 to-teal-700"
-                  }
-                  hover:opacity-80 transition-opacity
-                `}
+                              w-full rounded-t-lg relative cursor-pointer
+                              ${
+                                isRecent
+                                  ? "bg-gradient-to-t from-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                                  : isImproving && prevBucket
+                                    ? "bg-gradient-to-t from-green-500 to-green-600"
+                                    : "bg-gradient-to-t from-teal-600 to-teal-700"
+                              }
+                              hover:opacity-80 transition-opacity
+                            `}
                           >
                             {/* Tooltip */}
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -2759,13 +2760,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         return (
                           <div
                             className={`
-              text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5
-              ${
-                change < 0
-                  ? "bg-green-500/10 border-green-400/40 text-green-300"
-                  : "bg-red-500/10 border-red-400/40 text-red-300"
-              }
-            `}
+                              text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5
+                              ${
+                                change < 0
+                                  ? "bg-green-500/10 border-green-400/40 text-green-300"
+                                  : "bg-red-500/10 border-red-400/40 text-red-300"
+                              }
+                            `}
                           >
                             {change < 0 ? (
                               <>
@@ -2789,6 +2790,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
             )}
           </div>
         )}
+
 
         {/* PHOTOS VIEW */}
         {viewMode === "photos" && (
