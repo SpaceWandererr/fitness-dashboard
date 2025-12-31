@@ -201,7 +201,7 @@ export default function App() {
         onClick={handleClick}
         aria-label={showUpArrow ? "Scroll to top" : "Scroll to bottom"}
         title={showUpArrow ? "Go to Top" : "Go to Bottom"}
-        className="fixed bottom-1 md:bottom-6 right-1 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-sm border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
+        className="fixed bottom-1 md:bottom-6 right-2 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-black/70 backdrop-blur-sm border border-teal-400/40 text-teal-300 text-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:bg-teal-500/10 hover:scale-110 active:scale-95 transition-transform duration-150"
       >
         {showUpArrow ? "▲" : "▼"}
       </button>
