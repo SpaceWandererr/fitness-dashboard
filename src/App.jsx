@@ -35,6 +35,7 @@ import Gym from "./components/Gym.jsx";
 import Projects from "./components/Projects.jsx";
 import Control from "./components/Control.jsx";
 import HairCarePage from "./components/HairCarePage";
+import EthicalHackingSyllabus from "./components/EthicalHackingSyllabus.jsx";
 
 // ⬇️ PUT THIS HERE (top of App.jsx, after imports)
 function fetchWithTimeout(url, options = {}, timeout = 8000) {
@@ -296,7 +297,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend synced (no local state)");
             toastOnce("sync-backend", () =>
-              toast.success("Synced from backend"),
+              toast.success("Synced from backend")
             );
             setIsOffline(false);
           }
@@ -307,7 +308,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend is newer - synced");
             toastOnce("sync-newer", () =>
-              toast.success("Synced newer data from backend"),
+              toast.success("Synced newer data from backend")
             );
             setIsOffline(false);
           }
@@ -347,7 +348,7 @@ export default function App() {
 
                 console.log("✅ Local state pushed to backend");
                 toastOnce("sync-local", () =>
-                  toast.success("Local changes synced to backend"),
+                  toast.success("Local changes synced to backend")
                 );
                 setIsOffline(false);
               } catch (pushErr) {
@@ -355,7 +356,7 @@ export default function App() {
 
                 console.error(
                   "❌ Failed to push local state to backend",
-                  pushErr,
+                  pushErr
                 );
                 toast.error("Failed to sync local changes - working offline");
                 setIsOffline(true);
@@ -417,7 +418,7 @@ export default function App() {
           toastOnce("offline-cached", () =>
             toast(`${msg} - using cached data`, {
               icon: "⚠️",
-            }),
+            })
           );
         } else {
           toast.error("No cached data available");
@@ -578,7 +579,7 @@ export default function App() {
       setDashboardState(syncConflict.backendState);
       localStorage.setItem(
         "lifeosstate",
-        JSON.stringify(syncConflict.backendState),
+        JSON.stringify(syncConflict.backendState)
       );
       toast.success("Using backend version");
       setSyncConflict(null);
@@ -738,7 +739,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    [],
+    []
   );
 
   return (
@@ -1528,7 +1529,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState),
+                        JSON.stringify(backendState)
                       );
                       toast.success("✅ Synced from backend");
                       setIsOffline(false);
@@ -1608,7 +1609,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState),
+                        JSON.stringify(backendState)
                       );
                       toast.success("✅ Synced");
                       setIsOffline(false);
@@ -1770,6 +1771,30 @@ export default function App() {
                   ) : (
                     <div className="flex h-screen items-center justify-center text-emerald-400 text-sm">
                       Loading syllabus…
+                    </div>
+                  )
+                }
+              />
+              <Route
+                path="/ethical-hacking"
+                element={
+                  dashboardState ? (
+                    <motion.div
+                      initial={{ opacity: 0, x: 300 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={
+                        isHome ? { duration: 0.5, ease: "easeInOut" } : {}
+                      }
+                    >
+                      <EthicalHackingSyllabus
+                        dashboardState={dashboardState}
+                        updateDashboard={updateDashboard}
+                      />
+                    </motion.div>
+                  ) : (
+                    <div className="flex h-screen items-center justify-center text-emerald-400 text-sm">
+                      Loading ethical hacking syllabus…
                     </div>
                   )
                 }
@@ -3404,6 +3429,7 @@ function NavLink({ to, label, current }) {
 const links = [
   { to: "/", label: "HOME" },
   { to: "/syllabus", label: "STUDY" },
+  { to: "/ethical-hacking", label: "HACKING" },
   { to: "/HairCarePage", label: "HAIR" },
   { to: "/gym", label: "GYM" },
   { to: "/projects", label: "PROJECTS" },
