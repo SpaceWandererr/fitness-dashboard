@@ -593,7 +593,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
       <div className="max-w-[1800px] mx-auto px-6 py-6">
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* LEFT SIDE - Syllabus Content */}
-          <div className="space-y-4 w-full sm:w-[1800px]">
+          <div className="space-y-4 w-full sm:w-[1200px]">
             {Object.entries(tree).map(([moduleKey, sections]) => {
               const stats = moduleStats[moduleKey];
               const isModuleOpen = openModules[moduleKey];
