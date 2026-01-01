@@ -2918,7 +2918,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     })}
                   </div>
                 </div>
-                ;{/* Legend & Insights */}
+                {/* Legend & Insights */}
                 <div className="mt-6 pt-4 border-t border-teal-700/30">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-4 text-xs">
@@ -2981,7 +2981,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                       })()}
                   </div>
                 </div>
-                ; ;
+                
               </div>
             )}
           </div>
@@ -3403,13 +3403,13 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                     >
                       {/* Timeline connector */}
                       {idx < filteredLogs.length - 1 && (
-                        <div className="absolute left-2 top-8 bottom-0 w-px bg-teal-700/30" />
+                        <div className="absolute left-4 top-8 bottom-0 w-px bg-teal-700/30" />
                       )}
 
                       {/* Timeline dot */}
                       <div
                         className={`
-                absolute left-0 top-3 w-4 h-4 rounded-full border-2
+                absolute left-2 top-3 w-4 h-4 rounded-full border-2
                 ${
                   isPerfect
                     ? "bg-green-400 border-green-300 shadow-[0_0_12px_rgba(74,222,128,0.6)]"
