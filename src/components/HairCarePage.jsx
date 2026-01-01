@@ -3440,7 +3440,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                           </div>
 
                           {log.hairFallCount && (
-                            <div className="inline-flex flex-col items-end px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-400/40">
+                            <div className="inline-flex flex-col items-center px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-400/40 ">
                               <div className="text-[10px] uppercase tracking-wide text-red-300/70 mb-0.5">
                                 Hair Fall
                               </div>
