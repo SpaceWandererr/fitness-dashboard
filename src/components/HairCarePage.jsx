@@ -1258,7 +1258,7 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     return (
       <div className="w-full overflow-hidden">
         {/* Weekday Headers */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-3">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-2">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div
               key={i}
@@ -2403,8 +2403,8 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         {viewMode === "calendar" && (
           <div className="grid lg:grid-cols-2 gap-6">
             {/* LEFT:  Calendar*/}
-            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-6">
-              <div className="flex justify-between items-center mb-4">
+            <div className="bg-black/30 backdrop-blur-xl border border-teal-700/30 rounded-2xl p-4">
+              <div className="flex justify-between items-center mb-2">
                 <button
                   onClick={() =>
                     setCurrentMonth(currentMonth.subtract(1, "month"))
