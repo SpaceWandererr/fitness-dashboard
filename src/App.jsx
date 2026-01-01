@@ -296,7 +296,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend synced (no local state)");
             toastOnce("sync-backend", () =>
-              toast.success("Synced from backend")
+              toast.success("Synced from backend"),
             );
             setIsOffline(false);
           }
@@ -307,7 +307,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend is newer - synced");
             toastOnce("sync-newer", () =>
-              toast.success("Synced newer data from backend")
+              toast.success("Synced newer data from backend"),
             );
             setIsOffline(false);
           }
@@ -347,7 +347,7 @@ export default function App() {
 
                 console.log("✅ Local state pushed to backend");
                 toastOnce("sync-local", () =>
-                  toast.success("Local changes synced to backend")
+                  toast.success("Local changes synced to backend"),
                 );
                 setIsOffline(false);
               } catch (pushErr) {
@@ -355,7 +355,7 @@ export default function App() {
 
                 console.error(
                   "❌ Failed to push local state to backend",
-                  pushErr
+                  pushErr,
                 );
                 toast.error("Failed to sync local changes - working offline");
                 setIsOffline(true);
@@ -417,7 +417,7 @@ export default function App() {
           toastOnce("offline-cached", () =>
             toast(`${msg} - using cached data`, {
               icon: "⚠️",
-            })
+            }),
           );
         } else {
           toast.error("No cached data available");
@@ -578,7 +578,7 @@ export default function App() {
       setDashboardState(syncConflict.backendState);
       localStorage.setItem(
         "lifeosstate",
-        JSON.stringify(syncConflict.backendState)
+        JSON.stringify(syncConflict.backendState),
       );
       toast.success("Using backend version");
       setSyncConflict(null);
@@ -738,7 +738,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    []
+    [],
   );
 
   return (
@@ -1528,7 +1528,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState)
+                        JSON.stringify(backendState),
                       );
                       toast.success("✅ Synced from backend");
                       setIsOffline(false);
@@ -1608,7 +1608,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState)
+                        JSON.stringify(backendState),
                       );
                       toast.success("✅ Synced");
                       setIsOffline(false);
@@ -2029,7 +2029,7 @@ function VisionCarousel({ cards }) {
       </div>
 
       {/* Centered slide – mobile gets narrower, tablet+ uses full width of card */}
-      <div className="flex justify-center px-2 mb-16 mt-8 sm:px-4">
+      <div className="flex justify-center px-2 pb-16 mt-8 sm:px-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -2045,7 +2045,7 @@ function VisionCarousel({ cards }) {
             transition={
               isHome ? { duration: 0.45, ease: "easeOut" } : undefined
             }
-            className="w-full sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[95%]"
+            className="w-full sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[95%] pb-4"
           >
             {cards[index]}
           </motion.div>
@@ -2407,8 +2407,8 @@ function HomeDashboard({
             </motion.div>
 
             {/* Final Horizon Line */}
-            <div className="mt-8 text-center">
-              <p className="text-emerald-600 font-semibold uppercase  text-center tracking-[1em] animate-[pulse_6s_ease-in-out_infinite]">
+            <div className="mt-8 text-center px-2">
+              <p className="text-emerald-600 font-semibold uppercase text-center tracking-[0.2em] sm:tracking-[0.5em] md:tracking-[0.8em] lg:tracking-[1em] text-xs sm:text-sm md:text-base animate-[pulse_6s_ease-in-out_infinite]">
                 ··· VISION HORIZON 2026–2027 ···
               </p>
             </div>
@@ -3035,12 +3035,15 @@ function TopicsPanel({ stats }) {
 }
 
 function StreakPanel({ stats }) {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  const { streak } = stats;
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      transition={isHome ? { duration: 0.25 } : {}}
+      transition={isHome ? { duration: 0.25 } : undefined}
       className="rounded-2xl border border-fuchsia-500/30 bg-black/60 p-5 shadow-[0_0_32px_rgba(217,70,239,0.3)]"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-fuchsia-500/30 pb-3">
