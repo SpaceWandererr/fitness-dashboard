@@ -3,6 +3,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // In your component:
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4289,7 +4290,6 @@ function totalsOf(node, visited = new WeakSet()) {
 }
 
 /* ======================= MAIN ======================= */
-/* ======================= MAIN ======================= */
 export default function Syllabus({
   dashboardState,
   setDashboardState,
@@ -4314,6 +4314,7 @@ export default function Syllabus({
 
   // Single source of truth
   const tree = dashboardState?.syllabus_tree_v2 || null;
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // ==================== ALL EFFECTS (CLEAN & CORRECT) ====================
 
@@ -4500,6 +4501,7 @@ export default function Syllabus({
 
     // Will track the last completed item (for streak / last studied)
     let lastItem = null;
+    let affectedCount = 0;
 
     // 🔁 Recursive helper to mark everything under this node
     function mark(n) {
@@ -4510,7 +4512,8 @@ export default function Syllabus({
         n.forEach((it) => {
           if (it && typeof it === "object") {
             it.done = val;
-            it.completedOn = val ? todayISO() : "";
+            it.completedOn = val ? new Date().toISOString() : ""; // ✅ Full timestamp
+            affectedCount++;
 
             // Keep reference to last completed item
             if (val) lastItem = it;
@@ -4535,58 +4538,94 @@ export default function Syllabus({
 
     // 📌 If marking as done, update last studied + streak
     if (val && lastItem) {
-      updates.syllabus_lastStudied = `${
-        lastItem.title
-      } @ ${new Date().toLocaleString("en-IN")}`;
-
-      // Ensure streak has unique days only
+      updates.syllabus_lastStudied = `${lastItem.title} • ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
     // 🚀 Persist through App.jsx (local + backend handled there)
     updateDashboard(updates);
+
+    // 🔔 Toasts with count
+    if (val) {
+      toast.success(`Marked ${affectedCount} topics`);
+    } else {
+      toast(`Unmarked ${affectedCount} topics`, {
+        icon: "ℹ️",
+        style: {
+          background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)",
+          border: "1px solid rgba(59, 130, 246, 0.4)",
+          color: "#dbeafe",
+        },
+      });
+    }
   };
 
   // =========================================================
   // 🔥 Mark / Unmark SINGLE task
   // =========================================================
   const markTask = (path, idx, val) => {
-    // 🔑 Always read tree from App-owned state
     const tree = dashboardState?.syllabus_tree_v2;
     if (!tree) return;
 
-    // 🧬 Clone tree to avoid mutating state directly
     const updatedTree = structuredClone(tree);
-
-    // Get parent node of the leaf array
     const parentPath = path.slice(0, -1);
     const leafKey = path[path.length - 1];
-
     const parent = getRefAtPath(updatedTree, parentPath);
     const item = parent?.[leafKey]?.[idx];
     if (!item) return;
 
-    // ✅ Update task state immutably (on cloned tree)
+    // ✅ Fix 1: Store FULL ISO timestamp (not just date)
     item.done = val;
-    item.completedOn = val ? todayISO() : "";
+    item.completedOn = val ? new Date().toISOString() : ""; // 2026-01-02T09:26:00.000Z
 
-    // 🧠 Prepare updates (ONLY what changed)
-    const updates = {
-      syllabus_tree_v2: updatedTree,
-    };
+    const updates = { syllabus_tree_v2: updatedTree };
 
-    // 📌 If marking as done, update last studied + streak
     if (val) {
-      updates.syllabus_lastStudied = `${
-        item.title
-      } @ ${new Date().toLocaleString("en-IN")}`;
-
-      // Ensure streak has unique days only
+      updates.syllabus_lastStudied = `${item.title} • ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
+    } else {
+      let mostRecentTitle = null;
+      let mostRecentDate = null;
+
+      Object.values(updatedTree).forEach((module) => {
+        if (!module || typeof module !== "object") return;
+        Object.values(module).forEach((section) => {
+          if (!Array.isArray(section)) return;
+          section.forEach((topic) => {
+            if (!topic.done || !topic.completedOn) return;
+            const d = new Date(topic.completedOn);
+            if (!mostRecentDate || d > mostRecentDate) {
+              mostRecentDate = d;
+              mostRecentTitle = topic.title;
+            } else if (d.getTime() === mostRecentDate.getTime()) {
+              mostRecentTitle = topic.title;
+            }
+          });
+        });
+      });
+
+      if (mostRecentTitle && mostRecentDate) {
+        updates.syllabus_lastStudied = `${mostRecentTitle} • ${mostRecentDate.toLocaleString("en-IN")}`;
+      } else {
+        updates.syllabus_lastStudied = "";
+      }
     }
 
-    // 🚀 Persist through App.jsx (local + backend handled there)
     updateDashboard(updates);
+
+    // 🔔 Toasts
+    if (val) {
+      toast.success(`Marked: ${item.title}`);
+    } else {
+      toast(`Unmarked: ${item.title}`, {
+        icon: "ℹ️",
+        style: {
+          background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)",
+          border: "1px solid rgba(59, 130, 246, 0.4)",
+          color: "#dbeafe",
+        },
+      });
+    }
   };
 
   // =========================================================
@@ -4953,39 +4992,102 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
 
                 {/* Reset */}
                 <button
-                  onClick={async () => {
-                    // ⚠️ Strong confirmation – irreversible action
-                    if (
-                      !confirm(
-                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
-                      )
-                    )
-                      return;
-
-                    // 🧬 Fresh copy of the original syllabus tree
-                    const resetTree = structuredClone(TREE);
-
-                    // 🚀 Single source of truth update (App.jsx handles persistence)
-                    updateDashboard({
-                      syllabus_tree_v2: resetTree,
-                      syllabus_meta: {},
-                      syllabus_notes: {},
-                      syllabus_streak: [],
-                      syllabus_lastStudied: "",
-                    });
-
-                    alert("✅ RESET COMPLETE");
-                  }}
+                  onClick={() => setShowResetModal(true)}
                   className="px-3 py-1.5 rounded-xl text-[11px] md:text-xs
-    bg-gradient-to-r from-red-600 to-red-500
-    text-white border border-red-400/80
-    shadow-[0_0_10px_rgba(248,113,113,0.7)]
-    transition
-    hover:brightness-110 hover:-translate-y-[1px] hover:shadow-[0_0_18px_rgba(248,113,113,0.95)]
-    active:translate-y-[1px] active:scale-[0.97] active:shadow-sm"
+                  bg-gradient-to-r from-red-600 to-red-500
+                  text-white border border-red-400/80
+                  shadow-[0_0_10px_rgba(248,113,113,0.7)]
+                  transition
+                  hover:brightness-110 hover:-translate-y-[1px] hover:shadow-[0_0_18px_rgba(248,113,113,0.95)]
+                  active:translate-y-[1px] active:scale-[0.97] active:shadow-sm"
                 >
                   Reset
                 </button>
+
+                {showResetModal &&
+                  createPortal(
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+                      onClick={() => setShowResetModal(false)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        transition={{
+                          type: "spring",
+                          damping: 25,
+                          stiffness: 300,
+                        }}
+                        className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 rounded-2xl border border-red-700/40 shadow-2xl shadow-red-500/30 max-w-md w-full"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Icon */}
+                        <div className="flex justify-center mb-4">
+                          <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
+                            <svg
+                              className="w-8 h-8 text-red-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+
+                        <h3 className="text-xl font-bold text-center bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                          Reset ALL Syllabus Progress?
+                        </h3>
+                        <p className="text-sm text-slate-400 text-center mb-6">
+                          This will permanently clear all completion, notes,
+                          streaks and last studied activity.{" "}
+                          <span className="text-red-400 font-semibold">
+                            This action cannot be undone.
+                          </span>
+                        </p>
+
+                        {/* Buttons */}
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              const resetTree = structuredClone(TREE);
+
+                              updateDashboard({
+                                syllabus_tree_v2: resetTree,
+                                syllabus_meta: {},
+                                syllabus_notes: {},
+                                syllabus_streak: [],
+                                syllabus_lastStudied: "",
+                              });
+
+                              setShowResetModal(false);
+                              toast.success("Syllabus reset successfully.");
+                            }}
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-red-500/50"
+                          >
+                            Yes, reset everything
+                          </button>
+
+                          <button
+                            onClick={() => setShowResetModal(false)}
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-all duration-200"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </motion.div>
+                    </motion.div>,
+                    document.body,
+                  )}
 
                 {/* Export */}
                 <button
@@ -5323,36 +5425,36 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
 
   return (
     <>
-  <li
-    className={`
-      group relative overflow-hidden rounded-xl transition-all duration-300
+      <li
+        className={`
+      group relative overflow-hidden rounded-xl transition-all duration-300 top-2
       ${
         it.done
           ? "bg-gradient-to-r from-slate-800/40 to-slate-900/40 border border-slate-700/40"
           : "bg-gradient-to-r from-slate-800/60 to-slate-900/60 border border-slate-600/50 hover:border-[#00d1b2]/60 hover:shadow-lg hover:shadow-[#00d1b2]/10"
       }
     `}
-  >
-    {/* Glow effect on hover */}
-    <div className="absolute inset-0 bg-gradient-to-r from-[#00d1b2]/0 via-[#00d1b2]/5 to-[#00d1b2]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      >
+        {/* Glow effect on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#00d1b2]/0 via-[#00d1b2]/5 to-[#00d1b2]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-    {/* Left accent bar */}
-    <div
-      className={`
+        {/* Left accent bar */}
+        <div
+          className={`
         absolute left-0 top-0 bottom-0 w-1 transition-all duration-300
         ${it.done ? "bg-emerald-500" : "bg-slate-600 group-hover:bg-[#00d1b2]"}
       `}
-    ></div>
+        ></div>
 
-    {/* Main content */}
-    <div
-      onClick={() => markTask(path, idx, !it.done)}
-      className="relative flex items-center gap-4 px-4 py-3 cursor-pointer"
-    >
-      {/* Custom checkbox with gradient */}
-      <div className="relative shrink-0">
+        {/* Main content */}
         <div
-          className={`
+          onClick={() => markTask(path, idx, !it.done)}
+          className="relative flex items-center gap-4 px-4 py-3 cursor-pointer"
+        >
+          {/* Custom checkbox with gradient */}
+          <div className="relative shrink-0">
+            <div
+              className={`
             w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-300
             ${
               it.done
@@ -5360,20 +5462,30 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 : "bg-slate-900/50 border-slate-500 group-hover:border-[#00d1b2] group-hover:bg-[#00d1b2]/10"
             }
           `}
-        >
-          {it.done && (
-            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </div>
-      </div>
+            >
+              {it.done && (
+                <svg
+                  className="w-3.5 h-3.5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
 
-      {/* Title and metadata */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span
-            className={`
+          {/* Title and metadata */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span
+                className={`
               text-sm font-medium transition-all duration-300
               ${
                 it.done
@@ -5381,37 +5493,55 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                   : "text-slate-200 group-hover:text-white"
               }
             `}
-          >
-            {it.title}
-          </span>
-        </div>
+              >
+                {it.title}
+              </span>
+            </div>
 
-        {/* Compact badges row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Completion badge */}
-          {it.done && completedDate && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-medium">
-              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              {formatDateDDMMYYYY(completedDate)}
-            </span>
-          )}
+            {/* Compact badges row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Completion badge */}
+              {it.done && completedDate && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-medium">
+                  <svg
+                    className="w-2.5 h-2.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Completed on {formatDateDDMMYYYY(completedDate)}
+                </span>
+              )}
 
-          {/* Deadline badge */}
-          {deadline && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[10px] font-medium">
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {formatDateDDMMYYYY(deadline)}
-            </span>
-          )}
+              {/* Deadline badge */}
+              {deadline && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[10px] font-medium">
+                  <svg
+                    className="w-2.5 h-2.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Deadline {formatDateDDMMYYYY(deadline)}
+                </span>
+              )}
 
-          {/* Status indicator */}
-          {it.done && deadline && daysDiff !== null && (
-            <span
-              className={`
+              {/* Status indicator */}
+              {it.done && deadline && daysDiff !== null && (
+                <span
+                  className={`
                 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold
                 ${
                   daysDiff > 0
@@ -5421,56 +5551,66 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                       : "bg-yellow-500/15 border border-yellow-500/30 text-yellow-400"
                 }
               `}
-            >
-              {daysDiff > 0 ? "⚡" : daysDiff < 0 ? "⚠" : "✓"}
-              {daysDiff > 0
-                ? `${daysDiff}d early`
-                : daysDiff < 0
-                  ? `${Math.abs(daysDiff)}d late`
-                  : "on time"}
-            </span>
-          )}
-        </div>
-      </div>
+                >
+                  {daysDiff > 0 ? "⚡" : daysDiff < 0 ? "⚠" : "✓"}
+                  {daysDiff > 0
+                    ? `${daysDiff}d early`
+                    : daysDiff < 0
+                      ? `${Math.abs(daysDiff)}d late`
+                      : "on time"}
+                </span>
+              )}
+            </div>
+          </div>
 
-      {/* Right controls */}
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="flex items-center gap-2 shrink-0"
-      >
-        {/* Hour estimate with icon */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/50 border border-slate-700">
-          <svg className="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            step="0.25"
-            value={nr[key]?.estimate ?? 0.5}
-            onChange={(e) =>
-              setNR((old) => ({
-                ...old,
-                [key]: {
-                  ...(old[key] || {}),
-                  estimate: Number(e.target.value),
-                },
-              }))
-            }
-            className="w-10 text-xs bg-transparent text-slate-200 focus:outline-none"
-          />
-          <span className="text-[10px] text-slate-500">h</span>
-        </div>
+          {/* Right controls */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 shrink-0"
+          >
+            {/* Hour estimate with icon */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/50 border border-slate-700">
+              <svg
+                className="w-3 h-3 text-slate-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step="0.25"
+                value={nr[key]?.estimate ?? 0.5}
+                onChange={(e) =>
+                  setNR((old) => ({
+                    ...old,
+                    [key]: {
+                      ...(old[key] || {}),
+                      estimate: Number(e.target.value),
+                    },
+                  }))
+                }
+                className="w-10 text-xs bg-transparent text-slate-200 focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-500">h</span>
+            </div>
 
-        {/* Deadline button */}
-        <button
-          ref={buttonRef}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowDatePicker((s) => !s);
-          }}
-          className={`
+            {/* Deadline button */}
+            <button
+              ref={buttonRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDatePicker((s) => !s);
+              }}
+              className={`
             p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95
             ${
               deadline
@@ -5478,102 +5618,157 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                 : "bg-slate-700/50 border border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-[#00d1b2] hover:text-[#00d1b2]"
             }
           `}
-          title="Set deadline"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </li>
-
-  {/* Beautiful Modal for Date Picker */}
-  {showDatePicker &&
-    createPortal(
-      <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
-        onClick={() => setShowDatePicker(false)}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Modal Header with gradient */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/30 flex items-center justify-center">
-                <svg className="w-5 h-5 text-[#00d1b2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                Set Deadline
-              </h3>
-            </div>
-            <button
-              onClick={() => setShowDatePicker(false)}
-              className="w-9 h-9 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center"
+              title="Set deadline"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Task preview */}
-          <div className="mb-5 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-            <p className="text-sm text-slate-300 leading-relaxed">{it.title}</p>
-          </div>
-
-          {/* Date Picker */}
-          <div className="mb-5 flex justify-center">
-            <DatePicker
-              selected={deadline ? new Date(deadline) : null}
-              onChange={(date) => {
-                setTaskDeadline(path, idx, date ? formatLocalISO(date) : "");
-              }}
-              inline
-              calendarClassName="custom-calendar"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {deadline && (
-              <button
-                onClick={() => {
-                  setTaskDeadline(path, idx, "");
-                  setShowDatePicker(false);
-                }}
-                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/40 text-red-400 hover:from-red-600/30 hover:to-red-500/30 hover:border-red-500/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Remove Deadline
-              </button>
-            )}
-            <button
-              onClick={() => setShowDatePicker(false)}
-              className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/40 text-[#00d1b2] hover:from-[#00d1b2]/30 hover:to-blue-500/30 hover:border-[#00d1b2]/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
-              Done
             </button>
           </div>
-        </motion.div>
-      </div>,
-      document.body,
-    )}
-</>
+        </div>
+      </li>
 
+      {/* Beautiful Modal for Date Picker */}
+      {showDatePicker &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+            onClick={() => setShowDatePicker(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header with gradient */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/30 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-[#00d1b2]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                    Set Deadline
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="w-9 h-9 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Task preview */}
+              <div className="mb-5 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {it.title}
+                </p>
+              </div>
+
+              {/* Date Picker */}
+              <div className="mb-5 flex justify-center">
+                <DatePicker
+                  selected={deadline ? new Date(deadline) : null}
+                  onChange={(date) => {
+                    setTaskDeadline(
+                      path,
+                      idx,
+                      date ? formatLocalISO(date) : "",
+                    );
+                  }}
+                  inline
+                  calendarClassName="custom-calendar"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                {deadline && (
+                  <button
+                    onClick={() => {
+                      setTaskDeadline(path, idx, "");
+                      setShowDatePicker(false);
+                    }}
+                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/40 text-red-400 hover:from-red-600/30 hover:to-red-500/30 hover:border-red-500/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Remove Deadline
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/40 text-[#00d1b2] hover:from-[#00d1b2]/30 hover:to-blue-500/30 hover:border-[#00d1b2]/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -5695,6 +5890,7 @@ function SectionCard({
           dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
           shadow-[0_0_20px_rgba(0,0,0,0.2)]
           overflow-hidden
+          hover:shadow-2xl transition-all duration-300
         "
       >
         {/* ======================= HEADER ======================= */}
@@ -5703,7 +5899,7 @@ function SectionCard({
           data-expanded={m.open}
           data-done={allDone}
           className="
-            relative cursor-pointer
+            group relative cursor-pointer
             border border-[#0B5134] 
             bg-gradient-to-br from-[#183D3D] to-[#B82132]
             dark:from-[#0F1622] dark:to-[#0A0F1C]
@@ -5745,19 +5941,24 @@ function SectionCard({
           {/* ======================= TITLE + CONTROLS ======================= */}
           <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-2">
             <div className="flex items-start gap-2 min-w-0">
-              <span className="text-lg select-none shrink-0">
-                {m.open ? "🔽" : "▶️"}
-              </span>
-              <span className="font-semibold text-base sm:text-lg leading-snug break-words">
+              <motion.span
+                animate={{ rotate: m.open ? 90 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-lg select-none shrink-0 text-[#00d1b2]"
+              >
+                ▶️
+              </motion.span>
+              <span className="font-semibold text-base sm:text-lg leading-snug break-words group-hover:text-white transition-colors duration-200">
                 {secKey}
               </span>
             </div>
+
             <div
               className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="px-2 sm:px-2.5 py-1 bg-black/20 rounded-md border border-gray-700/30">
-                <span className="text-[11px] sm:text-xs font-medium text-gray-300 whitespace-nowrap">
+              <div className="px-2 sm:px-2.5 py-1 bg-black/30 rounded-md border border-gray-700/30 group-hover:border-gray-600/50 transition-all duration-200">
+                <span className="text-[11px] sm:text-xs font-medium text-gray-300 group-hover:text-gray-100 whitespace-nowrap">
                   {totals.done}/{totals.total} • {totals.pct}% • ~
                   {hoursRollup.toFixed(1)}h
                 </span>
@@ -5766,13 +5967,14 @@ function SectionCard({
               <button
                 onClick={() => setAllAtPath(sectionPath, !allDone)}
                 className="
-                px-2.5 py-1.5 text-xs font-medium
-                rounded-lg border border-[#00d1b2]/50
-                bg-[#00d1b2]/10 hover:bg-[#00d1b2]/20
-                text-[#00d1b2] 
-                hover:border-[#00d1b2]
-                hover:shadow-md hover:shadow-[#00d1b2]/30
-                transition-all duration-200 shrink-0
+                  px-2.5 py-1.5 text-xs font-medium
+                  rounded-lg border border-[#00d1b2]/50
+                  bg-[#00d1b2]/10 hover:bg-[#00d1b2]/20
+                  text-[#00d1b2] 
+                  hover:border-[#00d1b2]
+                  hover:shadow-lg hover:shadow-[#00d1b2]/30
+                  hover:scale-105 active:scale-95
+                  transition-all duration-200 shrink-0
                 "
               >
                 {allDone ? "Undo all" : "Mark all"}
@@ -5783,165 +5985,218 @@ function SectionCard({
                 ref={buttonRef}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!showDatePicker && buttonRef.current) {
-                    const rect = buttonRef.current.getBoundingClientRect();
-                    const calendarWidth = 240;
-
-                    let left = rect.left + window.scrollX;
-                    let top = rect.bottom + window.scrollY + 5;
-
-                    if (left + calendarWidth > window.innerWidth) {
-                      left = window.innerWidth - calendarWidth - 10;
-                    }
-                    if (top + 280 > window.innerHeight + window.scrollY) {
-                      top = rect.top + window.scrollY - 280;
-                    }
-
-                    setPickerPosition({ top, left });
-                    setShowDatePicker(true);
-                  } else {
-                    setShowDatePicker(false);
-                  }
+                  setShowDatePicker((v) => !v);
                 }}
-                className="
-                px-2.5 sm:px-3 py-1.5 border border-[#0B5134] hover:border-[#0d6847] rounded-lg bg-[#051C14] hover:bg-[#072920] transition-all duration-200 text-[11px] sm:text-xs font-medium whitespace-nowrap hover:shadow-md
-                "
+                className={`
+                  px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-[11px] sm:text-xs font-medium whitespace-nowrap hover:scale-105 active:scale-95
+                  ${
+                    m.targetDate
+                      ? "border border-blue-500/50 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:border-blue-500/70 hover:shadow-lg hover:shadow-blue-500/30"
+                      : "border border-[#0B5134] bg-[#051C14] hover:bg-[#072920] hover:border-[#0d6847] hover:shadow-lg"
+                  }
+                `}
               >
                 📅{" "}
                 {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
               </button>
-
-              {/* Clear Date Button - Only show if date exists */}
-              {m.targetDate && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTargetDate(sectionPath, "");
-                  }}
-                  className="
-                    px-2 py-1 border border-red-500/50 rounded-md
-                    bg-red-900/20 text-xs text-red-400
-                    hover:bg-red-900/40 hover:border-red-500
-                    transition-colors shrink-0
-                  "
-                  title="Clear deadline"
-                >
-                  ✕
-                </button>
-              )}
             </div>
           </div>
         </div>
 
         {/* ======================= EXPANDABLE CONTENT ======================= */}
-        <div
-          style={{
-            maxHeight: `${maxH}px`,
-            transition: "max-height 420ms ease",
-          }}
-          className="overflow-hidden"
-        >
-          <div ref={wrapRef} className="px-4 pb-4 pt-2 space-y-2">
-            {Object.entries(node || {}).map(([name, child]) => (
-              <SubNode
-                key={name}
-                name={name}
-                node={child}
-                path={[secKey, name]}
-                meta={meta}
-                nr={nr}
-                setNR={setNR}
-                toggleOpen={toggleOpen}
-                setTargetDate={setTargetDate}
-                setAllAtPath={setAllAtPath}
-                markTask={markTask}
-                setTaskDeadline={setTaskDeadline}
-              />
-            ))}
-          </div>
-        </div>
+        <AnimatePresence>
+          {m.open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 pt-2 space-y-2">
+                {Object.entries(node || {}).map(([name, child]) => (
+                  <SubNode
+                    key={name}
+                    name={name}
+                    node={child}
+                    path={[secKey, name]}
+                    meta={meta}
+                    nr={nr}
+                    setNR={setNR}
+                    toggleOpen={toggleOpen}
+                    setTargetDate={setTargetDate}
+                    setAllAtPath={setAllAtPath}
+                    markTask={markTask}
+                    setTaskDeadline={setTaskDeadline}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
-      {/* ======================= COMPACT THEME-ADAPTIVE DATEPICKER ======================= */}
+      {/* ======================= BEAUTIFUL MODAL DATEPICKER ======================= */}
       {showDatePicker &&
         createPortal(
           <div
-            style={{
-              position: "absolute",
-              top: `${pickerPosition.top}px`,
-              left: `${pickerPosition.left}px`,
-              zIndex: 99999,
-            }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+            onClick={() => setShowDatePicker(false)}
           >
-            <div
-              className="
-                rounded-lg p-1.5 shadow-xl border transition-all
-                w-[240px] max-w-[90vw]
-                bg-white dark:bg-[#0F1622]
-                border-gray-300 dark:border-[#2F6B60]
-                shadow-black/20 dark:shadow-black/60
-              "
-              style={{
-                fontSize: "13px",
-              }}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
             >
-              <DatePicker
-                selected={m.targetDate ? new Date(m.targetDate) : null}
-                onChange={(date) => {
-                  const formatted = date ? formatLocalISO(date) : "";
-                  setTargetDate(sectionPath, formatted);
-                  setShowDatePicker(false);
-                }}
-                onClickOutside={() => setShowDatePicker(false)}
-                inline
-                calendarClassName="compact-datepicker"
-                renderCustomHeader={({
-                  date,
-                  decreaseMonth,
-                  increaseMonth,
-                }) => (
-                  <div
-                    className="
-                      flex items-center justify-between 
-                      px-2 py-1.5 rounded-t-lg mb-1
-                      bg-gray-100 dark:bg-[#0B5134]
-                    "
-                  >
-                    <button
-                      onClick={decreaseMonth}
-                      className="
-                        transition p-0.5 text-lg font-bold
-                        text-gray-700 dark:text-[#CFE8E1]
-                        hover:text-blue-600 dark:hover:text-[#00d1b2]
-                      "
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/30 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-[#00d1b2]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
                     >
-                      ‹
-                    </button>
-                    <span
-                      className="
-                        font-semibold text-sm
-                        text-gray-900 dark:text-[#CFE8E1]
-                      "
-                    >
-                      {date.toLocaleString("default", {
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <button
-                      onClick={increaseMonth}
-                      className="
-                        transition p-0.5 text-lg font-bold
-                        text-gray-700 dark:text-[#CFE8E1]
-                        hover:text-blue-600 dark:hover:text-[#00d1b2]
-                      "
-                    >
-                      ›
-                    </button>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
                   </div>
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                    Module Deadline
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="w-9 h-9 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Module preview */}
+              <div className="mb-5 p-4 bg-gradient-to-br from-[#183D3D]/30 to-[#B82132]/30 rounded-xl border border-[#0B5134]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[#D42916]">▶️</span>
+                  <p className="text-sm font-semibold text-[#CFE8E1]">
+                    {secKey}
+                  </p>
+                </div>
+
+                {/* Progress info */}
+                <div className="flex items-center gap-3 text-xs text-slate-300">
+                  <span className="px-2 py-0.5 rounded-md bg-black/30 border border-gray-700/30">
+                    {totals.done}/{totals.total} topics
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-black/30 border border-gray-700/30">
+                    {totals.pct}% complete
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-black/30 border border-gray-700/30">
+                    ~{hoursRollup.toFixed(1)}h
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="mt-3 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
+                  <div
+                    className={`
+                      h-full transition-all duration-700
+                      ${
+                        totals.pct < 25
+                          ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E]"
+                          : totals.pct < 50
+                            ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80]"
+                            : totals.pct < 75
+                              ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0]"
+                              : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444]"
+                      }
+                    `}
+                    style={{ width: `${totals.pct}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Date Picker */}
+              <div className="mb-5 flex justify-center">
+                <DatePicker
+                  selected={m.targetDate ? new Date(m.targetDate) : null}
+                  onChange={(date) => {
+                    setTargetDate(
+                      sectionPath,
+                      date ? formatLocalISO(date) : "",
+                    );
+                  }}
+                  inline
+                  calendarClassName="custom-calendar"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                {m.targetDate && (
+                  <button
+                    onClick={() => {
+                      setTargetDate(sectionPath, "");
+                      setShowDatePicker(false);
+                    }}
+                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/40 text-red-400 hover:from-red-600/30 hover:to-red-500/30 hover:border-red-500/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Remove Deadline
+                  </button>
                 )}
-              />
-            </div>
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/40 text-[#00d1b2] hover:from-[#00d1b2]/30 hover:to-blue-500/30 hover:border-[#00d1b2]/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Done
+                </button>
+              </div>
+            </motion.div>
           </div>,
           document.body,
         )}
@@ -6095,160 +6350,299 @@ function SubNode({
   /* ======================= UI ======================= */
   return (
     <>
-      <div className="rounded-xl border border-[#0B5134]/35 bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#d9ebe5]">
+      <div
+        className="rounded-xl border border-[#0B5134]/35 rounded-l-xl 
+        bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] text-[#d9ebe5] shadow-xl hover:shadow-2xl transition-all duration-300"
+      >
         {/* HEADER */}
         <div
           onClick={() => toggleOpen(path)}
-          className="group p-3 cursor-pointer bg-gradient-to-r from-[#134039] to-[#0f362f] hover:from-[#165247] hover:to-[#134039] border-l-4 border-[#D42916] rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+          className="group p-3 cursor-pointer
+          bg-gradient-to-r from-[#134039] to-[#0f362f] hover:from-[#165247] hover:to-[#134039]
+          border-l-4 border-[#D42916] rounded-l-xl rounded-r-xl shadow-lg hover:shadow-xl transition-all duration-300"
         >
           <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
-            {/* Left section: Icon + Title + Badge */}
+            {/* Left section: Icon + Title */}
             <div className="flex items-center gap-2.5 flex-1 min-w-fit">
-              <span className="text-base transition-transform group-hover:scale-110">
-                {m.open ? "🔽" : "▶️"}
-              </span>
-              <span className="font-medium text-sm sm:text-[15px] text-gray-100">
+              <motion.span
+                animate={{ rotate: m.open ? 90 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-base text-[#00d1b2]"
+              >
+                ▶️
+              </motion.span>
+              <span className="font-medium text-sm sm:text-[15px] text-gray-100 group-hover:text-white transition-colors duration-200">
                 {name}
               </span>
-              {m.targetDate && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTargetDate(path, "");
-                  }}
-                  className="px-2 sm:hidden py-1 border border-red-500/50 hover:border-red-500 rounded-md
-                  bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 text-xs"
-                >
-                  ✕
-                </button>
-              )}
             </div>
 
             {/* Right section: Stats + Actions */}
             <div
-              onClick={(e) => e.stopPropagagation()}
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto"
             >
               {/* Stats with enhanced visibility */}
-              <div className="px-2 sm:px-2.5 py-1 bg-black/20 rounded-md border border-gray-700/30">
-                <span className="text-[11px] sm:text-xs font-medium text-gray-300 whitespace-nowrap">
+              <div className="px-2 sm:px-2.5 py-1 bg-black/30 rounded-md border border-gray-700/30 group-hover:border-gray-600/50 transition-all duration-200">
+                <span className="text-[11px] sm:text-xs font-medium text-gray-300 group-hover:text-gray-100 whitespace-nowrap transition-colors duration-200">
                   {totals.done}/{totals.total} • {totals.pct}% •{" "}
                   {totals.total ? "≈" : ""}
                   {hoursRollup?.toFixed?.(1) ?? ""}h
                 </span>
               </div>
+
               {/* Vertical divider - hidden on mobile */}
               <div className="hidden sm:block h-5 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
+
               {/* Action buttons */}
               <button
                 onClick={() => setAllAtPath(path, !allDone)}
-                className="px-2.5 sm:px-3 py-1.5 border border-[#00d1b2]/50 hover:border-[#00d1b2] rounded-lg bg-[#00d1b2]/5 hover:bg-[#00d1b2]/15 text-[#00d1b2] font-medium text-[11px] sm:text-xs transition-all duration-200 hover:shadow-md hover:shadow-[#00d1b2]/20 whitespace-nowrap"
+                className="px-2.5 sm:px-3 py-1.5 border border-[#00d1b2]/50 hover:border-[#00d1b2] rounded-lg bg-[#00d1b2]/5 hover:bg-[#00d1b2]/15 text-[#00d1b2] font-medium text-[11px] sm:text-xs transition-all duration-200 hover:shadow-lg hover:shadow-[#00d1b2]/30 hover:scale-105 active:scale-95 whitespace-nowrap"
               >
                 {allDone ? "Undo all" : "Mark all"}
               </button>
+
               <button
                 ref={buttonRef}
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowDatePicker((v) => !v);
                 }}
-                className="px-2.5 sm:px-3 py-1.5 border border-[#0B5134] hover:border-[#0d6847] rounded-lg bg-[#051C14] hover:bg-[#072920] transition-all duration-200 text-[11px] sm:text-xs font-medium whitespace-nowrap hover:shadow-md"
+                className={`
+                  px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-[11px] sm:text-xs font-medium whitespace-nowrap hover:scale-105 active:scale-95
+                  ${
+                    m.targetDate
+                      ? "border border-blue-500/50 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:border-blue-500/70 hover:shadow-lg hover:shadow-blue-500/30"
+                      : "border border-[#0B5134] bg-[#051C14] hover:bg-[#072920] hover:border-[#0d6847] hover:shadow-lg"
+                  }
+                `}
               >
                 📅{" "}
                 {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
               </button>
-              {m.targetDate && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTargetDate(path, "");
-                  }}
-                  className="px-2 hidden sm:block py-1 border border-red-500/50 hover:border-red-500 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 text-xs"
-                >
-                  ✕
-                </button>
-              )}
             </div>
           </div>
-          {deadlineStatus && (
-            <div
-              className={`text-[10px] font-bold px-2 sm:px-2.5 py-1 rounded-full w-fit sm:mt-0 mt-2 whitespace-nowrap shadow-sm ${
-                deadlineStatus.type === "ontime"
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
-                  : deadlineStatus.type === "late"
-                    ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
-                    : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
-              }`}
-            >
-              {deadlineStatus.label}
-            </div>
-          )}
+
+          {/* Calculate latest completion date for display */}
+          {(() => {
+            // Get latest completion date from completed topics
+            let latestDate = null;
+            if (Array.isArray(node)) {
+              node.forEach((item) => {
+                if (item.done && item.completedOn) {
+                  const itemDate = new Date(item.completedOn);
+                  if (!latestDate || itemDate > latestDate) {
+                    latestDate = itemDate;
+                  }
+                }
+              });
+            }
+
+            return (
+              (deadlineStatus ||
+                (totals.done === totals.total &&
+                  totals.total > 0 &&
+                  latestDate)) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-[10px] font-bold px-2 sm:px-2.5 py-1 rounded-full w-fit sm:mt-0 mt-2 whitespace-nowrap shadow-sm ${
+                    deadlineStatus
+                      ? deadlineStatus.type === "ontime"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
+                        : deadlineStatus.type === "late"
+                          ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                          : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+                      : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
+                  }`}
+                >
+                  {deadlineStatus
+                    ? deadlineStatus.label
+                    : `✓ Completed on ${latestDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`}
+                </motion.div>
+              )
+            );
+          })()}
         </div>
 
         {/* BODY */}
-        <div
-          ref={contentRef}
-          style={{ maxHeight: height }}
-          className="transition-all overflow-hidden"
-        >
-          <div className="px-3 pb-3">
-            {Array.isArray(node) ? (
-              <ul className="space-y-2">
-                {node.map((it, idx) => (
-                  <TaskItem
-                    key={idx}
-                    it={it}
-                    idx={idx}
-                    path={path}
-                    nr={nr}
-                    setNR={setNR}
-                    markTask={markTask}
-                    setTaskDeadline={setTaskDeadline}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(node || {}).map(([childKey, childVal]) => (
-                  <SubNode
-                    key={childKey}
-                    name={childKey}
-                    node={childVal}
-                    path={[...path, childKey]}
-                    meta={meta}
-                    nr={nr}
-                    setNR={setNR}
-                    toggleOpen={toggleOpen}
-                    setTargetDate={setTargetDate}
-                    setAllAtPath={setAllAtPath}
-                    markTask={markTask}
-                    setTaskDeadline={setTaskDeadline}
-                  />
-                ))}
+        <AnimatePresence>
+          {m.open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 pt-2">
+                {Array.isArray(node) ? (
+                  <ul className="space-y-2">
+                    {node.map((it, idx) => (
+                      <TaskItem
+                        key={idx}
+                        it={it}
+                        idx={idx}
+                        path={path}
+                        nr={nr}
+                        setNR={setNR}
+                        markTask={markTask}
+                        setTaskDeadline={setTaskDeadline}
+                      />
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="space-y-2">
+                    {Object.entries(node || {}).map(([childKey, childVal]) => (
+                      <SubNode
+                        key={childKey}
+                        name={childKey}
+                        node={childVal}
+                        path={[...path, childKey]}
+                        meta={meta}
+                        nr={nr}
+                        setNR={setNR}
+                        toggleOpen={toggleOpen}
+                        setTargetDate={setTargetDate}
+                        setAllAtPath={setAllAtPath}
+                        markTask={markTask}
+                        setTaskDeadline={setTaskDeadline}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Beautiful Modal for Section Deadline */}
       {showDatePicker &&
         createPortal(
           <div
-            style={{
-              position: "absolute",
-              top: pickerPosition.top,
-              left: pickerPosition.left,
-              zIndex: 99999,
-            }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+            onClick={() => setShowDatePicker(false)}
           >
-            <DatePicker
-              selected={m.targetDate ? new Date(m.targetDate) : null}
-              onChange={(date) => {
-                setTargetDate(path, date ? formatLocalISO(date) : "");
-                setShowDatePicker(false);
-              }}
-              onClickOutside={() => setShowDatePicker(false)}
-              inline
-            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/30 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-[#00d1b2]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                    Section Deadline
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="w-9 h-9 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Section name preview */}
+              <div className="mb-5 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[#D42916]">▶️</span>
+                  <p className="text-sm font-medium text-slate-200">{name}</p>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {totals.total} topics • {totals.done} completed
+                </p>
+              </div>
+
+              {/* Date Picker */}
+              <div className="mb-5 flex justify-center">
+                <DatePicker
+                  selected={m.targetDate ? new Date(m.targetDate) : null}
+                  onChange={(date) => {
+                    setTargetDate(path, date ? formatLocalISO(date) : "");
+                  }}
+                  inline
+                  calendarClassName="custom-calendar"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                {m.targetDate && (
+                  <button
+                    onClick={() => {
+                      setTargetDate(path, "");
+                      setShowDatePicker(false);
+                    }}
+                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/40 text-red-400 hover:from-red-600/30 hover:to-red-500/30 hover:border-red-500/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Remove Deadline
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/40 text-[#00d1b2] hover:from-[#00d1b2]/30 hover:to-blue-500/30 hover:border-[#00d1b2]/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Done
+                </button>
+              </div>
+            </motion.div>
           </div>,
           document.body,
         )}

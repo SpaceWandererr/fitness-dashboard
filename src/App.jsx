@@ -297,7 +297,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend synced (no local state)");
             toastOnce("sync-backend", () =>
-              toast.success("Synced from backend")
+              toast.success("Synced from backend"),
             );
             setIsOffline(false);
           }
@@ -308,7 +308,7 @@ export default function App() {
             localStorage.setItem("lifeosstate", JSON.stringify(backendState));
             console.log("✅ Backend is newer - synced");
             toastOnce("sync-newer", () =>
-              toast.success("Synced newer data from backend")
+              toast.success("Synced newer data from backend"),
             );
             setIsOffline(false);
           }
@@ -348,7 +348,7 @@ export default function App() {
 
                 console.log("✅ Local state pushed to backend");
                 toastOnce("sync-local", () =>
-                  toast.success("Local changes synced to backend")
+                  toast.success("Local changes synced to backend"),
                 );
                 setIsOffline(false);
               } catch (pushErr) {
@@ -356,7 +356,7 @@ export default function App() {
 
                 console.error(
                   "❌ Failed to push local state to backend",
-                  pushErr
+                  pushErr,
                 );
                 toast.error("Failed to sync local changes - working offline");
                 setIsOffline(true);
@@ -418,7 +418,7 @@ export default function App() {
           toastOnce("offline-cached", () =>
             toast(`${msg} - using cached data`, {
               icon: "⚠️",
-            })
+            }),
           );
         } else {
           toast.error("No cached data available");
@@ -579,7 +579,7 @@ export default function App() {
       setDashboardState(syncConflict.backendState);
       localStorage.setItem(
         "lifeosstate",
-        JSON.stringify(syncConflict.backendState)
+        JSON.stringify(syncConflict.backendState),
       );
       toast.success("Using backend version");
       setSyncConflict(null);
@@ -739,7 +739,7 @@ export default function App() {
   const bgClass = useMemo(
     () =>
       "bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#0b0b10] dark:from-[#020617] dark:via-[#020b15] dark:to-[#020617]",
-    []
+    [],
   );
 
   return (
@@ -781,6 +781,18 @@ export default function App() {
             iconTheme: {
               primary: "#ef4444",
               secondary: "#fee2e2",
+            },
+          },
+          info: {
+            // ✅ Added info style
+            style: {
+              background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)",
+              border: "1px solid rgba(59, 130, 246, 0.4)",
+              color: "#dbeafe",
+            },
+            iconTheme: {
+              primary: "#3b82f6",
+              secondary: "#dbeafe",
             },
           },
           loading: {
@@ -1529,7 +1541,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState)
+                        JSON.stringify(backendState),
                       );
                       toast.success("✅ Synced from backend");
                       setIsOffline(false);
@@ -1609,7 +1621,7 @@ export default function App() {
                       setDashboardState(backendState);
                       localStorage.setItem(
                         "lifeosstate",
-                        JSON.stringify(backendState)
+                        JSON.stringify(backendState),
                       );
                       toast.success("✅ Synced");
                       setIsOffline(false);

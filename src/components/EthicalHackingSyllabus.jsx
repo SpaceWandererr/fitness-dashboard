@@ -1277,8 +1277,6 @@ export default function EthicalHackingSyllabus({
   const [showResetModal, setShowResetModal] = useState(false);
 
   // Calculate grand statistics
-  // Calculate grand statistics
-  // Calculate grand statistics
   const grand = useMemo(() => {
     let total = 0,
       done = 0,
@@ -1723,95 +1721,114 @@ export default function EthicalHackingSyllabus({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-red-950/20 to-slate-950 text-slate-100">
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-950 via-red-950/20 to-slate-950 text-slate-100
+      md:mt-10 lg:mt-0 rounded-xl"
+    >
       {/* Header */}
-      <header className="w-full bg-gradient-to-r from-red-950/60 via-orange-950/40 to-red-950/60 backdrop-blur-xl border-b border-red-800/30 sticky top-0 z-40 shadow-2xl">
-        <div className="max-w-[1800px] mx-auto px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="text-4xl">🔐</div>
+      <header className="rounded-xl w-full bg-gradient-to-r from-red-950/60 via-orange-950/40 to-red-950/60 backdrop-blur-xl border-b border-red-800/30 sticky top-0 z-40 shadow-2xl">
+        <div className="max-w-[1800px] mx-auto px-3 sm:px-4 md:px-6 py-3 md:py-4">
+          {/* Top Row: Title + Main Actions */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            {/* Left: Icon + Title */}
+            <div className="flex items-start sm:items-center gap-3 whitespace-nowrap">
+              <div className="text-3xl sm:text-4xl shrink-0">🔐</div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-red-400 bg-clip-text text-transparent leading-tight">
                   Ethical Hacking Syllabus 2026
                 </h1>
-                <p className="text-sm text-slate-400">
+                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
                   Structured roadmap with streaks, exports and safe reset.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="px-3 py-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30">
+            {/* Right: Streak + Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+              {/* Streak Card */}
+              <div className="px-3 py-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 shadow-lg">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">🔥</span>
-                  <div>
-                    <div className="text-xs text-emerald-300">Streak</div>
-                    <div className="text-lg font-bold text-emerald-400">
-                      {streak.length}d
-                    </div>
+                  <span className="text-lg sm:text-xl">🔥</span>
+
+                  <div className="text-[10px] sm:text-xs text-emerald-300 font-medium">
+                    Streak
+                  </div>
+                  <div className="text-base sm:text-lg font-bold text-emerald-400">
+                    {streak.length}d
                   </div>
                 </div>
               </div>
-              <button
-                onClick={expandAll}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 border border-blue-400/50 transition"
-              >
-                Expand
-              </button>
-              <button
-                onClick={collapseAll}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 border border-slate-500/50 transition"
-              >
-                Collapse
-              </button>
-              <button
-                onClick={() => setShowResetModal(true)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 border border-red-400/50 transition"
-              >
-                🔄 Reset
-              </button>
 
-              <button
-                onClick={exportProgress}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 border border-slate-600 transition"
-              >
-                📤 Export
-              </button>
-              <label className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-500 border border-purple-400/50 transition cursor-pointer">
-                📥 Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importProgress}
-                  className="hidden"
-                />
-              </label>
+              {/* Action Buttons - Wrap on mobile */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={expandAll}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-blue-600 hover:bg-blue-500 border border-blue-400/50 transition-all hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
+                >
+                  Expand
+                </button>
+                <button
+                  onClick={collapseAll}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-700 hover:bg-slate-600 border border-slate-500/50 transition-all hover:shadow-lg active:scale-95"
+                >
+                  Collapse
+                </button>
+                <button
+                  onClick={() => setShowResetModal(true)}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-red-600 hover:bg-red-500 border border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-95"
+                >
+                  🔄 Reset
+                </button>
+                <button
+                  onClick={exportProgress}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-all hover:shadow-lg active:scale-95"
+                >
+                  📤 Export
+                </button>
+                <label className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-purple-600 hover:bg-purple-500 border border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/30 active:scale-95 cursor-pointer">
+                  📥 Import
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={importProgress}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
+          {/* Middle Row: Last Studied (only when exists) */}
           {lastStudied && (
-            <div className="mt-3 text-sm text-slate-400 flex items-center gap-2">
-              <span className="text-blue-400">📘</span>
-              <span>
-                Last studied:{" "}
-                <span className="text-slate-300">{lastStudied}</span>
-              </span>
+            <div className="mt-3 px-3 py-2 rounded-lg bg-blue-950/30 border border-blue-800/20 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-xs sm:text-sm">
+                <span className="text-blue-400 text-base sm:text-lg shrink-0">
+                  📘
+                </span>
+                <span className="text-slate-400">
+                  Last studied:{" "}
+                  <span className="text-slate-200 font-medium">
+                    {lastStudied}
+                  </span>
+                </span>
+              </div>
             </div>
           )}
 
-          <div className="mt-4">
-            <div className="flex justify-between text-sm text-slate-400 mb-1">
-              <span>
+          {/* Bottom Row: Progress Bar */}
+          <div className="mt-3 sm:mt-4">
+            <div className="flex justify-between text-xs sm:text-sm text-slate-400 mb-1.5">
+              <span className="font-medium">
                 {grand.done}/{grand.total} topics
               </span>
               <span className="text-red-400 font-bold">{grand.pct}%</span>
             </div>
-            <div className="h-3 rounded-full bg-slate-900/80 overflow-hidden border border-red-900/30">
+            <div className="h-2.5 sm:h-3 rounded-full bg-slate-900/80 overflow-hidden border border-red-900/30 shadow-inner">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${grand.pct}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-red-500 via-orange-500 to-red-500"
+                className="h-full bg-gradient-to-r from-red-500 via-orange-500 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
               />
             </div>
           </div>
@@ -2133,7 +2150,7 @@ export default function EthicalHackingSyllabus({
                                             transition={{ delay: idx * 0.05 }}
                                             className={`relative group rounded-xl border transition-all duration-300 ${
                                               item.done
-                                                ? "bg-slate-800/20 border-slate-700/30 hover:border-slate-600/50"
+                                                ? "bg-slate-800/20 border-emerald-700/30 hover:border-emerald-600/50 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
                                                 : "bg-slate-800/40 border-slate-700/50 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-500/10"
                                             }`}
                                           >
@@ -2142,7 +2159,7 @@ export default function EthicalHackingSyllabus({
                                               <motion.div
                                                 initial={{ scaleX: 0 }}
                                                 animate={{ scaleX: 1 }}
-                                                className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-400 rounded-t-xl"
+                                                className="absolute bg-gradient-to-r from-emerald-500 to-green-400 rounded-t-xl"
                                               />
                                             )}
 
