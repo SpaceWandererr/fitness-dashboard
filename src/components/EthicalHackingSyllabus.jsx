@@ -1465,9 +1465,11 @@ export default function EthicalHackingSyllabus({
     const updates = { ethical_hacking_syllabus: updatedTree };
 
     if (val) {
-      updates.ethical_hacking_lastStudied = `${item.title} @ ${new Date().toLocaleString("en-IN")}`;
+      updates.ethical_hacking_lastStudied = `${
+        item.title
+      } @ ${new Date().toLocaleString("en-IN")}`;
       updates.ethical_hacking_streak = Array.from(
-        new Set([...daySet, todayISO()]),
+        new Set([...daySet, todayISO()])
       );
     } else {
       // Unmarking - find the most recent completed topic
@@ -1493,22 +1495,26 @@ export default function EthicalHackingSyllabus({
       });
 
       if (mostRecentTopic) {
-        updates.ethical_hacking_lastStudied = `${mostRecentTopic} @ ${mostRecentDate.toLocaleString("en-IN")}`;
+        updates.ethical_hacking_lastStudied = `${mostRecentTopic} @ ${mostRecentDate.toLocaleString(
+          "en-IN"
+        )}`;
       } else {
         updates.ethical_hacking_lastStudied = "";
       }
     }
 
     updateDashboard(updates);
-    // Add toast notifications
+
     if (val) {
       toast.success(`✅ ${item.title}`);
     } else {
-      if (mostRecentTopic) {
-        toast.info(`↩️ Unmarked`);
-      } else {
-        toast.info(`↩️ Unmarked`);
-      }
+      toast(`↩️ Unmarked: ${item.title}`, {
+        icon: "↩️",
+        style: {
+          background: "#1e293b",
+          color: "#94a3b8",
+        },
+      });
     }
   };
 
@@ -1529,7 +1535,7 @@ export default function EthicalHackingSyllabus({
     const updates = { ethical_hacking_syllabus: updatedTree };
     if (val) {
       updates.ethical_hacking_streak = Array.from(
-        new Set([...daySet, todayISO()]),
+        new Set([...daySet, todayISO()])
       );
     }
     updateDashboard(updates);
@@ -1716,7 +1722,7 @@ export default function EthicalHackingSyllabus({
           </div>
         </motion.div>
       </motion.div>,
-      document.body,
+      document.body
     );
   };
 
@@ -1876,31 +1882,41 @@ export default function EthicalHackingSyllabus({
                   className="rounded-2xl bg-gradient-to-br from-slate-900/90 to-red-950/30 border border-red-800/30 overflow-hidden shadow-xl"
                 >
                   {/* Module Header */}
-                  <div className="p-4 bg-gradient-to-r from-red-950/50 to-transparent border-b border-red-800/30">
-                    <div className="flex items-center justify-between">
+                  <div className="p-3 sm:p-4 bg-gradient-to-r from-red-950/50 to-transparent border-b border-red-800/30">
+                    {/* Row: icon + title + right meta (responsive) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                      {/* Left: icon + title */}
                       <button
                         onClick={() => toggleModule(moduleKey)}
-                        className="flex items-center gap-3 flex-1"
+                        className="flex items-center gap-3 flex-shrink-0"
                       >
                         <motion.div
                           animate={{ rotate: isModuleOpen ? 90 : 0 }}
                           transition={{ duration: 0.2 }}
-                          className="text-red-400 text-xl"
+                          className="text-red-400 text-xl shrink-0"
                         >
                           ▶
                         </motion.div>
-                        <h2 className="text-xl font-bold text-slate-100">
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-100 text-left break-words">
                           {moduleKey}
                         </h2>
                       </button>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span className="text-slate-400">
-                          {stats.done}/{stats.total} • {stats.pct}% • �
-                          {stats.totalTime.toFixed(1)}h
+
+                      {/* Right: compact stats & meta pills */}
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-300">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
+                          {stats.done}/{stats.total} topics
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
+                          {stats.pct}% complete
+                        </span>
+                        <span className="sm:inline px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
+                          ≈{stats.totalTime.toFixed(1)}h
                         </span>
                       </div>
                     </div>
 
+                    {/* Progress bar */}
                     <div className="mt-3 h-2 rounded-full bg-slate-900/80 overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
@@ -1925,7 +1941,7 @@ export default function EthicalHackingSyllabus({
                             const sectionKey = pathKey(path);
                             const isSectionOpen = openSections[sectionKey];
                             const secDone = items.filter(
-                              (it) => it.done,
+                              (it) => it.done
                             ).length;
                             const secTotal = items.length;
                             const secPct = secTotal
@@ -1940,84 +1956,91 @@ export default function EthicalHackingSyllabus({
                                 className="rounded-xl bg-slate-900/50 border border-slate-700/50 overflow-hidden "
                               >
                                 {/* Section Header */}
-                                <div className="p-3 flex items-center justify-between hover:bg-slate-800/50 transition">
-                                  <button
-                                    onClick={() => toggleSection(path)}
-                                    className="flex items-center gap-2 flex-1"
-                                  >
-                                    <motion.span
-                                      animate={{
-                                        rotate: isSectionOpen ? 90 : 0,
-                                      }}
-                                      className="text-orange-400"
-                                    >
-                                      ▶
-                                    </motion.span>
-                                    <span className="font-medium text-slate-200">
-                                      {secKey}
-                                    </span>
-                                  </button>
-                                  <div className="flex items-center gap-3 text-sm">
-                                    <span className="text-slate-400">
-                                      {secDone}/{secTotal} • {secPct}% • ≈
-                                      {secTime}h
-                                    </span>
+                                <div className="p-3 sm:p-4 hover:bg-slate-800/50 transition">
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                                    {/* Left: icon + title */}
                                     <button
-                                      onClick={() =>
-                                        markAllSection(
-                                          path,
-                                          secDone !== secTotal,
-                                        )
-                                      }
-                                      className="px-2 py-1 rounded text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 transition"
+                                      onClick={() => toggleSection(path)}
+                                      className="flex items-center gap-2 flex-shrink-0"
                                     >
-                                      {secDone === secTotal
-                                        ? "Undo all"
-                                        : "Mark all"}
+                                      <motion.span
+                                        animate={{
+                                          rotate: isSectionOpen ? 90 : 0,
+                                        }}
+                                        className="text-orange-400 shrink-0"
+                                      >
+                                        ▶
+                                      </motion.span>
+                                      <span className="font-medium text-slate-200 text-sm sm:text-base text-left break-words">
+                                        {secKey}
+                                      </span>
                                     </button>
-                                    {/* NEW: Section Deadline Button */}
-                                    {/* NEW: Section Deadline Button */}
-                                    {(() => {
-                                      const sectionHasDeadline = items.some(
-                                        (item) => item.deadline,
-                                      );
-                                      const earliestDeadline =
-                                        sectionHasDeadline
-                                          ? items
-                                              .filter((item) => item.deadline)
-                                              .map(
-                                                (item) =>
-                                                  new Date(item.deadline),
-                                              )
-                                              .sort((a, b) => a - b)[0]
-                                          : null;
 
-                                      return (
-                                        <button
-                                          onClick={() =>
-                                            setShowSectionDeadlinePicker(
-                                              sectionKey,
-                                            )
-                                          }
-                                          className={`px-2 py-1 rounded text-xs border transition ${
-                                            sectionHasDeadline
-                                              ? "bg-blue-950/50 text-blue-400 border-blue-800/30 hover:bg-blue-900/50"
-                                              : "bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-300"
-                                          }`}
-                                        >
-                                          📅{" "}
-                                          {sectionHasDeadline
-                                            ? earliestDeadline.toLocaleDateString(
-                                                "en-GB",
-                                                {
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                },
+                                    {/* Right: stats + buttons (inline with title on desktop, below on mobile) */}
+                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                                      <span className="text-slate-400 whitespace-nowrap">
+                                        {secDone}/{secTotal} • {secPct}% • ≈
+                                        {secTime}h
+                                      </span>
+
+                                      <button
+                                        onClick={() =>
+                                          markAllSection(
+                                            path,
+                                            secDone !== secTotal
+                                          )
+                                        }
+                                        className="px-2 py-1 rounded text-[11px] sm:text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 transition whitespace-nowrap"
+                                      >
+                                        {secDone === secTotal
+                                          ? "Undo all"
+                                          : "Mark all"}
+                                      </button>
+
+                                      {(() => {
+                                        const sectionHasDeadline = items.some(
+                                          (item) => item.deadline
+                                        );
+                                        const earliestDeadline =
+                                          sectionHasDeadline
+                                            ? items
+                                                .filter((item) => item.deadline)
+                                                .map(
+                                                  (item) =>
+                                                    new Date(item.deadline)
+                                                )
+                                                .sort((a, b) => a - b)[0]
+                                            : null;
+
+                                        return (
+                                          <button
+                                            onClick={() =>
+                                              setShowSectionDeadlinePicker(
+                                                sectionKey
                                               )
-                                            : "Set Deadline"}
-                                        </button>
-                                      );
-                                    })()}
+                                            }
+                                            className={`px-2 py-1 rounded text-[11px] sm:text-xs border transition whitespace-nowrap flex items-center gap-1 ${
+                                              sectionHasDeadline
+                                                ? "bg-blue-950/50 text-blue-400 border-blue-800/30 hover:bg-blue-900/50"
+                                                : "bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-300"
+                                            }`}
+                                          >
+                                            <span className="text-sm">📅</span>
+                                            <span className="hidden xs:inline">
+                                              {sectionHasDeadline
+                                                ? earliestDeadline.toLocaleDateString(
+                                                    "en-GB",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "short",
+                                                    }
+                                                  )
+                                                : "Set Deadline"}
+                                            </span>
+                                          </button>
+                                        );
+                                      })()}
+                                    </div>
                                   </div>
                                 </div>
 
@@ -2039,8 +2062,16 @@ export default function EthicalHackingSyllabus({
                                           opacity: 0,
                                           y: 20,
                                         }}
-                                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                        animate={{
+                                          scale: 1,
+                                          opacity: 1,
+                                          y: 0,
+                                        }}
+                                        exit={{
+                                          scale: 0.9,
+                                          opacity: 0,
+                                          y: 20,
+                                        }}
                                         transition={{
                                           type: "spring",
                                           damping: 25,
@@ -2090,14 +2121,14 @@ export default function EthicalHackingSyllabus({
                                         </div>
 
                                         {/* Action Buttons */}
-                                        <div className="flex gap-2 justify-evenly">
+                                        <div className="flex gap-2 justify-between w-full px-4">
                                           <button
                                             onClick={() =>
                                               setSectionDeadline(path, null)
                                             }
                                             className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500
                                             hover:to-red-600 text-white text-xs font-medium transition-all duration-200 shadow-lg shadow-red-500/20
-                                            hover:shadow-red-500/40 flex items-center justify-center gap-1.5 whitespace-nowrap  py-2"
+                                            hover:shadow-red-500/40 flex items-center justify-center gap-1.5 whitespace-nowrap"
                                           >
                                             <svg
                                               className="w-3.5 h-3.5"
@@ -2112,7 +2143,7 @@ export default function EthicalHackingSyllabus({
                                                 d="M6 18L18 6M6 6l12 12"
                                               />
                                             </svg>
-                                            Remove All
+                                            Remove Deadline
                                           </button>
                                           <button
                                             onClick={() =>
@@ -2125,9 +2156,8 @@ export default function EthicalHackingSyllabus({
                                         </div>
                                       </motion.div>
                                     </motion.div>,
-                                    document.body,
+                                    document.body
                                   )}
-
                                 {/* Topics */}
                                 <AnimatePresence>
                                   {isSectionOpen && (
@@ -2154,21 +2184,12 @@ export default function EthicalHackingSyllabus({
                                                 : "bg-slate-800/40 border-slate-700/50 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-500/10"
                                             }`}
                                           >
-                                            {/* Progress indicator line */}
-                                            {item.done && (
-                                              <motion.div
-                                                initial={{ scaleX: 0 }}
-                                                animate={{ scaleX: 1 }}
-                                                className="absolute bg-gradient-to-r from-emerald-500 to-green-400 rounded-t-xl"
-                                              />
-                                            )}
-
                                             {/* MAIN CLICKABLE AREA */}
                                             <div
                                               onClick={() =>
                                                 markTask(path, idx, !item.done)
                                               }
-                                              className="flex items-start gap-4 p-4 cursor-pointer"
+                                              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 cursor-pointer"
                                             >
                                               {/* Custom Animated Checkbox */}
                                               <div className="relative flex items-center justify-center mt-0.5 flex-shrink-0">
@@ -2211,10 +2232,10 @@ export default function EthicalHackingSyllabus({
                                               </div>
 
                                               {/* Content */}
-                                              <div className="flex-1 min-w-0 mr-12">
+                                              <div className="flex-1 min-w-0 pr-10 sm:pr-12">
                                                 <div className="relative">
                                                   <span
-                                                    className={`block text-sm font-medium transition-all duration-300 ${
+                                                    className={`block text-sm font-medium transition-all duration-300 break-words ${
                                                       item.done
                                                         ? "text-slate-500"
                                                         : "text-slate-200 group-hover:text-white"
@@ -2238,7 +2259,7 @@ export default function EthicalHackingSyllabus({
                                                 </div>
 
                                                 {/* Date badges container */}
-                                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
                                                   {/* Completion badge */}
                                                   {item.completedOn && (
                                                     <motion.span
@@ -2250,10 +2271,10 @@ export default function EthicalHackingSyllabus({
                                                         opacity: 1,
                                                         y: 0,
                                                       }}
-                                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium"
+                                                      className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium"
                                                     >
                                                       <svg
-                                                        className="w-3 h-3"
+                                                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0"
                                                         fill="currentColor"
                                                         viewBox="0 0 20 20"
                                                       >
@@ -2263,19 +2284,21 @@ export default function EthicalHackingSyllabus({
                                                           clipRule="evenodd"
                                                         />
                                                       </svg>
-                                                      <span className="text-[10px] font-semibold opacity-70">
+                                                      <span className="text-[9px] sm:text-[10px] font-semibold opacity-70 hidden sm:inline">
                                                         COMPLETED:
                                                       </span>
-                                                      {new Date(
-                                                        item.completedOn,
-                                                      ).toLocaleDateString(
-                                                        "en-GB",
-                                                        {
-                                                          day: "2-digit",
-                                                          month: "short",
-                                                          year: "numeric",
-                                                        },
-                                                      )}
+                                                      <span className="text-[10px] sm:text-xs whitespace-nowrap">
+                                                        {new Date(
+                                                          item.completedOn
+                                                        ).toLocaleDateString(
+                                                          "en-GB",
+                                                          {
+                                                            day: "2-digit",
+                                                            month: "short",
+                                                            year: "numeric",
+                                                          }
+                                                        )}
+                                                      </span>
                                                     </motion.span>
                                                   )}
 
@@ -2290,10 +2313,10 @@ export default function EthicalHackingSyllabus({
                                                         scale: 1,
                                                         opacity: 1,
                                                       }}
-                                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-br from-blue-950/80 to-blue-900/50 text-blue-300 border border-blue-700/40 text-xs font-medium shadow-sm"
+                                                      className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-gradient-to-br from-blue-950/80 to-blue-900/50 text-blue-300 border border-blue-700/40 text-xs font-medium shadow-sm"
                                                     >
                                                       <svg
-                                                        className="w-3 h-3"
+                                                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0"
                                                         fill="none"
                                                         viewBox="0 0 24 24"
                                                         stroke="currentColor"
@@ -2305,19 +2328,21 @@ export default function EthicalHackingSyllabus({
                                                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                                                         />
                                                       </svg>
-                                                      <span className="text-[10px] font-semibold opacity-70">
+                                                      <span className="text-[9px] sm:text-[10px] font-semibold opacity-70 hidden sm:inline">
                                                         DEADLINE:
                                                       </span>
-                                                      {new Date(
-                                                        item.deadline,
-                                                      ).toLocaleDateString(
-                                                        "en-GB",
-                                                        {
-                                                          day: "2-digit",
-                                                          month: "short",
-                                                          year: "numeric",
-                                                        },
-                                                      )}
+                                                      <span className="text-[10px] sm:text-xs whitespace-nowrap">
+                                                        {new Date(
+                                                          item.deadline
+                                                        ).toLocaleDateString(
+                                                          "en-GB",
+                                                          {
+                                                            day: "2-digit",
+                                                            month: "short",
+                                                            year: "numeric",
+                                                          }
+                                                        )}
+                                                      </span>
                                                     </motion.span>
                                                   )}
                                                 </div>
@@ -2325,25 +2350,25 @@ export default function EthicalHackingSyllabus({
                                             </div>
 
                                             {/* Deadline action button - positioned absolutely */}
-                                            <div className="absolute top-4 right-4">
+                                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
                                               <motion.button
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={(e) => {
                                                   e.stopPropagation();
                                                   setShowDeadlinePicker(
-                                                    `${sectionKey}__${idx}`,
+                                                    `${sectionKey}__${idx}`
                                                   );
                                                 }}
-                                                className={`p-2 rounded-lg transition-all duration-200 ${
+                                                className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 ${
                                                   item.deadline
                                                     ? "opacity-100 bg-slate-700/50 hover:bg-slate-600/70 text-blue-400"
-                                                    : "opacity-0 group-hover:opacity-100 bg-slate-700/70 hover:bg-slate-600 text-slate-400 hover:text-blue-400"
+                                                    : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 bg-slate-700/70 hover:bg-slate-600 text-slate-400 hover:text-blue-400"
                                                 }`}
                                                 title="Set deadline"
                                               >
                                                 <svg
-                                                  className="w-4 h-4"
+                                                  className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                                                   fill="none"
                                                   viewBox="0 0 24 24"
                                                   stroke="currentColor"
@@ -2366,7 +2391,7 @@ export default function EthicalHackingSyllabus({
                                                   initial={{ opacity: 0 }}
                                                   animate={{ opacity: 1 }}
                                                   exit={{ opacity: 0 }}
-                                                  className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+                                                  className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                                                   onClick={() =>
                                                     setShowDeadlinePicker(null)
                                                   }
@@ -2392,26 +2417,36 @@ export default function EthicalHackingSyllabus({
                                                       damping: 25,
                                                       stiffness: 300,
                                                     }}
-                                                    className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl border border-red-800/30 shadow-2xl shadow-red-500/20"
+                                                    className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 rounded-2xl border border-purple-700/40 shadow-2xl shadow-purple-500/20 w-fit max-w-md flex flex-col items-center"
                                                     onClick={(e) =>
                                                       e.stopPropagation()
                                                     }
                                                   >
-                                                    <div className="mb-4">
-                                                      <h3 className="text-lg font-semibold text-white mb-1">
-                                                        Set Deadline
-                                                      </h3>
-                                                      <p className="text-sm text-slate-400">
+                                                    {/* Header */}
+                                                    <div className="mb-4 w-fit">
+                                                      <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-xl">
+                                                          📅
+                                                        </span>
+                                                        <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                                          Set Topic Deadline
+                                                        </h3>
+                                                      </div>
+                                                      <p className="text-xs text-slate-400">
+                                                        Apply a deadline to:
+                                                      </p>
+                                                      <p className="text-xs text-slate-300 mt-0.5 line-clamp-2">
                                                         {item.title}
                                                       </p>
                                                     </div>
 
-                                                    <div className="rounded-xl overflow-hidden border border-slate-700/50 bg-slate-900/50">
+                                                    {/* DatePicker */}
+                                                    <div className="rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950/50 mb-4 w-fit flex justify-center">
                                                       <DatePicker
                                                         selected={
                                                           item.deadline
                                                             ? new Date(
-                                                                item.deadline,
+                                                                item.deadline
                                                               )
                                                             : null
                                                         }
@@ -2419,42 +2454,57 @@ export default function EthicalHackingSyllabus({
                                                           setDeadline(
                                                             path,
                                                             idx,
-                                                            date,
+                                                            date
                                                           )
                                                         }
                                                         inline
                                                         minDate={new Date()}
                                                         dateFormat="dd-MMM-yyyy"
+                                                        calendarClassName="dark"
                                                       />
                                                     </div>
 
-                                                    <div className="flex gap-2 mt-4">
+                                                    {/* Actions */}
+                                                    <div className="flex gap-2 w-fit">
                                                       <button
                                                         onClick={() =>
                                                           setDeadline(
                                                             path,
                                                             idx,
-                                                            null,
+                                                            null
                                                           )
                                                         }
-                                                        className="flex-1 px-4 py-2.5 rounded-xl bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 text-red-400 hover:text-red-300 text-sm font-medium transition-all duration-200"
+                                                        className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-xs font-medium transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 flex items-center justify-center gap-1.5 whitespace-nowrap"
                                                       >
+                                                        <svg
+                                                          className="w-3.5 h-3.5"
+                                                          fill="none"
+                                                          viewBox="0 0 24 24"
+                                                          stroke="currentColor"
+                                                        >
+                                                          <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth="2"
+                                                            d="M6 18L18 6M6 6l12 12"
+                                                          />
+                                                        </svg>
                                                         Remove Deadline
                                                       </button>
                                                       <button
                                                         onClick={() =>
                                                           setShowDeadlinePicker(
-                                                            null,
+                                                            null
                                                           )
                                                         }
-                                                        className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-all duration-200"
+                                                        className="flex-1 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-all duration-200"
                                                       >
-                                                        Close
+                                                        Cancel
                                                       </button>
                                                     </div>
                                                   </motion.div>
                                                 </motion.div>,
-                                                document.body,
+                                                document.body
                                               )}
                                           </motion.div>
                                         ))}
@@ -2522,7 +2572,7 @@ export default function EthicalHackingSyllabus({
                                       day: "2-digit",
                                       month: "short",
                                       year: "numeric",
-                                    },
+                                    }
                                   )}
                                 </span>
                                 <span
@@ -2530,15 +2580,15 @@ export default function EthicalHackingSyllabus({
                                     topic.daysLeft < 0
                                       ? "bg-red-950/50 text-red-400 border border-red-800/30"
                                       : topic.daysLeft === 0
-                                        ? "bg-orange-950/50 text-orange-400 border border-orange-800/30"
-                                        : "bg-emerald-950/50 text-emerald-400 border border-emerald-800/30"
+                                      ? "bg-orange-950/50 text-orange-400 border border-orange-800/30"
+                                      : "bg-emerald-950/50 text-emerald-400 border border-emerald-800/30"
                                   }`}
                                 >
                                   {topic.daysLeft < 0
                                     ? `${Math.abs(topic.daysLeft)}d overdue`
                                     : topic.daysLeft === 0
-                                      ? "Due today"
-                                      : `${topic.daysLeft}d left`}
+                                    ? "Due today"
+                                    : `${topic.daysLeft}d left`}
                                 </span>
                               </>
                             ) : (
