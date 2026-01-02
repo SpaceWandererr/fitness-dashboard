@@ -1,1034 +1,1235 @@
-{
   "Episode 1 - Foundation": {
     "1. Introduction to Ethical Hacking": [
       {
-        "title": "What is Ethical Hacking and Why it's Important",
-        "done": false,
-        "completedOn": ""
+        title: "What is Ethical Hacking and Why it's Important",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Difference between Ethical Hacking, Black Hat, White Hat, and Grey Hat",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Difference between Ethical Hacking, Black Hat, White Hat, and Grey Hat",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Career Opportunities in Cybersecurity and Ethical Hacking",
-        "done": false,
-        "completedOn": ""
+        title: "Career Opportunities in Cybersecurity and Ethical Hacking",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Legal and Ethical Considerations in Hacking",
-        "done": false,
-        "completedOn": ""
+        title: "Legal and Ethical Considerations in Hacking",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Understanding Information Security CIA Triad (Confidentiality, Integrity, Availability)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Understanding Information Security CIA Triad (Confidentiality, Integrity, Availability)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Types of Cyber Attacks and Threat Landscape",
-        "done": false,
-        "completedOn": ""
+        title: "Types of Cyber Attacks and Threat Landscape",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Phases of Ethical Hacking (Reconnaissance, Scanning, Gaining Access, Maintaining Access, Covering Tracks)",
-        "done": false,
-        "completedOn": ""
-      }
+        title:
+          "Phases of Ethical Hacking (Reconnaissance, Scanning, Gaining Access, Maintaining Access, Covering Tracks)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "2. Computer Networking Fundamentals": [
       {
-        "title": "Understanding OSI and TCP/IP Models",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding OSI and TCP/IP Models",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "IP Addressing (IPv4, IPv6, Subnetting, CIDR)",
-        "done": false,
-        "completedOn": ""
+        title: "IP Addressing (IPv4, IPv6, Subnetting, CIDR)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Network Protocols (HTTP, HTTPS, FTP, SSH, DNS, DHCP, SMTP, POP3)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Network Protocols (HTTP, HTTPS, FTP, SSH, DNS, DHCP, SMTP, POP3)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Understanding Ports and Common Port Numbers",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Ports and Common Port Numbers",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Routers, Switches, Firewalls, and Network Devices",
-        "done": false,
-        "completedOn": ""
+        title: "Routers, Switches, Firewalls, and Network Devices",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Network Topologies and Architectures",
-        "done": false,
-        "completedOn": ""
+        title: "Network Topologies and Architectures",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Understanding VPNs, Proxies, and Tor",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Understanding VPNs, Proxies, and Tor",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "3. Linux Operating System for Hackers": [
       {
-        "title": "Introduction to Linux and Why Hackers Use It",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Linux and Why Hackers Use It",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Installing Kali Linux or Parrot OS (Virtual Machine Setup)",
-        "done": false,
-        "completedOn": ""
+        title: "Installing Kali Linux or Parrot OS (Virtual Machine Setup)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Linux File System Structure and Navigation",
-        "done": false,
-        "completedOn": ""
+        title: "Linux File System Structure and Navigation",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Essential Linux Commands (ls, cd, pwd, cat, grep, find, chmod, chown)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Essential Linux Commands (ls, cd, pwd, cat, grep, find, chmod, chown)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "File Permissions and User Management",
-        "done": false,
-        "completedOn": ""
+        title: "File Permissions and User Management",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Linux Package Management (apt, apt-get, dpkg)",
-        "done": false,
-        "completedOn": ""
+        title: "Linux Package Management (apt, apt-get, dpkg)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Text Editors (nano, vim)",
-        "done": false,
-        "completedOn": ""
+        title: "Text Editors (nano, vim)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Bash Scripting Basics for Automation",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Bash Scripting Basics for Automation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "4. Python Programming for Ethical Hackers": [
       {
-        "title": "Why Python for Cybersecurity",
-        "done": false,
-        "completedOn": ""
+        title: "Why Python for Cybersecurity",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Python Basics (Variables, Data Types, Operators)",
-        "done": false,
-        "completedOn": ""
+        title: "Python Basics (Variables, Data Types, Operators)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Control Flow (if-else, loops, functions)",
-        "done": false,
-        "completedOn": ""
+        title: "Control Flow (if-else, loops, functions)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Working with Lists, Tuples, Dictionaries, and Sets",
-        "done": false,
-        "completedOn": ""
+        title: "Working with Lists, Tuples, Dictionaries, and Sets",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "File Handling in Python",
-        "done": false,
-        "completedOn": ""
+        title: "File Handling in Python",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Python Modules and Libraries (os, sys, socket, requests)",
-        "done": false,
-        "completedOn": ""
+        title: "Python Modules and Libraries (os, sys, socket, requests)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Building Simple Scripts (Port Scanner, Password Generator)",
-        "done": false,
-        "completedOn": ""
+        title: "Building Simple Scripts (Port Scanner, Password Generator)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Exception Handling and Debugging",
-        "done": false,
-        "completedOn": ""
-      }
-    ]
+        title: "Exception Handling and Debugging",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
   },
   "Episode 2 - Reconnaissance & Scanning": {
     "1. Footprinting and Reconnaissance": [
       {
-        "title": "Introduction to Information Gathering",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Information Gathering",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Passive Reconnaissance vs Active Reconnaissance",
-        "done": false,
-        "completedOn": ""
+        title: "Passive Reconnaissance vs Active Reconnaissance",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "OSINT (Open Source Intelligence) Techniques",
-        "done": false,
-        "completedOn": ""
+        title: "OSINT (Open Source Intelligence) Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Google Dorking and Advanced Search Operators",
-        "done": false,
-        "completedOn": ""
+        title: "Google Dorking and Advanced Search Operators",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "WHOIS Lookup and DNS Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "WHOIS Lookup and DNS Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using Tools - theHarvester, Maltego, Shodan, Recon-ng",
-        "done": false,
-        "completedOn": ""
+        title: "Using Tools - theHarvester, Maltego, Shodan, Recon-ng",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Social Media Intelligence Gathering",
-        "done": false,
-        "completedOn": ""
+        title: "Social Media Intelligence Gathering",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Website Footprinting and Metadata Extraction",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Website Footprinting and Metadata Extraction",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "2. Scanning Networks": [
       {
-        "title": "Network Scanning Techniques and Methodologies",
-        "done": false,
-        "completedOn": ""
+        title: "Network Scanning Techniques and Methodologies",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Port Scanning (TCP Connect, SYN, UDP, FIN, Xmas)",
-        "done": false,
-        "completedOn": ""
+        title: "Port Scanning (TCP Connect, SYN, UDP, FIN, Xmas)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Mastering Nmap - Port Scanning and Service Detection",
-        "done": false,
-        "completedOn": ""
+        title: "Mastering Nmap - Port Scanning and Service Detection",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "OS Fingerprinting and Banner Grabbing",
-        "done": false,
-        "completedOn": ""
+        title: "OS Fingerprinting and Banner Grabbing",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Network Discovery and Host Detection",
-        "done": false,
-        "completedOn": ""
+        title: "Network Discovery and Host Detection",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Vulnerability Scanning with Nessus and OpenVAS",
-        "done": false,
-        "completedOn": ""
+        title: "Vulnerability Scanning with Nessus and OpenVAS",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Firewall and IDS Evasion Techniques",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Firewall and IDS Evasion Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "3. Enumeration": [
       {
-        "title": "What is Enumeration and Its Importance",
-        "done": false,
-        "completedOn": ""
+        title: "What is Enumeration and Its Importance",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "NetBIOS Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "NetBIOS Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "SNMP Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "SNMP Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "LDAP and Active Directory Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "LDAP and Active Directory Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "SMB and RPC Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "SMB and RPC Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "DNS Zone Transfer and Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "DNS Zone Transfer and Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using Enum4linux, SMBMap, and RPCClient",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Using Enum4linux, SMBMap, and RPCClient",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "4. Vulnerability Analysis": [
       {
-        "title": "Understanding Vulnerabilities and CVEs",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Vulnerabilities and CVEs",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "CVSS Scoring System",
-        "done": false,
-        "completedOn": ""
+        title: "CVSS Scoring System",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Common Vulnerability Databases (NVD, Exploit-DB)",
-        "done": false,
-        "completedOn": ""
+        title: "Common Vulnerability Databases (NVD, Exploit-DB)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Automated Vulnerability Scanning",
-        "done": false,
-        "completedOn": ""
+        title: "Automated Vulnerability Scanning",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Manual Vulnerability Assessment",
-        "done": false,
-        "completedOn": ""
+        title: "Manual Vulnerability Assessment",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Analyzing Scan Results and Prioritizing Risks",
-        "done": false,
-        "completedOn": ""
-      }
-    ]
+        title: "Analyzing Scan Results and Prioritizing Risks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
   },
   "Episode 3 - Exploitation & Post-Exploitation": {
     "1. System Hacking": [
       {
-        "title": "Password Cracking Techniques (Dictionary, Brute Force, Rainbow Tables)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Password Cracking Techniques (Dictionary, Brute Force, Rainbow Tables)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using John the Ripper and Hashcat",
-        "done": false,
-        "completedOn": ""
+        title: "Using John the Ripper and Hashcat",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Privilege Escalation (Vertical and Horizontal)",
-        "done": false,
-        "completedOn": ""
+        title: "Privilege Escalation (Vertical and Horizontal)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Exploiting Misconfigurations",
-        "done": false,
-        "completedOn": ""
+        title: "Exploiting Misconfigurations",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Windows Exploitation Techniques",
-        "done": false,
-        "completedOn": ""
+        title: "Windows Exploitation Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Linux Exploitation Techniques",
-        "done": false,
-        "completedOn": ""
+        title: "Linux Exploitation Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Clearing Logs and Covering Tracks",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Clearing Logs and Covering Tracks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "2. Malware and Trojans": [
       {
-        "title": "Understanding Malware Types (Virus, Worm, Trojan, Ransomware, Spyware)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Understanding Malware Types (Virus, Worm, Trojan, Ransomware, Spyware)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "How Malware Works and Infection Vectors",
-        "done": false,
-        "completedOn": ""
+        title: "How Malware Works and Infection Vectors",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Creating Payloads with Metasploit (msfvenom)",
-        "done": false,
-        "completedOn": ""
+        title: "Creating Payloads with Metasploit (msfvenom)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Backdoors and Remote Access Trojans (RATs)",
-        "done": false,
-        "completedOn": ""
+        title: "Backdoors and Remote Access Trojans (RATs)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Malware Analysis Basics (Static and Dynamic)",
-        "done": false,
-        "completedOn": ""
+        title: "Malware Analysis Basics (Static and Dynamic)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Anti-Virus Evasion Techniques",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Anti-Virus Evasion Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "3. Metasploit Framework": [
       {
-        "title": "Introduction to Metasploit Framework",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Metasploit Framework",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Metasploit Architecture (Exploits, Payloads, Auxiliaries, Encoders)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Metasploit Architecture (Exploits, Payloads, Auxiliaries, Encoders)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using msfconsole and Basic Commands",
-        "done": false,
-        "completedOn": ""
+        title: "Using msfconsole and Basic Commands",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Searching and Selecting Exploits",
-        "done": false,
-        "completedOn": ""
+        title: "Searching and Selecting Exploits",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Payload Generation and Delivery",
-        "done": false,
-        "completedOn": ""
+        title: "Payload Generation and Delivery",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Post-Exploitation with Meterpreter",
-        "done": false,
-        "completedOn": ""
+        title: "Post-Exploitation with Meterpreter",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Privilege Escalation and Persistence",
-        "done": false,
-        "completedOn": ""
+        title: "Privilege Escalation and Persistence",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Pivoting and Lateral Movement",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Pivoting and Lateral Movement",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "4. Social Engineering": [
       {
-        "title": "Understanding Social Engineering Attacks",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Social Engineering Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Phishing, Spear Phishing, and Whaling",
-        "done": false,
-        "completedOn": ""
+        title: "Phishing, Spear Phishing, and Whaling",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Pretexting, Baiting, and Tailgating",
-        "done": false,
-        "completedOn": ""
+        title: "Pretexting, Baiting, and Tailgating",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Creating Fake Login Pages",
-        "done": false,
-        "completedOn": ""
+        title: "Creating Fake Login Pages",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using Social Engineering Toolkit (SET)",
-        "done": false,
-        "completedOn": ""
+        title: "Using Social Engineering Toolkit (SET)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Human Psychology in Security",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Human Psychology in Security",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "5. Sniffing and Man-in-the-Middle Attacks": [
       {
-        "title": "Understanding Network Sniffing",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Network Sniffing",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Packet Analysis with Wireshark",
-        "done": false,
-        "completedOn": ""
+        title: "Packet Analysis with Wireshark",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "ARP Spoofing and ARP Poisoning",
-        "done": false,
-        "completedOn": ""
+        title: "ARP Spoofing and ARP Poisoning",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Man-in-the-Middle (MITM) Attacks",
-        "done": false,
-        "completedOn": ""
+        title: "Man-in-the-Middle (MITM) Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "DNS Spoofing and Cache Poisoning",
-        "done": false,
-        "completedOn": ""
+        title: "DNS Spoofing and Cache Poisoning",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using Ettercap and Bettercap",
-        "done": false,
-        "completedOn": ""
+        title: "Using Ettercap and Bettercap",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "SSL Stripping Attacks",
-        "done": false,
-        "completedOn": ""
-      }
-    ]
+        title: "SSL Stripping Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
   },
   "Episode 4 - Web & Application Hacking": {
     "1. Web Application Security Fundamentals": [
       {
-        "title": "How Web Applications Work (Client-Server Architecture)",
-        "done": false,
-        "completedOn": ""
+        title: "How Web Applications Work (Client-Server Architecture)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Understanding HTTP/HTTPS Protocols",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding HTTP/HTTPS Protocols",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Cookies, Sessions, and Authentication Mechanisms",
-        "done": false,
-        "completedOn": ""
+        title: "Cookies, Sessions, and Authentication Mechanisms",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "OWASP Top 10 Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "OWASP Top 10 Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Web Application Security Testing Methodology",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Web Application Security Testing Methodology",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "2. SQL Injection": [
       {
-        "title": "Understanding SQL and Database Basics",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding SQL and Database Basics",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Types of SQL Injection (In-band, Blind, Out-of-band)",
-        "done": false,
-        "completedOn": ""
+        title: "Types of SQL Injection (In-band, Blind, Out-of-band)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Detecting SQL Injection Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "Detecting SQL Injection Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Manual SQL Injection Exploitation",
-        "done": false,
-        "completedOn": ""
+        title: "Manual SQL Injection Exploitation",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using SQLMap for Automated Exploitation",
-        "done": false,
-        "completedOn": ""
+        title: "Using SQLMap for Automated Exploitation",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "SQL Injection Prevention and Mitigation",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "SQL Injection Prevention and Mitigation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "3. Cross-Site Scripting (XSS)": [
       {
-        "title": "Understanding XSS Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding XSS Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Types of XSS (Reflected, Stored, DOM-based)",
-        "done": false,
-        "completedOn": ""
+        title: "Types of XSS (Reflected, Stored, DOM-based)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Identifying XSS Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "Identifying XSS Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Crafting XSS Payloads",
-        "done": false,
-        "completedOn": ""
+        title: "Crafting XSS Payloads",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Cookie Stealing and Session Hijacking via XSS",
-        "done": false,
-        "completedOn": ""
+        title: "Cookie Stealing and Session Hijacking via XSS",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "XSS Prevention Techniques",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "XSS Prevention Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "4. Other Web Vulnerabilities": [
       {
-        "title": "Cross-Site Request Forgery (CSRF)",
-        "done": false,
-        "completedOn": ""
+        title: "Cross-Site Request Forgery (CSRF)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Insecure Direct Object References (IDOR)",
-        "done": false,
-        "completedOn": ""
+        title: "Insecure Direct Object References (IDOR)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Local File Inclusion (LFI) and Remote File Inclusion (RFI)",
-        "done": false,
-        "completedOn": ""
+        title: "Local File Inclusion (LFI) and Remote File Inclusion (RFI)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Command Injection and OS Command Execution",
-        "done": false,
-        "completedOn": ""
+        title: "Command Injection and OS Command Execution",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "XML External Entity (XXE) Attacks",
-        "done": false,
-        "completedOn": ""
+        title: "XML External Entity (XXE) Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Server-Side Request Forgery (SSRF)",
-        "done": false,
-        "completedOn": ""
+        title: "Server-Side Request Forgery (SSRF)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Broken Authentication and Session Management",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Broken Authentication and Session Management",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "5. Web Application Testing Tools": [
       {
-        "title": "Burp Suite - Complete Guide (Proxy, Repeater, Intruder, Scanner)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Burp Suite - Complete Guide (Proxy, Repeater, Intruder, Scanner)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "OWASP ZAP (Zed Attack Proxy)",
-        "done": false,
-        "completedOn": ""
+        title: "OWASP ZAP (Zed Attack Proxy)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Nikto Web Server Scanner",
-        "done": false,
-        "completedOn": ""
+        title: "Nikto Web Server Scanner",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "DirBuster and Gobuster for Directory Enumeration",
-        "done": false,
-        "completedOn": ""
+        title: "DirBuster and Gobuster for Directory Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Browser Developer Tools for Security Testing",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Browser Developer Tools for Security Testing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "6. API Security Testing": [
       {
-        "title": "Understanding REST APIs and GraphQL",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding REST APIs and GraphQL",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "API Authentication Mechanisms (JWT, OAuth, API Keys)",
-        "done": false,
-        "completedOn": ""
+        title: "API Authentication Mechanisms (JWT, OAuth, API Keys)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Common API Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "Common API Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Testing APIs with Postman and Burp Suite",
-        "done": false,
-        "completedOn": ""
+        title: "Testing APIs with Postman and Burp Suite",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "API Fuzzing and Rate Limiting Bypass",
-        "done": false,
-        "completedOn": ""
-      }
-    ]
+        title: "API Fuzzing and Rate Limiting Bypass",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
   },
   "Episode 5 - Advanced Topics & Specializations": {
     "1. Wireless Network Hacking": [
       {
-        "title": "Understanding Wireless Network Security (WEP, WPA, WPA2, WPA3)",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Wireless Network Security (WEP, WPA, WPA2, WPA3)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Wireless Reconnaissance and Network Discovery",
-        "done": false,
-        "completedOn": ""
+        title: "Wireless Reconnaissance and Network Discovery",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Cracking WEP and WPA/WPA2 Passwords",
-        "done": false,
-        "completedOn": ""
+        title: "Cracking WEP and WPA/WPA2 Passwords",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Evil Twin and Rogue Access Point Attacks",
-        "done": false,
-        "completedOn": ""
+        title: "Evil Twin and Rogue Access Point Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using Aircrack-ng Suite",
-        "done": false,
-        "completedOn": ""
+        title: "Using Aircrack-ng Suite",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Wireless Packet Sniffing and Analysis",
-        "done": false,
-        "completedOn": ""
+        title: "Wireless Packet Sniffing and Analysis",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Bluetooth Hacking Basics",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Bluetooth Hacking Basics",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "2. Mobile Application Security": [
       {
-        "title": "Introduction to Mobile Security (Android and iOS)",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Mobile Security (Android and iOS)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Android Security Architecture",
-        "done": false,
-        "completedOn": ""
+        title: "Android Security Architecture",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Setting Up Android Testing Environment (ADB, Emulators)",
-        "done": false,
-        "completedOn": ""
+        title: "Setting Up Android Testing Environment (ADB, Emulators)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Reverse Engineering Android APKs",
-        "done": false,
-        "completedOn": ""
+        title: "Reverse Engineering Android APKs",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Common Mobile Vulnerabilities (OWASP Mobile Top 10)",
-        "done": false,
-        "completedOn": ""
+        title: "Common Mobile Vulnerabilities (OWASP Mobile Top 10)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Mobile Application Penetration Testing",
-        "done": false,
-        "completedOn": ""
+        title: "Mobile Application Penetration Testing",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Using MobSF and Drozer",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Using MobSF and Drozer",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "3. Cloud Security": [
       {
-        "title": "Introduction to Cloud Computing Security",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Cloud Computing Security",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "AWS, Azure, and GCP Security Basics",
-        "done": false,
-        "completedOn": ""
+        title: "AWS, Azure, and GCP Security Basics",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Cloud Security Misconfigurations",
-        "done": false,
-        "completedOn": ""
+        title: "Cloud Security Misconfigurations",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "S3 Bucket Enumeration and Exploitation",
-        "done": false,
-        "completedOn": ""
+        title: "S3 Bucket Enumeration and Exploitation",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "IAM (Identity and Access Management) Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "IAM (Identity and Access Management) Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Container Security (Docker, Kubernetes)",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Container Security (Docker, Kubernetes)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "4. IoT Security": [
       {
-        "title": "Introduction to IoT and Security Challenges",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to IoT and Security Challenges",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "IoT Device Architecture and Communication Protocols",
-        "done": false,
-        "completedOn": ""
+        title: "IoT Device Architecture and Communication Protocols",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Common IoT Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "Common IoT Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Firmware Analysis and Reverse Engineering",
-        "done": false,
-        "completedOn": ""
+        title: "Firmware Analysis and Reverse Engineering",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "IoT Penetration Testing Methodology",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "IoT Penetration Testing Methodology",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "5. Cryptography for Ethical Hackers": [
       {
-        "title": "Introduction to Cryptography",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Cryptography",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Symmetric vs Asymmetric Encryption",
-        "done": false,
-        "completedOn": ""
+        title: "Symmetric vs Asymmetric Encryption",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Understanding Hash Functions (MD5, SHA, bcrypt)",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Hash Functions (MD5, SHA, bcrypt)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Public Key Infrastructure (PKI) and Digital Certificates",
-        "done": false,
-        "completedOn": ""
+        title: "Public Key Infrastructure (PKI) and Digital Certificates",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "SSL/TLS and HTTPS Security",
-        "done": false,
-        "completedOn": ""
+        title: "SSL/TLS and HTTPS Security",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Cryptographic Attacks (Rainbow Tables, Birthday Attack)",
-        "done": false,
-        "completedOn": ""
+        title: "Cryptographic Attacks (Rainbow Tables, Birthday Attack)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Implementing Encryption in Python",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Implementing Encryption in Python",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "6. Security Evasion Techniques": [
       {
-        "title": "Evading IDS/IPS Systems",
-        "done": false,
-        "completedOn": ""
+        title: "Evading IDS/IPS Systems",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Bypassing Firewalls and Network Filters",
-        "done": false,
-        "completedOn": ""
+        title: "Bypassing Firewalls and Network Filters",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Understanding Honeypots and How to Detect Them",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Honeypots and How to Detect Them",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Anti-Forensics Techniques",
-        "done": false,
-        "completedOn": ""
+        title: "Anti-Forensics Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Obfuscation and Packing",
-        "done": false,
-        "completedOn": ""
-      }
-    ]
+        title: "Obfuscation and Packing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
   },
   "Episode 6 - Professional Skills & Career": {
     "1. Penetration Testing Methodology": [
       {
-        "title": "Understanding Penetration Testing Lifecycle",
-        "done": false,
-        "completedOn": ""
+        title: "Understanding Penetration Testing Lifecycle",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Types of Penetration Testing (Black Box, White Box, Grey Box)",
-        "done": false,
-        "completedOn": ""
+        title: "Types of Penetration Testing (Black Box, White Box, Grey Box)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Rules of Engagement and Scoping",
-        "done": false,
-        "completedOn": ""
+        title: "Rules of Engagement and Scoping",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Writing Professional Penetration Testing Reports",
-        "done": false,
-        "completedOn": ""
+        title: "Writing Professional Penetration Testing Reports",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Risk Assessment and CVSS Scoring",
-        "done": false,
-        "completedOn": ""
+        title: "Risk Assessment and CVSS Scoring",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Remediation Recommendations",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Remediation Recommendations",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "2. Bug Bounty Hunting": [
       {
-        "title": "Introduction to Bug Bounty Programs",
-        "done": false,
-        "completedOn": ""
+        title: "Introduction to Bug Bounty Programs",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Popular Bug Bounty Platforms (HackerOne, Bugcrowd, Synack)",
-        "done": false,
-        "completedOn": ""
+        title: "Popular Bug Bounty Platforms (HackerOne, Bugcrowd, Synack)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Reconnaissance for Bug Bounties",
-        "done": false,
-        "completedOn": ""
+        title: "Reconnaissance for Bug Bounties",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Finding and Exploiting Vulnerabilities",
-        "done": false,
-        "completedOn": ""
+        title: "Finding and Exploiting Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Writing Effective Bug Reports",
-        "done": false,
-        "completedOn": ""
+        title: "Writing Effective Bug Reports",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Building Your Bug Bounty Reputation",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Building Your Bug Bounty Reputation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "3. Capture The Flag (CTF) Challenges": [
       {
-        "title": "What are CTF Competitions",
-        "done": false,
-        "completedOn": ""
+        title: "What are CTF Competitions",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Types of CTF Challenges (Jeopardy, Attack-Defense)",
-        "done": false,
-        "completedOn": ""
+        title: "Types of CTF Challenges (Jeopardy, Attack-Defense)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Practicing on TryHackMe, HackTheBox, PentesterLab",
-        "done": false,
-        "completedOn": ""
+        title: "Practicing on TryHackMe, HackTheBox, PentesterLab",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Common CTF Categories (Web, Binary, Crypto, Forensics, Reversing)",
-        "done": false,
-        "completedOn": ""
+        title:
+          "Common CTF Categories (Web, Binary, Crypto, Forensics, Reversing)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Building CTF Problem-Solving Skills",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Building CTF Problem-Solving Skills",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "4. Certifications and Career Path": [
       {
-        "title": "CompTIA Security+ Certification",
-        "done": false,
-        "completedOn": ""
+        title: "CompTIA Security+ Certification",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Certified Ethical Hacker (CEH) Certification",
-        "done": false,
-        "completedOn": ""
+        title: "Certified Ethical Hacker (CEH) Certification",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Offensive Security Certified Professional (OSCP)",
-        "done": false,
-        "completedOn": ""
+        title: "Offensive Security Certified Professional (OSCP)",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "CISSP - Certified Information Systems Security Professional",
-        "done": false,
-        "completedOn": ""
+        title: "CISSP - Certified Information Systems Security Professional",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "eJPT and eCPPT Certifications",
-        "done": false,
-        "completedOn": ""
+        title: "eJPT and eCPPT Certifications",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Career Paths in Cybersecurity",
-        "done": false,
-        "completedOn": ""
+        title: "Career Paths in Cybersecurity",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Building Your Cybersecurity Portfolio",
-        "done": false,
-        "completedOn": ""
-      }
+        title: "Building Your Cybersecurity Portfolio",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
     "5. Continuous Learning and Community": [
       {
-        "title": "Staying Updated with Latest Vulnerabilities and Exploits",
-        "done": false,
-        "completedOn": ""
+        title: "Staying Updated with Latest Vulnerabilities and Exploits",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Following Security Blogs and Researchers",
-        "done": false,
-        "completedOn": ""
+        title: "Following Security Blogs and Researchers",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Joining Cybersecurity Communities and Forums",
-        "done": false,
-        "completedOn": ""
+        title: "Joining Cybersecurity Communities and Forums",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Contributing to Open Source Security Projects",
-        "done": false,
-        "completedOn": ""
+        title: "Contributing to Open Source Security Projects",
+        done: false,
+        completedOn: "",
+        deadline: "",
       },
       {
-        "title": "Attending Security Conferences (DEF CON, Black Hat)",
-        "done": false,
-        "completedOn": ""
-      }
-    ]
-  }
-}
+        title: "Attending Security Conferences (DEF CON, Black Hat)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+  },
+  

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // In your component:
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ======= FULL embedded syllabus tree (auto-parsed + Aptitude fixed) ======= */
 const TREE = {
@@ -4324,7 +4325,7 @@ export default function Syllabus({
 
     const timer = setTimeout(
       () => setShowLastStudied(false),
-      LAST_STUDIED_HIDE_MINUTES * 60 * 1000
+      LAST_STUDIED_HIDE_MINUTES * 60 * 1000,
     );
 
     return () => clearTimeout(timer);
@@ -4356,7 +4357,7 @@ export default function Syllabus({
     function filterNode(node) {
       if (Array.isArray(node)) {
         const items = node.filter((it) =>
-          (it.title || "").toLowerCase().includes(q)
+          (it.title || "").toLowerCase().includes(q),
         );
         return items.length ? items : null;
       }
@@ -4398,7 +4399,7 @@ export default function Syllabus({
         };
       });
     },
-    [setDashboardState]
+    [setDashboardState],
   );
 
   // =========================================================
@@ -4628,7 +4629,7 @@ export default function Syllabus({
         syllabus_notes: updatedNotes,
       });
     },
-    [nr, updateDashboard]
+    [nr, updateDashboard],
   );
 
   /* ======================= EXPORT ======================= */
@@ -4956,7 +4957,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                     // ⚠️ Strong confirmation – irreversible action
                     if (
                       !confirm(
-                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!"
+                        "⚠️ Reset ALL syllabus progress? This CANNOT be undone!",
                       )
                     )
                       return;
@@ -5045,10 +5046,10 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                 grand.pct < 25
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-300 shadow-[0_0_6px_#22c55e]"
                   : grand.pct < 50
-                  ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
-                  : grand.pct < 75
-                  ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
-                  : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
+                    ? "bg-gradient-to-r from-emerald-300 to-lime-300 shadow-[0_0_6px_#4ade80]"
+                    : grand.pct < 75
+                      ? "bg-gradient-to-r from-lime-300 to-cyan-300 shadow-[0_0_6px_#a7f3d0]"
+                      : "bg-gradient-to-r from-rose-500 to-red-400 shadow-[0_0_8px_#ef4444]"
               }
             `}
                   style={{
@@ -5322,173 +5323,257 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
 
   return (
     <>
-      <li
-        className={`
-          p-2.5 rounded-lg border transition-all duration-200 mt-2
-          ${
-            it.done
-              ? "border-[#00d1b2]/20 bg-[#0B2F2A]/30 opacity-90"
-              : "border-[#00d1b2]/40 bg-[#0B2F2A]/50 hover:bg-[#0B2F2A]/70 hover:border-[#00d1b2]/60"
-          }
-        `}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {/* Checkbox */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                markTask(path, idx, !it.done);
-              }}
-              className={`
-                shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center 
-                transition-all cursor-pointer font-bold text-xs
-                ${
-                  it.done
-                    ? "bg-[#00d1b2] border-[#00d1b2] text-black"
-                    : "bg-transparent border-[#00d1b2]/50 hover:border-[#00d1b2] hover:bg-[#00d1b2]/10"
-                }
-              `}
-            >
-              {it.done && "✓"}
-            </button>
+  <li
+    className={`
+      group relative overflow-hidden rounded-xl transition-all duration-300
+      ${
+        it.done
+          ? "bg-gradient-to-r from-slate-800/40 to-slate-900/40 border border-slate-700/40"
+          : "bg-gradient-to-r from-slate-800/60 to-slate-900/60 border border-slate-600/50 hover:border-[#00d1b2]/60 hover:shadow-lg hover:shadow-[#00d1b2]/10"
+      }
+    `}
+  >
+    {/* Glow effect on hover */}
+    <div className="absolute inset-0 bg-gradient-to-r from-[#00d1b2]/0 via-[#00d1b2]/5 to-[#00d1b2]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-            {/* Title */}
-            <div
-              onClick={() => markTask(path, idx, !it.done)}
-              className={`
-                cursor-pointer text-sm break-words flex-1 transition-all duration-200
-                ${
-                  it.done
-                    ? "line-through opacity-70 text-gray-400"
-                    : "text-[#d9ebe5]"
-                }
-              `}
-            >
-              {it.title}
-            </div>
-          </div>
+    {/* Left accent bar */}
+    <div
+      className={`
+        absolute left-0 top-0 bottom-0 w-1 transition-all duration-300
+        ${it.done ? "bg-emerald-500" : "bg-slate-600 group-hover:bg-[#00d1b2]"}
+      `}
+    ></div>
 
-          {/* Controls */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 shrink-0"
-          >
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step="0.25"
-              value={nr[key]?.estimate ?? 0.5}
-              onChange={(e) =>
-                setNR((old) => ({
-                  ...old,
-                  [key]: {
-                    ...(old[key] || {}),
-                    estimate: Number(e.target.value),
-                  },
-                }))
+    {/* Main content */}
+    <div
+      onClick={() => markTask(path, idx, !it.done)}
+      className="relative flex items-center gap-4 px-4 py-3 cursor-pointer"
+    >
+      {/* Custom checkbox with gradient */}
+      <div className="relative shrink-0">
+        <div
+          className={`
+            w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-300
+            ${
+              it.done
+                ? "bg-gradient-to-br from-emerald-500 to-green-600 border-emerald-400 shadow-md shadow-emerald-500/30"
+                : "bg-slate-900/50 border-slate-500 group-hover:border-[#00d1b2] group-hover:bg-[#00d1b2]/10"
+            }
+          `}
+        >
+          {it.done && (
+            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+      </div>
+
+      {/* Title and metadata */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span
+            className={`
+              text-sm font-medium transition-all duration-300
+              ${
+                it.done
+                  ? "text-slate-500 line-through"
+                  : "text-slate-200 group-hover:text-white"
               }
-              className="w-12 text-xs rounded px-1.5 py-1 border border-[#00d1b2]/40 bg-[#051C14] text-[#d9ebe5]"
-            />
-            <span className="text-[10px] text-gray-500">h</span>
-
-            <button
-              ref={buttonRef}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!showDatePicker && buttonRef.current) {
-                  const rect = buttonRef.current.getBoundingClientRect();
-                  const calendarWidth = 240;
-
-                  let left = rect.left + window.scrollX;
-                  let top = rect.bottom + window.scrollY + 5;
-
-                  if (left + calendarWidth > window.innerWidth)
-                    left = window.innerWidth - calendarWidth - 10;
-                  if (top + 280 > window.innerHeight + window.scrollY)
-                    top = rect.top + window.scrollY - 280;
-
-                  setPickerPosition({ top, left });
-                }
-                setShowDatePicker((s) => !s);
-              }}
-              className="text-[11px] border rounded px-2 py-1 border-[#00d1b2]/40 bg-[#051C14] text-[#d9ebe5]"
-            >
-              📅 {deadline ? formatDateDDMMYYYY(deadline) : "Set"}
-            </button>
-
-            {deadline && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTaskDeadline(path, idx, "");
-                }}
-                className="w-6 h-6 flex items-center justify-center border border-red-500/50 rounded bg-red-900/20 text-xs text-red-400"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+            `}
+          >
+            {it.title}
+          </span>
         </div>
 
-        {(deadline || (it.done && completedDate)) && (
-          <div className="mt-2 pl-6 text-[10px]">
-            {deadline && !it.done && (
-              <div className="flex items-center gap-1 text-[#a7f3d0]">
-                ⏰ Due: {formatDateDDMMYYYY(deadline)}
-              </div>
-            )}
+        {/* Compact badges row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Completion badge */}
+          {it.done && completedDate && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-medium">
+              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {formatDateDDMMYYYY(completedDate)}
+            </span>
+          )}
 
-            {it.done && completedDate && (
-              <div className="flex items-center gap-1 flex-wrap">
-                ✅ Completed on {formatDateDDMMYYYY(completedDate)}
-                {deadline && daysDiff !== null && (
-                  <span
-                    className={`ml-1 font-semibold ${
-                      daysDiff > 0
-                        ? "text-green-400"
-                        : daysDiff < 0
-                          ? "text-red-400"
-                          : "text-yellow-400"
-                    }`}
-                  >
-                    {daysDiff > 0
-                      ? `(${daysDiff} days before deadline)`
-                      : daysDiff < 0
-                        ? `(${Math.abs(daysDiff)} days after deadline)`
-                        : "(on deadline day)"}
-                  </span>
-                )}
+          {/* Deadline badge */}
+          {deadline && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[10px] font-medium">
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {formatDateDDMMYYYY(deadline)}
+            </span>
+          )}
+
+          {/* Status indicator */}
+          {it.done && deadline && daysDiff !== null && (
+            <span
+              className={`
+                inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold
+                ${
+                  daysDiff > 0
+                    ? "bg-green-500/15 border border-green-500/30 text-green-400"
+                    : daysDiff < 0
+                      ? "bg-red-500/15 border border-red-500/30 text-red-400"
+                      : "bg-yellow-500/15 border border-yellow-500/30 text-yellow-400"
+                }
+              `}
+            >
+              {daysDiff > 0 ? "⚡" : daysDiff < 0 ? "⚠" : "✓"}
+              {daysDiff > 0
+                ? `${daysDiff}d early`
+                : daysDiff < 0
+                  ? `${Math.abs(daysDiff)}d late`
+                  : "on time"}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Right controls */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex items-center gap-2 shrink-0"
+      >
+        {/* Hour estimate with icon */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/50 border border-slate-700">
+          <svg className="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step="0.25"
+            value={nr[key]?.estimate ?? 0.5}
+            onChange={(e) =>
+              setNR((old) => ({
+                ...old,
+                [key]: {
+                  ...(old[key] || {}),
+                  estimate: Number(e.target.value),
+                },
+              }))
+            }
+            className="w-10 text-xs bg-transparent text-slate-200 focus:outline-none"
+          />
+          <span className="text-[10px] text-slate-500">h</span>
+        </div>
+
+        {/* Deadline button */}
+        <button
+          ref={buttonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDatePicker((s) => !s);
+          }}
+          className={`
+            p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95
+            ${
+              deadline
+                ? "bg-blue-500/20 border border-blue-500/50 text-blue-400 hover:bg-blue-500/30"
+                : "bg-slate-700/50 border border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-[#00d1b2] hover:text-[#00d1b2]"
+            }
+          `}
+          title="Set deadline"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </li>
+
+  {/* Beautiful Modal for Date Picker */}
+  {showDatePicker &&
+    createPortal(
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+        onClick={() => setShowDatePicker(false)}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Modal Header with gradient */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/30 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[#00d1b2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </div>
-            )}
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                Set Deadline
+              </h3>
+            </div>
+            <button
+              onClick={() => setShowDatePicker(false)}
+              className="w-9 h-9 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-        )}
-      </li>
 
-      {showDatePicker &&
-        createPortal(
-          <div
-            style={{
-              position: "absolute",
-              top: pickerPosition.top,
-              left: pickerPosition.left,
-              zIndex: 99999,
-            }}
-          >
+          {/* Task preview */}
+          <div className="mb-5 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+            <p className="text-sm text-slate-300 leading-relaxed">{it.title}</p>
+          </div>
+
+          {/* Date Picker */}
+          <div className="mb-5 flex justify-center">
             <DatePicker
               selected={deadline ? new Date(deadline) : null}
               onChange={(date) => {
                 setTaskDeadline(path, idx, date ? formatLocalISO(date) : "");
-                setShowDatePicker(false);
               }}
-              onClickOutside={() => setShowDatePicker(false)}
               inline
+              calendarClassName="custom-calendar"
             />
-          </div>,
-          document.body,
-        )}
-    </>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {deadline && (
+              <button
+                onClick={() => {
+                  setTaskDeadline(path, idx, "");
+                  setShowDatePicker(false);
+                }}
+                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/40 text-red-400 hover:from-red-600/30 hover:to-red-500/30 hover:border-red-500/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Remove Deadline
+              </button>
+            )}
+            <button
+              onClick={() => setShowDatePicker(false)}
+              className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/40 text-[#00d1b2] hover:from-[#00d1b2]/30 hover:to-blue-500/30 hover:border-[#00d1b2]/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Done
+            </button>
+          </div>
+        </motion.div>
+      </div>,
+      document.body,
+    )}
+</>
+
   );
 }
 
@@ -6091,8 +6176,8 @@ function SubNode({
                 deadlineStatus.type === "ontime"
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                   : deadlineStatus.type === "late"
-                  ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
-                  : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+                    ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                    : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
               }`}
             >
               {deadlineStatus.label}
@@ -6165,7 +6250,7 @@ function SubNode({
               inline
             />
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
