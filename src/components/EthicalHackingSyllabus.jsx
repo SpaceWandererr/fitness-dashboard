@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 
 /* ======= ETHICAL HACKING SYLLABUS TREE ======= */
 const HACKING_TREE = {
-  "Episode 1 - Foundation": {
+  "EP - 1 - Foundation": {
     "1. Introduction to Ethical Hacking": [
       {
         title: "What is Ethical Hacking and Why it's Important",
@@ -202,7 +202,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "Episode 2 - Reconnaissance & Scanning": {
+  "EP - 2 - Reconnaissance & Scanning": {
     "1. Footprinting and Reconnaissance": [
       {
         title: "Introduction to Information Gathering",
@@ -380,7 +380,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "Episode 3 - Exploitation & Post-Exploitation": {
+  "EP - 3 - Exploitation & Post-Exploitation": {
     "1. System Hacking": [
       {
         title:
@@ -599,7 +599,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "Episode 4 - Web & Application Hacking": {
+  "EP - 4 - Web & Application Hacking": {
     "1. Web Application Security Fundamentals": [
       {
         title: "How Web Applications Work (Client-Server Architecture)",
@@ -818,7 +818,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "Episode 5 - Advanced Topics & Specializations": {
+  "EP - 5 - Advanced Topics & Specializations": {
     "1. Wireless Network Hacking": [
       {
         title: "Understanding Wireless Network Security (WEP, WPA, WPA2, WPA3)",
@@ -1054,7 +1054,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "Episode 6 - Professional Skills & Career": {
+  "EP - 6 - Professional Skills & Career": {
     "1. Penetration Testing Methodology": [
       {
         title: "Understanding Penetration Testing Lifecycle",
@@ -1355,7 +1355,7 @@ export default function EthicalHackingSyllabus({
               const deadlineDate = new Date(item.deadline);
               deadlineDate.setHours(0, 0, 0, 0);
               const daysLeft = Math.ceil(
-                (deadlineDate - today) / (1000 * 60 * 60 * 24),
+                (deadlineDate - today) / (1000 * 60 * 60 * 24)
               );
               topicData.daysLeft = daysLeft;
               topicsWithDeadline.push(topicData); // ✅ Fixed: was wrong before
@@ -1369,7 +1369,7 @@ export default function EthicalHackingSyllabus({
 
     // Sort topics with deadlines by date
     topicsWithDeadline.sort(
-      (a, b) => new Date(a.deadline) - new Date(b.deadline),
+      (a, b) => new Date(a.deadline) - new Date(b.deadline)
     );
 
     // Combine: deadline topics first, then topics without deadlines
@@ -1394,7 +1394,7 @@ export default function EthicalHackingSyllabus({
               const deadlineDate = new Date(item.deadline);
               const today = new Date();
               const daysLeft = Math.ceil(
-                (deadlineDate - today) / (1000 * 60 * 60 * 24),
+                (deadlineDate - today) / (1000 * 60 * 60 * 24)
               );
 
               if (daysLeft < 0) priority += 200;
@@ -1910,9 +1910,6 @@ export default function EthicalHackingSyllabus({
                         <span className="px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
                           {stats.pct}% complete
                         </span>
-                        <span className="sm:inline px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
-                          ≈{stats.totalTime.toFixed(1)}h
-                        </span>
                       </div>
                     </div>
 
@@ -2035,7 +2032,7 @@ export default function EthicalHackingSyllabus({
                                                       month: "short",
                                                     }
                                                   )
-                                                : "Set Deadline"}
+                                                : "Set"}
                                             </span>
                                           </button>
                                         );
@@ -2523,180 +2520,396 @@ export default function EthicalHackingSyllabus({
               );
             })}
           </div>
-
           {/* RIGHT SIDE - Features */}
           <div className="space-y-4 w-full lg:w-[40%]">
             {/* Daily Auto Planner */}
             <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 to-purple-950/30 border border-purple-800/30 p-4 sm:p-5 shadow-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">📅</span>
-                  <div>
-                    <h3 className="font-bold text-base sm:text-lg text-slate-100">
-                      Daily Auto Planner
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      Priority tasks & deadlines
+              {/* Header */}
+              <div className="flex items-start justify-between mb-3">
+                <p className="text-xs sm:text-sm text-slate-400 max-w-[60%]">
+                  Closest-deadline hacking topics not yet done.
+                </p>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">🎯</span>
+                  <div className="text-right">
+                    <p className="text-xs sm:text-sm font-bold text-purple-300">
+                      {deadlineTopics.length}{" "}
+                      {deadlineTopics.length === 1 ? "Task" : "Tasks"}
                     </p>
-                  </div>
-                </div>
-                <div className="px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 self-start sm:self-auto">
-                  <div className="text-xs text-purple-300">
-                    {deadlineTopics.length} Tasks
+                    <p className="text-[9px] text-slate-500">
+                      Sorted by deadline
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+              {/* List */}
+              <ul className="space-y-1.5 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
                 {deadlineTopics.length > 0 ? (
-                  deadlineTopics.map((topic, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => jumpToTopic(topic)}
-                      className="p-1.5 rounded-lg bg-slate-900/70 border border-slate-700/50 hover:border-purple-500/50 hover:bg-slate-900/90 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg flex-shrink-0">📘</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-slate-300 group-hover:text-slate-100 transition-colors line-clamp-2 mb-2">
-                            {topic.title}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            {topic.deadline ? (
-                              <>
-                                <span className="text-xs px-2 py-0.5 rounded bg-blue-950/50 text-blue-400 border border-blue-800/30 whitespace-nowrap">
-                                  📅{" "}
-                                  {new Date(topic.deadline).toLocaleDateString(
-                                    "en-GB",
-                                    {
+                  deadlineTopics.map((topic, idx) => {
+                    const deadline = topic.deadline
+                      ? new Date(topic.deadline)
+                      : null;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    let urgencyIcon = "📅";
+                    let urgencyBadge =
+                      "bg-emerald-900/30 text-emerald-300 border-emerald-700/40";
+                    let cardBg = "from-slate-900/70 to-slate-950/80";
+                    let borderColor = "border-slate-700/60";
+                    let glowColor = "shadow-purple-900/0";
+                    let progressColor = "bg-emerald-500";
+                    let daysLeft = null;
+                    let daysLeftText = "";
+
+                    if (deadline) {
+                      const diff = deadline.getTime() - today.getTime();
+                      const daysRemaining = Math.ceil(
+                        diff / (24 * 60 * 60 * 1000)
+                      );
+                      daysLeft = daysRemaining;
+
+                      if (diff < 0) {
+                        urgencyIcon = "⏰";
+                        urgencyBadge =
+                          "bg-red-900/40 text-red-300 border-red-600/50";
+                        cardBg = "from-red-950/25 to-slate-950/80";
+                        borderColor = "border-red-700/50";
+                        glowColor = "shadow-red-900/20";
+                        progressColor = "bg-red-500";
+                        daysLeftText = `${Math.abs(daysRemaining)}d late`;
+                      } else if (daysRemaining === 0) {
+                        urgencyIcon = "⚡";
+                        urgencyBadge =
+                          "bg-orange-900/40 text-orange-300 border-orange-600/50";
+                        cardBg = "from-orange-950/25 to-slate-950/80";
+                        borderColor = "border-orange-700/50";
+                        glowColor = "shadow-orange-900/20";
+                        progressColor = "bg-orange-500";
+                        daysLeftText = "Today";
+                      } else if (daysRemaining <= 3) {
+                        urgencyIcon = "⏰";
+                        urgencyBadge =
+                          "bg-yellow-900/40 text-yellow-300 border-yellow-600/50";
+                        cardBg = "from-yellow-950/25 to-slate-950/80";
+                        borderColor = "border-yellow-700/50";
+                        glowColor = "shadow-yellow-900/20";
+                        progressColor = "bg-yellow-500";
+                        daysLeftText = `${daysRemaining}d left`;
+                      } else {
+                        daysLeftText = `${daysRemaining}d left`;
+                      }
+                    }
+
+                    return (
+                      <li
+                        key={idx}
+                        onClick={() => jumpToTopic(topic)}
+                        className={`
+              group relative
+              bg-gradient-to-br ${cardBg}
+              rounded-lg
+              border ${borderColor}
+              overflow-hidden
+              transition-all duration-200
+              hover:brightness-110
+              hover:shadow-md ${glowColor}
+              cursor-pointer
+            `}
+                      >
+                        {/* Left accent bar */}
+                        <div
+                          className={`absolute left-0 top-0 bottom-0 w-0.5 ${progressColor} opacity-60 group-hover:opacity-100 transition-opacity`}
+                        />
+
+                        <div className="p-2 pl-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            {/* Icon + title */}
+                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                              <span className="text-sm shrink-0">
+                                {urgencyIcon}
+                              </span>
+                              <span className="text-xs text-slate-200/80 font-medium truncate group-hover:text-white transition-colors">
+                                {topic.title}
+                              </span>
+                            </div>
+
+                            {/* Date + badge */}
+                            {deadline && (
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <div className="flex items-center gap-0.5 opacity-70">
+                                  <span className="text-[9px]">📆</span>
+                                  <span className="text-[9px] text-slate-300 font-medium hidden sm:inline">
+                                    {deadline.toLocaleDateString("en-GB", {
                                       day: "2-digit",
                                       month: "short",
                                       year: "numeric",
-                                    }
-                                  )}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-0.5 rounded whitespace-nowrap ${
-                                    topic.daysLeft < 0
-                                      ? "bg-red-950/50 text-red-400 border border-red-800/30"
-                                      : topic.daysLeft === 0
-                                      ? "bg-orange-950/50 text-orange-400 border border-orange-800/30"
-                                      : "bg-emerald-950/50 text-emerald-400 border border-emerald-800/30"
-                                  }`}
-                                >
-                                  {topic.daysLeft < 0
-                                    ? `${Math.abs(topic.daysLeft)}d overdue`
-                                    : topic.daysLeft === 0
-                                    ? "Due today"
-                                    : `${topic.daysLeft}d left`}
-                                </span>
-                              </>
-                            ) : (
-                              <span className=""></span>
+                                    })}
+                                  </span>
+                                </div>
+
+                                {daysLeftText && (
+                                  <span
+                                    className={`
+                          text-[9px] font-bold px-1.5 py-0.5 rounded
+                          border ${urgencyBadge}
+                          whitespace-nowrap
+                          ${
+                            urgencyBadge.includes("bg-red-")
+                              ? "animate-pulse"
+                              : ""
+                          }
+                        `}
+                                  >
+                                    {daysLeftText}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
+
+                          {/* Small progress bar for near deadlines */}
+                          {deadline &&
+                            daysLeft !== null &&
+                            daysLeft > 0 &&
+                            daysLeft < 30 && (
+                              <div className="mt-1.5 ml-6">
+                                <div className="h-0.5 bg-white/10 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full ${progressColor} rounded-full transition-all duration-500`}
+                                    style={{
+                                      width: `${(() => {
+                                        const maxDays = 30;
+                                        return Math.min(
+                                          95,
+                                          Math.max(
+                                            5,
+                                            ((maxDays - daysLeft) / maxDays) *
+                                              100
+                                          )
+                                        );
+                                      })()}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
                         </div>
-                      </div>
-                    </div>
-                  ))
+
+                        {/* Shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      </li>
+                    );
+                  })
                 ) : (
-                  <div className="text-center py-8 text-slate-500">
-                    <div className="text-4xl mb-2">📭</div>
+                  <div className="text-center py-6 text-slate-500">
+                    <div className="text-3xl mb-1">📭</div>
                     <div className="text-sm">No tasks pending</div>
                     <div className="text-xs mt-1 text-slate-600">
                       Click 📅 Deadline button to set deadlines
                     </div>
                   </div>
                 )}
-              </div>
+              </ul>
             </div>
 
             {/* Smart Suggest */}
-            <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 to-pink-950/30 border border-pink-800/30 p-5 shadow-xl">
+            <div
+              className="
+    rounded-2xl border border-pink-800/40
+    bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950
+    p-5 shadow-[0_0_20px_rgba(0,0,0,0.25)]
+    transition-all duration-300
+    hover:shadow-[0_0_30px_rgba(244,114,182,0.25)]
+  "
+            >
+              {/* ===== Header ===== */}
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🤖</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-400/70 to-pink-500/90 flex items-center justify-center shadow-lg border border-pink-300/60">
+                    <span className="text-xl">🤖</span>
+                  </div>
                   <div>
-                    <h3 className="font-bold text-lg text-slate-100">
+                    <h3 className="font-bold text-base text-slate-50">
                       Smart Suggest
                     </h3>
-                    <p className="text-xs text-slate-400">
-                      AI-powered study planner
+                    <p className="text-[10px] text-slate-400">
+                      AI-powered hacking study planner
                     </p>
                   </div>
                 </div>
-                <div className="px-3 py-1.5 rounded-lg bg-pink-500/20 text-xs text-pink-400 border border-pink-500/30">
-                  AI Powered
-                </div>
+
+                <span
+                  className="
+        text-[10px] px-3 py-1.5 rounded-full
+        bg-gradient-to-r from-pink-500 to-fuchsia-500
+        text-black font-bold
+        border border-pink-300/60
+        whitespace-nowrap
+      "
+                >
+                  ✨ AI Powered
+                </span>
               </div>
 
-              <div className="space-y-3">
-                <div className="text-sm text-slate-400">
+              {/* ===== Input ===== */}
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-slate-300 mb-2 block">
                   Available Study Time
+                </label>
+
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      value={studyTime}
+                      onChange={(e) =>
+                        setStudyTime(parseInt(e.target.value) || 0)
+                      }
+                      className="
+            w-full px-4 py-2.5 text-sm rounded-xl border 
+            bg-slate-900/80 border-slate-700
+            text-slate-100 outline-none
+            focus:ring-2 focus:ring-pink-500/60 focus:border-pink-500/60
+          "
+                      placeholder="120"
+                      min="0"
+                      max="1440"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">
+                      minutes
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={generateSuggestions}
+                    className="
+          px-5 py-2.5 rounded-xl 
+          bg-gradient-to-r from-pink-500 to-fuchsia-500
+          hover:from-pink-400 hover:to-fuchsia-400
+          text-black font-bold text-sm
+          shadow-[0_0_12px_rgba(244,114,182,0.45)]
+          transition-all duration-200
+        "
+                  >
+                    Generate ✨
+                  </button>
                 </div>
-                <input
-                  type="number"
-                  value={studyTime}
-                  onChange={(e) => setStudyTime(parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-100 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
-                  placeholder="120"
-                  min="0"
-                  max="1440"
-                />
-                <span className="text-xs text-slate-500">
-                  minutes (≈{Math.floor(studyTime / 30)} topics @ 30min each)
-                </span>
 
-                <button
-                  onClick={generateSuggestions}
-                  className="w-full mt-3 px-4 py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 font-medium transition"
-                >
-                  Generate ✨
-                </button>
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  ≈ {Math.floor(studyTime / 30)} topics @ 30 min each
+                </p>
+              </div>
 
-                <div className="mt-4 max-h-[400px] overflow-y-auto space-y-2">
-                  {suggestions.length > 0 ? (
-                    suggestions.map((topic, idx) => (
+              {/* ===== Suggestions ===== */}
+              <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                {suggestions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-4xl mb-1 block">📊</span>
+                    <p className="text-sm text-slate-400">
+                      Click{" "}
+                      <span className="text-pink-400 font-medium">
+                        Generate
+                      </span>{" "}
+                      to get suggestions
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Based on deadlines, priority and time left
+                    </p>
+                  </div>
+                ) : (
+                  suggestions.map((topic, idx) => {
+                    const hasDeadline = !!topic.deadline;
+                    const now = new Date();
+                    const deadlineDate = hasDeadline
+                      ? new Date(topic.deadline)
+                      : null;
+
+                    let urgency = {
+                      badgeBg: "bg-emerald-500/15",
+                      badgeText: "text-emerald-300",
+                      badgeBorder: "border-emerald-500/40",
+                    };
+
+                    if (deadlineDate && deadlineDate < now) {
+                      urgency = {
+                        badgeBg: "bg-red-500/15",
+                        badgeText: "text-red-300",
+                        badgeBorder: "border-red-500/40",
+                      };
+                    }
+
+                    return (
                       <div
-                        key={idx}
+                        key={`${topic.title}-${idx}`}
                         onClick={() => jumpToTopic(topic)}
-                        className="p-3 rounded-lg bg-slate-900/70 border border-slate-700/50 hover:border-pink-500/50 transition cursor-pointer"
+                        className={`
+              group relative rounded-xl border p-3 text-sm
+              bg-slate-900/70 border-slate-700/60
+              hover:border-pink-500/60 hover:bg-slate-900/90
+              transition-all duration-250 overflow-hidden
+              cursor-pointer
+            `}
                       >
-                        <div className="flex items-start gap-2">
-                          <span className="text-sm font-bold text-pink-400">
-                            #{idx + 1}
-                          </span>
-                          <div className="flex-1">
-                            <div className="text-sm text-slate-300">
-                              {topic.title}
-                            </div>
-                            <div className="text-xs text-slate-500 mt-1">
-                              {topic.module} • ≈{topic.estimatedTime}min
-                              {topic.deadline && (
-                                <span className="ml-2 text-orange-400">
-                                  📅 {topic.deadline}
+                        {/* Left accent bar */}
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-pink-500 to-fuchsia-500 opacity-80" />
+
+                        <div className="pl-3">
+                          <div className="flex items-start gap-2">
+                            <span className="text-xs font-bold text-pink-400 mt-0.5">
+                              #{idx + 1}
+                            </span>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs sm:text-sm text-slate-200 group-hover:text-white transition-colors">
+                                {topic.title}
+                              </div>
+
+                              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                                <span className="whitespace-nowrap">
+                                  {topic.module} • ≈{topic.estimatedTime}min
                                 </span>
-                              )}
+
+                                {hasDeadline && (
+                                  <span
+                                    className={`
+                          inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                          ${urgency.badgeBg} ${urgency.badgeText} border ${urgency.badgeBorder}
+                          text-[10px] whitespace-nowrap
+                        `}
+                                  >
+                                    📅{" "}
+                                    {deadlineDate.toLocaleDateString("en-GB", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
+
+                        {/* Shine overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-slate-500">
-                      <div className="text-4xl mb-2">📊</div>
-                      <div className="text-sm">
-                        Click "Generate" to get suggestions
-                      </div>
-                      <div className="text-xs mt-1">
-                        Based on deadlines and priority
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* ===== Footer ===== */}
+              <div className="mt-4 pt-3 border-t border-slate-700/60 text-[11px] text-slate-400">
+                {suggestions.length > 0
+                  ? "Tap a suggestion to jump directly to that topic in the syllabus."
+                  : "Tell the AI how many minutes you have, then generate a focused plan."}
               </div>
             </div>
           </div>
+          
         </div>
       </div>
       <ResetModal />
