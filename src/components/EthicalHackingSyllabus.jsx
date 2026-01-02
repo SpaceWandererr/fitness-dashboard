@@ -1508,7 +1508,7 @@ export default function EthicalHackingSyllabus({
     if (val) {
       toast.success(`✅ ${item.title}`);
     } else {
-      toast(`↩️ Unmarked: ${item.title}`, {
+      toast(`Unmarked: ${item.title}`, {
         icon: "↩️",
         style: {
           background: "#1e293b",
@@ -1539,6 +1539,20 @@ export default function EthicalHackingSyllabus({
       );
     }
     updateDashboard(updates);
+
+    // Toast
+    const sectionName = path[path.length - 1] || "section";
+    if (val) {
+      toast.success(`Marked all in ${sectionName}`);
+    } else {
+      toast(`Unmarked all in ${sectionName}`, {
+        icon: "↩️",
+        style: {
+          background: "#020617",
+          color: "#e5e7eb",
+        },
+      });
+    }
   };
 
   // Set deadline for individual topic
@@ -1574,7 +1588,13 @@ export default function EthicalHackingSyllabus({
     if (date) {
       toast.success(`📅 Deadline set for ${items.length} topics!`);
     } else {
-      toast.info(`🗑️ Deadlines removed`);
+        toast(`🗑️ Deadlines removed`, {
+          icon: "↩️",
+          style: {
+            background: "#1e293b",
+            color: "#94a3b8",
+          },
+        });
     }
   };
 

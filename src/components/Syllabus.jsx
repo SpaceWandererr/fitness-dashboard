@@ -4387,21 +4387,36 @@ export default function Syllabus({
       setDashboardState((prev) => {
         const current = prev?.syllabus_meta || {};
         const prevOpen = current[key]?.open || false;
+        const nextOpen = !prevOpen;
 
-        return {
+        const nextState = {
           ...prev,
           syllabus_meta: {
             ...current,
             [key]: {
               ...(current[key] || {}),
-              open: !prevOpen,
+              open: nextOpen,
             },
           },
         };
+
+        // 🔔 Optional: very subtle feedback
+        toast.dismiss(); // avoid stacking if user spam-clicks
+        toast(nextOpen ? "Section expanded" : "Section collapsed", {
+          icon: nextOpen ? "▾" : "▸",
+          duration: 1200,
+          style: {
+            background: "#020617",
+            color: "#e5e7eb",
+          },
+        });
+
+        return nextState;
       });
     },
-    [setDashboardState],
+    [setDashboardState]
   );
+
 
   // =========================================================
   // 🔥 FIXED: Set deadline on section + cascade to tasks
@@ -4483,6 +4498,19 @@ export default function Syllabus({
         },
       },
     });
+
+    // Toast
+    if (pct && Number(pct) > 0) {
+      toast.success(`Target set to ${pct}% for this section`);
+    } else {
+      toast(`Target removed for this section`, {
+        icon: "🎯",
+        style: {
+          background: "#020617",
+          color: "#e5e7eb",
+        },
+      });
+    }
   };
 
   // =========================================================
@@ -4538,7 +4566,9 @@ export default function Syllabus({
 
     // 📌 If marking as done, update last studied + streak
     if (val && lastItem) {
-      updates.syllabus_lastStudied = `${lastItem.title} • ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_lastStudied = `${
+        lastItem.title
+      } • ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     }
 
@@ -4581,7 +4611,9 @@ export default function Syllabus({
     const updates = { syllabus_tree_v2: updatedTree };
 
     if (val) {
-      updates.syllabus_lastStudied = `${item.title} • ${new Date().toLocaleString("en-IN")}`;
+      updates.syllabus_lastStudied = `${
+        item.title
+      } • ${new Date().toLocaleString("en-IN")}`;
       updates.syllabus_streak = Array.from(new Set([...daySet, todayISO()]));
     } else {
       let mostRecentTitle = null;
@@ -4605,7 +4637,9 @@ export default function Syllabus({
       });
 
       if (mostRecentTitle && mostRecentDate) {
-        updates.syllabus_lastStudied = `${mostRecentTitle} • ${mostRecentDate.toLocaleString("en-IN")}`;
+        updates.syllabus_lastStudied = `${mostRecentTitle} • ${mostRecentDate.toLocaleString(
+          "en-IN"
+        )}`;
       } else {
         updates.syllabus_lastStudied = "";
       }
@@ -4649,6 +4683,19 @@ export default function Syllabus({
     updateDashboard({
       syllabus_notes: updatedNotes,
     });
+
+    // 🔔 Toast
+    if (date) {
+      toast.success("Deadline set for this topic");
+    } else {
+      toast("Deadline removed for this topic", {
+        icon: "📅",
+        style: {
+          background: "#020617",
+          color: "#e5e7eb",
+        },
+      });
+    }
   };
 
   /* ======================= NOTES ======================= */
@@ -4667,8 +4714,20 @@ export default function Syllabus({
       updateDashboard({
         syllabus_notes: updatedNotes,
       });
+
+      if (!Object.keys(updatedNotes || {}).length) {
+        toast("All notes cleared", {
+          icon: "🗑️",
+          style: {
+            background: "#020617",
+            color: "#e5e7eb",
+          },
+        });
+      } else {
+        toast.success("Notes updated");
+      }
     },
-    [nr, updateDashboard],
+    [nr, updateDashboard]
   );
 
   /* ======================= EXPORT ======================= */
