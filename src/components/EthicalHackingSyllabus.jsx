@@ -3,163 +3,1242 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
 
 /* ======= ETHICAL HACKING SYLLABUS TREE ======= */
 const HACKING_TREE = {
-  "Module 1 - Foundations": {
+  "Episode 1 - Foundation": {
     "1. Introduction to Ethical Hacking": [
-      { title: "What is Ethical Hacking and Why It Matters", done: false, completedOn: "", deadline: "" },
-      { title: "Types of Hackers: White Hat, Black Hat, Grey Hat", done: false, completedOn: "", deadline: "" },
-      { title: "Legal and Ethical Considerations in Pentesting", done: false, completedOn: "", deadline: "" },
-      { title: "Career Paths and Certifications (CEH, OSCP, etc.)", done: false, completedOn: "", deadline: "" },
-      { title: "Setting Up Your Hacking Lab Environment", done: false, completedOn: "", deadline: "" },
+      {
+        title: "What is Ethical Hacking and Why it's Important",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Difference between Ethical Hacking, Black Hat, White Hat, and Grey Hat",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Career Opportunities in Cybersecurity and Ethical Hacking",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Legal and Ethical Considerations in Hacking",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Understanding Information Security CIA Triad (Confidentiality, Integrity, Availability)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Types of Cyber Attacks and Threat Landscape",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Phases of Ethical Hacking (Reconnaissance, Scanning, Gaining Access, Maintaining Access, Covering Tracks)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. Networking Fundamentals": [
-      { title: "OSI Model and TCP/IP Stack Deep Dive", done: false, completedOn: "", deadline: "" },
-      { title: "IP Addressing, Subnetting, and CIDR Notation", done: false, completedOn: "", deadline: "" },
-      { title: "Common Network Protocols (HTTP, FTP, SSH, DNS, SMTP)", done: false, completedOn: "", deadline: "" },
-      { title: "Network Devices: Routers, Switches, Firewalls", done: false, completedOn: "", deadline: "" },
-      { title: "Understanding Ports and Services", done: false, completedOn: "", deadline: "" },
+    "2. Computer Networking Fundamentals": [
+      {
+        title: "Understanding OSI and TCP/IP Models",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "IP Addressing (IPv4, IPv6, Subnetting, CIDR)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Network Protocols (HTTP, HTTPS, FTP, SSH, DNS, DHCP, SMTP, POP3)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Understanding Ports and Common Port Numbers",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Routers, Switches, Firewalls, and Network Devices",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Network Topologies and Architectures",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Understanding VPNs, Proxies, and Tor",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "3. Linux for Hackers": [
-      { title: "Linux File System Structure and Navigation", done: false, completedOn: "", deadline: "" },
-      { title: "Essential Linux Commands (ls, cd, grep, find, etc.)", done: false, completedOn: "", deadline: "" },
-      { title: "File Permissions and User Management", done: false, completedOn: "", deadline: "" },
-      { title: "Package Management (apt, yum, pacman)", done: false, completedOn: "", deadline: "" },
-      { title: "Bash Scripting for Automation", done: false, completedOn: "", deadline: "" },
-      { title: "Setting Up Kali Linux and Essential Tools", done: false, completedOn: "", deadline: "" },
+    "3. Linux Operating System for Hackers": [
+      {
+        title: "Introduction to Linux and Why Hackers Use It",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Installing Kali Linux or Parrot OS (Virtual Machine Setup)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Linux File System Structure and Navigation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Essential Linux Commands (ls, cd, pwd, cat, grep, find, chmod, chown)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "File Permissions and User Management",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Linux Package Management (apt, apt-get, dpkg)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Text Editors (nano, vim)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Bash Scripting Basics for Automation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "4. Python Programming for Ethical Hackers": [
+      {
+        title: "Why Python for Cybersecurity",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Python Basics (Variables, Data Types, Operators)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Control Flow (if-else, loops, functions)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Working with Lists, Tuples, Dictionaries, and Sets",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "File Handling in Python",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Python Modules and Libraries (os, sys, socket, requests)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Building Simple Scripts (Port Scanner, Password Generator)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Exception Handling and Debugging",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
   },
-  "Module 2 - Reconnaissance": {
-    "1. Information Gathering Techniques": [
-      { title: "Passive vs Active Reconnaissance", done: false, completedOn: "", deadline: "" },
-      { title: "OSINT Framework and Methodology", done: false, completedOn: "", deadline: "" },
-      { title: "Google Dorking Advanced Techniques", done: false, completedOn: "", deadline: "" },
-      { title: "Social Engineering Fundamentals", done: false, completedOn: "", deadline: "" },
-      { title: "Harvesting Email Addresses and Metadata", done: false, completedOn: "", deadline: "" },
+  "Episode 2 - Reconnaissance & Scanning": {
+    "1. Footprinting and Reconnaissance": [
+      {
+        title: "Introduction to Information Gathering",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Passive Reconnaissance vs Active Reconnaissance",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "OSINT (Open Source Intelligence) Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Google Dorking and Advanced Search Operators",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "WHOIS Lookup and DNS Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using Tools - theHarvester, Maltego, Shodan, Recon-ng",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Social Media Intelligence Gathering",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Website Footprinting and Metadata Extraction",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. Footprinting and Scanning": [
-      { title: "DNS Enumeration with nslookup, dig, and dnsenum", done: false, completedOn: "", deadline: "" },
-      { title: "WHOIS Lookups and Domain Research", done: false, completedOn: "", deadline: "" },
-      { title: "Subdomain Discovery with Sublist3r and Amass", done: false, completedOn: "", deadline: "" },
-      { title: "Network Scanning with Nmap (TCP/SYN/UDP scans)", done: false, completedOn: "", deadline: "" },
-      { title: "Service Version Detection and OS Fingerprinting", done: false, completedOn: "", deadline: "" },
+    "2. Scanning Networks": [
+      {
+        title: "Network Scanning Techniques and Methodologies",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Port Scanning (TCP Connect, SYN, UDP, FIN, Xmas)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Mastering Nmap - Port Scanning and Service Detection",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "OS Fingerprinting and Banner Grabbing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Network Discovery and Host Detection",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Vulnerability Scanning with Nessus and OpenVAS",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Firewall and IDS Evasion Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "3. Enumeration": [
+      {
+        title: "What is Enumeration and Its Importance",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "NetBIOS Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "SNMP Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "LDAP and Active Directory Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "SMB and RPC Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "DNS Zone Transfer and Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using Enum4linux, SMBMap, and RPCClient",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "4. Vulnerability Analysis": [
+      {
+        title: "Understanding Vulnerabilities and CVEs",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "CVSS Scoring System",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Common Vulnerability Databases (NVD, Exploit-DB)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Automated Vulnerability Scanning",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Manual Vulnerability Assessment",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Analyzing Scan Results and Prioritizing Risks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
   },
-  "Module 3 - Vulnerability Assessment": {
-    "1. Vulnerability Scanning": [
-      { title: "Using Nessus for Vulnerability Assessment", done: false, completedOn: "", deadline: "" },
-      { title: "OpenVAS Setup and Configuration", done: false, completedOn: "", deadline: "" },
-      { title: "Understanding CVE Database and Exploit-DB", done: false, completedOn: "", deadline: "" },
-      { title: "CVSS Scoring and Risk Prioritization", done: false, completedOn: "", deadline: "" },
+  "Episode 3 - Exploitation & Post-Exploitation": {
+    "1. System Hacking": [
+      {
+        title:
+          "Password Cracking Techniques (Dictionary, Brute Force, Rainbow Tables)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using John the Ripper and Hashcat",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Privilege Escalation (Vertical and Horizontal)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Exploiting Misconfigurations",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Windows Exploitation Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Linux Exploitation Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Clearing Logs and Covering Tracks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. Service Enumeration": [
-      { title: "SMB/NetBIOS Enumeration with enum4linux", done: false, completedOn: "", deadline: "" },
-      { title: "SNMP Enumeration and Community Strings", done: false, completedOn: "", deadline: "" },
-      { title: "LDAP Enumeration and Active Directory Basics", done: false, completedOn: "", deadline: "" },
-      { title: "FTP, SSH, and Telnet Service Exploitation", done: false, completedOn: "", deadline: "" },
+    "2. Malware and Trojans": [
+      {
+        title:
+          "Understanding Malware Types (Virus, Worm, Trojan, Ransomware, Spyware)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "How Malware Works and Infection Vectors",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Creating Payloads with Metasploit (msfvenom)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Backdoors and Remote Access Trojans (RATs)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Malware Analysis Basics (Static and Dynamic)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Anti-Virus Evasion Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "3. Metasploit Framework": [
+      {
+        title: "Introduction to Metasploit Framework",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Metasploit Architecture (Exploits, Payloads, Auxiliaries, Encoders)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using msfconsole and Basic Commands",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Searching and Selecting Exploits",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Payload Generation and Delivery",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Post-Exploitation with Meterpreter",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Privilege Escalation and Persistence",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Pivoting and Lateral Movement",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "4. Social Engineering": [
+      {
+        title: "Understanding Social Engineering Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Phishing, Spear Phishing, and Whaling",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Pretexting, Baiting, and Tailgating",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Creating Fake Login Pages",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using Social Engineering Toolkit (SET)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Human Psychology in Security",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "5. Sniffing and Man-in-the-Middle Attacks": [
+      {
+        title: "Understanding Network Sniffing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Packet Analysis with Wireshark",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "ARP Spoofing and ARP Poisoning",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Man-in-the-Middle (MITM) Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "DNS Spoofing and Cache Poisoning",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using Ettercap and Bettercap",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "SSL Stripping Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
   },
-  "Module 4 - Web Application Hacking": {
-    "1. Web Application Architecture": [
-      { title: "Understanding Client-Server Model", done: false, completedOn: "", deadline: "" },
-      { title: "HTTP Methods, Headers, and Status Codes", done: false, completedOn: "", deadline: "" },
-      { title: "Cookies, Sessions, and Authentication Mechanisms", done: false, completedOn: "", deadline: "" },
-      { title: "Same-Origin Policy and CORS", done: false, completedOn: "", deadline: "" },
+  "Episode 4 - Web & Application Hacking": {
+    "1. Web Application Security Fundamentals": [
+      {
+        title: "How Web Applications Work (Client-Server Architecture)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Understanding HTTP/HTTPS Protocols",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Cookies, Sessions, and Authentication Mechanisms",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "OWASP Top 10 Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Web Application Security Testing Methodology",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. OWASP Top 10 Vulnerabilities": [
-      { title: "SQL Injection: Detection and Exploitation", done: false, completedOn: "", deadline: "" },
-      { title: "Cross-Site Scripting (XSS): Reflected, Stored, DOM", done: false, completedOn: "", deadline: "" },
-      { title: "Cross-Site Request Forgery (CSRF)", done: false, completedOn: "", deadline: "" },
-      { title: "Broken Authentication and Session Management", done: false, completedOn: "", deadline: "" },
-      { title: "Sensitive Data Exposure", done: false, completedOn: "", deadline: "" },
-      { title: "XML External Entities (XXE)", done: false, completedOn: "", deadline: "" },
-      { title: "Broken Access Control", done: false, completedOn: "", deadline: "" },
-      { title: "Security Misconfiguration", done: false, completedOn: "", deadline: "" },
-      { title: "Using Components with Known Vulnerabilities", done: false, completedOn: "", deadline: "" },
-      { title: "Insufficient Logging and Monitoring", done: false, completedOn: "", deadline: "" },
+    "2. SQL Injection": [
+      {
+        title: "Understanding SQL and Database Basics",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Types of SQL Injection (In-band, Blind, Out-of-band)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Detecting SQL Injection Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Manual SQL Injection Exploitation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using SQLMap for Automated Exploitation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "SQL Injection Prevention and Mitigation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "3. Web Testing Tools": [
-      { title: "Burp Suite: Proxy, Repeater, Intruder", done: false, completedOn: "", deadline: "" },
-      { title: "OWASP ZAP for Automated Scanning", done: false, completedOn: "", deadline: "" },
-      { title: "SQLMap for SQL Injection Automation", done: false, completedOn: "", deadline: "" },
-      { title: "Nikto Web Server Scanner", done: false, completedOn: "", deadline: "" },
-      { title: "Manual Testing with cURL and Postman", done: false, completedOn: "", deadline: "" },
+    "3. Cross-Site Scripting (XSS)": [
+      {
+        title: "Understanding XSS Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Types of XSS (Reflected, Stored, DOM-based)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Identifying XSS Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Crafting XSS Payloads",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Cookie Stealing and Session Hijacking via XSS",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "XSS Prevention Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "4. Other Web Vulnerabilities": [
+      {
+        title: "Cross-Site Request Forgery (CSRF)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Insecure Direct Object References (IDOR)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Local File Inclusion (LFI) and Remote File Inclusion (RFI)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Command Injection and OS Command Execution",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "XML External Entity (XXE) Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Server-Side Request Forgery (SSRF)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Broken Authentication and Session Management",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "5. Web Application Testing Tools": [
+      {
+        title:
+          "Burp Suite - Complete Guide (Proxy, Repeater, Intruder, Scanner)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "OWASP ZAP (Zed Attack Proxy)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Nikto Web Server Scanner",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "DirBuster and Gobuster for Directory Enumeration",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Browser Developer Tools for Security Testing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "6. API Security Testing": [
+      {
+        title: "Understanding REST APIs and GraphQL",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "API Authentication Mechanisms (JWT, OAuth, API Keys)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Common API Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Testing APIs with Postman and Burp Suite",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "API Fuzzing and Rate Limiting Bypass",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
   },
-  "Module 5 - System Hacking": {
-    "1. Password Attacks": [
-      { title: "Understanding Password Hash Types (MD5, SHA, NTLM)", done: false, completedOn: "", deadline: "" },
-      { title: "Dictionary Attacks with Wordlists", done: false, completedOn: "", deadline: "" },
-      { title: "Brute Force Attacks: Techniques and Tools", done: false, completedOn: "", deadline: "" },
-      { title: "Rainbow Tables and Hash Cracking", done: false, completedOn: "", deadline: "" },
-      { title: "John the Ripper and Hashcat Mastery", done: false, completedOn: "", deadline: "" },
-      { title: "Password Spraying in Active Directory", done: false, completedOn: "", deadline: "" },
+  "Episode 5 - Advanced Topics & Specializations": {
+    "1. Wireless Network Hacking": [
+      {
+        title: "Understanding Wireless Network Security (WEP, WPA, WPA2, WPA3)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Wireless Reconnaissance and Network Discovery",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Cracking WEP and WPA/WPA2 Passwords",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Evil Twin and Rogue Access Point Attacks",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using Aircrack-ng Suite",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Wireless Packet Sniffing and Analysis",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Bluetooth Hacking Basics",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. Exploitation Techniques": [
-      { title: "Metasploit Framework: Basics to Advanced", done: false, completedOn: "", deadline: "" },
-      { title: "Exploit Development Fundamentals", done: false, completedOn: "", deadline: "" },
-      { title: "Buffer Overflow Attacks (Stack and Heap)", done: false, completedOn: "", deadline: "" },
-      { title: "Privilege Escalation: Windows and Linux", done: false, completedOn: "", deadline: "" },
-      { title: "Exploiting Misconfigurations and Weak Permissions", done: false, completedOn: "", deadline: "" },
+    "2. Mobile Application Security": [
+      {
+        title: "Introduction to Mobile Security (Android and iOS)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Android Security Architecture",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Setting Up Android Testing Environment (ADB, Emulators)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Reverse Engineering Android APKs",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Common Mobile Vulnerabilities (OWASP Mobile Top 10)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Mobile Application Penetration Testing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Using MobSF and Drozer",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "3. Post-Exploitation": [
-      { title: "Maintaining Persistent Access (Backdoors)", done: false, completedOn: "", deadline: "" },
-      { title: "Covering Tracks and Log Manipulation", done: false, completedOn: "", deadline: "" },
-      { title: "Data Exfiltration Techniques", done: false, completedOn: "", deadline: "" },
-      { title: "Pivoting and Lateral Movement", done: false, completedOn: "", deadline: "" },
-      { title: "Credential Dumping (Mimikatz, etc.)", done: false, completedOn: "", deadline: "" },
+    "3. Cloud Security": [
+      {
+        title: "Introduction to Cloud Computing Security",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "AWS, Azure, and GCP Security Basics",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Cloud Security Misconfigurations",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "S3 Bucket Enumeration and Exploitation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "IAM (Identity and Access Management) Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Container Security (Docker, Kubernetes)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "4. IoT Security": [
+      {
+        title: "Introduction to IoT and Security Challenges",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "IoT Device Architecture and Communication Protocols",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Common IoT Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Firmware Analysis and Reverse Engineering",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "IoT Penetration Testing Methodology",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "5. Cryptography for Ethical Hackers": [
+      {
+        title: "Introduction to Cryptography",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Symmetric vs Asymmetric Encryption",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Understanding Hash Functions (MD5, SHA, bcrypt)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Public Key Infrastructure (PKI) and Digital Certificates",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "SSL/TLS and HTTPS Security",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Cryptographic Attacks (Rainbow Tables, Birthday Attack)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Implementing Encryption in Python",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+    ],
+    "6. Security Evasion Techniques": [
+      {
+        title: "Evading IDS/IPS Systems",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Bypassing Firewalls and Network Filters",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Understanding Honeypots and How to Detect Them",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Anti-Forensics Techniques",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Obfuscation and Packing",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
   },
-  "Module 6 - Wireless Hacking": {
-    "1. Wireless Standards and Security": [
-      { title: "Wi-Fi Protocols (WEP, WPA, WPA2, WPA3)", done: false, completedOn: "", deadline: "" },
-      { title: "Bluetooth Security and Attacks", done: false, completedOn: "", deadline: "" },
-      { title: "RFID and NFC Security", done: false, completedOn: "", deadline: "" },
+  "Episode 6 - Professional Skills & Career": {
+    "1. Penetration Testing Methodology": [
+      {
+        title: "Understanding Penetration Testing Lifecycle",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Types of Penetration Testing (Black Box, White Box, Grey Box)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Rules of Engagement and Scoping",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Writing Professional Penetration Testing Reports",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Risk Assessment and CVSS Scoring",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Remediation Recommendations",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. Wireless Network Attacks": [
-      { title: "Packet Sniffing with Wireshark", done: false, completedOn: "", deadline: "" },
-      { title: "Evil Twin and Rogue Access Point Attacks", done: false, completedOn: "", deadline: "" },
-      { title: "WPA/WPA2 Cracking with Aircrack-ng Suite", done: false, completedOn: "", deadline: "" },
-      { title: "Deauthentication and Disassociation Attacks", done: false, completedOn: "", deadline: "" },
-      { title: "WPS PIN Cracking with Reaver", done: false, completedOn: "", deadline: "" },
+    "2. Bug Bounty Hunting": [
+      {
+        title: "Introduction to Bug Bounty Programs",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Popular Bug Bounty Platforms (HackerOne, Bugcrowd, Synack)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Reconnaissance for Bug Bounties",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Finding and Exploiting Vulnerabilities",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Writing Effective Bug Reports",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Building Your Bug Bounty Reputation",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-  },
-  "Module 7 - Malware Analysis": {
-    "1. Malware Types and Behavior": [
-      { title: "Viruses, Worms, and Trojans", done: false, completedOn: "", deadline: "" },
-      { title: "Ransomware and Cryptojacking", done: false, completedOn: "", deadline: "" },
-      { title: "Rootkits and Bootkits", done: false, completedOn: "", deadline: "" },
-      { title: "Spyware, Adware, and PUPs", done: false, completedOn: "", deadline: "" },
+    "3. Capture The Flag (CTF) Challenges": [
+      {
+        title: "What are CTF Competitions",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Types of CTF Challenges (Jeopardy, Attack-Defense)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Practicing on TryHackMe, HackTheBox, PentesterLab",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title:
+          "Common CTF Categories (Web, Binary, Crypto, Forensics, Reversing)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Building CTF Problem-Solving Skills",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-    "2. Reverse Engineering": [
-      { title: "Static Analysis with IDA Pro and Ghidra", done: false, completedOn: "", deadline: "" },
-      { title: "Dynamic Analysis with Debuggers (x64dbg, OllyDbg)", done: false, completedOn: "", deadline: "" },
-      { title: "Assembly Language Basics (x86/x64)", done: false, completedOn: "", deadline: "" },
-      { title: "Malware Behavior Analysis in Sandbox", done: false, completedOn: "", deadline: "" },
-      { title: "Identifying Indicators of Compromise (IOCs)", done: false, completedOn: "", deadline: "" },
+    "4. Certifications and Career Path": [
+      {
+        title: "CompTIA Security+ Certification",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Certified Ethical Hacker (CEH) Certification",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Offensive Security Certified Professional (OSCP)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "CISSP - Certified Information Systems Security Professional",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "eJPT and eCPPT Certifications",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Career Paths in Cybersecurity",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Building Your Cybersecurity Portfolio",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
-  },
-  "Module 8 - Advanced Topics": {
-    "1. Cryptography": [
-      { title: "Symmetric vs Asymmetric Encryption", done: false, completedOn: "", deadline: "" },
-      { title: "Hashing Algorithms (MD5, SHA, bcrypt, Argon2)", done: false, completedOn: "", deadline: "" },
-      { title: "Public Key Infrastructure (PKI)", done: false, completedOn: "", deadline: "" },
-      { title: "SSL/TLS Handshake and Certificate Analysis", done: false, completedOn: "", deadline: "" },
-      { title: "Cryptographic Attacks (Birthday, Rainbow Tables)", done: false, completedOn: "", deadline: "" },
-    ],
-    "2. Cloud Security": [
-      { title: "Cloud Service Models (IaaS, PaaS, SaaS)", done: false, completedOn: "", deadline: "" },
-      { title: "AWS Security Best Practices and IAM", done: false, completedOn: "", deadline: "" },
-      { title: "Azure Security Center and Policies", done: false, completedOn: "", deadline: "" },
-      { title: "Container Security (Docker, Kubernetes)", done: false, completedOn: "", deadline: "" },
-      { title: "Cloud Penetration Testing Methodology", done: false, completedOn: "", deadline: "" },
-    ],
-    "3. Mobile Security": [
-      { title: "Android Security Architecture", done: false, completedOn: "", deadline: "" },
-      { title: "iOS Security Model and Jailbreaking", done: false, completedOn: "", deadline: "" },
-      { title: "Mobile App Penetration Testing", done: false, completedOn: "", deadline: "" },
-      { title: "Analyzing APKs with jadx and apktool", done: false, completedOn: "", deadline: "" },
+    "5. Continuous Learning and Community": [
+      {
+        title: "Staying Updated with Latest Vulnerabilities and Exploits",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Following Security Blogs and Researchers",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Joining Cybersecurity Communities and Forums",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Contributing to Open Source Security Projects",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
+      {
+        title: "Attending Security Conferences (DEF CON, Black Hat)",
+        done: false,
+        completedOn: "",
+        deadline: "",
+      },
     ],
   },
 };
@@ -176,12 +1255,16 @@ const todayISO = () => {
 const pathKey = (p) => p.join("__");
 
 /* ======================= MAIN COMPONENT ======================= */
-export default function EthicalHackingSyllabus({ dashboardState, updateDashboard }) {
+export default function EthicalHackingSyllabus({
+  dashboardState,
+  updateDashboard,
+}) {
   const [query, setQuery] = useState("");
   const [openModules, setOpenModules] = useState({});
   const [openSections, setOpenSections] = useState({});
   const [showDeadlinePicker, setShowDeadlinePicker] = useState(null);
-  const [showSectionDeadlinePicker, setShowSectionDeadlinePicker] = useState(null); // NEW: Section deadline
+  const [showSectionDeadlinePicker, setShowSectionDeadlinePicker] =
+    useState(null); // NEW: Section deadline
   const [studyTime, setStudyTime] = useState(120);
   const [suggestions, setSuggestions] = useState([]);
 
@@ -191,42 +1274,60 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
   const lastStudied = dashboardState?.ethical_hacking_lastStudied || "";
 
   const daySet = useMemo(() => new Set(streak), [streak]);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // Calculate grand statistics
+  // Calculate grand statistics
+  // Calculate grand statistics
   const grand = useMemo(() => {
-    let total = 0, done = 0, totalTime = 0;
-    const traverse = (node) => {
-      if (Array.isArray(node)) {
-        node.forEach(it => {
-          total++;
-          if (it.done) done++;
-          totalTime += 2.5;
+    let total = 0,
+      done = 0,
+      totalTime = 0;
+
+    // Directly iterate through the structure
+    Object.values(tree).forEach((module) => {
+      if (module && typeof module === "object") {
+        Object.values(module).forEach((section) => {
+          if (Array.isArray(section)) {
+            section.forEach((topic) => {
+              total++;
+              if (topic.done) {
+                done++;
+                totalTime += 2.5;
+              }
+            });
+          }
         });
-      } else if (typeof node === "object") {
-        Object.values(node).forEach(traverse);
       }
+    });
+
+    return {
+      total,
+      done,
+      pct: total ? Math.round((done / total) * 100) : 0,
+      totalTime,
     };
-    traverse(tree);
-    return { total, done, pct: total ? Math.round((done / total) * 100) : 0, totalTime };
   }, [tree]);
 
   // Calculate module statistics
   const moduleStats = useMemo(() => {
     const stats = {};
     Object.entries(tree).forEach(([moduleKey, sections]) => {
-      let total = 0, done = 0, totalTime = 0;
-      Object.values(sections).forEach(items => {
-        items.forEach(it => {
+      let total = 0,
+        done = 0,
+        totalTime = 0;
+      Object.values(sections).forEach((items) => {
+        items.forEach((it) => {
           total++;
           if (it.done) done++;
           totalTime += 2.5;
         });
       });
-      stats[moduleKey] = { 
-        total, 
-        done, 
+      stats[moduleKey] = {
+        total,
+        done,
         pct: total ? Math.round((done / total) * 100) : 0,
-        totalTime 
+        totalTime,
       };
     });
     return stats;
@@ -234,39 +1335,55 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
 
   // Get closest deadline topics
   const deadlineTopics = useMemo(() => {
-    const topics = [];
+    const topicsWithDeadline = [];
+    const topicsWithoutDeadline = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     Object.entries(tree).forEach(([moduleKey, sections]) => {
       Object.entries(sections).forEach(([secKey, items]) => {
         items.forEach((item, idx) => {
-          if (item.deadline && !item.done) {
-            const deadlineDate = new Date(item.deadline);
-            deadlineDate.setHours(0, 0, 0, 0);
-            const daysLeft = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
-
-            topics.push({
+          if (!item.done) {
+            const topicData = {
               title: item.title,
-              deadline: item.deadline,
+              deadline: item.deadline || null,
               path: [moduleKey, secKey],
               idx,
-              daysLeft,
               module: moduleKey,
-              section: secKey
-            });
+              section: secKey,
+            };
+
+            if (item.deadline) {
+              const deadlineDate = new Date(item.deadline);
+              deadlineDate.setHours(0, 0, 0, 0);
+              const daysLeft = Math.ceil(
+                (deadlineDate - today) / (1000 * 60 * 60 * 24),
+              );
+              topicData.daysLeft = daysLeft;
+              topicsWithDeadline.push(topicData); // ✅ Fixed: was wrong before
+            } else {
+              topicsWithoutDeadline.push(topicData); // ✅ Fixed: was wrong before
+            }
           }
         });
       });
     });
 
-    return topics.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 6);
+    // Sort topics with deadlines by date
+    topicsWithDeadline.sort(
+      (a, b) => new Date(a.deadline) - new Date(b.deadline),
+    );
+
+    // Combine: deadline topics first, then topics without deadlines
+    const allTopics = [...topicsWithDeadline, ...topicsWithoutDeadline];
+
+    return allTopics.slice(0, 6);
   }, [tree]);
 
   // Generate AI suggestions
   const generateSuggestions = useCallback(() => {
     const allTopics = [];
-    const topicsPerHour = 60 / 2.5;
+    const topicsPerHour = 60 / 30;
     const maxTopics = Math.floor((studyTime / 60) * topicsPerHour);
 
     Object.entries(tree).forEach(([moduleKey, sections]) => {
@@ -278,7 +1395,9 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
             if (item.deadline) {
               const deadlineDate = new Date(item.deadline);
               const today = new Date();
-              const daysLeft = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+              const daysLeft = Math.ceil(
+                (deadlineDate - today) / (1000 * 60 * 60 * 24),
+              );
 
               if (daysLeft < 0) priority += 200;
               else if (daysLeft === 0) priority += 150;
@@ -297,7 +1416,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
               idx,
               priority,
               deadline: item.deadline || null,
-              estimatedTime: 2.5
+              estimatedTime: 30,
             });
           }
         });
@@ -311,26 +1430,26 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
 
   // Jump to topic
   const jumpToTopic = useCallback((topic) => {
-    setOpenModules(prev => ({ ...prev, [topic.module]: true }));
+    setOpenModules((prev) => ({ ...prev, [topic.module]: true }));
     const sectionKey = pathKey(topic.path);
-    setOpenSections(prev => ({ ...prev, [sectionKey]: true }));
+    setOpenSections((prev) => ({ ...prev, [sectionKey]: true }));
 
     setTimeout(() => {
       const element = document.getElementById(sectionKey);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }, 100);
   }, []);
 
   // Toggle functions
   const toggleModule = (moduleKey) => {
-    setOpenModules(prev => ({ ...prev, [moduleKey]: !prev[moduleKey] }));
+    setOpenModules((prev) => ({ ...prev, [moduleKey]: !prev[moduleKey] }));
   };
 
   const toggleSection = (path) => {
     const key = pathKey(path);
-    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   // Mark task
@@ -346,11 +1465,53 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
     item.completedOn = val ? todayISO() : "";
 
     const updates = { ethical_hacking_syllabus: updatedTree };
+
     if (val) {
       updates.ethical_hacking_lastStudied = `${item.title} @ ${new Date().toLocaleString("en-IN")}`;
-      updates.ethical_hacking_streak = Array.from(new Set([...daySet, todayISO()]));
+      updates.ethical_hacking_streak = Array.from(
+        new Set([...daySet, todayISO()]),
+      );
+    } else {
+      // Unmarking - find the most recent completed topic
+      let mostRecentTopic = null;
+      let mostRecentDate = null;
+
+      Object.entries(updatedTree).forEach(([moduleKey, sections]) => {
+        if (sections && typeof sections === "object") {
+          Object.entries(sections).forEach(([secKey, items]) => {
+            if (Array.isArray(items)) {
+              items.forEach((topic) => {
+                if (topic.done && topic.completedOn) {
+                  const topicDate = new Date(topic.completedOn);
+                  if (!mostRecentDate || topicDate > mostRecentDate) {
+                    mostRecentDate = topicDate;
+                    mostRecentTopic = topic.title;
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (mostRecentTopic) {
+        updates.ethical_hacking_lastStudied = `${mostRecentTopic} @ ${mostRecentDate.toLocaleString("en-IN")}`;
+      } else {
+        updates.ethical_hacking_lastStudied = "";
+      }
     }
+
     updateDashboard(updates);
+    // Add toast notifications
+    if (val) {
+      toast.success(`✅ ${item.title}`);
+    } else {
+      if (mostRecentTopic) {
+        toast.info(`↩️ Unmarked`);
+      } else {
+        toast.info(`↩️ Unmarked`);
+      }
+    }
   };
 
   // Mark all in section
@@ -362,14 +1523,16 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
     const items = parent?.[leafKey];
     if (!items) return;
 
-    items.forEach(item => {
+    items.forEach((item) => {
       item.done = val;
       item.completedOn = val ? todayISO() : "";
     });
 
     const updates = { ethical_hacking_syllabus: updatedTree };
     if (val) {
-      updates.ethical_hacking_streak = Array.from(new Set([...daySet, todayISO()]));
+      updates.ethical_hacking_streak = Array.from(
+        new Set([...daySet, todayISO()]),
+      );
     }
     updateDashboard(updates);
   };
@@ -383,7 +1546,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
     const item = parent?.[leafKey]?.[idx];
     if (!item) return;
 
-    item.deadline = date ? date.toISOString().split('T')[0] : "";
+    item.deadline = date ? date.toISOString().split("T")[0] : "";
     updateDashboard({ ethical_hacking_syllabus: updatedTree });
     setShowDeadlinePicker(null);
   };
@@ -397,21 +1560,26 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
     const items = parent?.[leafKey];
     if (!items) return;
 
-    const dateString = date ? date.toISOString().split('T')[0] : "";
-    items.forEach(item => {
+    const dateString = date ? date.toISOString().split("T")[0] : "";
+    items.forEach((item) => {
       item.deadline = dateString;
     });
 
     updateDashboard({ ethical_hacking_syllabus: updatedTree });
     setShowSectionDeadlinePicker(null);
+    if (date) {
+      toast.success(`📅 Deadline set for ${items.length} topics!`);
+    } else {
+      toast.info(`🗑️ Deadlines removed`);
+    }
   };
 
   // Expand/Collapse All
   const expandAll = () => {
     const allOpen = {};
-    Object.keys(tree).forEach(moduleKey => {
+    Object.keys(tree).forEach((moduleKey) => {
       allOpen[moduleKey] = true;
-      Object.keys(tree[moduleKey]).forEach(secKey => {
+      Object.keys(tree[moduleKey]).forEach((secKey) => {
         allOpen[pathKey([moduleKey, secKey])] = true;
       });
     });
@@ -430,9 +1598,11 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
       tree,
       streak,
       lastStudied,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -460,6 +1630,96 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
       }
     };
     reader.readAsText(file);
+  };
+
+  // Reset Confirmation Modal
+  const ResetModal = () => {
+    if (!showResetModal) return null;
+
+    return createPortal(
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={() => setShowResetModal(false)}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 rounded-2xl border border-red-700/40 shadow-2xl shadow-red-500/20 max-w-md w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Warning Icon */}
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h3 className="text-xl font-bold text-center bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent mb-2">
+            Reset ALL Progress?
+          </h3>
+          <p className="text-sm text-slate-400 text-center mb-6">
+            This will permanently delete all your progress, deadlines, and
+            completion dates. This action{" "}
+            <span className="text-red-400 font-semibold">
+              cannot be undone!
+            </span>
+          </p>
+
+          {/* Stats to be lost */}
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+            <div className="text-xs text-red-300 mb-2">You will lose:</div>
+            <div className="space-y-1 text-sm text-slate-300">
+              <div>• {grand.done} completed topics</div>
+              <div>• {streak.length} day streak</div>
+              <div>• All deadlines and dates</div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                updateDashboard({
+                  ethical_hacking_syllabus: structuredClone(HACKING_TREE),
+                  ethical_hacking_streak: [],
+                  ethical_hacking_lastStudied: "",
+                });
+                setShowResetModal(false);
+                toast.success("Progress reset successfully");
+              }}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+            >
+              Yes, Reset Everything
+            </button>
+            <button
+              onClick={() => setShowResetModal(false)}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-all duration-200"
+            >
+              Cancel
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>,
+      document.body,
+    );
   };
 
   return (
@@ -505,19 +1765,12 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                 Collapse
               </button>
               <button
-                onClick={() => {
-                  if (!confirm("⚠️ Reset ALL progress? This cannot be undone!"))
-                    return;
-                  updateDashboard({
-                    ethical_hacking_syllabus: structuredClone(HACKING_TREE),
-                    ethical_hacking_streak: [],
-                    ethical_hacking_lastStudied: "",
-                  });
-                }}
+                onClick={() => setShowResetModal(true)}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 border border-red-400/50 transition"
               >
-                Reset
+                🔄 Reset
               </button>
+
               <button
                 onClick={exportProgress}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 border border-slate-600 transition"
@@ -593,7 +1846,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
       <div className="max-w-[1800px] mx-auto px-6 py-6">
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* LEFT SIDE - Syllabus Content */}
-          <div className="space-y-4 w-full sm:w-[1200px]">
+          <div className="space-y-4 w-full lg:w-[60%]">
             {Object.entries(tree).map(([moduleKey, sections]) => {
               const stats = moduleStats[moduleKey];
               const isModuleOpen = openModules[moduleKey];
@@ -625,7 +1878,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                       </button>
                       <div className="flex items-center gap-4 text-sm">
                         <span className="text-slate-400">
-                          {stats.done}/{stats.total} • {stats.pct}% • ≈
+                          {stats.done}/{stats.total} • {stats.pct}% • �
                           {stats.totalTime.toFixed(1)}h
                         </span>
                       </div>
@@ -655,7 +1908,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                             const sectionKey = pathKey(path);
                             const isSectionOpen = openSections[sectionKey];
                             const secDone = items.filter(
-                              (it) => it.done
+                              (it) => it.done,
                             ).length;
                             const secTotal = items.length;
                             const secPct = secTotal
@@ -667,7 +1920,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                               <div
                                 key={secKey}
                                 id={sectionKey}
-                                className="rounded-xl bg-slate-900/50 border border-slate-700/50 overflow-hidden"
+                                className="rounded-xl bg-slate-900/50 border border-slate-700/50 overflow-hidden "
                               >
                                 {/* Section Header */}
                                 <div className="p-3 flex items-center justify-between hover:bg-slate-800/50 transition">
@@ -696,7 +1949,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                       onClick={() =>
                                         markAllSection(
                                           path,
-                                          secDone !== secTotal
+                                          secDone !== secTotal,
                                         )
                                       }
                                       className="px-2 py-1 rounded text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 transition"
@@ -706,66 +1959,156 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                         : "Mark all"}
                                     </button>
                                     {/* NEW: Section Deadline Button */}
-                                    <button
-                                      onClick={() =>
-                                        setShowSectionDeadlinePicker(sectionKey)
-                                      }
-                                      className="px-2 py-1 rounded text-xs bg-slate-700 hover:bg-slate-600 border border-slate-600 transition"
-                                    >
-                                      📅 Deadline
-                                    </button>
+                                    {/* NEW: Section Deadline Button */}
+                                    {(() => {
+                                      const sectionHasDeadline = items.some(
+                                        (item) => item.deadline,
+                                      );
+                                      const earliestDeadline =
+                                        sectionHasDeadline
+                                          ? items
+                                              .filter((item) => item.deadline)
+                                              .map(
+                                                (item) =>
+                                                  new Date(item.deadline),
+                                              )
+                                              .sort((a, b) => a - b)[0]
+                                          : null;
+
+                                      return (
+                                        <button
+                                          onClick={() =>
+                                            setShowSectionDeadlinePicker(
+                                              sectionKey,
+                                            )
+                                          }
+                                          className={`px-2 py-1 rounded text-xs border transition ${
+                                            sectionHasDeadline
+                                              ? "bg-blue-950/50 text-blue-400 border-blue-800/30 hover:bg-blue-900/50"
+                                              : "bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-300"
+                                          }`}
+                                        >
+                                          📅{" "}
+                                          {sectionHasDeadline
+                                            ? earliestDeadline.toLocaleDateString(
+                                                "en-GB",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "short",
+                                                },
+                                              )
+                                            : "Set Deadline"}
+                                        </button>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
 
                                 {/* Section Deadline Picker Modal */}
                                 {showSectionDeadlinePicker === sectionKey &&
                                   createPortal(
-                                    <div
-                                      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                                    <motion.div
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                                       onClick={() =>
                                         setShowSectionDeadlinePicker(null)
                                       }
                                     >
-                                      <div
-                                        className="bg-slate-900 p-6 rounded-xl border border-red-800/30 shadow-2xl"
+                                      <motion.div
+                                        initial={{
+                                          scale: 0.9,
+                                          opacity: 0,
+                                          y: 20,
+                                        }}
+                                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                        transition={{
+                                          type: "spring",
+                                          damping: 25,
+                                          stiffness: 300,
+                                        }}
+                                        className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 rounded-2xl border
+                                        border-purple-700/40 shadow-2xl shadow-purple-500/20 w-fit flex flex-col
+                                        items-center"
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        <h3 className="text-lg font-bold text-slate-100 mb-3">
-                                          Set Deadline for All Topics
-                                        </h3>
-                                        <p className="text-sm text-slate-400 mb-4">
-                                          This will set the same deadline for
-                                          all {secTotal} topics in this section
-                                        </p>
-                                        <DatePicker
-                                          selected={null}
-                                          onChange={(date) =>
-                                            setSectionDeadline(path, date)
-                                          }
-                                          inline
-                                          minDate={new Date()}
-                                        />
-                                        <div className="mt-4 flex gap-2">
+                                        {/* Header */}
+                                        <div className="mb-4">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xl">📅</span>
+                                            <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                              Set Section Deadline
+                                            </h3>
+                                          </div>
+                                          <p className="text-xs text-slate-400">
+                                            Apply the same deadline to all{" "}
+                                            <span className="text-purple-400 font-semibold">
+                                              {secTotal} topics
+                                            </span>
+                                          </p>
+                                          <p className="text-xs text-slate-500 mt-0.5">
+                                            Section:{" "}
+                                            <span className="text-slate-300">
+                                              {secKey}
+                                            </span>
+                                          </p>
+                                        </div>
+
+                                        {/* DatePicker Container */}
+                                        <div
+                                          className="rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950/50 mb-4
+                                          flex  w-fit "
+                                        >
+                                          <DatePicker
+                                            selected={null}
+                                            onChange={(date) =>
+                                              setSectionDeadline(path, date)
+                                            }
+                                            inline
+                                            minDate={new Date()}
+                                            calendarClassName="dark"
+                                          />
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex gap-2 justify-evenly">
                                           <button
                                             onClick={() =>
                                               setSectionDeadline(path, null)
                                             }
-                                            className="flex-1 px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm transition"
+                                            className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500
+                                            hover:to-red-600 text-white text-xs font-medium transition-all duration-200 shadow-lg shadow-red-500/20
+                                            hover:shadow-red-500/40 flex items-center justify-center gap-1.5 whitespace-nowrap  py-2"
                                           >
-                                            ✕ Remove All Deadlines
+                                            <svg
+                                              className="w-3.5 h-3.5"
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M6 18L18 6M6 6l12 12"
+                                              />
+                                            </svg>
+                                            Remove All
                                           </button>
                                           <button
                                             onClick={() =>
                                               setShowSectionDeadlinePicker(null)
                                             }
-                                            className="flex-1 px-3 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm transition"
+                                            className="flex-1 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-all duration-200"
                                           >
                                             Cancel
                                           </button>
                                         </div>
-                                      </div>
-                                    </div>,
-                                    document.body
+                                      </motion.div>
+                                    </motion.div>,
+                                    document.body,
                                   )}
 
                                 {/* Topics */}
@@ -907,14 +2250,14 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                         COMPLETED:
                                                       </span>
                                                       {new Date(
-                                                        item.completedOn
+                                                        item.completedOn,
                                                       ).toLocaleDateString(
                                                         "en-GB",
                                                         {
                                                           day: "2-digit",
                                                           month: "short",
                                                           year: "numeric",
-                                                        }
+                                                        },
                                                       )}
                                                     </motion.span>
                                                   )}
@@ -949,14 +2292,14 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                         DEADLINE:
                                                       </span>
                                                       {new Date(
-                                                        item.deadline
+                                                        item.deadline,
                                                       ).toLocaleDateString(
                                                         "en-GB",
                                                         {
                                                           day: "2-digit",
                                                           month: "short",
                                                           year: "numeric",
-                                                        }
+                                                        },
                                                       )}
                                                     </motion.span>
                                                   )}
@@ -972,7 +2315,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                 onClick={(e) => {
                                                   e.stopPropagation();
                                                   setShowDeadlinePicker(
-                                                    `${sectionKey}__${idx}`
+                                                    `${sectionKey}__${idx}`,
                                                   );
                                                 }}
                                                 className={`p-2 rounded-lg transition-all duration-200 ${
@@ -1051,7 +2394,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                         selected={
                                                           item.deadline
                                                             ? new Date(
-                                                                item.deadline
+                                                                item.deadline,
                                                               )
                                                             : null
                                                         }
@@ -1059,7 +2402,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                           setDeadline(
                                                             path,
                                                             idx,
-                                                            date
+                                                            date,
                                                           )
                                                         }
                                                         inline
@@ -1074,7 +2417,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                           setDeadline(
                                                             path,
                                                             idx,
-                                                            null
+                                                            null,
                                                           )
                                                         }
                                                         className="flex-1 px-4 py-2.5 rounded-xl bg-red-600/10 hover:bg-red-600/20 border border-red-600/30 text-red-400 hover:text-red-300 text-sm font-medium transition-all duration-200"
@@ -1084,7 +2427,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                       <button
                                                         onClick={() =>
                                                           setShowDeadlinePicker(
-                                                            null
+                                                            null,
                                                           )
                                                         }
                                                         className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-all duration-200"
@@ -1094,7 +2437,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                                                     </div>
                                                   </motion.div>
                                                 </motion.div>,
-                                                document.body
+                                                document.body,
                                               )}
                                           </motion.div>
                                         ))}
@@ -1115,64 +2458,75 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
           </div>
 
           {/* RIGHT SIDE - Features */}
-          <div className="space-y-4 w-full lg:flex-[3] lg:max-w-[400px]">
+          <div className="space-y-4 w-full lg:w-[40%]">
             {/* Daily Auto Planner */}
-            <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 to-purple-950/30 border border-purple-800/30 p-5 shadow-xl">
-              <div className="flex items-center justify-between mb-4">
+            <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 to-purple-950/30 border border-purple-800/30 p-4 sm:p-5 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">📅</span>
                   <div>
-                    <h3 className="font-bold text-lg text-slate-100">
+                    <h3 className="font-bold text-base sm:text-lg text-slate-100">
                       Daily Auto Planner
                     </h3>
                     <p className="text-xs text-slate-400">
-                      Closest-deadline topics not yet done.
+                      Priority tasks & deadlines
                     </p>
                   </div>
                 </div>
-                <div className="px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
+                <div className="px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 self-start sm:self-auto">
                   <div className="text-xs text-purple-300">
                     {deadlineTopics.length} Tasks
-                  </div>
-                  <div className="text-sm font-bold text-purple-400">
-                    Sorted by deadline
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
                 {deadlineTopics.length > 0 ? (
                   deadlineTopics.map((topic, idx) => (
                     <div
                       key={idx}
                       onClick={() => jumpToTopic(topic)}
-                      className="p-3 rounded-lg bg-slate-900/70 border border-slate-700/50 hover:border-purple-500/50 transition cursor-pointer"
+                      className="p-1.5 rounded-lg bg-slate-900/70 border border-slate-700/50 hover:border-purple-500/50 hover:bg-slate-900/90 transition-all cursor-pointer group"
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-lg">📘</span>
-                        <div className="flex-1">
-                          <div className="text-sm text-slate-300">
+                        <span className="text-lg flex-shrink-0">📘</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-slate-300 group-hover:text-slate-100 transition-colors line-clamp-2 mb-2">
                             {topic.title}
                           </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs px-2 py-0.5 rounded bg-blue-950/50 text-blue-400 border border-blue-800/30">
-                              📅 {topic.deadline}
-                            </span>
-                            <span
-                              className={`text-xs px-2 py-0.5 rounded ${
-                                topic.daysLeft < 0
-                                  ? "bg-red-950/50 text-red-400 border border-red-800/30"
-                                  : topic.daysLeft === 0
-                                  ? "bg-orange-950/50 text-orange-400 border border-orange-800/30"
-                                  : "bg-emerald-950/50 text-emerald-400 border border-emerald-800/30"
-                              }`}
-                            >
-                              {topic.daysLeft < 0
-                                ? `${Math.abs(topic.daysLeft)}d overdue`
-                                : topic.daysLeft === 0
-                                ? "Due today"
-                                : `${topic.daysLeft}d left`}
-                            </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {topic.deadline ? (
+                              <>
+                                <span className="text-xs px-2 py-0.5 rounded bg-blue-950/50 text-blue-400 border border-blue-800/30 whitespace-nowrap">
+                                  📅{" "}
+                                  {new Date(topic.deadline).toLocaleDateString(
+                                    "en-GB",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    },
+                                  )}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-0.5 rounded whitespace-nowrap ${
+                                    topic.daysLeft < 0
+                                      ? "bg-red-950/50 text-red-400 border border-red-800/30"
+                                      : topic.daysLeft === 0
+                                        ? "bg-orange-950/50 text-orange-400 border border-orange-800/30"
+                                        : "bg-emerald-950/50 text-emerald-400 border border-emerald-800/30"
+                                  }`}
+                                >
+                                  {topic.daysLeft < 0
+                                    ? `${Math.abs(topic.daysLeft)}d overdue`
+                                    : topic.daysLeft === 0
+                                      ? "Due today"
+                                      : `${topic.daysLeft}d left`}
+                                </span>
+                              </>
+                            ) : (
+                              <span className=""></span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1181,9 +2535,9 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <div className="text-4xl mb-2">📭</div>
-                    <div className="text-sm">No deadlines set yet</div>
-                    <div className="text-xs mt-1">
-                      Click 📅 Deadline button to set
+                    <div className="text-sm">No tasks pending</div>
+                    <div className="text-xs mt-1 text-slate-600">
+                      Click 📅 Deadline button to set deadlines
                     </div>
                   </div>
                 )}
@@ -1223,7 +2577,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
                   max="1440"
                 />
                 <span className="text-xs text-slate-500">
-                  minutes (≈{Math.floor(studyTime / 2.5)} topics @ 2.5min each)
+                  minutes (≈{Math.floor(studyTime / 30)} topics @ 30min each)
                 </span>
 
                 <button
@@ -1278,6 +2632,7 @@ export default function EthicalHackingSyllabus({ dashboardState, updateDashboard
           </div>
         </div>
       </div>
+      <ResetModal />
     </div>
   );
 }
