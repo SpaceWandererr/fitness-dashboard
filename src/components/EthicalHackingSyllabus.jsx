@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 
 /* ======= ETHICAL HACKING SYLLABUS TREE ======= */
 const HACKING_TREE = {
-  "EP - 1 - Foundation": {
+  "EP - 1 Foundation": {
     "1. Introduction to Ethical Hacking": [
       {
         title: "What is Ethical Hacking and Why it's Important",
@@ -202,7 +202,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "EP - 2 - Reconnaissance & Scanning": {
+  "EP - 2 Reconnaissance & Scanning": {
     "1. Footprinting and Reconnaissance": [
       {
         title: "Introduction to Information Gathering",
@@ -380,7 +380,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "EP - 3 - Exploitation & Post-Exploitation": {
+  "EP - 3 Exploitation & Post-Exploitation": {
     "1. System Hacking": [
       {
         title:
@@ -599,7 +599,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "EP - 4 - Web & Application Hacking": {
+  "EP - 4 Web & Application Hacking": {
     "1. Web Application Security Fundamentals": [
       {
         title: "How Web Applications Work (Client-Server Architecture)",
@@ -818,7 +818,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "EP - 5 - Advanced Topics & Specializations": {
+  "EP - 5 Advanced Top. & Specializations": {
     "1. Wireless Network Hacking": [
       {
         title: "Understanding Wireless Network Security (WEP, WPA, WPA2, WPA3)",
@@ -1054,7 +1054,7 @@ const HACKING_TREE = {
       },
     ],
   },
-  "EP - 6 - Professional Skills & Career": {
+  "EP - 6 Professional Skills & Career": {
     "1. Penetration Testing Methodology": [
       {
         title: "Understanding Penetration Testing Lifecycle",
@@ -1903,12 +1903,29 @@ export default function EthicalHackingSyllabus({
                       </button>
 
                       {/* Right: compact stats & meta pills */}
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-300">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
-                          {stats.done}/{stats.total} topics
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-200">
+                        <span
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md
+                   bg-gradient-to-r from-emerald-500/15 to-emerald-500/5
+                   border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.15)]
+                   whitespace-nowrap"
+                        >
+                          <span className="text-[10px]">📚</span>
+                          <span className="font-semibold">
+                            {stats.done}/{stats.total} topics
+                          </span>
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-slate-900/60 border border-slate-700/70 whitespace-nowrap">
-                          {stats.pct}% complete
+
+                        <span
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md
+                   bg-gradient-to-r from-sky-500/15 to-sky-500/5
+                   border border-sky-500/40 shadow-[0_0_10px_rgba(56,189,248,0.15)]
+                   whitespace-nowrap"
+                        >
+                          <span className="text-[10px]">📈</span>
+                          <span className="font-semibold">
+                            {stats.pct}% complete
+                          </span>
                         </span>
                       </div>
                     </div>
