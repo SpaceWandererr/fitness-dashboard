@@ -2620,15 +2620,32 @@ export default function Planner({ dashboardState, updateDashboard }) {
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_300px] gap-6 items-stretch">
         {/* ================= LEFT: MINI CALENDAR ================= */}
         <div className="h-full">
-          <div
-            className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3
-           place-content-center"
-          >
-            <MiniCalendar
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              dayMap={planner.dayMap}
-            />
+          <div className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3 flex flex-col">
+            <div className="flex-1 place-content-center">
+              <MiniCalendar
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                dayMap={planner.dayMap}
+              />
+            </div>
+
+            {/* Added legend to fill bottom space and provide useful context */}
+            <div className="mt-1 pt-2 border-t border-[#2F6B60]/30">
+              <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-300">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-blue-500/60" />
+                  <span>Events</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-green-500/60" />
+                  <span>Tasks Completed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-yellow-500/60" />
+                  <span>Pending</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
