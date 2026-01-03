@@ -411,7 +411,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
               </div>
 
-              {/* BMI */}
+              {/* BMI – always shown, uses latest available weight */}
               <div
                 className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60
                 p-2 sm:p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20 hover:border-purple-400/50 transition-all flex flex-col gap-1.5"
@@ -426,32 +426,57 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
 
                 {/* Number and Badge Row */}
-                <div className="flex items-baseline justify-between">
-                  <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
-                    {entry?.bmi ? entry.bmi.toFixed(1) : "—"}
-                  </div>
+                {(() => {
+                  // Find the latest weight: today first, otherwise go backwards
+                  let latestWeight = entry?.weight ?? null;
+                  if (latestWeight === null) {
+                    let checkDate = dayjs(date).subtract(1, "day");
+                    while (latestWeight === null && checkDate.isAfter(dayjs("2020-01-01"))) {
+                      const key = checkDate.format("YYYY-MM-DD");
+                      if (logs[key]?.weight != null) {
+                        latestWeight = logs[key].weight;
+                        break;
+                      }
+                      checkDate = checkDate.subtract(1, "day");
+                    }
+                  }
 
-                  {entry?.bmi && (
-                    <div
-                      className={`text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${
-                        entry.bmi < 18.5
-                          ? "bg-orange-500/30 text-orange-100 border-orange-400/50"
-                          : entry.bmi < 25
-                            ? "bg-emerald-500/30 text-emerald-100 border-emerald-400/50"
-                            : entry.bmi < 30
-                              ? "bg-amber-500/30 text-amber-100 border-amber-400/50"
-                              : entry.bmi < 35
-                                ? "bg-red-500/30 text-red-100 border-red-400/50"
-                                : entry.bmi < 40
-                                  ? "bg-red-600/30 text-red-100 border-red-500/50"
-                                  : "bg-red-700/40 text-red-50 border-red-600/60"
-                      }`}
-                    >
-                      {getBMICategory(entry.bmi)}
+                  // Compute BMI from the latest weight (height is fixed at 176 cm)
+                  const bmi =
+                    latestWeight != null
+                      ? Number((latestWeight / Math.pow(176 / 100, 2)).toFixed(1))
+                      : null;
+
+                  return (
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
+                        {bmi != null ? bmi.toFixed(1) : "—"}
+                      </div>
+
+                      {bmi != null && (
+                        <div
+                          className={`text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                            bmi < 18.5
+                              ? "bg-orange-500/30 text-orange-100 border-orange-400/50"
+                              : bmi < 25
+                                ? "bg-emerald-500/30 text-emerald-100 border-emerald-400/50"
+                                : bmi < 30
+                                  ? "bg-amber-500/30 text-amber-100 border-amber-400/50"
+                                  : bmi < 35
+                                    ? "bg-red-500/30 text-red-100 border-red-400/50"
+                                    : bmi < 40
+                                      ? "bg-red-600/30 text-red-100 border-red-500/50"
+                                      : "bg-red-700/40 text-red-50 border-red-600/60"
+                          }`}
+                        >
+                          {getBMICategory(bmi)}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
+              
             </div>
 
             {/* Exercises Card */}
@@ -1745,9 +1770,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
       }
     }
   }, [date, doneState, logs]);
-
-  
-
 
   return (
     <div
