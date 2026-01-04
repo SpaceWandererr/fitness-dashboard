@@ -1888,7 +1888,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
         {/* Focus Mode - REDESIGNED */}
         <div className="rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden hover:shadow-[0_0_12px_rgba(63,167,150,0.4)] transition-all">
           {/* Header */}
-          <div className="px-4 py-3 bg-gradient-to-r from-rose-500/10 to-orange-500/10 border-b border-[#2F6B60]/30">
+          <div className="h-12 px-4 py-3 bg-gradient-to-r from-rose-500/10 to-orange-500/10 border-b border-[#2F6B60]/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <motion.span
@@ -2071,7 +2071,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
         {/* Daily Habits - UNIFIED PROGRESS (Tasks + Habits Combined) */}
         <div className="rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden hover:shadow-[0_0_12px_rgba(63,167,150,0.4)] transition-all">
           {/* Header */}
-          <div className="px-4 py-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-b border-[#2F6B60]/30">
+          <div className="h-12 px-4 py-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-b border-[#2F6B60]/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <motion.span
@@ -2091,7 +2091,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                   const taskScore = totalPlanned; // 0-8 points (morning + afternoon + evening tasks)
                   const waterScore = Math.min(
                     1,
-                    (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                    (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                   ); // 0-1 point
                   const meditateScore = planner.dayMap?.[dayKey]?.habits
                     ?.meditate
@@ -2099,7 +2099,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     : 0; // 0-1 point
                   const readingScore = Math.min(
                     1,
-                    (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                    (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                   ); // 0-1 point
                   const total =
                     taskScore + waterScore + meditateScore + readingScore;
@@ -2141,7 +2141,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                             ...prevDay.habits,
                             water: Math.max(
                               0,
-                              (prevDay.habits?.water || 0) - 1
+                              (prevDay.habits?.water || 0) - 1,
                             ),
                           },
                         };
@@ -2178,7 +2178,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                             ...prevDay.habits,
                             water: Math.min(
                               12,
-                              (prevDay.habits?.water || 0) + 1
+                              (prevDay.habits?.water || 0) + 1,
                             ),
                           },
                         };
@@ -2327,7 +2327,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     width: `${Math.min(
                       100,
                       ((planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30) *
-                        100
+                        100,
                     )}%`,
                   }}
                   transition={{ duration: 0.5 }}
@@ -2353,7 +2353,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                     const taskScore = totalPlanned; // 0-8
                     const waterScore = Math.min(
                       1,
-                      (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                      (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                     ); // 0-1
                     const meditateScore = planner.dayMap?.[dayKey]?.habits
                       ?.meditate
@@ -2361,7 +2361,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                       : 0; // 0-1
                     const readingScore = Math.min(
                       1,
-                      (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                      (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                     ); // 0-1
                     const total =
                       taskScore + waterScore + meditateScore + readingScore;
@@ -2377,7 +2377,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                       const taskScore = totalPlanned; // 0-8
                       const waterScore = Math.min(
                         1,
-                        (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                        (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                       );
                       const meditateScore = planner.dayMap?.[dayKey]?.habits
                         ?.meditate
@@ -2385,7 +2385,7 @@ export default function Planner({ dashboardState, updateDashboard }) {
                         : 0;
                       const readingScore = Math.min(
                         1,
-                        (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                        (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                       );
                       const total =
                         taskScore + waterScore + meditateScore + readingScore;
@@ -2421,14 +2421,14 @@ export default function Planner({ dashboardState, updateDashboard }) {
                 Tasks ({totalPlanned}/8) + Water (
                 {Math.min(
                   1,
-                  (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8
+                  (planner.dayMap?.[dayKey]?.habits?.water || 0) / 8,
                 ).toFixed(1)}
                 ) + Meditation (
                 {planner.dayMap?.[dayKey]?.habits?.meditate ? 1 : 0}) + Reading
                 (
                 {Math.min(
                   1,
-                  (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30
+                  (planner.dayMap?.[dayKey]?.habits?.reading || 0) / 30,
                 ).toFixed(1)}
                 )
               </div>
@@ -2439,8 +2439,8 @@ export default function Planner({ dashboardState, updateDashboard }) {
         {/* Daily Achievements & Streaks - COMPACT WITH ALL FEATURES */}
         <div className="rounded-xl border border-[#2F6B60]/40 bg-black/20 backdrop-blur-sm overflow-hidden hover:shadow-[0_0_12px_rgba(63,167,150,0.4)] transition-all">
           {/* Header */}
-          <div className="px-4 py-2 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-b border-[#2F6B60]/30">
-            <div className="flex items-center justify-between">
+          <div className="h-12 px-4 py-2 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-b border-[#2F6B60]/30">
+            <div className="flex items-center justify-between pt-[inherit]">
               <div className="flex items-center gap-2">
                 <motion.span
                   animate={{ rotate: [0, 15, -15, 0] }}
@@ -2620,15 +2620,32 @@ export default function Planner({ dashboardState, updateDashboard }) {
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_300px] gap-6 items-stretch">
         {/* ================= LEFT: MINI CALENDAR ================= */}
         <div className="h-full">
-          <div
-            className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3
-           place-content-center"
-          >
-            <MiniCalendar
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              dayMap={planner.dayMap}
-            />
+          <div className="h-full rounded-xl border border-[#2F6B60]/40 bg-black/20 p-3 flex flex-col">
+            <div className="flex-1 place-content-center">
+              <MiniCalendar
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                dayMap={planner.dayMap}
+              />
+            </div>
+
+            {/* Added legend to fill bottom space and provide useful context */}
+            <div className="mt-1 pt-2 border-t border-[#2F6B60]/30">
+              <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-300">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-blue-500/60" />
+                  <span>Events</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-green-500/60" />
+                  <span>Tasks Completed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-yellow-500/60" />
+                  <span>Pending</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -621,7 +621,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
     };
 
     // ✅ FIXED: Current streak = BOTH minoxidil AND minimalist
-    // FIXED Current streak BOTH minoxidil AND minimalist
     let streak = 0;
     let startFromYesterday = false;
 
@@ -656,7 +655,6 @@ export default function HairCare({ dashboardState, updateDashboard }) {
 
   const data = analytics[`days${analyticsPeriod}`];
 
-  // PDF Export Function
   // Updated PDF Export Function - Matches Screen Design
   const exportToPDF = () => {
     const allLogDates = Object.keys(hairLogs)
@@ -706,12 +704,38 @@ export default function HairCare({ dashboardState, updateDashboard }) {
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-          background: #f0f9ff;
-          padding: 20px;
-          color: #1a1a1a;
-        }
+          body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #f0f9ff;
+    padding: 20px;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  @media print {
+    body {
+      padding: 0;
+      background: white;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    
+    .container { 
+      box-shadow: none; 
+      padding: 20px; 
+    }
+  }
+
+
 
         .container {
           max-width: 900px;
@@ -1166,20 +1190,68 @@ export default function HairCare({ dashboardState, updateDashboard }) {
         </div>
 
         <div class="section">
-          <div class="section-header">📉 Hair Fall Progression</div>
-          <div class="section-subtitle">Weekly average over ${totalDays} days</div>
-          <div class="chart-container">
-            ${
-              data.hairFall.avg > 0
-                ? `<div style="text-align: center; color: #0f766e; font-size: 13px; font-weight: 600;">Avg: ${data.hairFall.avg} strands/day | Total: ${data.hairFall.total} | Data: ${data.hairFall.days} days</div>`
-                : `<div class="chart-empty">📉<br>No hair fall data recorded</div>`
-            }
+  <div class="section-header">📉 Hair Fall Progression</div>
+  <div class="section-subtitle">Weekly average over ${totalDays} days</div>
+  <div class="chart-container">
+    ${
+      data.hairFall.avg > 0
+        ? `
+          <div style="margin-bottom: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div style="background: #fef2f2; padding: 12px; border-radius: 8px; border: 2px solid #fca5a5;">
+              <div style="font-size: 10px; color: #dc2626; font-weight: 600; margin-bottom: 4px;">Avg Daily Fall</div>
+              <div style="font-size: 28px; font-weight: 800; color: #dc2626;">${data.hairFall.avg}</div>
+              <div style="font-size: 11px; color: #ef4444;">strands/day</div>
+            </div>
+            <div style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 2px solid #93c5fd;">
+              <div style="font-size: 10px; color: #2563eb; font-weight: 600; margin-bottom: 4px;">Total Recorded</div>
+              <div style="font-size: 28px; font-weight: 800; color: #2563eb;">${data.hairFall.total}</div>
+              <div style="font-size: 11px; color: #3b82f6;">total strands</div>
+            </div>
+            <div style="background: #f0fdfa; padding: 12px; border-radius: 8px; border: 2px solid #5eead4;">
+              <div style="font-size: 10px; color: #0f766e; font-weight: 600; margin-bottom: 4px;">Data Points</div>
+              <div style="font-size: 28px; font-weight: 800; color: #0f766e;">${data.hairFall.days}</div>
+              <div style="font-size: 11px; color: #14b8a6;">recorded days</div>
+            </div>
           </div>
-        </div>
+          
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 2px solid #cbd5e1;">
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 200px;">
+              ${data.hairFall.trend
+                .slice(0, 12)
+                .map((bucket, idx) => {
+                  const maxFall = Math.max(
+                    ...data.hairFall.trend.slice(0, 12).map((b) => b.avg),
+                    1,
+                  );
+                  const height =
+                    bucket.avg > 0 ? (bucket.avg / maxFall) * 100 : 0;
+                  const isRecent =
+                    idx >= data.hairFall.trend.slice(0, 12).length - 3;
 
-        ${
-          data.sideEffects.length > 0
-            ? `
+                  return `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0;">
+                      ${bucket.avg > 0 ? `<div style="font-size: 10px; font-weight: 700; color: #374151; margin-bottom: 4px;">${bucket.avg}</div>` : ""}
+                      <div style="width: 100%; background: ${isRecent ? "linear-gradient(to top, #14b8a6, #5eead4)" : "linear-gradient(to top, #6b7280, #9ca3af)"}; border-radius: 4px 4px 0 0; height: ${height}%; min-height: ${bucket.avg > 0 ? "6px" : "0px"};"></div>
+                      <div style="font-size: 9px; color: #6b7280; font-weight: 600; margin-top: 4px; white-space: nowrap;">W${bucket.week}</div>
+                    </div>
+                  `;
+                })
+                .join("")}
+            </div>
+            <div style="text-align: center; margin-top: 12px; font-size: 10px; color: #64748b;">
+              📊 Recent 3 weeks highlighted in teal • Lower values indicate improvement
+            </div>
+          </div>
+        `
+        : `<div class="chart-empty">📉<br>No hair fall data recorded</div>`
+    }
+  </div>
+</div>
+
+
+          ${
+            data.sideEffects.length > 0
+              ? `
           <div class="section">
             <div class="section-header">⚠️ Side Effects</div>
             <div class="section-subtitle">${
@@ -1200,15 +1272,15 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                 )
                 .join("")}
             </ul>
-          </div>
-        `
-            : ""
-        }
+             </div>
+            `
+              : ""
+          }
 
-        ${
-          data.notes.length > 0
-            ? `
-          <div class="section">
+            ${
+              data.notes.length > 0
+                ? `
+            <div class="section">
             <div class="section-header">📝 Patient Notes</div>
             <div class="section-subtitle">${
               data.notes.length
@@ -1227,15 +1299,15 @@ export default function HairCare({ dashboardState, updateDashboard }) {
               `
                 )
                 .join("")}
-            </ul>
-          </div>
-        `
-            : ""
-        }
+                </ul>
+                </div>
+                   `
+                : ""
+            }
 
-        <div class="footer">
-          <p>⚕️ Auto-generated from self-tracked data</p>
-          <p>Verify accuracy with patient. Generated by LifeOS Hair Care Tracker</p>
+                   <div class="footer">
+                 <p>⚕️ Auto-generated from self-tracked data</p>
+                 <p>Verify accuracy with patient. Generated by LifeOS Hair Care Tracker</p>
         </div>
       </div>
     </body>
@@ -1946,27 +2018,32 @@ export default function HairCare({ dashboardState, updateDashboard }) {
                         return (
                           <div
                             key={idx}
-                            className="flex-1 flex flex-col items-center gap-2"
+                            className="flex-1 flex flex-col items-center justify-end gap-1 sm:gap-2 h-full"
                           >
-                            <div className="text-xs font-bold text-gray-700">
-                              {bucket.avg}
-                            </div>
+                            {bucket.avg > 0 && (
+                              <div className="text-[10px] sm:text-xs font-bold text-gray-700">
+                                {bucket.avg}
+                              </div>
+                            )}
                             <div
                               className={`w-full rounded-t-lg transition-all ${
                                 isRecent
                                   ? "bg-gradient-to-t from-teal-500 to-teal-400"
                                   : "bg-gradient-to-t from-gray-400 to-gray-500"
                               }`}
-                              style={{ height: `${height}%` }}
+                              style={{
+                                height: `${height}%`,
+                                minHeight: bucket.avg > 0 ? "8px" : "0px",
+                              }}
                             />
-                            <div className="text-[10px] text-gray-500 font-medium">
+                            <div className="text-[9px] sm:text-[10px] text-gray-500 font-medium whitespace-nowrap">
                               W{bucket.week}
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="text-xs text-gray-500 text-center mt-4">
+                    <div className="text-[10px] sm:text-xs text-gray-500 text-center mt-3 sm:mt-4">
                       📊 Recent 3 weeks highlighted in teal • Lower values
                       indicate improvement
                     </div>

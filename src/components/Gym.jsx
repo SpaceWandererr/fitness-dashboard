@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-
+import { toast, Toaster } from "react-hot-toast";
 import dayjs from "dayjs";
 
 const countDone = (arr) => {
@@ -292,6 +292,15 @@ function DailySummaryMerged({ date, logs, mode }) {
 
   const nextInfo = getNextWorkoutInfo(date);
 
+  const getBMICategory = (bmi) => {
+    if (bmi < 18.5) return "Underweight";
+    if (bmi < 25) return "Normal";
+    if (bmi < 30) return "Overweight";
+    if (bmi < 35) return "Obese I";
+    if (bmi < 40) return "Obese II";
+    return "Obese III";
+  };
+
   /* ---------- SHARED GLASS CARD ---------- */
   const cardClass =
     "rounded-xl p-1 sm:rounded-2xl sm:p-x-4  h-full text-[#E8FFFA] flex flex-col justify-even";
@@ -402,20 +411,79 @@ function DailySummaryMerged({ date, logs, mode }) {
                 </div>
               </div>
 
-              {/* BMI */}
-              <div className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60 p-2 sm:p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20 hover:border-purple-400/50 transition-all">
-                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-purple-300/70 dark:text-purple-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
+              {/* BMI – always shown, uses latest available weight */}
+              <div
+                className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60
+                p-2 sm:p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20 hover:border-purple-400/50 transition-all flex flex-col gap-1.5"
+              >
+                {/* Title */}
+                <div
+                  className="text-[8px] sm:text-[9px] uppercase tracking-wider text-purple-300/70
+                  dark:text-purple-200/60 font-semibold flex items-center gap-0.5 sm:gap-1 justify-center sm:justify-start"
+                >
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
-                <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
-                  {entry?.bmi ?? "—"}
-                </div>
+
+                {/* Number and Badge Row */}
+                {(() => {
+                  // Find the latest weight: today first, otherwise go backwards
+                  let latestWeight = entry?.weight ?? null;
+                  if (latestWeight === null) {
+                    let checkDate = dayjs(date).subtract(1, "day");
+                    while (latestWeight === null && checkDate.isAfter(dayjs("2020-01-01"))) {
+                      const key = checkDate.format("YYYY-MM-DD");
+                      if (logs[key]?.weight != null) {
+                        latestWeight = logs[key].weight;
+                        break;
+                      }
+                      checkDate = checkDate.subtract(1, "day");
+                    }
+                  }
+
+                  // Compute BMI from the latest weight (height is fixed at 176 cm)
+                  const bmi =
+                    latestWeight != null
+                      ? Number((latestWeight / Math.pow(176 / 100, 2)).toFixed(1))
+                      : null;
+
+                  return (
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
+                        {bmi != null ? bmi.toFixed(1) : "—"}
+                      </div>
+
+                      {bmi != null && (
+                        <div
+                          className={`text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                            bmi < 18.5
+                              ? "bg-orange-500/30 text-orange-100 border-orange-400/50"
+                              : bmi < 25
+                                ? "bg-emerald-500/30 text-emerald-100 border-emerald-400/50"
+                                : bmi < 30
+                                  ? "bg-amber-500/30 text-amber-100 border-amber-400/50"
+                                  : bmi < 35
+                                    ? "bg-red-500/30 text-red-100 border-red-400/50"
+                                    : bmi < 40
+                                      ? "bg-red-600/30 text-red-100 border-red-500/50"
+                                      : "bg-red-700/40 text-red-50 border-red-600/60"
+                          }`}
+                        >
+                          {getBMICategory(bmi)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
+              
             </div>
 
             {/* Exercises Card */}
-            <div className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80 dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden">
+            <div
+              className="bg-gradient-to-br from-[#0F766E]/60 via-[#0c4a42]/40 to-[#0a3832]/60 dark:from-[#0F1622]/80
+              dark:via-[#132033]/60 dark:to-[#0A0F1C]/80 rounded-xl border border-emerald-400/30 overflow-hidden"
+            >
               {/* Header */}
               <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-black/20 border-b border-emerald-400/20">
                 <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-emerald-200/80 font-semibold">
@@ -438,7 +506,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           </span>
                           <span className="break-words">{ex}</span>
                         </div>
-                      ) : null
+                      ) : null,
                     )}
                   </div>
                 ) : (
@@ -706,8 +774,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       ? weightTrend > 0
                         ? `↗️ +${weightTrend}kg`
                         : weightTrend < 0
-                        ? `↘️ ${weightTrend}kg`
-                        : "→ 0kg"
+                          ? `↘️ ${weightTrend}kg`
+                          : "→ 0kg"
                       : "—"}
                   </div>
                 </div>
@@ -717,8 +785,8 @@ function DailySummaryMerged({ date, logs, mode }) {
                       weightTrend > 0
                         ? "text-red-300"
                         : weightTrend < 0
-                        ? "text-emerald-300"
-                        : "text-gray-300"
+                          ? "text-emerald-300"
+                          : "text-gray-300"
                     }`}
                   >
                     {weightTrend > 0 ? "📈" : weightTrend < 0 ? "📉" : "➡️"}
@@ -892,7 +960,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   const [currWeight, setCurrWeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [sundayQuote, setSundayQuote] = useState(
-    "Fetching your motivational quote..."
+    "Fetching your motivational quote...",
   );
 
   // Modal inputs + editing states
@@ -928,6 +996,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
   // Add these with your other useState declarations
   const [showResetModal, setShowResetModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [resetType, setResetType] = useState(""); // 'clearDay' or 'fullReset'
 
   // Add this function before your resetProgress function
   function showToast(message, type = "success") {
@@ -936,8 +1005,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
       type === "success"
         ? "bg-emerald-500/90"
         : type === "error"
-        ? "bg-red-500/90"
-        : "bg-orange-500/90";
+          ? "bg-red-500/90"
+          : "bg-orange-500/90";
 
     toast.className = `fixed bottom-4 right-4 z-[60] px-4 py-3 rounded-lg ${bgColor} text-white text-sm font-medium shadow-lg transition-all duration-300`;
     toast.style.animation = "slideIn 0.3s ease-out";
@@ -983,13 +1052,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setCurrWeight(
       dashboardState.wd_goals?.currentWeight != null
         ? String(dashboardState.wd_goals.currentWeight)
-        : ""
+        : "",
     );
 
     setTargetWeight(
       dashboardState.wd_goals?.targetWeight != null
         ? String(dashboardState.wd_goals.targetWeight)
-        : ""
+        : "",
     );
 
     // Mark as loaded after first run
@@ -997,6 +1066,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       setHasLoadedInitialData(true);
     }
   }, [dashboardState, hasLoadedInitialData]);
+  
 
   useEffect(() => {
     setLogs((prev) => {
@@ -1038,7 +1108,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         .catch((e) => {
           console.warn("Sunday quote fetch failed", e);
           setSundayQuote(
-            "Recovery is just as important as training. Rest, recharge, and come back stronger."
+            "Recovery is just as important as training. Rest, recharge, and come back stronger.",
           );
         });
     }
@@ -1084,7 +1154,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         yogaMinutes: existing?.yogaMinutes ?? null,
       };
     },
-    [logs]
+    [logs],
   );
 
   /* -------------------- Toggle single exercise (click in UI) -------------------- */
@@ -1185,17 +1255,19 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
 
     setRunningDistance(
-      entry?.running?.distanceKm != null ? String(entry.running.distanceKm) : ""
+      entry?.running?.distanceKm != null
+        ? String(entry.running.distanceKm)
+        : "",
     );
     setRunningDuration(
       entry?.running?.durationMinutes != null
         ? String(entry.running.durationMinutes)
-        : ""
+        : "",
     );
     setRunningMood(entry?.running?.mood ?? "");
     setRunningNotes(entry?.running?.notes ?? "");
     setYogaMinutesInput(
-      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : ""
+      entry?.yogaMinutes != null ? String(entry.yogaMinutes) : "",
     );
     setOtherExercisesInput(entry?.otherExercises ?? "");
     setShowModal(true);
@@ -1210,12 +1282,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
     const parsedWeight = weightInput ? Number(weightInput) : null;
     const weightVal = Number.isFinite(parsedWeight)
       ? parsedWeight
-      : existing.weight ?? null;
+      : (existing.weight ?? null);
 
     const newBmi =
       weightVal != null
         ? Number((weightVal / Math.pow(HEIGHT_CM / 100, 2)).toFixed(1))
-        : existing.bmi ?? null;
+        : (existing.bmi ?? null);
 
     // NEW parsed values
     const runningDistanceVal = runningDistance ? Number(runningDistance) : null;
@@ -1438,7 +1510,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   const entry = useMemo(
     () => logs[dateKey] || getEntry(dateKey),
-    [logs, dateKey, getEntry]
+    [logs, dateKey, getEntry],
   );
 
   const dayWeekday = useMemo(() => dayjs(date).format("dddd"), [date]);
@@ -1451,7 +1523,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
         right: [],
         finisher: [],
       },
-    [dayWeekday]
+    [dayWeekday],
   );
 
   const totalExercises = useMemo(
@@ -1459,7 +1531,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       (dayPlan.left?.length || 0) +
       (dayPlan.right?.length || 0) +
       (dayPlan.finisher?.length || 0),
-    [dayPlan]
+    [dayPlan],
   );
 
   const completedExercises = useMemo(
@@ -1467,7 +1539,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
       (entry.left ?? []).filter((e) => e?.done).length +
       (entry.right ?? []).filter((e) => e?.done).length +
       (entry.finisher ?? []).filter((e) => e?.done).length,
-    [entry]
+    [entry],
   );
 
   const canComplete = useMemo(() => {
@@ -1774,7 +1846,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
             {/* Reset Button - Opens Modal */}
             <button
-              onClick={() => setShowResetModal(true)}
+              onClick={() => {
+                setResetType("fullReset");
+                setShowResetModal(true);
+              }}
               className="w-full sm:w-auto group relative overflow-hidden bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold border border-red-400/20 shadow-lg shadow-red-900/40 hover:scale-[1.02] transition-all duration-300"
             >
               <span className="relative z-10 flex items-center justify-center gap-1.5">
@@ -1913,11 +1988,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 const hasWeight = entry?.weight != null;
                 const isToday = useMemo(
                   () => dayjs(date).isSame(dayjs(), "day"),
-                  [date]
+                  [date],
                 );
                 const isFuture = useMemo(
                   () => dayjs(date).isAfter(dayjs(), "day"),
-                  [date]
+                  [date],
                 );
 
                 if (isFuture) {
@@ -2055,7 +2130,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           const lastDate = dayjs(history[0]);
                           const daysAgo = dayjs(date).diff(lastDate, "day");
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return "No history";
@@ -2081,7 +2156,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                         if (isToday) {
                           return `Last: ${lastDate.format(
-                            "MMM D"
+                            "MMM D",
                           )} (${daysAgo}d ago)`;
                         }
                         return `From: ${lastDate.format("MMM D")}`;
@@ -2160,7 +2235,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
             style={{
               [pctToGoal < 0 ? "left" : "right"]: `calc(${Math.min(
                 100,
-                Math.abs(pctToGoal)
+                Math.abs(pctToGoal),
               )}% - 16px)`,
             }}
           >
@@ -2305,9 +2380,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0)
+                                  (dayPlan.finisher?.length || 0),
                               )) *
-                              100
+                              100,
                           )}
                           %
                         </p>
@@ -2330,10 +2405,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                                 1,
                                 (dayPlan.left?.length || 0) +
                                   (dayPlan.right?.length || 0) +
-                                  (dayPlan.finisher?.length || 0)
+                                  (dayPlan.finisher?.length || 0),
                               )) *
-                              100
-                          )
+                              100,
+                          ),
                         )}%`,
                       }}
                     ></div>
@@ -2397,8 +2472,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
           doneState[dateKey]
             ? "bg-gray-600/40 text-gray-400 cursor-not-allowed opacity-50"
             : allDone
-            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
-            : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-[1.02] shadow-md shadow-orange-600/30"
+              : "bg-gradient-to-r from-indigo-500 to-blue-500 text-white hover:scale-[1.02] shadow-md shadow-blue-600/30"
         }
       `}
                     >
@@ -2447,19 +2522,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     {doneState[dateKey] && (
                       <button
                         onClick={() => {
-                          if (
-                            window.confirm(
-                              "⚠️ Clear this workout? This cannot be undone."
-                            )
-                          ) {
-                            deleteWorkout(dateKey);
-                          }
+                          setResetType("clearDay"); // Add this state to distinguish
+                          setShowResetModal(true);
                         }}
                         className="w-full rounded-xl px-4 py-3 font-semibold text-sm 
-          flex items-center justify-center gap-2
-          bg-gradient-to-r from-red-600 to-rose-600 text-white 
-          hover:scale-[1.02] transition-all duration-300 
-          shadow-md shadow-red-600/30"
+                                flex items-center justify-center gap-2
+                                bg-gradient-to-r from-red-600 to-rose-600 text-white 
+                                hover:scale-[1.02] transition-all duration-300 
+                                shadow-md shadow-red-600/30"
                       >
                         🗑️ Clear Day
                       </button>
@@ -2488,10 +2558,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 type="number"
                 value={caloriesInput}
                 onChange={(e) => setCaloriesInput(e.target.value)}
-                className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                className="w-full bg-emerald-950/40 backdrop-blur-sm
                      border border-emerald-400/30 rounded-xl p-2.5 
-                     text-emerald-100 placeholder:text-emerald-300/40
+                     text-emerald-50 font-medium placeholder:text-emerald-400/50
                      outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                     focus:bg-emerald-950/60
                      transition-all duration-200"
                 placeholder="500"
               />
@@ -2507,10 +2578,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 step="0.1"
                 value={weightInput}
                 onChange={(e) => setWeightInput(e.target.value)}
-                className="w-full bg-gradient-to-br from-[#183D3D]/30 via-[#0F2A2A]/20 to-[#0A1F1F]/30 
+                className="w-full bg-cyan-950/40 backdrop-blur-sm
                      border border-cyan-400/30 rounded-xl p-2.5 
-                     text-cyan-100 placeholder:text-cyan-300/40
+                     text-cyan-50 font-medium placeholder:text-cyan-400/50
                      outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400
+                     focus:bg-cyan-950/60
                      transition-all duration-200"
                 placeholder="79.5"
               />
@@ -2532,14 +2604,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     max="5"
                     value={durationHours}
                     onChange={(e) => setDurationHours(Number(e.target.value))}
-                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                    className="w-full bg-teal-950/40 backdrop-blur-sm
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
-                         text-teal-100 placeholder:text-teal-300/40
+                         text-teal-50 font-medium placeholder:text-teal-400/50
                          outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
+                         focus:bg-teal-950/60
                          transition-all duration-200"
                     placeholder="0"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-teal-300/60 font-medium">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-teal-300/70 font-semibold">
                     hrs
                   </span>
                 </div>
@@ -2554,14 +2627,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     max="59"
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                    className="w-full bg-teal-950/40 backdrop-blur-sm
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
-                         text-teal-100 placeholder:text-teal-300/40
+                         text-teal-50 font-medium placeholder:text-teal-400/50
                          outline-none focus:ring-2 focus:ring-teal-400/60 focus:border-teal-400
+                         focus:bg-teal-950/60
                          transition-all duration-200"
                     placeholder="0"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-teal-300/60 font-medium">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-teal-300/70 font-semibold">
                     min
                   </span>
                 </div>
@@ -2581,16 +2655,15 @@ export default function Gym({ dashboardState, updateDashboard }) {
                   type="button"
                   onClick={() => setMoodInput(m)}
                   className={`
-              flex-1 text-2xl sm:text-3xl p-2.5 sm:p-3 rounded-xl transition-all duration-200
-              bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl 
-              border-2 shadow-lg
-              hover:scale-105 active:scale-95
-              ${
-                moodInput === m
-                  ? "border-purple-400 bg-purple-500/20 shadow-purple-500/30 scale-105"
-                  : "border-white/10 opacity-60 hover:opacity-100 hover:border-white/30"
-              }
-            `}
+                    flex-1 text-2xl sm:text-3xl p-2.5 sm:p-3 rounded-xl transition-all duration-200
+                    backdrop-blur-sm shadow-lg
+                    hover:scale-105 active:scale-95
+                    ${
+                      moodInput === m
+                        ? "bg-purple-500/30 border-2 border-purple-400/60 shadow-purple-500/30 scale-105"
+                        : "bg-purple-950/30 border-2 border-purple-400/20 opacity-70 hover:opacity-100 hover:border-purple-400/40 hover:bg-purple-900/40"
+                    }
+                  `}
                 >
                   {m}
                 </button>
@@ -2616,10 +2689,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                   step="0.1"
                   value={runningDistance}
                   onChange={(e) => setRunningDistance(e.target.value)}
-                  className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                  className="w-full bg-emerald-950/40 backdrop-blur-sm
                    border border-emerald-400/30 rounded-xl p-2.5 
-                   text-emerald-100 placeholder:text-emerald-300/40
+                   text-emerald-50 font-medium placeholder:text-emerald-400/50
                    outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                   focus:bg-emerald-950/60
                    transition-all duration-200"
                   placeholder="3.5"
                 />
@@ -2635,10 +2709,11 @@ export default function Gym({ dashboardState, updateDashboard }) {
                   step="1"
                   value={runningDuration}
                   onChange={(e) => setRunningDuration(e.target.value)}
-                  className="w-full bg-gradient-to-br from-[#0F766E]/30 via-[#0c4a42]/20 to-[#0a3832]/30 
+                  className="w-full bg-emerald-950/40 backdrop-blur-sm
                    border border-emerald-400/30 rounded-xl p-2.5 
-                   text-emerald-100 placeholder:text-emerald-300/40
+                   text-emerald-50 font-medium placeholder:text-emerald-400/50
                    outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                   focus:bg-emerald-950/60
                    transition-all duration-200"
                   placeholder="25"
                 />
@@ -2660,14 +2735,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
                       type="button"
                       onClick={() => setRunningMood(m)}
                       className={`
-            w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-lg
-            rounded-lg border backdrop-blur-xl transition-all duration-200
-            ${
-              runningMood === m
-                ? "border-emerald-400 bg-emerald-500/20 text-emerald-100 shadow-md shadow-emerald-500/30 scale-105"
-                : "border-white/10 bg-white/5 text-emerald-100/80 opacity-70 hover:opacity-100 hover:border-white/30"
-            }
-          `}
+                        w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-lg
+                        rounded-lg border-2 backdrop-blur-sm transition-all duration-200
+                        ${
+                          runningMood === m
+                            ? "border-emerald-400/60 bg-emerald-500/30 shadow-md shadow-emerald-500/30 scale-105"
+                            : "border-emerald-400/20 bg-emerald-950/30 opacity-70 hover:opacity-100 hover:border-emerald-400/40 hover:bg-emerald-900/40"
+                        }
+                      `}
                     >
                       {m}
                     </button>
@@ -2680,10 +2755,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 rows={2}
                 value={runningNotes}
                 onChange={(e) => setRunningNotes(e.target.value)}
-                className="w-full bg-gradient-to-br from-[#0F766E]/20 via-[#0c4a42]/15 to-[#0a3832]/20
-      border border-emerald-400/25 rounded-xl p-2.5 text-emerald-100
-      placeholder:text-emerald-300/40 outline-none focus:ring-2 focus:ring-emerald-400/60
-      focus:border-emerald-400 text-xs transition-all duration-200"
+                className="w-full bg-emerald-950/40 backdrop-blur-sm
+                  border border-emerald-400/30 rounded-xl p-2.5 
+                  text-emerald-50 font-medium placeholder:text-emerald-400/50
+                  outline-none focus:ring-2 focus:ring-emerald-400/60
+                  focus:border-emerald-400 focus:bg-emerald-950/60
+                  text-xs transition-all duration-200 resize-none"
                 placeholder="Route, pace, intervals, extra notes..."
               />
             </div>
@@ -2701,7 +2778,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 step="1"
                 value={yogaMinutesInput}
                 onChange={(e) => setYogaMinutesInput(e.target.value)}
-                className="w-full bg-gradient-to-br from-183D3D30 via-0F2A2A20 to-0A1F1F30 border border-cyan-400/30 rounded-xl p-2.5 text-cyan-100 placeholder:text-cyan-300/40 outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400"
+                className="w-full bg-cyan-950/40 backdrop-blur-sm
+                  border border-cyan-400/30 rounded-xl p-2.5 
+                  text-cyan-50 font-medium placeholder:text-cyan-400/50
+                  outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400
+                  focus:bg-cyan-950/60
+                  transition-all duration-200"
                 placeholder="20"
               />
             </div>
@@ -2713,28 +2795,34 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 rows={2}
                 value={otherExercisesInput}
                 onChange={(e) => setOtherExercisesInput(e.target.value)}
-                className="w-full bg-gradient-to-br from-0F766E20 via-0c4a4215 to-0a383220 border border-emerald-400/25 rounded-xl p-2.5 text-emerald-100 placeholder:text-emerald-300/40 outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400 text-xs"
-                placeholder="e.g. 15 min skipping + 3 sets push‑ups"
+                className="w-full bg-emerald-950/40 backdrop-blur-sm
+                  border border-emerald-400/30 rounded-xl p-2.5 
+                  text-emerald-50 font-medium placeholder:text-emerald-400/50
+                  outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400
+                  focus:bg-emerald-950/60
+                  text-xs transition-all duration-200 resize-none"
+                placeholder="e.g. 15 min skipping + 3 sets push-ups"
               />
             </div>
           </div>
 
-          {/* -------------------- COLLAPSIBLE EXERCISE EDITOR -------------------- */}
+          {/* ---------------- COLLAPSIBLE EXERCISE EDITOR ---------------- */}
           <div className="mb-5">
             <button
               type="button"
               onClick={() => setShowExerciseEditor(!showExerciseEditor)}
               className="w-full flex items-center justify-between p-3 rounded-xl
-                   bg-gradient-to-br from-emerald-500/20 to-teal-500/20
-                   border border-emerald-400/30 hover:border-emerald-400/50
+                   bg-gradient-to-br from-emerald-900/50 via-teal-900/40 to-emerald-900/60
+                   border border-emerald-400/40 hover:border-emerald-400/70
+                   shadow-md shadow-emerald-900/40
                    transition-all duration-200 group"
             >
               <div className="flex items-center gap-2">
                 <span className="text-lg">💪</span>
-                <span className="text-sm font-semibold text-emerald-200">
+                <span className="text-sm font-semibold text-emerald-100">
                   Edit Exercise Checklist
                 </span>
-                <span className="text-xs text-emerald-300/60 font-medium">
+                <span className="text-xs text-emerald-200/80 font-medium">
                   (
                   {editLeft.filter((e) => e.done).length +
                     editRight.filter((e) => e.done).length +
@@ -2743,7 +2831,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 </span>
               </div>
               <svg
-                className={`w-5 h-5 text-emerald-300 transition-transform duration-300 ${
+                className={`w-5 h-5 text-emerald-200 transition-transform duration-300 ${
                   showExerciseEditor ? "rotate-180" : ""
                 }`}
                 fill="none"
@@ -2767,10 +2855,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                   : "max-h-0 opacity-0"
               }`}
             >
-              <div className="space-y-3 p-3 rounded-xl bg-black/20 border border-emerald-400/20">
+              <div className="space-y-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-400/25 backdrop-blur-sm">
                 {/* LEFT */}
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-emerald-300/80 mb-2 font-semibold flex items-center gap-1.5">
+                  <div className="text-xs uppercase tracking-wide text-emerald-200/90 mb-2 font-semibold flex items-center gap-1.5">
                     <span className="w-1 h-4 bg-emerald-400 rounded-full"></span>
                     Left Side
                   </div>
@@ -2785,14 +2873,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           setEditLeft(temp);
                         }}
                         className={`
-                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                    border backdrop-blur-xl hover:scale-105 active:scale-95
-                    ${
-                      ex.done
-                        ? "bg-emerald-500/30 border-emerald-400 text-emerald-100 shadow-lg shadow-emerald-500/20"
-                        : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
-                    }
-                  `}
+                          px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                          border-2 backdrop-blur-sm hover:scale-105 active:scale-95
+                          ${
+                            ex.done
+                              ? "bg-emerald-500/30 border-emerald-400 text-emerald-50 shadow-lg shadow-emerald-500/25"
+                              : "bg-emerald-950/30 border-emerald-400/25 text-emerald-100/80 hover:bg-emerald-900/40 hover:border-emerald-400/50"
+                          }
+                        `}
                       >
                         {ex.done ? "✓" : "○"} {ex.name}
                       </button>
@@ -2802,7 +2890,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                 {/* RIGHT */}
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-teal-300/80 mb-2 font-semibold flex items-center gap-1.5">
+                  <div className="text-xs uppercase tracking-wide text-teal-200/90 mb-2 font-semibold flex items-center gap-1.5">
                     <span className="w-1 h-4 bg-teal-400 rounded-full"></span>
                     Right Side
                   </div>
@@ -2817,14 +2905,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           setEditRight(temp);
                         }}
                         className={`
-                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                    border backdrop-blur-xl hover:scale-105 active:scale-95
-                    ${
-                      ex.done
-                        ? "bg-teal-500/30 border-teal-400 text-teal-100 shadow-lg shadow-teal-500/20"
-                        : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
-                    }
-                  `}
+                          px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                          border-2 backdrop-blur-sm hover:scale-105 active:scale-95
+                          ${
+                            ex.done
+                              ? "bg-teal-500/30 border-teal-400 text-teal-50 shadow-lg shadow-teal-500/25"
+                              : "bg-teal-950/30 border-teal-400/25 text-teal-100/80 hover:bg-teal-900/40 hover:border-teal-400/50"
+                          }
+                        `}
                       >
                         {ex.done ? "✓" : "○"} {ex.name}
                       </button>
@@ -2834,7 +2922,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
                 {/* FINISHER */}
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-cyan-300/80 mb-2 font-semibold flex items-center gap-1.5">
+                  <div className="text-xs uppercase tracking-wide text-cyan-200/90 mb-2 font-semibold flex items-center gap-1.5">
                     <span className="w-1 h-4 bg-cyan-400 rounded-full"></span>
                     Finisher
                   </div>
@@ -2849,14 +2937,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
                           setEditFinisher(temp);
                         }}
                         className={`
-                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                    border backdrop-blur-xl hover:scale-105 active:scale-95
-                    ${
-                      ex.done
-                        ? "bg-cyan-500/30 border-cyan-300 text-cyan-100 shadow-lg shadow-cyan-500/20"
-                        : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10"
-                    }
-                  `}
+                          px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                          border-2 backdrop-blur-sm hover:scale-105 active:scale-95
+                          ${
+                            ex.done
+                              ? "bg-cyan-500/30 border-cyan-300 text-cyan-50 shadow-lg shadow-cyan-500/25"
+                              : "bg-cyan-950/30 border-cyan-300/25 text-cyan-100/80 hover:bg-cyan-900/40 hover:border-cyan-300/50"
+                          }
+                        `}
                       >
                         {ex.done ? "✓" : "○"} {ex.name}
                       </button>
@@ -2867,14 +2955,13 @@ export default function Gym({ dashboardState, updateDashboard }) {
             </div>
           </div>
 
-          {/* -------------------- ACTION BUTTONS -------------------- */}
+          {/* ---------------- ACTION BUTTONS ---------------- */}
           <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-emerald-500/20">
             <button
               type="button"
-              className="px-5 py-2.5 rounded-xl font-semibold text-sm
-                   bg-gradient-to-r from-red-600/30 to-red-500/30 
-                   border border-red-400/40 text-red-200 
-                   hover:from-red-600/40 hover:to-red-500/40 hover:border-red-400/60
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm backdrop-blur-sm
+                   bg-red-950/40 border-2 border-red-400/40 
+                   text-red-50 hover:bg-red-900/60 hover:border-red-400/60
                    transition-all duration-200 hover:scale-105 active:scale-95"
               onClick={() => setShowModal(false)}
             >
@@ -2883,11 +2970,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
             <button
               type="button"
-              className="px-5 py-2.5 rounded-xl font-semibold text-sm
-                   bg-gradient-to-r from-emerald-600/40 to-teal-600/40 
-                   border border-emerald-400/50 text-emerald-100
-                   hover:from-emerald-600/50 hover:to-teal-600/50 hover:border-emerald-400/70
-                   shadow-lg shadow-emerald-500/20
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm backdrop-blur-sm shadow-lg shadow-emerald-900/40
+                   bg-emerald-950/50 border-2 border-emerald-400/50 
+                   text-emerald-50 hover:bg-emerald-900/70 hover:border-emerald-400/70
                    transition-all duration-200 hover:scale-105 active:scale-95"
               onClick={saveWorkout}
             >
@@ -2897,15 +2982,27 @@ export default function Gym({ dashboardState, updateDashboard }) {
         </Modal>
       )}
 
-      {/* Reset Modal */}
+      {/* Reset Modal - Handles Clear Day & Full Reset */}
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
-          <div className="w-[90%] absolute top-[10rem] max-w-md rounded-2xl border border-red-500/30 bg-gradient-to-br from-[#2a0a0f] via-[#1a0a0f] to-[#0a0a0f] shadow-[0_25px_60px_rgba(220,38,38,0.4),0_0_80px_rgba(220,38,38,0.2)] p-6">
+          <div
+            className={`w-[90%] absolute top-[10rem] max-w-md rounded-2xl border p-6 shadow-[0_25px_60px_rgba(220,38,38,0.4),0_0_80px_rgba(220,38,38,0.2)] transition-all ${
+              resetType === "clearDay"
+                ? "border-red-500/30 bg-gradient-to-br from-[#2a0a0f] via-[#1a0a0f] to-[#0a0a0f]"
+                : "border-red-500/40 bg-gradient-to-br from-[#2a0a0f] via-[#1a0a0f] to-[#0a0a0f]"
+            }`}
+          >
             {/* Icon & Title */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
+              <div
+                className={`w-12 h-12 rounded-full border flex items-center justify-center ${
+                  resetType === "clearDay"
+                    ? "bg-red-500/20 border-red-500/40"
+                    : "bg-red-600/30 border-red-500/50"
+                }`}
+              >
                 <svg
-                  className="w-6 h-6 text-red-400"
+                  className={`w-6 h-6 ${resetType === "clearDay" ? "text-red-400" : "text-red-300"}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -2919,8 +3016,14 @@ export default function Gym({ dashboardState, updateDashboard }) {
                 </svg>
               </div>
               <div>
-                <h3 className="text-red-400 text-xl font-bold">
-                  Reset All Progress
+                <h3
+                  className={`text-xl font-bold ${
+                    resetType === "clearDay" ? "text-red-400" : "text-red-300"
+                  }`}
+                >
+                  {resetType === "clearDay"
+                    ? "Clear Today's Workout"
+                    : "Reset All Progress"}
                 </h3>
                 <p className="text-red-200/50 text-xs">Permanent action</p>
               </div>
@@ -2929,25 +3032,46 @@ export default function Gym({ dashboardState, updateDashboard }) {
             {/* Message */}
             <div className="mb-6 p-4 rounded-lg bg-red-950/40 border border-red-500/20">
               <p className="text-sm text-red-100/90 leading-relaxed mb-3">
-                This will permanently delete:
+                {resetType === "clearDay"
+                  ? "This will permanently delete today's workout data:"
+                  : "This will permanently delete:"}
               </p>
               <ul className="space-y-1.5 text-sm text-red-200/80">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                  All gym logs and workout history
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                  Calendar completion marks
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                  Weight tracking and goals
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                  All custom weight overrides
-                </li>
+                {resetType === "clearDay" ? (
+                  <>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      Today’s exercise completion
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      Calories, duration, and notes
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      Weight entry for today
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      All gym logs and workout history
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      Calendar completion marks
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      Weight tracking and goals
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                      All custom weight overrides
+                    </li>
+                  </>
+                )}
               </ul>
               <div className="mt-3 pt-3 border-t border-red-500/20">
                 <p className="text-xs text-red-300/70 font-semibold flex items-center gap-1.5">
@@ -2973,7 +3097,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
               <button
                 onClick={() => {
                   setShowResetModal(false);
-                  showToast("✓ Action cancelled safely", "success");
+                  if (typeof showToast === "function")
+                    showToast("✓ Action cancelled safely", "success");
                 }}
                 className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-br from-slate-700 to-slate-800 text-white border border-slate-600/50 hover:from-slate-600 hover:to-slate-700 transition-all duration-200 active:scale-95"
               >
@@ -2982,7 +3107,33 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
               {/* Reset Button */}
               <button
-                onClick={resetProgress}
+                onClick={async () => {
+                  setIsResetting(true);
+                  try {
+                    if (resetType === "clearDay") {
+                      await deleteWorkout(dateKey);
+                      if (typeof showToast === "function")
+                        showToast(
+                          "✅ Workout cleared successfully!",
+                          "success",
+                        );
+                    } else {
+                      await resetProgress();
+                      if (typeof showToast === "function")
+                        showToast(
+                          "✅ All progress reset successfully!",
+                          "success",
+                        );
+                    }
+                  } catch (error) {
+                    console.error("Reset failed:", error);
+                    if (typeof showToast === "function")
+                      showToast("❌ Reset failed. Please try again.", "error");
+                  } finally {
+                    setShowResetModal(false);
+                    setIsResetting(false);
+                  }
+                }}
                 disabled={isResetting}
                 className="flex-1 px-4 py-2.5 rounded-lg text-sm font-bold bg-gradient-to-br from-red-600 to-red-700 text-white border border-red-500/50 hover:from-red-500 hover:to-red-600 transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(239,68,68,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -3007,8 +3158,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Resetting...
+                    {resetType === "clearDay" ? "Clearing..." : "Resetting..."}
                   </span>
+                ) : resetType === "clearDay" ? (
+                  "Clear Day"
                 ) : (
                   "Reset All Data"
                 )}
@@ -3199,7 +3352,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                 }`}
               >
                 {weekdays[dayIndex]}
-              </div>
+              </div>,
             );
           }
 
@@ -3284,7 +3437,7 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                   {hasCalories && ` • ${entry.calories} kcal`}
                   {hasWeight && ` • ${entry.weight} kg`}
                 </div>
-              </div>
+              </div>,
             );
           }
 
@@ -3323,8 +3476,8 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                       dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
-                        ? "bg-yellow-500/60"
-                        : "bg-gray-700"
+                          ? "bg-yellow-500/60"
+                          : "bg-gray-700"
                     }`}
                   />
                 </div>
