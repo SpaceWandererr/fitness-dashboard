@@ -1,22 +1,21 @@
 import { useEffect, useState, useRef } from "react";
+import { db, backupsTable } from "../db/backupsDB";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://fitness-backend-laoe.onrender.com/api/state";
 const BACKUP_INDEX_KEY = "wd_state_backups";
-const MAX_BACKUPS = 8;
-const STORAGE_WARNING_MB = 4;
+const MAX_BACKUPS = 20;
+const STORAGE_WARNING_MB = 50;
 
-function loadBackupIndex() {
+async function loadBackupIndex() {
   try {
-    return JSON.parse(localStorage.getItem(BACKUP_INDEX_KEY) || "[]");
-  } catch {
+    const backups = await backupsTable.orderBy("createdAt").reverse().toArray();
+    return backups;
+  } catch (error) {
+    console.error("Failed to load backups:", error);
     return [];
   }
-}
-
-function saveBackupIndex(list) {
-  localStorage.setItem(BACKUP_INDEX_KEY, JSON.stringify(list));
 }
 
 function getLocalStorageSize() {
@@ -62,6 +61,7 @@ export default function Control({
   const [showPreview, setShowPreview] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [storageUsed, setStorageUsed] = useState(0);
+  const [storageQuota, setStorageQuota] = useState(0);
   const [notification, setNotification] = useState(null);
   const [filterTag, setFilterTag] = useState("all");
   const [isResetting, setIsResetting] = useState(false);
@@ -81,12 +81,33 @@ export default function Control({
     setTimeout(() => setNotification(null), 3000);
   };
 
-  function refreshBackups() {
-    const loadedBackups = loadBackupIndex();
+  async function refreshBackups() {
+    const loadedBackups = await loadBackupIndex();
     setBackups(loadedBackups);
     setFilteredBackups(loadedBackups);
-    setStorageUsed(getLocalStorageSize());
+
+    if (navigator.storage && navigator.storage.estimate) {
+      try {
+        const estimate = await navigator.storage.estimate();
+
+        const usedMB = estimate.usage
+          ? (estimate.usage / 1024 / 1024).toFixed(2)
+          : "0.00";
+
+        setStorageUsed(usedMB);
+        setStorageQuota(STORAGE_WARNING_MB); // ✅ Uses the constant!
+      } catch (error) {
+        console.error("Storage estimate failed:", error);
+        setStorageUsed("0.00");
+        setStorageQuota(STORAGE_WARNING_MB); // ✅ Uses the constant!
+      }
+    } else {
+      setStorageUsed("0.00");
+      setStorageQuota(STORAGE_WARNING_MB); // ✅ Uses the constant!
+    }
   }
+
+
 
   useEffect(() => {
     let filtered = backups.filter((b) =>
@@ -100,13 +121,12 @@ export default function Control({
     setFilteredBackups(filtered);
   }, [searchTerm, backups, filterTag]);
 
-  function createBackup(isManual = true, tag = "manual") {
+  // ✅ REPLACE WITH THIS
+  async function createBackup(isManual = true, tag = "manual") {
     if (!dashboardState) {
       showNotification("App state not ready yet", "error");
       return;
     }
-
-    const backups = loadBackupIndex();
 
     const snapshot = {
       id: crypto.randomUUID(),
@@ -120,14 +140,30 @@ export default function Control({
       itemCount: Object.keys(dashboardState).length,
     };
 
-    const next = [snapshot, ...backups].slice(0, MAX_BACKUPS);
+    try {
+      // Add to IndexedDB
+      await backupsTable.add(snapshot);
 
-    saveBackupIndex(next);
-    setLabel("");
-    refreshBackups();
+      // Keep only MAX_BACKUPS
+      const allBackups = await backupsTable
+        .orderBy("createdAt")
+        .reverse()
+        .toArray();
 
-    if (isManual) {
-      showNotification("Backup created successfully", "success");
+      if (allBackups.length > MAX_BACKUPS) {
+        const toDelete = allBackups.slice(MAX_BACKUPS).map((b) => b.id);
+        await backupsTable.bulkDelete(toDelete);
+      }
+
+      setLabel("");
+      await refreshBackups();
+
+      if (isManual) {
+        showNotification("Backup created successfully", "success");
+      }
+    } catch (error) {
+      console.error("Backup creation failed:", error);
+      showNotification("Failed to create backup", "error");
     }
   }
 
@@ -182,17 +218,20 @@ export default function Control({
     }
   }
 
-  function deleteBackup(id) {
+  async function deleteBackup(id) {
     if (!window.confirm("Delete this backup? This cannot be undone.")) return;
 
-    const next = backups.filter((b) => b.id !== id);
-    saveBackupIndex(next);
-    setBackups(next);
-    setFilteredBackups(next); // ✅ Also update filtered list
-    showNotification("Backup deleted", "success");
+    try {
+      await backupsTable.delete(id);
+      await refreshBackups();
+      showNotification("Backup deleted", "success");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      showNotification("Failed to delete backup", "error");
+    }
   }
 
-  function deleteAllBackups() {
+  async function deleteAllBackups() {
     if (
       !window.confirm(
         "⚠️ Delete ALL backups?\n\nThis action is permanent and cannot be undone!"
@@ -200,10 +239,14 @@ export default function Control({
     )
       return;
 
-    saveBackupIndex([]);
-    setBackups([]);
-    setFilteredBackups([]); // ✅ Also update filtered list
-    showNotification("All backups deleted", "success");
+    try {
+      await backupsTable.clear();
+      await refreshBackups();
+      showNotification("All backups deleted", "success");
+    } catch (error) {
+      console.error("Clear failed:", error);
+      showNotification("Failed to delete backups", "error");
+    }
   }
 
   async function globalReset() {
@@ -313,30 +356,37 @@ export default function Control({
     showNotification("Backup exported", "success");
   }
 
-  function exportAllBackups() {
+  async function exportAllBackups() {
     if (backups.length === 0) {
       showNotification("No backups to export", "error");
       return;
     }
 
-    const blob = new Blob(
-      [
-        JSON.stringify(
-          { backups, exportedAt: new Date().toISOString() },
-          null,
-          2
-        ),
-      ],
-      { type: "application/json" }
-    );
+    try {
+      const allBackups = await backupsTable.toArray();
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `lifeos-all-backups-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showNotification("All backups exported", "success");
+      const blob = new Blob(
+        [
+          JSON.stringify(
+            { backups: allBackups, exportedAt: new Date().toISOString() },
+            null,
+            2
+          ),
+        ],
+        { type: "application/json" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lifeos-all-backups-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotification("All backups exported", "success");
+    } catch (error) {
+      console.error("Export failed:", error);
+      showNotification("Failed to export backups", "error");
+    }
   }
 
   function importBackup(e) {
@@ -344,16 +394,25 @@ export default function Control({
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const json = JSON.parse(reader.result);
 
         if (json.snapshot?.state) {
           initiateRestore(json.snapshot);
         } else if (json.backups && Array.isArray(json.backups)) {
-          const merged = [...json.backups, ...backups].slice(0, MAX_BACKUPS);
-          saveBackupIndex(merged);
-          refreshBackups();
+          await backupsTable.bulkAdd(json.backups);
+
+          const allBackups = await backupsTable
+            .orderBy("createdAt")
+            .reverse()
+            .toArray();
+          if (allBackups.length > MAX_BACKUPS) {
+            const toDelete = allBackups.slice(MAX_BACKUPS).map((b) => b.id);
+            await backupsTable.bulkDelete(toDelete);
+          }
+
+          await refreshBackups();
           showNotification(
             `Imported ${json.backups.length} backups`,
             "success"
@@ -361,7 +420,8 @@ export default function Control({
         } else {
           throw new Error("Invalid format");
         }
-      } catch {
+      } catch (error) {
+        console.error("Import failed:", error);
         showNotification("Invalid backup file", "error");
       }
     };
@@ -371,75 +431,63 @@ export default function Control({
 
   // COMPLETELY FIXED: Auto-backup logic - runs ONLY ONCE on mount
   useEffect(() => {
-    // Load backups first
-    refreshBackups();
+    (async () => {
+      await refreshBackups();
 
-    // Check if we should create an auto-backup
-    if (!autoBackupEnabled || !dashboardState) {
-      console.log("Auto-backup disabled or no dashboard state");
-      return;
-    }
-
-    const now = new Date();
-    const lastAuto = localStorage.getItem("wd_last_auto_backup");
-
-    let shouldBackup = false;
-
-    if (!lastAuto) {
-      // First time - create backup
-      console.log("🆕 First auto-backup");
-      shouldBackup = true;
-    } else {
-      const lastAutoDate = new Date(lastAuto);
-
-      switch (autoBackupFrequency) {
-        case "hourly":
-          const hoursDiff = (now - lastAutoDate) / (1000 * 60 * 60);
-          if (hoursDiff >= 1) {
-            console.log(
-              `⏰ Hourly backup due (${hoursDiff.toFixed(1)} hours since last)`
-            );
-            shouldBackup = true;
-          }
-          break;
-
-        case "daily":
-          const lastDateStr = lastAutoDate.toDateString();
-          const nowDateStr = now.toDateString();
-          if (lastDateStr !== nowDateStr) {
-            console.log(
-              `📅 Daily backup due (last: ${lastDateStr}, now: ${nowDateStr})`
-            );
-            shouldBackup = true;
-          }
-          break;
-
-        case "weekly":
-          const isSunday = now.getDay() === 0;
-          const lastWasToday =
-            lastAutoDate.toDateString() === now.toDateString();
-          if (isSunday && !lastWasToday) {
-            console.log(
-              `📅 Weekly backup due (Sunday, last: ${lastAutoDate.toDateString()})`
-            );
-            shouldBackup = true;
-          }
-          break;
+      if (!autoBackupEnabled || !dashboardState) {
+        console.log("Auto-backup disabled or no dashboard state");
+        return;
       }
-    }
 
-    if (shouldBackup) {
-      console.log(`✅ Creating ${autoBackupFrequency} auto-backup now`);
-      createBackup(false, "auto");
-      localStorage.setItem("wd_last_auto_backup", now.toISOString());
-    } else {
-      console.log(
-        `⏭️ Auto-backup not needed yet (frequency: ${autoBackupFrequency})`
-      );
-    }
+      const now = new Date();
+      const lastAuto = localStorage.getItem("wd_last_auto_backup");
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Intentionally empty - run once on mount when dashboardState is available
+      let shouldBackup = false;
+
+      if (!lastAuto) {
+        console.log("🆕 First auto-backup");
+        shouldBackup = true;
+      } else {
+        const lastAutoDate = new Date(lastAuto);
+
+        switch (autoBackupFrequency) {
+          case "hourly":
+            const hoursDiff = (now - lastAutoDate) / (1000 * 60 * 60);
+            if (hoursDiff >= 1) {
+              console.log(
+                `⏰ Hourly backup due (${hoursDiff.toFixed(1)} hours)`
+              );
+              shouldBackup = true;
+            }
+            break;
+
+          case "daily":
+            if (lastAutoDate.toDateString() !== now.toDateString()) {
+              console.log(`📅 Daily backup due`);
+              shouldBackup = true;
+            }
+            break;
+
+          case "weekly":
+            const isSunday = now.getDay() === 0;
+            const lastWasToday =
+              lastAutoDate.toDateString() === now.toDateString();
+            if (isSunday && !lastWasToday) {
+              console.log(`📅 Weekly backup due`);
+              shouldBackup = true;
+            }
+            break;
+        }
+      }
+
+      if (shouldBackup) {
+        console.log(`✅ Creating ${autoBackupFrequency} auto-backup`);
+        await createBackup(false, "auto");
+        localStorage.setItem("wd_last_auto_backup", now.toISOString());
+      }
+    })();
+  }, []);
+  // Intentionally empty - run once on mount when dashboardState is available
 
   function toggleAutoBackup() {
     const newState = !autoBackupEnabled;
@@ -515,7 +563,7 @@ export default function Control({
             <h3 className="font-semibold">Storage Usage</h3>
           </div>
           <span className="text-sm text-[#7FAFA4]">
-            {storageUsed} MB / 5 MB
+            {storageUsed} MB / {storageQuota} MB
           </span>
         </div>
         <div className="w-full bg-black/60 rounded-full h-2 overflow-hidden">
@@ -525,7 +573,7 @@ export default function Control({
                 ? "bg-red-500"
                 : "bg-gradient-to-r from-[#064E3B] to-[#3FA796]"
             }`}
-            style={{ width: `${Math.min((storageUsed / 5) * 100, 100)}%` }}
+            style={{ width: `${Math.min((storageUsed / 100) * 100, 100)}%` }}
           />
         </div>
         {storageUsed > STORAGE_WARNING_MB && (
