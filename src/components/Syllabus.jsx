@@ -5703,6 +5703,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
       </li>
 
       {/* Modal - Already responsive with max-w-md */}
+      {/* Beautiful Modal for Date Picker */}
       {showDatePicker &&
         createPortal(
           <div
@@ -5714,10 +5715,131 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
+              className="w-full max-w-md bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl p-4 sm:p-6"
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="deadline-modal-title"
             >
-              {/* Rest of modal code stays the same */}
+              {/* Modal Header with gradient */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/30 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-[#00d1b2]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3
+                    id="deadline-modal-title"
+                    className="text-lg font-semibold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent"
+                  >
+                    Set Deadline
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(false)}
+                  className="w-9 h-9 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Task preview */}
+              <div className="mb-5 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {it.title}
+                </p>
+              </div>
+
+              {/* Date Picker */}
+              <div className="mb-5 flex justify-center">
+                <DatePicker
+                  selected={deadline ? new Date(deadline) : null}
+                  onChange={(date) => {
+                    setTaskDeadline(
+                      path,
+                      idx,
+                      date ? formatLocalISO(date) : ""
+                    );
+                  }}
+                  inline
+                  calendarClassName="custom-calendar"
+                  minDate={new Date()}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {deadline && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTaskDeadline(path, idx, "");
+                      setShowDatePicker(false);
+                    }}
+                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600/20 to-red-500/20 border border-red-500/40 text-red-400 hover:from-red-600/30 hover:to-red-500/30 hover:border-red-500/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Remove Deadline
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(false)}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00d1b2]/20 to-blue-500/20 border border-[#00d1b2]/40 text-[#00d1b2] hover:from-[#00d1b2]/30 hover:to-blue-500/30 hover:border-[#00d1b2]/60 transition-all duration-200 font-medium hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Done
+                </button>
+              </div>
             </motion.div>
           </div>,
           document.body
@@ -5876,10 +5998,10 @@ function SectionCard({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                      : totals.pct < 75
-                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                    : totals.pct < 75
+                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6078,10 +6200,10 @@ function SectionCard({
                         totals.pct < 25
                           ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E]"
                           : totals.pct < 50
-                            ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80]"
-                            : totals.pct < 75
-                              ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0]"
-                              : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444]"
+                          ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80]"
+                          : totals.pct < 75
+                          ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0]"
+                          : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444]"
                       }
                     `}
                     style={{ width: `${totals.pct}%` }}
@@ -6096,11 +6218,12 @@ function SectionCard({
                   onChange={(date) => {
                     setTargetDate(
                       sectionPath,
-                      date ? formatLocalISO(date) : "",
+                      date ? formatLocalISO(date) : ""
                     );
                   }}
                   inline
                   calendarClassName="custom-calendar"
+                  minDate={new Date()}
                 />
               </div>
 
@@ -6152,7 +6275,7 @@ function SectionCard({
               </div>
             </motion.div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
@@ -6404,14 +6527,18 @@ function SubNode({
                       ? deadlineStatus.type === "ontime"
                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                         : deadlineStatus.type === "late"
-                          ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
-                          : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                        : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
                       : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                   }`}
                 >
                   {deadlineStatus
                     ? deadlineStatus.label
-                    : `✓ Completed on ${latestDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`}
+                    : `✓ Completed on ${latestDate.toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}`}
                 </motion.div>
               )
             );
@@ -6547,6 +6674,7 @@ function SubNode({
                   }}
                   inline
                   calendarClassName="custom-calendar"
+                  minDate={new Date()}
                 />
               </div>
 
@@ -6598,7 +6726,7 @@ function SubNode({
               </div>
             </motion.div>
           </div>,
-          document.body,
+          document.body
         )}
     </>
   );
