@@ -1544,6 +1544,73 @@ export default function Planner({ dashboardState, updateDashboard }) {
     sunset: weatherData?.meta?.sunset || null,
   };
 
+  // Auto-update streak based on daily completion
+  useEffect(() => {
+    const checkStreak = () => {
+      const today = formatDateKey(new Date());
+      const yesterday = formatDateKey(dayjs().subtract(1, "day").toDate());
+
+      // Get today's and yesterday's data
+      const todayData = planner.dayMap?.[today];
+      const yesterdayData = planner.dayMap?.[yesterday];
+
+      // Calculate completion (customize thresholds as needed)
+      const todayTasks =
+        (todayData?.Morning?.length || 0) +
+        (todayData?.Afternoon?.length || 0) +
+        (todayData?.Evening?.length || 0);
+
+      const yesterdayTasks =
+        (yesterdayData?.Morning?.length || 0) +
+        (yesterdayData?.Afternoon?.length || 0) +
+        (yesterdayData?.Evening?.length || 0);
+
+      // Check if day is "complete" (at least 3 tasks)
+      const todayComplete =
+        todayTasks >= 5 &&
+        (todayData?.habits?.water || 0) >= 8 &&
+        todayData?.habits?.meditate === true;
+
+      const yesterdayComplete = yesterdayTasks >= 3;
+
+      // Check if we've already updated streak today
+      const lastStreakDate = localStorage.getItem("lastStreakUpdate");
+      const isNewDay = lastStreakDate !== today;
+
+      if (isNewDay && todayComplete) {
+        // Increment streak if yesterday was also complete, else reset to 1
+        setPlanner((p) => {
+          const newStreak = yesterdayComplete ? (p.streak || 0) + 1 : 1;
+          localStorage.setItem("lastStreakUpdate", today);
+          showToast(`🔥 Streak: ${newStreak} days!`);
+          return { ...p, streak: newStreak };
+        });
+      } else if (isNewDay && !todayComplete && !yesterdayComplete) {
+        // Reset streak if we missed yesterday and haven't completed today
+        const hoursSinceMidnight = dayjs().hour();
+        if (hoursSinceMidnight > 6) {
+          // Give grace period until 6 AM
+          setPlanner((p) => {
+            if (p.streak > 0) {
+              localStorage.setItem("lastStreakUpdate", today);
+              showToast("⚠️ Streak reset!");
+              return { ...p, streak: 0 };
+            }
+            return p;
+          });
+        }
+      }
+    };
+
+    // Check immediately on mount
+    checkStreak();
+
+    // Check every hour
+    const interval = setInterval(checkStreak, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [planner.dayMap, showToast]); // Re-run when tasks change
+
   return (
     <div className="p-6 max-w-7xl mx-auto rounded-xl text-[#E8FFFA] bg-gradient-to-br from-[#B82132] via-[#183D3D] to-[#0F0F0F] dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C] transition-colors duration-500 space-y-6 md:mt-7 lg:mt-0">
       {/* HEADER */}
