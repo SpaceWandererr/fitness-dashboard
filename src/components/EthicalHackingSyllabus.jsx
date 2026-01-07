@@ -1275,6 +1275,7 @@ export default function EthicalHackingSyllabus({
 
   const daySet = useMemo(() => new Set(streak), [streak]);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Calculate grand statistics
   const grand = useMemo(() => {
@@ -1355,7 +1356,7 @@ export default function EthicalHackingSyllabus({
               const deadlineDate = new Date(item.deadline);
               deadlineDate.setHours(0, 0, 0, 0);
               const daysLeft = Math.ceil(
-                (deadlineDate - today) / (1000 * 60 * 60 * 24)
+                (deadlineDate - today) / (1000 * 60 * 60 * 24),
               );
               topicData.daysLeft = daysLeft;
               topicsWithDeadline.push(topicData); // ✅ Fixed: was wrong before
@@ -1369,7 +1370,7 @@ export default function EthicalHackingSyllabus({
 
     // Sort topics with deadlines by date
     topicsWithDeadline.sort(
-      (a, b) => new Date(a.deadline) - new Date(b.deadline)
+      (a, b) => new Date(a.deadline) - new Date(b.deadline),
     );
 
     // Combine: deadline topics first, then topics without deadlines
@@ -1394,7 +1395,7 @@ export default function EthicalHackingSyllabus({
               const deadlineDate = new Date(item.deadline);
               const today = new Date();
               const daysLeft = Math.ceil(
-                (deadlineDate - today) / (1000 * 60 * 60 * 24)
+                (deadlineDate - today) / (1000 * 60 * 60 * 24),
               );
 
               if (daysLeft < 0) priority += 200;
@@ -1469,7 +1470,7 @@ export default function EthicalHackingSyllabus({
         item.title
       } @ ${new Date().toLocaleString("en-IN")}`;
       updates.ethical_hacking_streak = Array.from(
-        new Set([...daySet, todayISO()])
+        new Set([...daySet, todayISO()]),
       );
     } else {
       // Unmarking - find the most recent completed topic
@@ -1496,7 +1497,7 @@ export default function EthicalHackingSyllabus({
 
       if (mostRecentTopic) {
         updates.ethical_hacking_lastStudied = `${mostRecentTopic} @ ${mostRecentDate.toLocaleString(
-          "en-IN"
+          "en-IN",
         )}`;
       } else {
         updates.ethical_hacking_lastStudied = "";
@@ -1535,7 +1536,7 @@ export default function EthicalHackingSyllabus({
     const updates = { ethical_hacking_syllabus: updatedTree };
     if (val) {
       updates.ethical_hacking_streak = Array.from(
-        new Set([...daySet, todayISO()])
+        new Set([...daySet, todayISO()]),
       );
     }
     updateDashboard(updates);
@@ -1588,13 +1589,13 @@ export default function EthicalHackingSyllabus({
     if (date) {
       toast.success(`📅 Deadline set for ${items.length} topics!`);
     } else {
-        toast(`🗑️ Deadlines removed`, {
-          icon: "↩️",
-          style: {
-            background: "#1e293b",
-            color: "#94a3b8",
-          },
-        });
+      toast(`🗑️ Deadlines removed`, {
+        icon: "↩️",
+        style: {
+          background: "#1e293b",
+          color: "#94a3b8",
+        },
+      });
     }
   };
 
@@ -1666,7 +1667,10 @@ export default function EthicalHackingSyllabus({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        onClick={() => setShowResetModal(false)}
+        onClick={() => {
+          setIsClosing(true);
+          setShowResetModal(false);
+        }}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -1729,7 +1733,8 @@ export default function EthicalHackingSyllabus({
                 setShowResetModal(false);
                 toast.success("Progress reset successfully");
               }}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white
+              text-sm font-medium transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
             >
               Yes, Reset Everything
             </button>
@@ -1742,7 +1747,7 @@ export default function EthicalHackingSyllabus({
           </div>
         </motion.div>
       </motion.div>,
-      document.body
+      document.body,
     );
   };
 
@@ -1800,8 +1805,9 @@ export default function EthicalHackingSyllabus({
                   Collapse
                 </button>
                 <button
-                  onClick={() => setShowResetModal(true)}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-red-600 hover:bg-red-500 border border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-95"
+                  onClick={() => !isClosing && setShowResetModal(true)}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm 
+                  font-medium bg-red-600 hover:bg-red-500 border border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-95"
                 >
                   🔄 Reset
                 </button>
@@ -1975,7 +1981,7 @@ export default function EthicalHackingSyllabus({
                             const sectionKey = pathKey(path);
                             const isSectionOpen = openSections[sectionKey];
                             const secDone = items.filter(
-                              (it) => it.done
+                              (it) => it.done,
                             ).length;
                             const secTotal = items.length;
                             const secPct = secTotal
@@ -2021,7 +2027,7 @@ export default function EthicalHackingSyllabus({
                                         onClick={() =>
                                           markAllSection(
                                             path,
-                                            secDone !== secTotal
+                                            secDone !== secTotal,
                                           )
                                         }
                                         className="px-2 py-1 rounded text-[11px] sm:text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 transition whitespace-nowrap"
@@ -2033,7 +2039,7 @@ export default function EthicalHackingSyllabus({
 
                                       {(() => {
                                         const sectionHasDeadline = items.some(
-                                          (item) => item.deadline
+                                          (item) => item.deadline,
                                         );
                                         const earliestDeadline =
                                           sectionHasDeadline
@@ -2041,7 +2047,7 @@ export default function EthicalHackingSyllabus({
                                                 .filter((item) => item.deadline)
                                                 .map(
                                                   (item) =>
-                                                    new Date(item.deadline)
+                                                    new Date(item.deadline),
                                                 )
                                                 .sort((a, b) => a - b)[0]
                                             : null;
@@ -2050,7 +2056,7 @@ export default function EthicalHackingSyllabus({
                                           <button
                                             onClick={() =>
                                               setShowSectionDeadlinePicker(
-                                                sectionKey
+                                                sectionKey,
                                               )
                                             }
                                             className={`px-2 py-1 rounded text-[11px] sm:text-xs border transition whitespace-nowrap flex items-center gap-1 ${
@@ -2067,7 +2073,7 @@ export default function EthicalHackingSyllabus({
                                                     {
                                                       day: "2-digit",
                                                       month: "short",
-                                                    }
+                                                    },
                                                   )
                                                 : "Set"}
                                             </span>
@@ -2190,7 +2196,7 @@ export default function EthicalHackingSyllabus({
                                         </div>
                                       </motion.div>
                                     </motion.div>,
-                                    document.body
+                                    document.body,
                                   )}
                                 {/* Topics */}
                                 <AnimatePresence>
@@ -2323,14 +2329,14 @@ export default function EthicalHackingSyllabus({
                                                       </span>
                                                       <span className="text-[10px] sm:text-xs whitespace-nowrap">
                                                         {new Date(
-                                                          item.completedOn
+                                                          item.completedOn,
                                                         ).toLocaleDateString(
                                                           "en-GB",
                                                           {
                                                             day: "2-digit",
                                                             month: "short",
                                                             year: "numeric",
-                                                          }
+                                                          },
                                                         )}
                                                       </span>
                                                     </motion.span>
@@ -2367,14 +2373,14 @@ export default function EthicalHackingSyllabus({
                                                       </span>
                                                       <span className="text-[10px] sm:text-xs whitespace-nowrap">
                                                         {new Date(
-                                                          item.deadline
+                                                          item.deadline,
                                                         ).toLocaleDateString(
                                                           "en-GB",
                                                           {
                                                             day: "2-digit",
                                                             month: "short",
                                                             year: "numeric",
-                                                          }
+                                                          },
                                                         )}
                                                       </span>
                                                     </motion.span>
@@ -2391,7 +2397,7 @@ export default function EthicalHackingSyllabus({
                                                 onClick={(e) => {
                                                   e.stopPropagation();
                                                   setShowDeadlinePicker(
-                                                    `${sectionKey}__${idx}`
+                                                    `${sectionKey}__${idx}`,
                                                   );
                                                 }}
                                                 className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 ${
@@ -2480,7 +2486,7 @@ export default function EthicalHackingSyllabus({
                                                         selected={
                                                           item.deadline
                                                             ? new Date(
-                                                                item.deadline
+                                                                item.deadline,
                                                               )
                                                             : null
                                                         }
@@ -2488,7 +2494,7 @@ export default function EthicalHackingSyllabus({
                                                           setDeadline(
                                                             path,
                                                             idx,
-                                                            date
+                                                            date,
                                                           )
                                                         }
                                                         inline
@@ -2505,7 +2511,7 @@ export default function EthicalHackingSyllabus({
                                                           setDeadline(
                                                             path,
                                                             idx,
-                                                            null
+                                                            null,
                                                           )
                                                         }
                                                         className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-xs font-medium transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 flex items-center justify-center gap-1.5 whitespace-nowrap"
@@ -2528,7 +2534,7 @@ export default function EthicalHackingSyllabus({
                                                       <button
                                                         onClick={() =>
                                                           setShowDeadlinePicker(
-                                                            null
+                                                            null,
                                                           )
                                                         }
                                                         className="flex-1 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-all duration-200"
@@ -2538,7 +2544,7 @@ export default function EthicalHackingSyllabus({
                                                     </div>
                                                   </motion.div>
                                                 </motion.div>,
-                                                document.body
+                                                document.body,
                                               )}
                                           </motion.div>
                                         ))}
@@ -2604,7 +2610,7 @@ export default function EthicalHackingSyllabus({
                     if (deadline) {
                       const diff = deadline.getTime() - today.getTime();
                       const daysRemaining = Math.ceil(
-                        diff / (24 * 60 * 60 * 1000)
+                        diff / (24 * 60 * 60 * 1000),
                       );
                       daysLeft = daysRemaining;
 
@@ -2724,8 +2730,8 @@ export default function EthicalHackingSyllabus({
                                           Math.max(
                                             5,
                                             ((maxDays - daysLeft) / maxDays) *
-                                              100
-                                          )
+                                              100,
+                                          ),
                                         );
                                       })()}%`,
                                     }}
@@ -2946,7 +2952,6 @@ export default function EthicalHackingSyllabus({
               </div>
             </div>
           </div>
-          
         </div>
       </div>
       <ResetModal />
