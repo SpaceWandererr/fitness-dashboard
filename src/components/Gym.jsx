@@ -94,84 +94,144 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
 const DEFAULT_PLAN = {
   Monday: {
     title: "Chest + Core",
+
     left: [
-      "Bench Press (Barbell or Smith Machine) – 4×8",
+      "Bench Press (Barbell/Smith) – 4×8",
       "Incline Dumbbell Press – 4×10",
-      "Incline Chest Press Machine – 3×12-15 (replace Push-ups)",
+      "Chest Press Machine – 3×12",
       "Dumbbell Pullover – 3×10",
+      "Decline Bench Crunch – 3×15",
     ],
-    right: ["Chest Fly (Pec Deck / Cable) – 3×12"],
-    finisherLabel: "Core Finisher",
-    finisher: ["Decline Bench Crunch – 3×15", "Cable Crunch – 3×15"],
+
+    right: [
+      "Chest Fly (Pec Deck/Cable) – 3×12",
+      "Cable Crunch – 3×15",
+      "Plank – 3×30–45 sec",
+    ],
+
+    finisherLabel: "🔥 Fat Burn",
+
+    finisher: [
+      "Incline Walk – 15–20 min (Incline 6–10, Speed 4.5–5)",
+      "Optional: Mountain Climbers – 30 sec × 5",
+    ],
   },
   Tuesday: {
     title: "Back + Biceps",
+
     left: [
-      "One-Arm DB Row – 3×12 (Biceps)",
-      "Barbell Curl – 3×10 (Biceps)",
-      "Hammer Curl – 3×12 (Biceps)",
-    ],
-    right: [
       "Lat Pull-down – 4×10 (Back)",
       "Seated Cable Row – 4×10 (Back)",
-      "Rope Cable Curl – 2×15 (slow burn)",
+      "One-Arm DB Row – 3×12 (Back)",
     ],
-    finisherLabel: null,
-    finisher: [],
+
+    right: [
+      "Barbell Curl – 3×10 (Biceps)",
+      "Hammer Curl – 3×12 (Biceps)",
+      "Rope Cable Curl – 2×15 (Slow Burn)",
+      "Face Pull – 3×12 (Rear Delt/Posture)",
+    ],
+
+    finisherLabel: "🔥 Fat Burn",
+
+    finisher: [
+      "Jump Rope / High Knees – 30 sec ON / 30 sec OFF × 5",
+      "Incline Walk – 10–15 min (Incline 6–10, Speed 4.5–5)",
+    ],
   },
   Wednesday: {
-    title: "Legs (Quads + Glutes + Calves)",
+    title: "Legs (Quads + Glutes + Hamstrings + Calves)",
+
     left: [
       "Squats – 4×8",
-      "Leg Press Machine – 4×10",
-      "Walking Lunges – 3×12 each leg",
+      "Leg Press Machine – 3×10",
+      "Walking Lunges – 3×10 each leg",
+      "Romanian Deadlift (DB/Barbell) – 3×10 (Hamstrings)",
     ],
-    right: ["Leg Extension Machine – 3×15", "Seated Calf Raise Machine – 4×15"],
-    finisherLabel: null,
-    finisher: [],
+
+    right: [
+      "Leg Extension Machine – 3×12–15",
+      "Seated Leg Curl – 3×12 (Hamstrings)",
+      "Seated/Standing Calf Raise – 4×15",
+      "Glute Bridge / Hip Thrust – 3×12",
+    ],
+
+    finisherLabel: "🔥 Cardio (Recovery Friendly)",
+
+    finisher: [
+      "Cycle – 10–15 min (Low–Medium Resistance)",
+      "Optional: Incline Walk – 10 min (Incline 5–6, Speed 4)",
+    ],
   },
   Thursday: {
     title: "Shoulders + Abs",
+
     left: [
-      "Overhead DB Press – 4×10",
+      "Overhead DB Press – 4×8–10",
       "Lateral Raise – 4×12",
-      "Front Raise – 3×12",
+      "Rear Delt Fly (Machine/Cable) – 3×12",
+      "Shrugs – 3×12–15",
     ],
-    right: ["Rear Delt Fly (Machine Pec) – 3×12", "Shrugs – 3×15"],
-    finisherLabel: "Abs Finisher",
+
+    right: [
+      "Plank – 3×45–60 sec",
+      "Face Pull – 3×12 (Posture/Rear Delt)",
+      "Hanging Knee Raise / Leg Raise – 3×12",
+      "Cable Crunch – 3×15",
+    ],
+
+    finisherLabel: "🔥 Fat Burn",
+
     finisher: [
-      "Plank – 3×1 min",
-      "Russian Twist with Dumbbell or Plate – 3×20",
-      "Bicycle Crunch – 3×20",
+      "Cycle or Treadmill – 15 min (Moderate)",
+      "Optional: Battle Rope / High Knees – 30 sec × 5",
     ],
   },
   Friday: {
     title: "Chest + Arms (Hypertrophy Focus)",
-    left: ["Incline Barbell Press – 4×10", "Close-Grip Bench Press – 3×10"],
-    right: [
-      "Cable Crossovers – 3×15",
-      "Triceps Rope Push-down – 3×15",
-      "Preacher Curl (Bench or Machine) – 3×12",
+
+    left: [
+      "Incline Barbell Press – 4×10",
+      "Flat DB Press – 3×10–12",
+      "Overhead DB Triceps Extension – 3×12",
+      "Close-Grip Bench Press – 3×10 (Triceps)",
+      "Hammer Curl – 3×12",
     ],
-    finisherLabel: "Core (optional)",
-    finisher: ["Decline Bench Crunch – 3×15"],
+
+    right: [
+      "Cable Crossovers – 3×12–15",
+      "Triceps Rope Push-down – 3×12–15",
+      "Preacher Curl (Machine/Bench) – 3×12",
+    ],
+
+    finisherLabel: "🔥 Pump + Burn",
+
+    finisher: [
+      "Superset: Rope Push-down + Cable Curl – 2×15 each",
+      "Cycle / Treadmill – 10–15 min (Moderate)",
+    ],
   },
   Saturday: {
-    title: "Legs + Core + Cardio",
+    title: "Legs + Core + Conditioning",
+
     left: [
-      "Dead-lift – 4×6 (strength focus)",
-      "Leg Press Machine – 4×10",
-      "Bulgarian Split Squat (Dumbbells or Smith Machine) – 3×10 each leg",
+      "Deadlift (Moderate Weight) – 4×5–6",
+      "Bulgarian Split Squat – 3×10 each leg",
+      "Leg Press Machine – 3×10 (Controlled)",
     ],
+
     right: [
       "Hamstring Curl Machine – 3×12",
-      "Sitting Calf Raise Machine – 4×15",
+      "Seated/Standing Calf Raise – 4×15",
+      "Glute Bridge / Hip Thrust – 3×12",
     ],
-    finisherLabel: "Core/Cardio Finisher",
+
+    finisherLabel: "🔥 Core + Cardio",
+
     finisher: [
-      "Decline Bench Crunch – 3×15 (replaces Cable Knee Raise)",
-      "Plank – 3×1 min",
-      "15–20 mins HIIT or Treadmill run",
+      "Hanging Knee Raise / Leg Raise – 3×12",
+      "Plank – 3×45–60 sec",
+      "Cycle HIIT – 30 sec fast / 60 sec slow × 8 rounds",
     ],
   },
   Sunday: {
