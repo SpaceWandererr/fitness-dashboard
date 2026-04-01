@@ -359,7 +359,7 @@ function DailySummaryMerged({ date, logs, mode }) {
       title: plan?.title || "No plan",
       wd,
     };
-  };
+  };;
 
   const nextInfo = getNextWorkoutInfo(date);
 
@@ -1525,7 +1525,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     });
 
     console.log("Target weight saved:", newWeight);
-  };
+  };;
 
   const updateCurrentWeight = async () => {
     const raw = currWeight;
@@ -3421,8 +3421,9 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
             headers.push(
               <div
                 key={i}
-                className={`text-[10px] text-center font-semibold uppercase ${isToday ? "text-yellow-300" : "text-emerald-300/60"
-                  }`}
+                className={`text-[10px] text-center font-semibold uppercase ${
+                  isToday ? "text-yellow-300" : "text-emerald-300/60"
+                }`}
               >
                 {weekdays[dayIndex]}
               </div>,
@@ -3485,17 +3486,20 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
                     flex items-center justify-center border
                     transition-all duration-200
                     cursor-pointer hover:scale-105
-                    ${isDone
-                      ? "bg-emerald-600 text-white border-emerald-400/50 shadow-md shadow-emerald-500/30"
-                      : "bg-gray-700/80 text-gray-200 border-white/10 hover:bg-gray-600/80"
+                    ${
+                      isDone
+                        ? "bg-emerald-600 text-white border-emerald-400/50 shadow-md shadow-emerald-500/30"
+                        : "bg-gray-700/80 text-gray-200 border-white/10 hover:bg-gray-600/80"
                     }
-                    ${isSelected
-                      ? "ring-2 ring-cyan-400 scale-[1.08] shadow-lg"
-                      : ""
+                    ${
+                      isSelected
+                        ? "ring-2 ring-cyan-400 scale-[1.08] shadow-lg"
+                        : ""
                     }
-                    ${isToday
-                      ? "border-cyan-400 ring-2 ring-cyan-400/60 font-bold scale-110 shadow-lg shadow-cyan-400/30"
-                      : ""
+                    ${
+                      isToday
+                        ? "border-cyan-400 ring-2 ring-cyan-400/60 font-bold scale-110 shadow-lg shadow-cyan-400/30"
+                        : ""
                     }
                   `}
                 >
@@ -3533,20 +3537,22 @@ function MiniCalendar({ date, setDate, doneState, logs }) {
               return (
                 <div key={day} className="flex-1 text-center">
                   <div
-                    className={`text-[9px] mb-1 ${isCurrentDay
+                    className={`text-[9px] mb-1 ${
+                      isCurrentDay
                         ? "text-yellow-300 font-bold"
                         : "text-gray-400"
-                      }`}
+                    }`}
                   >
                     {day}
                   </div>
                   <div
-                    className={`w-full h-2 rounded-full transition-all ${dayDone
+                    className={`w-full h-2 rounded-full transition-all ${
+                      dayDone
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500"
                         : isCurrentDay
                           ? "bg-yellow-500/60"
                           : "bg-gray-700"
-                      }`}
+                    }`}
                   />
                 </div>
               );
