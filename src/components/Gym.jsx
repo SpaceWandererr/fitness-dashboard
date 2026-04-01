@@ -120,14 +120,14 @@ const DEFAULT_PLAN = {
     title: "Back + Biceps",
 
     left: [
-      "Lat Pull-down – 4×10 (Back)",
-      "Seated Cable Row – 4×10 (Back)",
+      "Barbell Curl – 3×10 (Biceps)",
+      "Hammer Curl – 3×12 (Biceps)",
       "One-Arm DB Row – 3×12 (Back)",
     ],
 
     right: [
-      "Barbell Curl – 3×10 (Biceps)",
-      "Hammer Curl – 3×12 (Biceps)",
+      "Lat Pull-down – 4×10 (Back)",
+      "Seated Cable Row – 4×10 (Back)",
       "Rope Cable Curl – 2×15 (Slow Burn)",
       "Face Pull – 3×12 (Rear Delt/Posture)",
     ],
@@ -334,18 +334,29 @@ function DailySummaryMerged({ date, logs, mode }) {
         : "You showed up. That's what matters. 🚀";
 
   const getNextWorkoutInfo = (date) => {
-    const today = dayjs(date);
-    const tomorrow = today.add(1, "day");
-    const wd = tomorrow.format("dddd");
-    const plan = DEFAULT_PLAN[wd];
+    const selected = dayjs(date);
+    const today = dayjs();
 
-    if (!plan) {
-      return { label: "Tomorrow", title: "No plan", wd };
+    // ✅ If selected date is today → show next workout
+    if (selected.isSame(today, "day")) {
+      const tomorrow = selected.add(1, "day");
+      const wd = tomorrow.format("dddd");
+      const plan = DEFAULT_PLAN[wd];
+
+      return {
+        label: "Tomorrow",
+        title: plan?.title || "No plan",
+        wd,
+      };
     }
 
+    // ✅ If user selected ANY other date → show that day's workout
+    const wd = selected.format("dddd");
+    const plan = DEFAULT_PLAN[wd];
+
     return {
-      label: tomorrow.isSame(dayjs().add(1, "day"), "day") ? "Tomorrow" : wd,
-      title: plan.title || "No plan",
+      label: wd,
+      title: plan?.title || "No plan",
       wd,
     };
   };
@@ -491,7 +502,10 @@ function DailySummaryMerged({ date, logs, mode }) {
                   let latestWeight = entry?.weight ?? null;
                   if (latestWeight === null) {
                     let checkDate = dayjs(date).subtract(1, "day");
-                    while (latestWeight === null && checkDate.isAfter(dayjs("2020-01-01"))) {
+                    while (
+                      latestWeight === null &&
+                      checkDate.isAfter(dayjs("2020-01-01"))
+                    ) {
                       const key = checkDate.format("YYYY-MM-DD");
                       if (logs[key]?.weight != null) {
                         latestWeight = logs[key].weight;
@@ -504,7 +518,9 @@ function DailySummaryMerged({ date, logs, mode }) {
                   // Compute BMI from the latest weight (height is fixed at 176 cm)
                   const bmi =
                     latestWeight != null
-                      ? Number((latestWeight / Math.pow(176 / 100, 2)).toFixed(1))
+                      ? Number(
+                          (latestWeight / Math.pow(176 / 100, 2)).toFixed(1),
+                        )
                       : null;
 
                   return (
@@ -536,7 +552,6 @@ function DailySummaryMerged({ date, logs, mode }) {
                   );
                 })()}
               </div>
-              
             </div>
 
             {/* Exercises Card */}
@@ -1126,7 +1141,6 @@ export default function Gym({ dashboardState, updateDashboard }) {
       setHasLoadedInitialData(true);
     }
   }, [dashboardState, hasLoadedInitialData]);
-  
 
   useEffect(() => {
     setLogs((prev) => {
