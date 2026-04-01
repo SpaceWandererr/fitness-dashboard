@@ -4150,26 +4150,6 @@ const TREE = {
   },
 };
 
-<<<<<<< Updated upstream
-=======
-// Stabilize meta reference to prevent re-renders
-// Fixed: Always return the latest value, not stale ref.current
-function useStable(obj) {
-  const ref = useRef(obj);
-  // Update ref synchronously to avoid stale reads
-  if (ref.current !== obj) {
-    ref.current = obj;
-  }
-  return ref.current;
-}
-
-/* =======https://fitness-backend-laoe.onrender.com/=============== KEYS ======================= */
-const K_TREE = "syllabus_tree_v2";
-const K_META = "syllabus_meta_v2";
-const K_NOTES = "syllabus_notes_v2";
-const K_STREAK = "syllabus_streak_v2";
-
->>>>>>> Stashed changes
 /* ======================= UTIL ======================= */
 
 /**
@@ -4310,7 +4290,6 @@ function totalsOf(node, visited = new WeakSet()) {
 }
 
 /* ======================= MAIN ======================= */
-<<<<<<< Updated upstream
 export default function Syllabus({
   dashboardState,
   setDashboardState,
@@ -4319,62 +4298,12 @@ export default function Syllabus({
   // ==================== ALL HOOKS AT TOP ====================
   // Control flags
   // UI state
-=======
-export default function Syllabus({ dashboardState, setDashboardState }) {
-  // ---------------- MONGO CONFIG ----------------
-  const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://fitness-backend-laoe.onrender.com/api/state";
-
-  // ⛑ Guard: prevent crash before state arrives
-  if (!dashboardState) {
-    return <div className="p-6 text-white">Loading syllabus from Mongo...</div>;
-  }
-
-  /* ======================= SYNCED STATE FROM MONGO ======================= */
-  const normalizeTree = useCallback((src) => {
-    const out = {};
-    for (const [k, v] of Object.entries(src || {})) {
-      out[k] = normalizeSection(v);
-    }
-    return out;
-  }, []);
-
-  // 1️⃣ BUILD TREE FIRST
-  const tree = useMemo(() => {
-    if (dashboardState?.syllabus_tree_v2) {
-      return normalizeTree(dashboardState.syllabus_tree_v2);
-    }
-    return normalizeTree(TREE);
-  }, [dashboardState?.syllabus_tree_v2, normalizeTree]);
-
-  // 2️⃣ RAW META SECOND
-  const meta = dashboardState?.syllabus_meta || {};
-
-  // 3️⃣ STABLE META THIRD - Use useMemo to ensure updates properly
-  const stableMeta = useMemo(() => meta, [meta]);
-
-  // 4️⃣ NOTES / REMINDERS
-  const nr = dashboardState?.syllabus_notes || {};
-  const daySet = new Set(dashboardState?.syllabus_streak || []);
-
->>>>>>> Stashed changes
   const [showLastStudied, setShowLastStudied] = useState(true);
   const [query, setQuery] = useState("");
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [milestone, setMilestone] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const saveTimeoutRef = useRef(null);
-
-  /* ======================= CLEANUP TIMEOUT ======================= */
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Derived data (SAFE)
   const meta = dashboardState?.syllabus_meta || {};
@@ -4448,49 +4377,18 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     return filterNode(tree) || {};
   }, [tree, query]);
 
-<<<<<<< Updated upstream
   // ==================== CALLBACKS ====================
 
   // 🔹 Toggle open / close (UI-only, no backend timestamp)
   const toggleOpen = useCallback(
     (path) => {
       const key = pathKey(path);
-=======
-  /* ======================= DASHBOARD UPDATE ======================= */
-  const updateDashboard = useCallback(
-    (updates) => {
-      // Update local state first
-      setDashboardState((prev) => {
-        const newState = {
-          ...prev,
-          ...updates,
-        };
-
-        // Save to MongoDB asynchronously AFTER state update (debounced)
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-        saveTimeoutRef.current = setTimeout(() => {
-          fetch(API_URL, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newState),
-          }).catch((err) => console.error("Mongo save failed:", err));
-        }, 500); // Debounce saves by 500ms
-
-        return newState;
-      });
-    },
-    [API_URL]
-  );
->>>>>>> Stashed changes
 
       setDashboardState((prev) => {
         const current = prev?.syllabus_meta || {};
         const prevOpen = current[key]?.open || false;
         const nextOpen = !prevOpen;
 
-<<<<<<< Updated upstream
         const nextState = {
           ...prev,
           syllabus_meta: {
@@ -4516,98 +4414,14 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         return nextState;
       });
     },
-    [setDashboardState]
+    [setDashboardState],
   );
-
-=======
-  // ✅ Stable Toggle (does not break after Mongo re-render)
-  const toggleOpen = useCallback(
-    (path) => {
-      const key = pathKey(path);
-
-      // Use functional update to read latest state
-      setDashboardState((prev) => {
-        const current = prev?.syllabus_meta || {};
-        const prevOpen = current[key]?.open || false;
-
-        const newState = {
-          ...prev,
-          syllabus_meta: {
-            ...current,
-            [key]: {
-              ...(current[key] || {}),
-              open: !prevOpen,
-            },
-          },
-        };
-
-        // Save to MongoDB asynchronously AFTER state update (debounced, no event)
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-        saveTimeoutRef.current = setTimeout(() => {
-          fetch(API_URL, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newState),
-          }).catch((err) => console.error("Mongo save failed:", err));
-        }, 500); // Debounce saves by 500ms
-
-        return newState;
-      });
-    },
-    [API_URL]
-  );
-
-  // alias for Section header click
-  const onSectionHeaderClick = (path) => {
-    toggleOpen(path);
-  };
->>>>>>> Stashed changes
 
   // =========================================================
   // 🔥 FIXED: Set deadline on section + cascade to tasks
   // =========================================================
   const setTargetDate = (path, date) => {
     const key = pathKey(path);
-    const newTree = deepClone(tree);
-    const node = getRefAtPath(newTree, path);
-    const updatedMeta = {
-      ...meta,
-      [key]: { ...(meta[key] || {}), targetDate: date },
-    };
-
-    // Cascade deadline to all nested subsections and topics
-    function cascadeDeadline(node, deadline, currentPath, metaObj) {
-      if (Array.isArray(node)) {
-        // It's a task list - set deadline for all tasks
-        node.forEach((item) => {
-          if (!item.deadline) {
-            item.deadline = deadline;
-          }
-        });
-      } else if (isObject(node)) {
-        // It's a nested object - recurse into children
-        for (const [childKey, childVal] of Object.entries(node || {})) {
-          const childPath = [...currentPath, childKey];
-          const childKeyStr = pathKey(childPath);
-
-          // Set targetDate in meta for subsection
-          if (!metaObj[childKeyStr]) {
-            metaObj[childKeyStr] = {};
-          }
-          metaObj[childKeyStr].targetDate = deadline;
-
-          // Recurse into children
-          cascadeDeadline(childVal, deadline, childPath, metaObj);
-        }
-      }
-    }
-
-    // Only cascade if a date is provided (not when clearing)
-    if (node && date) {
-      cascadeDeadline(node, date, path, updatedMeta);
-    }
 
     // 1️⃣ Clone meta safely
     const updatedMeta = { ...meta };
@@ -4664,11 +4478,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
     // 4️⃣ Persist ONLY what changed
     updateDashboard({
       syllabus_meta: updatedMeta,
-<<<<<<< Updated upstream
       syllabus_notes: newNotes,
-=======
-      syllabus_tree_v2: newTree,
->>>>>>> Stashed changes
     });
   };
 
@@ -4827,7 +4637,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
 
       if (mostRecentTitle && mostRecentDate) {
         updates.syllabus_lastStudied = `${mostRecentTitle} • ${mostRecentDate.toLocaleString(
-          "en-IN"
+          "en-IN",
         )}`;
       } else {
         updates.syllabus_lastStudied = "";
@@ -4888,7 +4698,6 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
   };
 
   /* ======================= NOTES ======================= */
-<<<<<<< Updated upstream
 
   // ✅ Notes updater (NO tree, NO manual fetch)
   const setNR = useCallback(
@@ -4917,40 +4726,7 @@ export default function Syllabus({ dashboardState, setDashboardState }) {
         toast.success("Notes updated");
       }
     },
-    [nr, updateDashboard]
-=======
-  const setNR = useCallback(
-    (newNR) => {
-      // Handle functional updates like setState
-      if (typeof newNR === "function") {
-        setDashboardState((prev) => {
-          const currentNotes = prev?.syllabus_notes || {};
-          const updatedNotes = newNR(currentNotes);
-          const newState = {
-            ...prev,
-            syllabus_notes: updatedNotes,
-          };
-
-          // Save to MongoDB
-          if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-          }
-          saveTimeoutRef.current = setTimeout(() => {
-            fetch(API_URL, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(newState),
-            }).catch((err) => console.error("Mongo save failed:", err));
-          }, 500);
-
-          return newState;
-        });
-      } else {
-        updateDashboard({ syllabus_notes: newNR });
-      }
-    },
-    [updateDashboard, API_URL]
->>>>>>> Stashed changes
+    [nr, updateDashboard],
   );
 
   /* ======================= EXPORT ======================= */
@@ -5449,21 +5225,13 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
 
       {/* === Search Bar === */}
       <div className="w-full px-3 mt-4 mb-2">
-<<<<<<< Updated upstream
         <div className="max-w-7xl mx-auto">
-=======
-        <div className="max-w-6xl mx-auto">
->>>>>>> Stashed changes
           <div className="relative">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-<<<<<<< Updated upstream
               placeholder=" Search syllabus topics..."
-=======
-              placeholder="🔍 Search syllabus topics..."
->>>>>>> Stashed changes
               className="
                 w-full px-4 py-3 pl-12 rounded-xl
                 bg-gradient-to-br from-[#0F0F0F] via-[#183D3D] to-[#B82132]
@@ -5510,11 +5278,7 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
       </div>
 
       {/* === Combined Layout (Planner + Topics) === */}
-<<<<<<< Updated upstream
       <div className="w-full max-w-7xl px-3 mt-2 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-1">
-=======
-      <div className="w-full px-3 mt-2 pb-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
->>>>>>> Stashed changes
         {/* RIGHT SIDE (above on mobile) */}
         <div className="order-1 lg:order-2 lg:col-span-4 space-y-6">
           {/* 🗓️ Daily Planner */}
@@ -5547,7 +5311,6 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
         {/* LEFT SIDE — All Topics */}
         <div className="order-2 lg:order-1 lg:col-span-6 space-y-4 ">
           <main className="w-full px-0 md:px-1 space-y-4">
-<<<<<<< Updated upstream
             {Object.entries(filtered)
               .filter(([k]) => k !== "__normalized")
               .map(([secKey, node]) => (
@@ -5566,24 +5329,6 @@ active:translate-y-[1px] active:scale-[0.97] active:shadow-sm
                   setTaskDeadline={setTaskDeadline}
                 />
               ))}
-=======
-            {Object.entries(filtered).map(([secKey, secVal]) => (
-              <SectionCard
-                key={secKey}
-                secKey={secKey}
-                node={secVal}
-                stableMeta={stableMeta}
-                nr={nr}
-                setNR={setNR}
-                setSectionTargetPct={setSectionTargetPct}
-                setTargetDate={setTargetDate}
-                toggleOpen={toggleOpen} // ✅ USE ONLY THIS
-                setAllAtPath={setAllAtPath}
-                markTask={markTask}
-                setTaskDeadline={setTaskDeadline}
-              />
-            ))}
->>>>>>> Stashed changes
           </main>
         </div>
       </div>
@@ -5796,7 +5541,6 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               </div>
             </div>
 
-<<<<<<< Updated upstream
             {/* Title and badges */}
             <div className="flex-1 min-w-0">
               {/* Title */}
@@ -5865,8 +5609,8 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                     daysDiff > 0
                       ? "bg-green-500/15 border border-green-500/30 text-green-400"
                       : daysDiff < 0
-                      ? "bg-red-500/15 border border-red-500/30 text-red-400"
-                      : "bg-yellow-500/15 border border-yellow-500/30 text-yellow-400"
+                        ? "bg-red-500/15 border border-red-500/30 text-red-400"
+                        : "bg-yellow-500/15 border border-yellow-500/30 text-yellow-400"
                   }
                 `}
                   >
@@ -5874,23 +5618,10 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                     {daysDiff > 0
                       ? `${daysDiff}d early`
                       : daysDiff < 0
-                      ? `${Math.abs(daysDiff)}d late`
-                      : "on time"}
+                        ? `${Math.abs(daysDiff)}d late`
+                        : "on time"}
                   </span>
                 )}
-=======
-            {/* Show deadline if set */}
-            {it.deadline && (
-              <div className="text-xs opacity-70 text-[#a7f3d0]">
-                ⏰ Deadline: {formatDateDDMMYYYY(it.deadline)}
-              </div>
-            )}
-
-            {/* Show completed date if done */}
-            {it.done && completedDate && (
-              <div className="text-xs opacity-70">
-                ✅ Completed: {new Date(completedDate).toLocaleDateString()}
->>>>>>> Stashed changes
               </div>
             </div>
           </div>
@@ -5970,7 +5701,6 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
         </div>
       </li>
 
-<<<<<<< Updated upstream
       {/* Modal - Already responsive with max-w-md */}
       {/* Beautiful Modal for Date Picker */}
       {showDatePicker &&
@@ -6051,7 +5781,7 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
                     setTaskDeadline(
                       path,
                       idx,
-                      date ? formatLocalISO(date) : ""
+                      date ? formatLocalISO(date) : "",
                     );
                   }}
                   inline
@@ -6111,65 +5841,9 @@ function TaskItem({ it, idx, path, nr, setNR, markTask, setTaskDeadline }) {
               </div>
             </motion.div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
-=======
-        {/* RIGHT */}
-        <div onClick={(e) => e.stopPropagation()} className="flex gap-2">
-          <input
-            type="number"
-            min={0}
-            step="0.25"
-            value={nr[key]?.estimate !== undefined ? nr[key].estimate : 0.5}
-            onChange={(e) =>
-              setNR((old) => ({
-                ...old,
-                [key]: {
-                  ...(old[key] || {}),
-                  estimate: Number(e.target.value),
-                },
-              }))
-            }
-            className="w-16 text-xs rounded px-1 border border-[#00d1b2]/40 bg-black/40"
-          />
-
-          <div className="relative">
-            <input
-              type="date"
-              ref={localDateRef}
-              value={it.deadline ?? ""}
-              onChange={(e) => setTaskDeadline(path, idx, e.target.value)}
-              className="absolute opacity-0 pointer-events-none w-0 h-0"
-            />
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Position the input near the button before showing picker
-                if (localDateRef.current) {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  localDateRef.current.style.position = "fixed";
-                  localDateRef.current.style.left = `${rect.left}px`;
-                  localDateRef.current.style.top = `${rect.bottom + 5}px`;
-                  localDateRef.current.style.zIndex = "9999";
-                  localDateRef.current.showPicker();
-                }
-              }}
-              className="text-xs border border-[#00d1b2]/40 px-2 rounded hover:bg-[#00d1b2]/10 transition"
-              title={
-                it.deadline
-                  ? `Deadline: ${formatDateDDMMYYYY(it.deadline)}`
-                  : "Set deadline"
-              }
-            >
-              📅 {it.deadline ? formatDateDDMMYYYY(it.deadline) : "Deadline"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </li>
->>>>>>> Stashed changes
   );
 }
 
@@ -6200,283 +5874,6 @@ function SectionCard({
   const totals = totalsOf(node);
   const allDone = totals.total > 0 && totals.done === totals.total;
 
-<<<<<<< Updated upstream
-=======
-  // Date input ref
-  const sectionDateRef = useRef(null);
-
-  // Collapse animation height
-  const wrapRef = useRef(null);
-  const [maxH, setMaxH] = useState(0);
-
-  /* ======================= HEIGHT ANIMATION ======================= */
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-
-    // Measure height based on open state
-    const measure = () => setMaxH(m.open ? el.scrollHeight : 0);
-    measure();
-
-    // Auto update when content size changes
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-
-    return () => ro.disconnect();
-  }, [m.open, node, stableMeta, nr]);
-
-  return (
-    <section
-      className="
-        rounded-xl
-        border border-[#1c5b44]/40
-        dark:border-[#00D1FF33]
-        backdrop-blur-md
-        bg-gradient-to-br 
-        from-[#0F0F0F] via-[#183D3D] to-[#B82132] 
-        dark:from-[#0F1622] dark:via-[#132033] dark:to-[#0A0F1C]
-        shadow-[0_0_20px_rgba(0,0,0,0.2)]
-        overflow-hidden
-      "
-    >
-      {/* ======================= HEADER ======================= */}
-      <div
-        onClick={() => toggleOpen(sectionPath)}
-        data-expanded={m.open}
-        data-done={allDone}
-        className="
-          relative cursor-pointer
-          border border-[#0B5134] 
-          bg-gradient-to-br from-[#183D3D] to-[#B82132]
-          dark:from-[#0F1622] dark:to-[#0A0F1C]
-          text-[#CFE8E1]
-          rounded-lg px-4 py-3
-          transition-all duration-300
-          hover:border-[#2F6B60]
-          hover:shadow-[0_0_10px_rgba(47,107,96,0.4)]
-        "
-      >
-        {/* ======================= PROGRESS BAR ======================= */}
-        <div className="absolute top-0 left-0 right-0 mx-1 h-2 rounded-full bg-[#0E1F19] overflow-hidden">
-          {/* Glass Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/0 pointer-events-none" />
-
-          {/* Progress Fill */}
-          <div
-            className={`
-              h-full transition-all duration-700 ease-out
-              ${totals.pct >= 90 ? "animate-heartbeat" : ""}
-              ${
-                totals.pct < 25
-                  ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
-                  : totals.pct < 50
-                  ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                  : totals.pct < 75
-                  ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                  : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
-              }
-            `}
-            style={{
-              width: `${totals.pct}%`,
-              minWidth: totals.pct > 0 ? "6px" : "6px",
-            }}
-          >
-            {/* Visual texture effects */}
-            <div className="absolute inset-0 bg-stripes animate-stripes pointer-events-none" />
-            <div className="absolute inset-0 bg-wave animate-wave pointer-events-none opacity-40" />
-          </div>
-        </div>
-
-        {/* ======================= TITLE + CONTROLS ======================= */}
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-2">
-          {/* LEFT: Arrow + Section Name */}
-          <div className="flex items-start gap-2 min-w-0">
-            <span className="text-lg select-none shrink-0">
-              {m.open ? "🔽" : "▶️"}
-            </span>
-            <span className="font-semibold text-base sm:text-lg leading-snug break-words">
-              {secKey}
-            </span>
-          </div>
-
-          {/* RIGHT: Stats + Actions */}
-          <div
-            className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Progress stats */}
-            <span className="shrink-0">
-              {totals.done}/{totals.total} • {totals.pct}% • ~
-              {totals.estimate || 0}h
-            </span>
-
-            {/* Mark All Button */}
-            <button
-              onClick={() => setAllAtPath(sectionPath, !allDone)}
-              className="
-                px-2 py-1 rounded-md border
-                border-[#00d1b2]/50 bg-[#051C14]
-                text-xs font-medium
-                hover:bg-[#07261b]
-                transition-colors shrink-0
-              "
-            >
-              {allDone ? "Undo all" : "Mark all"}
-            </button>
-
-            {/* Deadline Picker */}
-            <div className="relative">
-              {/* hidden input */}
-              <input
-                type="date"
-                ref={sectionDateRef}
-                value={m.targetDate ?? ""}
-                onChange={(e) => setTargetDate(sectionPath, e.target.value)}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-              />
-
-              {/* custom button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (sectionDateRef.current) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    sectionDateRef.current.style.position = "fixed";
-                    sectionDateRef.current.style.left = `${rect.left}px`;
-                    sectionDateRef.current.style.top = `${rect.bottom + 5}px`;
-                    sectionDateRef.current.style.zIndex = "9999";
-                    sectionDateRef.current.showPicker();
-                  }
-                }}
-                className="
-                  px-2 py-1 border border-[#0B5134] rounded-md
-                  bg-[#051C14] text-xs
-                  hover:border-[#2F6B60] transition
-                "
-              >
-                📅{" "}
-                {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================= EXPANDABLE CONTENT ======================= */}
-      <div
-        style={{
-          maxHeight: `${maxH}px`,
-          transition: "max-height 420ms ease",
-        }}
-        className="overflow-hidden"
-      >
-        <div ref={wrapRef} className="px-4 pb-4 pt-2 space-y-2">
-          {Object.entries(node || {}).map(([name, child]) => (
-            <SubNode
-              key={name}
-              name={name}
-              node={child}
-              path={[secKey, name]}
-              stableMeta={stableMeta}
-              nr={nr}
-              setNR={setNR}
-              toggleOpen={toggleOpen}
-              setTargetDate={setTargetDate}
-              setAllAtPath={setAllAtPath}
-              markTask={markTask}
-              setTaskDeadline={setTaskDeadline}
-            />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/********************** Sub Section **********************/
-
-function SubNode({
-  name,
-  node,
-  path,
-  stableMeta,
-  nr,
-  setNR,
-  toggleOpen,
-  setTargetDate,
-  setAllAtPath,
-  markTask,
-  setTaskDeadline,
-}) {
-  /* ======================= META ======================= */
-  const k = pathKey(path);
-  const m = stableMeta[k] || { open: false, targetDate: "" };
-
-  /* ======================= STATS ======================= */
-  const totals = useMemo(() => totalsOf(node), [node]);
-  const allDone = totals.total > 0 && totals.done === totals.total;
-
-  /* ======================= COLLAPSE ANIMATION ======================= */
-  const contentRef = useRef(null);
-  const subsectionDateRef = useRef(null);
-  const [height, setHeight] = useState("0px");
-
-  useEffect(() => {
-    if (m.open && contentRef.current) {
-      setHeight(contentRef.current.scrollHeight + "px");
-    } else {
-      setHeight("0px");
-    }
-  }, [m.open, node]);
-
-  /* ======================= AUTO-SAVE completedDate ======================= */
-  const completedRef = useRef(new Set());
-
-  useEffect(() => {
-    if (!Array.isArray(node)) return;
-
-    const updates = {};
-    let hasChanges = false;
-
-    node.forEach((it, idx) => {
-      const key = itemKey(path, idx);
-      const cacheKey = `${key}_${it.done}`;
-
-      if (it.done) {
-        // Item is done: set completedDate if not already set
-        if (!completedRef.current.has(cacheKey) && !nr[key]?.completedDate) {
-          updates[key] = {
-            ...(nr[key] || {}),
-            completedDate: new Date().toISOString(),
-          };
-          completedRef.current.add(cacheKey);
-          hasChanges = true;
-        }
-      } else {
-        // Item is undone: clear completedDate if it exists
-        if (nr[key]?.completedDate) {
-          const { completedDate, ...rest } = nr[key];
-          updates[key] = rest;
-          completedRef.current.delete(cacheKey);
-          hasChanges = true;
-        } else {
-          // Remove from cache if item is undone (even if no completedDate)
-          completedRef.current.delete(cacheKey);
-        }
-      }
-    });
-
-    // Only update if there are actual changes to prevent loops
-    if (hasChanges) {
-      setNR((old) => ({
-        ...old,
-        ...updates,
-      }));
-    }
-  }, [node, path, setNR]); // Removed 'nr' from deps to prevent loop
-
->>>>>>> Stashed changes
   /* ======================= HOUR ROLLUP ======================= */
   const hoursRollup = useMemo(() => {
     if (!Array.isArray(node)) {
@@ -6600,10 +5997,10 @@ function SubNode({
                   totals.pct < 25
                     ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E] shadow-[0_0_8px_#0F766E]"
                     : totals.pct < 50
-                    ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
-                    : totals.pct < 75
-                    ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
-                    : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
+                      ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80] shadow-[0_0_8px_#4ADE80]"
+                      : totals.pct < 75
+                        ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0] shadow-[0_0_8px_#A7F3D0]"
+                        : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444] shadow-[0_0_10px_#EF4444]"
                 }
               `}
               style={{
@@ -6635,7 +6032,6 @@ function SubNode({
               className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"
               onClick={(e) => e.stopPropagation()}
             >
-<<<<<<< Updated upstream
               <div className="px-2 sm:px-2.5 py-1 bg-black/30 rounded-md border border-gray-700/30 group-hover:border-gray-600/50 transition-all duration-200">
                 <span className="text-[11px] sm:text-xs font-medium text-gray-300 group-hover:text-gray-100 whitespace-nowrap">
                   {totals.done}/{totals.total} • {totals.pct}% • ~
@@ -6674,40 +6070,6 @@ function SubNode({
                       : "border border-[#0B5134] bg-[#051C14] hover:bg-[#072920] hover:border-[#0d6847] hover:shadow-lg"
                   }
                 `}
-=======
-              {allDone ? "Undo all" : "Mark all"}
-            </button>
-
-            {/* Deadline Picker for Subsection */}
-            <div className="relative">
-              <input
-                type="date"
-                ref={subsectionDateRef}
-                value={m.targetDate ?? ""}
-                onChange={(e) => setTargetDate(path, e.target.value)}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-              />
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (subsectionDateRef.current) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    subsectionDateRef.current.style.position = "fixed";
-                    subsectionDateRef.current.style.left = `${rect.left}px`;
-                    subsectionDateRef.current.style.top = `${
-                      rect.bottom + 5
-                    }px`;
-                    subsectionDateRef.current.style.zIndex = "9999";
-                    subsectionDateRef.current.showPicker();
-                  }
-                }}
-                className="
-                  px-2 py-1 border border-[#0B5134] rounded-md
-                  bg-[#051C14] text-xs
-                  hover:border-[#2F6B60] transition
-                "
->>>>>>> Stashed changes
               >
                 📅{" "}
                 {m.targetDate ? formatDateDDMMYYYY(m.targetDate) : "Deadline"}
@@ -6837,10 +6199,10 @@ function SubNode({
                         totals.pct < 25
                           ? "bg-gradient-to-r from-[#0F766E] to-[#22C55E]"
                           : totals.pct < 50
-                          ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80]"
-                          : totals.pct < 75
-                          ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0]"
-                          : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444]"
+                            ? "bg-gradient-to-r from-[#22C55E] to-[#4ADE80]"
+                            : totals.pct < 75
+                              ? "bg-gradient-to-r from-[#4ADE80] to-[#A7F3D0]"
+                              : "bg-gradient-to-r from-[#7A1D2B] to-[#EF4444]"
                       }
                     `}
                     style={{ width: `${totals.pct}%` }}
@@ -6855,7 +6217,7 @@ function SubNode({
                   onChange={(date) => {
                     setTargetDate(
                       sectionPath,
-                      date ? formatLocalISO(date) : ""
+                      date ? formatLocalISO(date) : "",
                     );
                   }}
                   inline
@@ -6912,7 +6274,7 @@ function SubNode({
               </div>
             </motion.div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
@@ -7164,8 +6526,8 @@ function SubNode({
                       ? deadlineStatus.type === "ontime"
                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                         : deadlineStatus.type === "late"
-                        ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
-                        : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
+                          ? "bg-red-500/20 text-red-300 border border-red-500/50 ring-1 ring-red-500/20"
+                          : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 ring-1 ring-yellow-500/20"
                       : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 ring-1 ring-emerald-500/20"
                   }`}
                 >
@@ -7363,7 +6725,7 @@ function SubNode({
               </div>
             </motion.div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
