@@ -93,27 +93,27 @@ async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
 /* ---------------------- Full 6-day Workout Plan ---------------------- */
 const DEFAULT_PLAN = {
   Monday: {
-    title: "Chest + Core",
+    title: "Legs (Quads + Glutes + Hamstrings + Calves)",
 
     left: [
-      "Bench Press (Barbell/Smith) – 4×8",
-      "Incline Dumbbell Press – 4×10",
-      "Chest Press Machine – 3×12",
-      "Dumbbell Pullover – 3×10",
-      "Decline Bench Crunch – 3×15",
+      "Squats – 4×8",
+      "Leg Press Machine – 3×10",
+      "Walking Lunges – 3×10 each leg",
+      "Romanian Deadlift (DB/Barbell) – 3×10 (Hamstrings)",
     ],
 
     right: [
-      "Chest Fly (Pec Deck/Cable) – 3×12",
-      "Cable Crunch – 3×15",
-      "Plank – 3×30–45 sec",
+      "Leg Extension Machine – 3×12–15",
+      "Seated Leg Curl – 3×12 (Hamstrings)",
+      "Seated/Standing Calf Raise – 4×15",
+      "Glute Bridge / Hip Thrust – 3×12",
     ],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: "🔥 Cardio (Recovery Friendly)",
 
     finisher: [
-      "Incline Walk – 15–20 min (Incline 6–10, Speed 4.5–5)",
-      "Optional: Mountain Climbers – 30 sec × 5",
+      "Cycle – 10–15 min (Low–Medium Resistance)",
+      "Optional: Incline Walk – 10 min (Incline 5–6, Speed 4)",
     ],
   },
   Tuesday: {
@@ -140,30 +140,53 @@ const DEFAULT_PLAN = {
     ],
   },
   Wednesday: {
-    title: "Legs (Quads + Glutes + Hamstrings + Calves)",
+    title: "Chest + Core",
 
     left: [
-      "Squats – 4×8",
-      "Leg Press Machine – 3×10",
-      "Walking Lunges – 3×10 each leg",
-      "Romanian Deadlift (DB/Barbell) – 3×10 (Hamstrings)",
+      "Bench Press (Barbell/Smith) – 4×8",
+      "Incline Dumbbell Press – 4×10",
+      "Chest Press Machine – 3×12",
+      "Dumbbell Pullover – 3×10",
+      "Decline Bench Crunch – 3×15",
     ],
 
     right: [
-      "Leg Extension Machine – 3×12–15",
-      "Seated Leg Curl – 3×12 (Hamstrings)",
+      "Chest Fly (Pec Deck/Cable) – 3×12",
+      "Cable Crunch – 3×15",
+      "Plank – 3×30–45 sec",
+    ],
+
+    finisherLabel: "🔥 Fat Burn",
+
+    finisher: [
+      "Incline Walk – 15–20 min (Incline 6–10, Speed 4.5–5)",
+      "Optional: Mountain Climbers – 30 sec × 5",
+    ],
+  },
+  Thursday: {
+    title: "Legs + Core + Conditioning",
+
+    left: [
+      "Deadlift (Moderate Weight) – 4×5–6",
+      "Bulgarian Split Squat – 3×10 each leg",
+      "Leg Press Machine – 3×10 (Controlled)",
+    ],
+
+    right: [
+      "Hamstring Curl Machine – 3×12",
       "Seated/Standing Calf Raise – 4×15",
       "Glute Bridge / Hip Thrust – 3×12",
     ],
 
-    finisherLabel: "🔥 Cardio (Recovery Friendly)",
+    finisherLabel: "🔥 Core + Cardio",
 
     finisher: [
-      "Cycle – 10–15 min (Low–Medium Resistance)",
-      "Optional: Incline Walk – 10 min (Incline 5–6, Speed 4)",
+      "Hanging Knee Raise / Leg Raise – 3×12",
+      "Plank – 3×45–60 sec",
+      "Cycle HIIT – 30 sec fast / 60 sec slow × 8 rounds",
     ],
   },
-  Thursday: {
+  Friday: {
     title: "Shoulders + Abs",
 
     left: [
@@ -187,7 +210,7 @@ const DEFAULT_PLAN = {
       "Optional: Battle Rope / High Knees – 30 sec × 5",
     ],
   },
-  Friday: {
+  Saturday: {
     title: "Chest + Arms (Hypertrophy Focus)",
 
     left: [
@@ -209,29 +232,6 @@ const DEFAULT_PLAN = {
     finisher: [
       "Superset: Rope Push-down + Cable Curl – 2×15 each",
       "Cycle / Treadmill – 10–15 min (Moderate)",
-    ],
-  },
-  Saturday: {
-    title: "Legs + Core + Conditioning",
-
-    left: [
-      "Deadlift (Moderate Weight) – 4×5–6",
-      "Bulgarian Split Squat – 3×10 each leg",
-      "Leg Press Machine – 3×10 (Controlled)",
-    ],
-
-    right: [
-      "Hamstring Curl Machine – 3×12",
-      "Seated/Standing Calf Raise – 4×15",
-      "Glute Bridge / Hip Thrust – 3×12",
-    ],
-
-    finisherLabel: "🔥 Core + Cardio",
-
-    finisher: [
-      "Hanging Knee Raise / Leg Raise – 3×12",
-      "Plank – 3×45–60 sec",
-      "Cycle HIIT – 30 sec fast / 60 sec slow × 8 rounds",
     ],
   },
   Sunday: {
