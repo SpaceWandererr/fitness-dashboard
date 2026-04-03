@@ -359,7 +359,7 @@ function DailySummaryMerged({ date, logs, mode }) {
       title: plan?.title || "No plan",
       wd,
     };
-  };;
+  };
 
   const nextInfo = getNextWorkoutInfo(date);
 
@@ -770,6 +770,27 @@ function DailySummaryMerged({ date, logs, mode }) {
                   {entry?.mood ?? "—"}
                 </div>
               </div>
+              {/* Recovery */}
+              <div className="mt-3">
+                <div>😴 Sleep (hours)</div>
+                <input
+                  type="number"
+                  value={sleep}
+                  onChange={(e) => setSleep(e.target.value)}
+                  className="w-full p-1 bg-black/30 rounded"
+                />
+
+                <div className="mt-2">💪 Soreness</div>
+                <select
+                  value={soreness}
+                  onChange={(e) => setSoreness(e.target.value)}
+                  className="w-full p-1 bg-black/30 rounded"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
             </div>
 
             {/* CALORIE STATS */}
@@ -1070,6 +1091,10 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
   // Add these with your other useState declarations
   const [showResetModal, setShowResetModal] = useState(false);
+  // 💧 Water Tracker
+  const [water, setWater] = useState(0);
+  const [sleep, setSleep] = useState("");
+  const [soreness, setSoreness] = useState("medium");
   const [isResetting, setIsResetting] = useState(false);
   const [resetType, setResetType] = useState(""); // 'clearDay' or 'fullReset'
 
@@ -1135,6 +1160,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
         ? String(dashboardState.wd_goals.targetWeight)
         : "",
     );
+
+    setWater(dashboardState?.wd_water || 0);
 
     // Mark as loaded after first run
     if (!hasLoadedInitialData) {
@@ -1322,6 +1349,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setDurationHours(entry?.duration?.hours ?? 0);
     setDurationMinutes(entry?.duration?.minutes ?? 0);
     setMoodInput(entry?.mood ?? "🙂");
+    setSleep(entry?.sleep ?? "");
+    setSoreness(entry?.soreness ?? "medium");
 
     // load edit arrays (cloned so editing in modal doesn't mutate UI until save)
     setEditLeft((entry.left || []).map((it) => ({ ...it })));
@@ -1391,6 +1420,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
         minutes: Number(durationMinutes || 0),
       },
       mood: moodInput || existing.mood || null,
+      sleep: Number(sleep),
+      soreness,
 
       // NEW
       running: {
@@ -1525,7 +1556,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     });
 
     console.log("Target weight saved:", newWeight);
-  };;
+  };
 
   const updateCurrentWeight = async () => {
     const raw = currWeight;
@@ -1548,6 +1579,16 @@ export default function Gym({ dashboardState, updateDashboard }) {
     });
 
     console.log("Current weight updated:", newWeight);
+  };
+
+  // 💧 Update Water
+  const updateWater = async (val) => {
+    const newVal = Math.max(0, Math.min(5, val));
+    setWater(newVal);
+
+    await updateDashboard({
+      wd_water: newVal,
+    });
   };
 
   /* -------------------- Reset full progress -------------------- */
@@ -1801,6 +1842,26 @@ export default function Gym({ dashboardState, updateDashboard }) {
     setIsEditingCurrent(c == null || c === "");
   }, [dashboardState?.wd_goals]);
 
+  // 🤖 AI Coach Suggestion
+  const getSuggestion = () => {
+    const yesterday = dayjs(date).subtract(1, "day").format("YYYY-MM-DD");
+    const prev = logs[yesterday];
+
+    if (prev?.weekday === "Monday") {
+      return "💪 Avoid legs today. Train upper body.";
+    }
+
+    if (water < 2.5) {
+      return "💧 Drink more water bro!";
+    }
+
+    if (entry?.duration?.hours === 0 && entry?.duration?.minutes === 0) {
+      return "⚡ Try to complete full workout today!";
+    }
+
+    return "🔥 You're on track. Keep pushing!";
+  };
+
   // ✅ PUT IT HERE (DERIVED LOGIC SECTION)
   const allDone =
     Array.isArray(entry.left) &&
@@ -2049,6 +2110,25 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
             <span className="text-xs text-cyan-300/70 flex-shrink-0">kg</span>
           </div>
+          {/* 💧 Water Tracker */}
+          <div className="p-3 rounded-xl border border-cyan-400/30 mb-4">
+            <div className="text-xs text-cyan-200">💧 Water Intake</div>
+
+            <div className="flex items-center gap-3 mt-2">
+              <button onClick={() => updateWater(water - 0.5)}>-</button>
+
+              <span className="font-bold">{water} L</span>
+
+              <button onClick={() => updateWater(water + 0.5)}>+</button>
+            </div>
+
+            <div className="h-2 bg-black/30 mt-2 rounded">
+              <div
+                className="h-full bg-cyan-400 rounded"
+                style={{ width: `${(water / 4) * 100}%` }}
+              />
+            </div>
+          </div>
           {/* Display Current/Today's weight with trend */}
           <div className="bg-gradient-to-br from-teal-600/10 via-teal-700/5 to-teal-800/10 rounded-xl px-3 py-2.5 border border-teal-500/30 shadow-sm">
             {/* Header Row */}
@@ -2060,14 +2140,8 @@ export default function Gym({ dashboardState, updateDashboard }) {
               {/* Status right aligned */}
               {(() => {
                 const hasWeight = entry?.weight != null;
-                const isToday = useMemo(
-                  () => dayjs(date).isSame(dayjs(), "day"),
-                  [date],
-                );
-                const isFuture = useMemo(
-                  () => dayjs(date).isAfter(dayjs(), "day"),
-                  [date],
-                );
+                const isToday = dayjs(date).isSame(dayjs(), "day");
+                const isFuture = dayjs(date).isAfter(dayjs(), "day");
 
                 if (isFuture) {
                   return (
@@ -2334,6 +2408,12 @@ export default function Gym({ dashboardState, updateDashboard }) {
             doneState={doneState}
             logs={logs}
           />
+        </div>
+
+        {/* 🤖 AI Coach */}
+        <div className="p-3 rounded-xl border border-emerald-400/30 mb-4">
+          <div className="text-xs text-emerald-200">🤖 AI Coach</div>
+          <p className="text-sm mt-2">{getSuggestion()}</p>
         </div>
 
         {/* Summary Section */}
@@ -2677,7 +2757,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     min="0"
                     max="5"
                     value={durationHours}
-                    onChange={(e) => setDurationHours(Number(e.target.value))}
+                    onChange={(e) => setDurationHours(e.target.value)}
                     className="w-full bg-teal-950/40 backdrop-blur-sm
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-50 font-medium placeholder:text-teal-400/50
@@ -2700,7 +2780,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     min="0"
                     max="59"
                     value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
                     className="w-full bg-teal-950/40 backdrop-blur-sm
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-50 font-medium placeholder:text-teal-400/50
