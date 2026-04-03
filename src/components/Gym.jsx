@@ -359,7 +359,7 @@ function DailySummaryMerged({ date, logs, mode }) {
       title: plan?.title || "No plan",
       wd,
     };
-  };;
+  };
 
   const nextInfo = getNextWorkoutInfo(date);
 
@@ -1525,7 +1525,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
     });
 
     console.log("Target weight saved:", newWeight);
-  };;
+  };
 
   const updateCurrentWeight = async () => {
     const raw = currWeight;
@@ -2677,7 +2677,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     min="0"
                     max="5"
                     value={durationHours}
-                    onChange={(e) => setDurationHours(Number(e.target.value))}
+                    onChange={(e) => setDurationHours(e.target.value)}
                     className="w-full bg-teal-950/40 backdrop-blur-sm
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-50 font-medium placeholder:text-teal-400/50
@@ -2700,7 +2700,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
                     min="0"
                     max="59"
                     value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
                     className="w-full bg-teal-950/40 backdrop-blur-sm
                          border border-teal-400/30 rounded-xl p-2.5 pr-10
                          text-teal-50 font-medium placeholder:text-teal-400/50
