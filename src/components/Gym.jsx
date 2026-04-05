@@ -109,11 +109,11 @@ const DEFAULT_PLAN = {
       "Glute Bridge / Hip Thrust – 3×12",
     ],
 
-    finisherLabel: "🔥 Cardio (Recovery Friendly)",
-
+    finisherLabel: "🔥 Fat Burn",
     finisher: [
-      "Cycle – 10–15 min (Low–Medium Resistance)",
-      "Optional: Incline Walk – 10 min (Incline 5–6, Speed 4)",
+      "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
+      "Mountain Climbers – 30 sec × 5",
+      "Plank – 3×45–60 sec",
     ],
   },
   Tuesday: {
@@ -133,10 +133,10 @@ const DEFAULT_PLAN = {
     ],
 
     finisherLabel: "🔥 Fat Burn",
-
     finisher: [
-      "Jump Rope / High Knees – 30 sec ON / 30 sec OFF × 5",
-      "Incline Walk – 10–15 min (Incline 6–10, Speed 4.5–5)",
+      "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
+      "Mountain Climbers – 30 sec × 5",
+      "Plank – 3×45–60 sec",
     ],
   },
   Wednesday: {
@@ -150,17 +150,13 @@ const DEFAULT_PLAN = {
       "Decline Bench Crunch – 3×15",
     ],
 
-    right: [
-      "Chest Fly (Pec Deck/Cable) – 3×12",
-      "Cable Crunch – 3×15",
-      "Plank – 3×30–45 sec",
-    ],
+    right: ["Chest Fly (Pec Deck/Cable) – 3×12", "Cable Crunch – 3×15"],
 
     finisherLabel: "🔥 Fat Burn",
-
     finisher: [
-      "Incline Walk – 15–20 min (Incline 6–10, Speed 4.5–5)",
-      "Optional: Mountain Climbers – 30 sec × 5",
+      "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
+      "Mountain Climbers – 30 sec × 5",
+      "Plank – 3×45–60 sec",
     ],
   },
   Thursday: {
@@ -178,12 +174,11 @@ const DEFAULT_PLAN = {
       "Glute Bridge / Hip Thrust – 3×12",
     ],
 
-    finisherLabel: "🔥 Core + Cardio",
-
+    finisherLabel: "🔥 Fat Burn",
     finisher: [
-      "Hanging Knee Raise / Leg Raise – 3×12",
+      "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
+      "Mountain Climbers – 30 sec × 5",
       "Plank – 3×45–60 sec",
-      "Cycle HIIT – 30 sec fast / 60 sec slow × 8 rounds",
     ],
   },
   Friday: {
@@ -204,10 +199,10 @@ const DEFAULT_PLAN = {
     ],
 
     finisherLabel: "🔥 Fat Burn",
-
     finisher: [
-      "Cycle or Treadmill – 15 min (Moderate)",
-      "Optional: Battle Rope / High Knees – 30 sec × 5",
+      "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
+      "Mountain Climbers – 30 sec × 5",
+      "Plank – 3×45–60 sec",
     ],
   },
   Saturday: {
@@ -227,11 +222,11 @@ const DEFAULT_PLAN = {
       "Preacher Curl (Machine/Bench) – 3×12",
     ],
 
-    finisherLabel: "🔥 Pump + Burn",
-
+    finisherLabel: "🔥 Fat Burn",
     finisher: [
-      "Superset: Rope Push-down + Cable Curl – 2×15 each",
-      "Cycle / Treadmill – 10–15 min (Moderate)",
+      "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
+      "Mountain Climbers – 30 sec × 5",
+      "Plank – 3×45–60 sec",
     ],
   },
   Sunday: {
