@@ -128,6 +128,7 @@ const DEFAULT_PLAN = {
     right: [
       "Lat Pull-down – 4×10 (Back)",
       "Seated Cable Row – 4×10 (Back)",
+      "Seated Row Machine – 4×10 (Back)",
       "Rope Cable Curl – 2×15 (Slow Burn)",
       "Face Pull – 3×12 (Rear Delt/Posture)",
     ],
@@ -192,7 +193,7 @@ const DEFAULT_PLAN = {
     ],
 
     right: [
-      "Plank – 3×45–60 sec",
+      "Seated Row Machine – 4×10 (Back)",
       "Face Pull – 3×12 (Posture/Rear Delt)",
       "Hanging Knee Raise / Leg Raise – 3×12",
       "Cable Crunch – 3×15",
