@@ -272,14 +272,58 @@ function DailySummaryMerged({ date, logs, mode }) {
     0,
   );
 
+
   const MUSCLES = {
-    Chest: ["Press", "Fly", "Pullover"],
-    Back: ["Row", "Pull", "Lat", "Dead"],
-    Biceps: ["Curl"],
-    Triceps: ["Tricep", "Push-down"],
-    Legs: ["Squat", "Leg", "Lunges", "Calf"],
-    Shoulders: ["Overhead", "Lateral", "Shrug", "Front Raise"],
-    Core: ["Crunch", "Plank", "Russian", "Abs"],
+    Chest: [
+      "Bench Press",
+      "Incline Dumbbell Press",
+      "Chest Press",
+      "Chest Fly",
+      "Cable Crossovers",
+      "Incline Barbell Press",
+      "Flat DB Press",
+      "Dumbbell Pullover",
+    ],
+
+    Back: [
+      "Lat Pull-down",
+      "Seated Cable Row",
+      "One-Arm DB Row",
+      "Deadlift",
+      "Face Pull",
+    ],
+
+    Biceps: ["Barbell Curl", "Hammer Curl", "Rope Cable Curl", "Preacher Curl"],
+
+    Triceps: ["Triceps Extension", "Push-down", "Close-Grip Bench Press"],
+
+    Legs: [
+      "Squats",
+      "Leg Press",
+      "Walking Lunges",
+      "Bulgarian Split Squat",
+      "Leg Extension",
+      "Leg Curl",
+      "Hamstring Curl",
+      "Calf Raise",
+      "Hip Thrust",
+      "Glute Bridge",
+    ],
+
+    Shoulders: [
+      "Overhead DB Press",
+      "Lateral Raise",
+      "Rear Delt Fly",
+      "Shrugs",
+    ],
+
+    Core: [
+      "Plank",
+      "Cable Crunch",
+      "Decline Bench Crunch",
+      "Hanging Knee Raise",
+      "Mountain Climbers",
+    ],
   };
 
   const musclesWorked = [];
@@ -1108,7 +1152,7 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
       allKeys.forEach((dateKey) => {
         // ✅ Prefer backend data if it exists, otherwise keep local
-        merged[dateKey] = incoming[dateKey] || prev[dateKey];
+        merged[dateKey] = prev[dateKey] || incoming[dateKey];
       });
 
       return merged;
@@ -1374,9 +1418,9 @@ export default function Gym({ dashboardState, updateDashboard }) {
 
     const updatedEntry = {
       weekday: existing.weekday,
-      left: editLeft.length ? editLeft : existing.left,
-      right: editRight.length ? editRight : existing.right,
-      finisher: editFinisher.length ? editFinisher : existing.finisher,
+      left: editLeft,
+      right: editRight,
+      finisher: editFinisher,
       calories: caloriesVal,
       weight: weightVal,
       bmi: newBmi,
@@ -1447,22 +1491,19 @@ export default function Gym({ dashboardState, updateDashboard }) {
   /* -------------------- Edit existing workout (open modal with values) -------------------- */
   const editWorkout = () => {
     const dateKey = dayjs(date).format("YYYY-MM-DD");
+    const entry = logs[dateKey] || getEntry(dateKey);
 
-    const entry = logs[dateKey];
+    setEditLeft((entry.left || []).map((it) => ({ ...it })));
+    setEditRight((entry.right || []).map((it) => ({ ...it })));
+    setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
 
-    if (entry) {
-      setEditLeft((entry.left || []).map((it) => ({ ...it })));
-      setEditRight((entry.right || []).map((it) => ({ ...it })));
-      setEditFinisher((entry.finisher || []).map((it) => ({ ...it })));
+    setCaloriesInput(entry.calories ?? "");
+    setWeightInput(entry.weight ?? "");
+    setDurationHours(entry?.duration?.hours ?? 0);
+    setDurationMinutes(entry?.duration?.minutes ?? 0);
+    setMoodInput(entry?.mood ?? "🙂");
 
-      setCaloriesInput(entry.calories ?? "");
-      setWeightInput(entry.weight ?? "");
-      setDurationHours(entry?.duration?.hours ?? 0);
-      setDurationMinutes(entry?.duration?.minutes ?? 0);
-      setMoodInput(entry?.mood ?? "🙂");
-    }
-
-    openModal();
+    setShowModal(true); // ✅ NO openModal()
   };
 
   /* -------------------- Delete / Unmark (clear) a date entry -------------------- */
