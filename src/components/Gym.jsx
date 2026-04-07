@@ -109,7 +109,7 @@ const DEFAULT_PLAN = {
       "Glute Bridge / Hip Thrust – 3×12",
     ],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: " Fat Burn",
     finisher: [
       "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
       "Mountain Climbers – 30 sec × 5",
@@ -133,7 +133,7 @@ const DEFAULT_PLAN = {
       "Face Pull – 3×12 (Rear Delt/Posture)",
     ],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: " Fat Burn",
     finisher: [
       "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
       "Mountain Climbers – 30 sec × 5",
@@ -153,7 +153,7 @@ const DEFAULT_PLAN = {
 
     right: ["Chest Fly (Pec Deck/Cable) – 3×12", "Cable Crunch – 3×15"],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: " Fat Burn",
     finisher: [
       "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
       "Mountain Climbers – 30 sec × 5",
@@ -175,7 +175,7 @@ const DEFAULT_PLAN = {
       "Glute Bridge / Hip Thrust – 3×12",
     ],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: " Fat Burn",
     finisher: [
       "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
       "Mountain Climbers – 30 sec × 5",
@@ -199,7 +199,7 @@ const DEFAULT_PLAN = {
       "Cable Crunch – 3×15",
     ],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: " Fat Burn",
     finisher: [
       "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
       "Mountain Climbers – 30 sec × 5",
@@ -223,7 +223,7 @@ const DEFAULT_PLAN = {
       "Preacher Curl (Machine/Bench) – 3×12",
     ],
 
-    finisherLabel: "🔥 Fat Burn",
+    finisherLabel: " Fat Burn",
     finisher: [
       "Incline Walk – 20–30 min (Incline 12–16, Speed 4.5–6)",
       "Mountain Climbers – 30 sec × 5",
