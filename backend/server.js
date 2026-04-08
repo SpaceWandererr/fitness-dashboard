@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import http from "http";
 
 // Routes
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -18,7 +17,18 @@ app.disable("x-powered-by");
 app.set("etag", false);
 
 // ------------------------------------------------------
-// ⭐ GLOBAL CORS (SAFE FOR RENDER)
+// 🔥 GLOBAL ERROR HANDLERS (VERY IMPORTANT)
+// ------------------------------------------------------
+process.on("uncaughtException", (err) => {
+  console.error("💥 UNCAUGHT EXCEPTION:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("💥 UNHANDLED REJECTION:", err);
+});
+
+// ------------------------------------------------------
+// ⭐ GLOBAL CORS
 // ------------------------------------------------------
 app.use(
   cors({
@@ -33,6 +43,13 @@ app.use(
 // ------------------------------------------------------
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// ------------------------------------------------------
+// 🔥 ROOT HEALTH ROUTE (IMPORTANT FOR RENDER)
+// ------------------------------------------------------
+app.get("/", (req, res) => {
+  res.send("Backend running ✅");
+});
 
 // ------------------------------------------------------
 // Test Route
@@ -79,7 +96,7 @@ app.use("/api/state", dashboardRoutes);
 app.use("/api/snapshots", snapshotRoutes);
 
 // ------------------------------------------------------
-// ⭐ SAFE FINAL FALLBACK (NO WILDCARDS, NO REGEX)
+// 404 Fallback
 // ------------------------------------------------------
 app.use((req, res) => {
   res.status(404).json({
@@ -95,8 +112,6 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-const server = http.createServer(app);
-
 if (!MONGO_URI) {
   console.error("❌ MONGO_URI is missing");
   process.exit(1);
@@ -106,6 +121,13 @@ mongoose
   .connect(MONGO_URI, { family: 4 })
   .then(() => {
     console.log("🟢 MongoDB Atlas Connected");
-    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+    // ✅ IMPORTANT: use app.listen (NOT http server)
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   })
-  .catch((err) => console.error("❌ MongoDB connection failed:", err.message));
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err.message);
+    process.exit(1);
+  });
