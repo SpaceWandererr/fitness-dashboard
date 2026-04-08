@@ -112,22 +112,21 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
+// Start server FIRST
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// Then connect DB
 if (!MONGO_URI) {
   console.error("❌ MONGO_URI is missing");
-  process.exit(1);
-}
-
-mongoose
-  .connect(MONGO_URI, { family: 4 })
-  .then(() => {
-    console.log("🟢 MongoDB Atlas Connected");
-
-    // ✅ IMPORTANT: use app.listen (NOT http server)
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+} else {
+  mongoose
+    .connect(MONGO_URI, { family: 4 })
+    .then(() => {
+      console.log("🟢 MongoDB Atlas Connected");
+    })
+    .catch((err) => {
+      console.error("❌ MongoDB connection failed:", err.message);
     });
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err.message);
-    process.exit(1);
-  });
+}
