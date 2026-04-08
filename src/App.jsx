@@ -38,14 +38,37 @@ import HairCarePage from "./components/HairCarePage";
 import EthicalHackingSyllabus from "./components/EthicalHackingSyllabus.jsx";
 
 // ⬇️ PUT THIS HERE (top of App.jsx, after imports)
-function fetchWithTimeout(url, options = {}, timeout = 8000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+async function fetchWithTimeout(
+  url,
+  options = {},
+  timeout = 8000,
+  retries = 2,
+) {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-  return fetch(url, {
-    ...options,
-    signal: controller.signal,
-  }).finally(() => clearTimeout(id));
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+
+    clearTimeout(id);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    return res;
+  } catch (err) {
+    if (retries > 0) {
+      console.log("🔁 Retry...", retries);
+
+      await new Promise((r) => setTimeout(r, 2000));
+
+      return fetchWithTimeout(url, options, timeout, retries - 1);
+    }
+
+    throw err;
+  }
 }
 
 function normalizeSection(section, visited = new WeakSet()) {
