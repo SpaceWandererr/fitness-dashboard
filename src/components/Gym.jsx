@@ -564,7 +564,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                       : null;
 
                   return (
-                    <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline justify-between flex-col md:flex-row">
                       <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
                         {bmi != null ? bmi.toFixed(1) : "—"}
                       </div>
