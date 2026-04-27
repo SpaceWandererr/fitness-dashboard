@@ -494,47 +494,39 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* Stats Grid */}
-            <div
-              className="
-  grid 
-  grid-cols-1 
-  xs:grid-cols-2 
-  sm:grid-cols-3 
-  gap-3 sm:gap-4
-"
-            >
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {/* CALORIES */}
               <div
                 className="
     bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 
     dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 
-    p-3 sm:p-4 md:p-5 
-    rounded-2xl 
+    p-2 sm:p-4 md:p-5 
+    rounded-xl sm:rounded-2xl
     border border-orange-500/30 dark:border-orange-400/20 
     hover:border-orange-400/50 
     transition-all duration-300
     flex flex-col justify-between h-full
-    min-h-[110px] sm:min-h-[130px]
+    min-h-[90px] sm:min-h-[130px]
   "
               >
                 {/* Top */}
-                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-orange-300/70 font-semibold flex items-center gap-2">
+                <div className="text-[9px] sm:text-xs uppercase tracking-wider text-orange-300/70 font-semibold flex items-center gap-1">
                   <span>🔥</span>
-                  <span>Calories</span>
+                  <span>Cal</span>
                 </div>
 
                 {/* Middle */}
-                <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-100">
+                <div className="text-base sm:text-xl md:text-2xl font-bold text-orange-100">
                   {entry?.calories ?? "—"}
                   {entry?.calories && (
-                    <span className="text-xs ml-1 text-orange-300/60">
+                    <span className="text-[10px] sm:text-xs ml-1 text-orange-300/60">
                       kcal
                     </span>
                   )}
                 </div>
 
-                {/* Bottom (for balance) */}
-                <div className="text-xs opacity-50">Today</div>
+                {/* Bottom */}
+                <div className="text-[9px] sm:text-xs opacity-50">Today</div>
               </div>
 
               {/* WEIGHT */}
@@ -542,28 +534,33 @@ function DailySummaryMerged({ date, logs, mode }) {
                 className="
     bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 
     dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 
-    p-3 sm:p-4 md:p-5 
-    rounded-2xl 
+    p-2 sm:p-4 md:p-5 
+    rounded-xl sm:rounded-2xl
     border border-cyan-500/30 dark:border-cyan-400/20 
     hover:border-cyan-400/50 
     transition-all duration-300
     flex flex-col justify-between h-full
-    min-h-[110px] sm:min-h-[130px]
+    min-h-[90px] sm:min-h-[130px]
   "
               >
                 {/* Top */}
-                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-cyan-300/70 font-semibold flex items-center gap-2">
+                <div className="text-[9px] sm:text-xs uppercase tracking-wider text-cyan-300/70 font-semibold flex items-center gap-1">
                   <span>⚖️</span>
-                  <span>Weight</span>
+                  <span>Wt</span>
                 </div>
 
                 {/* Middle */}
-                <div className="text-lg sm:text-xl md:text-2xl font-bold text-cyan-100">
-                  {entry?.weight ? `${entry.weight} kg` : "—"}
+                <div className="text-base sm:text-xl md:text-2xl font-bold text-cyan-100">
+                  {entry?.weight ? entry.weight : "—"}
+                  {entry?.weight && (
+                    <span className="text-[10px] sm:text-xs ml-1 text-cyan-300/60">
+                      kg
+                    </span>
+                  )}
                 </div>
 
                 {/* Bottom */}
-                <div className="text-xs opacity-50">
+                <div className="text-[9px] sm:text-xs opacity-50">
                   {entry?.weight ? "Latest" : "No data"}
                 </div>
               </div>
@@ -574,17 +571,17 @@ function DailySummaryMerged({ date, logs, mode }) {
     bg-gradient-to-br 
     from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 
     dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60
-    p-3 sm:p-4 md:p-5
-    rounded-2xl
+    p-2 sm:p-4 md:p-5
+    rounded-xl sm:rounded-2xl
     border border-purple-500/30 dark:border-purple-400/20 
     hover:border-purple-400/50 
     transition-all duration-300
     flex flex-col justify-between h-full
-    min-h-[110px] sm:min-h-[130px]
+    min-h-[90px] sm:min-h-[130px]
   "
               >
-                {/* Title */}
-                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-purple-300/70 font-semibold flex items-center gap-2">
+                {/* Top */}
+                <div className="text-[9px] sm:text-xs uppercase tracking-wider text-purple-300/70 font-semibold flex items-center gap-1">
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
@@ -618,20 +615,21 @@ function DailySummaryMerged({ date, logs, mode }) {
                   return (
                     <>
                       {/* Middle */}
-                      <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-100">
+                      <div className="text-base sm:text-xl md:text-2xl font-bold text-purple-100">
                         {bmi != null ? bmi.toFixed(1) : "—"}
                       </div>
 
                       {/* Bottom */}
-                      <div className="flex justify-start">
+                      <div>
                         {bmi != null ? (
                           <div
                             className={`
-                text-xs sm:text-sm
+                text-[9px] sm:text-sm
                 font-medium 
-                px-3 py-1 
+                px-2 sm:px-3 py-0.5 sm:py-1 
                 rounded-full 
                 border 
+                w-fit
                 ${
                   bmi < 18.5
                     ? "bg-orange-500/30 text-orange-100 border-orange-400/50"
@@ -650,7 +648,9 @@ function DailySummaryMerged({ date, logs, mode }) {
                             {getBMICategory(bmi)}
                           </div>
                         ) : (
-                          <span className="text-xs opacity-50">No data</span>
+                          <span className="text-[9px] sm:text-xs opacity-50">
+                            No data
+                          </span>
                         )}
                       </div>
                     </>
