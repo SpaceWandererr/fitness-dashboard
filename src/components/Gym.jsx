@@ -98,7 +98,6 @@ const DEFAULT_PLAN = {
     left: [
       "Squats – 4×8",
       "Leg Press Machine – 3×10",
-      "Walking Lunges – 3×10 each leg",
       "Romanian Deadlift (DB/Barbell) – 3×10 (Hamstrings)",
     ],
 
@@ -106,7 +105,6 @@ const DEFAULT_PLAN = {
       "Leg Extension Machine – 3×12–15",
       "Seated Leg Curl – 3×12 (Hamstrings)",
       "Seated/Standing Calf Raise – 4×15",
-      "Glute Bridge / Hip Thrust – 3×12",
     ],
 
     finisherLabel: " Fat Burn",
@@ -263,8 +261,16 @@ function DailySummaryMerged({ date, logs, mode }) {
   /* ---------- NEW CARD METRICS ---------- */
 
   const parseSets = (ex) => {
-    const m = ex.match(/(\d+)×(\d+)/);
-    return m ? Number(m[1]) : 0;
+    if (!ex || typeof ex !== "string") return 0;
+
+    const m = ex.match(/(\d+)\s*[×x]\s*(\d+)/i);
+
+    if (!m) return 0;
+
+    const sets = Number(m[1]);
+    const reps = Number(m[2]);
+
+    return sets * reps; // proper volume
   };
 
   const totalSets = planExercises.reduce((a, b) => a + parseSets(b), 0);
@@ -488,58 +494,105 @@ function DailySummaryMerged({ date, logs, mode }) {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+            <div
+              className="
+  grid 
+  grid-cols-1 
+  xs:grid-cols-2 
+  sm:grid-cols-3 
+  gap-3 sm:gap-4
+"
+            >
               {/* CALORIES */}
-              <div className="bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 p-2 sm:p-3 rounded-xl border border-orange-500/30 dark:border-orange-400/20 hover:border-orange-400/50 transition-all">
-                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-orange-300/70 dark:text-orange-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
+              <div
+                className="
+    bg-gradient-to-br from-[#B82132]/20 via-[#8B1A28]/15 to-[#5A1119]/20 
+    dark:from-[#B82132]/30 dark:via-[#8B1A28]/20 dark:to-[#5A1119]/30 
+    p-3 sm:p-4 md:p-5 
+    rounded-2xl 
+    border border-orange-500/30 dark:border-orange-400/20 
+    hover:border-orange-400/50 
+    transition-all duration-300
+    flex flex-col justify-between h-full
+    min-h-[110px] sm:min-h-[130px]
+  "
+              >
+                {/* Top */}
+                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-orange-300/70 font-semibold flex items-center gap-2">
                   <span>🔥</span>
-                  <span className="hidden xs:inline">Calories</span>
-                  <span className="xs:hidden">Cal</span>
+                  <span>Calories</span>
                 </div>
-                <div className="text-sm sm:text-base md:text-xl font-bold text-orange-100 dark:text-orange-200 flex flex-wrap items-baseline gap-0.5">
-                  <span className="break-all">{entry?.calories ?? "—"}</span>
+
+                {/* Middle */}
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-100">
+                  {entry?.calories ?? "—"}
                   {entry?.calories && (
-                    <span className="text-[8px] sm:text-[9px] md:text-[10px] text-orange-300/60 dark:text-orange-300/50 font-normal whitespace-nowrap">
+                    <span className="text-xs ml-1 text-orange-300/60">
                       kcal
                     </span>
                   )}
                 </div>
+
+                {/* Bottom (for balance) */}
+                <div className="text-xs opacity-50">Today</div>
               </div>
 
               {/* WEIGHT */}
-              <div className="bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 p-2 sm:p-3 rounded-xl border border-cyan-500/30 dark:border-cyan-400/20 hover:border-cyan-400/50 transition-all">
-                <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-cyan-300/70 dark:text-cyan-200/60 font-semibold mb-0.5 sm:mb-1 flex items-center gap-0.5 sm:gap-1">
+              <div
+                className="
+    bg-gradient-to-br from-[#183D3D]/40 via-[#0F2A2A]/30 to-[#0A1F1F]/40 
+    dark:from-[#183D3D]/50 dark:via-[#0F2A2A]/40 dark:to-[#0A1F1F]/50 
+    p-3 sm:p-4 md:p-5 
+    rounded-2xl 
+    border border-cyan-500/30 dark:border-cyan-400/20 
+    hover:border-cyan-400/50 
+    transition-all duration-300
+    flex flex-col justify-between h-full
+    min-h-[110px] sm:min-h-[130px]
+  "
+              >
+                {/* Top */}
+                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-cyan-300/70 font-semibold flex items-center gap-2">
                   <span>⚖️</span>
                   <span>Weight</span>
                 </div>
-                <div className="text-sm sm:text-base md:text-xl font-bold text-cyan-100 dark:text-cyan-200 flex flex-wrap items-baseline gap-0.5">
-                  <span>{entry?.weight ?? "—"}</span>
-                  {entry?.weight && (
-                    <span className="text-[8px] sm:text-[9px] md:text-[10px] text-cyan-300/60 dark:text-cyan-300/50 font-normal whitespace-nowrap">
-                      kg
-                    </span>
-                  )}
+
+                {/* Middle */}
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-cyan-100">
+                  {entry?.weight ? `${entry.weight} kg` : "—"}
+                </div>
+
+                {/* Bottom */}
+                <div className="text-xs opacity-50">
+                  {entry?.weight ? "Latest" : "No data"}
                 </div>
               </div>
 
-              {/* BMI – always shown, uses latest available weight */}
+              {/* BMI */}
               <div
-                className="bg-gradient-to-br from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60
-                p-2 sm:p-3 rounded-xl border border-purple-500/30 dark:border-purple-400/20 hover:border-purple-400/50 transition-all flex flex-col gap-1.5"
+                className="
+    bg-gradient-to-br 
+    from-[#0F0F0F]/60 via-[#1A1A1A]/50 to-[#0A0A0A]/60 
+    dark:from-[#0F1622]/60 dark:via-[#1A2033]/50 dark:to-[#0A0F1C]/60
+    p-3 sm:p-4 md:p-5
+    rounded-2xl
+    border border-purple-500/30 dark:border-purple-400/20 
+    hover:border-purple-400/50 
+    transition-all duration-300
+    flex flex-col justify-between h-full
+    min-h-[110px] sm:min-h-[130px]
+  "
               >
                 {/* Title */}
-                <div
-                  className="text-[8px] sm:text-[9px] uppercase tracking-wider text-purple-300/70
-                  dark:text-purple-200/60 font-semibold flex items-center gap-0.5 sm:gap-1 justify-center sm:justify-start"
-                >
+                <div className="text-[10px] sm:text-xs uppercase tracking-wider text-purple-300/70 font-semibold flex items-center gap-2">
                   <span>📊</span>
                   <span>BMI</span>
                 </div>
 
-                {/* Number and Badge Row */}
+                {/* Content */}
                 {(() => {
-                  // Find the latest weight: today first, otherwise go backwards
                   let latestWeight = entry?.weight ?? null;
+
                   if (latestWeight === null) {
                     let checkDate = dayjs(date).subtract(1, "day");
                     while (
@@ -555,7 +608,6 @@ function DailySummaryMerged({ date, logs, mode }) {
                     }
                   }
 
-                  // Compute BMI from the latest weight (height is fixed at 176 cm)
                   const bmi =
                     latestWeight != null
                       ? Number(
@@ -564,31 +616,44 @@ function DailySummaryMerged({ date, logs, mode }) {
                       : null;
 
                   return (
-                    <div className="flex items-baseline justify-between flex-col md:flex-row">
-                      <div className="text-sm sm:text-base md:text-xl font-bold text-purple-100 dark:text-purple-200">
+                    <>
+                      {/* Middle */}
+                      <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-100">
                         {bmi != null ? bmi.toFixed(1) : "—"}
                       </div>
 
-                      {bmi != null && (
-                        <div
-                          className={`text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${
-                            bmi < 18.5
-                              ? "bg-orange-500/30 text-orange-100 border-orange-400/50"
-                              : bmi < 25
-                                ? "bg-emerald-500/30 text-emerald-100 border-emerald-400/50"
-                                : bmi < 30
-                                  ? "bg-amber-500/30 text-amber-100 border-amber-400/50"
-                                  : bmi < 35
-                                    ? "bg-red-500/30 text-red-100 border-red-400/50"
-                                    : bmi < 40
-                                      ? "bg-red-600/30 text-red-100 border-red-500/50"
-                                      : "bg-red-700/40 text-red-50 border-red-600/60"
-                          }`}
-                        >
-                          {getBMICategory(bmi)}
-                        </div>
-                      )}
-                    </div>
+                      {/* Bottom */}
+                      <div className="flex justify-start">
+                        {bmi != null ? (
+                          <div
+                            className={`
+                text-xs sm:text-sm
+                font-medium 
+                px-3 py-1 
+                rounded-full 
+                border 
+                ${
+                  bmi < 18.5
+                    ? "bg-orange-500/30 text-orange-100 border-orange-400/50"
+                    : bmi < 25
+                      ? "bg-emerald-500/30 text-emerald-100 border-emerald-400/50"
+                      : bmi < 30
+                        ? "bg-amber-500/30 text-amber-100 border-amber-400/50"
+                        : bmi < 35
+                          ? "bg-red-500/30 text-red-100 border-red-400/50"
+                          : bmi < 40
+                            ? "bg-red-600/30 text-red-100 border-red-500/50"
+                            : "bg-red-700/40 text-red-50 border-red-600/60"
+                }
+              `}
+                          >
+                            {getBMICategory(bmi)}
+                          </div>
+                        ) : (
+                          <span className="text-xs opacity-50">No data</span>
+                        )}
+                      </div>
+                    </>
                   );
                 })()}
               </div>
