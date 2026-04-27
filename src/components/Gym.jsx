@@ -649,7 +649,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           </div>
                         ) : (
                           <span className="text-[9px] sm:text-xs opacity-50">
-                            No data
+                            Not logged today
                           </span>
                         )}
                       </div>
