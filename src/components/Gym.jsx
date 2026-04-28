@@ -641,7 +641,7 @@ function DailySummaryMerged({ date, logs, mode }) {
                           ? "bg-red-500/30 text-red-100 border-red-400/50"
                           : bmi < 40
                             ? "bg-red-600/30 text-red-100 border-red-500/50"
-                            : "bg-red-700/40 text-red-50 border-red-600/60"
+                                      : "bg-red-700/40 text-red-50 border-red-600/60"
                 }
               `}
                           >
