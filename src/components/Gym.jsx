@@ -30,7 +30,7 @@ const fmtDisp = (d) => dayjs(d).format("DD-MM-YYYY");
 // Sunday Quote Fetcher
 async function fetchSundayQuote(opts = { cooldownSeconds: 60 }) {
   const LOCAL_FALLBACK = [
-    "Discipline is doing what needs to be done even when you don't feel like doing it. — Unknown",
+    "Discipline is doing what needs to be done even when you don't feel like doing it. — Jay",
     "Your body can stand almost anything. It's your mind that you have to convince. — Unknown",
     "Push yourself because no one else is going to do it for you. — Unknown",
     "Rest is not idleness. Sometimes, rest is the most productive thing you can do. — Unknown",
